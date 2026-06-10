@@ -1,0 +1,60 @@
+.callback-page {
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: linear-gradient(
+    135deg,
+    #001d39,
+    #0a4174,
+    #49769f
+  );
+}
+
+.callback-card {
+  width: 400px;
+
+  background: white;
+
+  padding: 40px;
+
+  border-radius: 20px;
+
+  text-align: center;
+
+  box-shadow:
+    0 15px 40px
+    rgba(0, 0, 0, 0.15);
+}
+
+.callback-card h2 {
+  color: #001d39;
+
+  margin-top: 20px;
+}
+
+.callback-card p {
+  color: #64748b;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+
+  margin: auto;
+
+  border: 5px solid #e5e7eb;
+  border-top: 5px solid #0a4174;
+
+  border-radius: 50%;
+
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

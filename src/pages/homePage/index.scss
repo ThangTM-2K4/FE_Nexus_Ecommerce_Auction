@@ -1,0 +1,17 @@
+.home-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(162, 210, 255, 0.2), transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 175, 204, 0.15), transparent 50%),
+    linear-gradient(135deg, #f9fafb 0%, #f5f8fa 100%);
+  
+  .home-main {
+    flex: 1;
+    padding: 2.5rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}

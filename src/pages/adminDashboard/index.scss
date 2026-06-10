@@ -1,0 +1,13 @@
+.admin-dashboard {
+  background: linear-gradient(135deg, rgba(255, 175, 204, 0.15), rgba(205, 180, 219, 0.1));
+  border-radius: 18px;
+  padding: 2rem;
+  border: 1.5px solid rgba(255, 175, 204, 0.3);
+  box-shadow: 0 12px 30px rgba(255, 175, 204, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 16px 40px rgba(255, 175, 204, 0.15);
+  }
+}
