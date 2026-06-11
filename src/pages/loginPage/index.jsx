@@ -137,11 +137,11 @@ function LoginPage() {
             break;
 
           case "BUYER":
-            navigate("/buyer");
+            navigate("/");
             break;
 
           default:
-            navigate("/user");
+            navigate("/");
         }
       }, 1000);
     } catch (err) {

@@ -116,7 +116,7 @@ function RegisterPage() {
       );
 
       setTimeout(() => {
-        navigate("/");
+        navigate("/login");
       }, 1500);
     } catch (err) {
       toast.error(
@@ -298,7 +298,7 @@ function RegisterPage() {
 
             <span
               onClick={() =>
-                navigate("/")
+                navigate("/login")
               }
             >
               Đăng nhập

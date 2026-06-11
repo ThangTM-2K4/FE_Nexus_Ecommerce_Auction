@@ -1,3 +1,5 @@
+@import './styles/cta-effect';
+
 * {
   margin: 0;
   padding: 0;
@@ -5,25 +7,29 @@
 }
 
 :root {
-  --color-primary: #A2D2FF;
-  --color-secondary: #BDE0FE;
-  --color-accent-1: #FFAFCC;
-  --color-accent-2: #FFC8DD;
-  --color-accent-3: #CDB4DB;
-  --color-text-dark: #2d3748;
-  --color-text-light: #718096;
-  --color-border: #e2e8f0;
+  --deep: #001D39;
+  --navy: #0A4174;
+  --steel: #49769F;
+  --teal: #4E8EA2;
+  --sage: #6EA2B3;
+  --sky: #7BBDE8;
+  --mist: #BDD8E9;
+  --ink-muted: #49769F;
+  --surface: #ffffff;
+  --surface-soft: #f6fafd;
 }
 
-html, body {
+html,
+body {
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background:
-    radial-gradient(circle at 20% 50%, rgba(162, 210, 255, 0.2), transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 175, 204, 0.15), transparent 50%),
-    linear-gradient(135deg, #fafbff 0%, #f5f9ff 50%, #fff5f8 100%);
-  color: var(--color-text-dark);
+    radial-gradient(ellipse 65% 45% at 10% 0%, rgba(123, 189, 232, 0.28), transparent),
+    radial-gradient(ellipse 55% 40% at 90% 5%, rgba(78, 142, 162, 0.15), transparent),
+    radial-gradient(ellipse 75% 50% at 50% 100%, rgba(189, 216, 233, 0.4), transparent),
+    linear-gradient(180deg, #fafcfe 0%, #f0f7fb 100%);
+  color: var(--deep);
   min-height: 100%;
 }
 
@@ -31,7 +37,18 @@ body {
   min-height: 100vh;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
