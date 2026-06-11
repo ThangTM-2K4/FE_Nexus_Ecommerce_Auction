@@ -354,8 +354,9 @@ export default function HomePageContent() {
 						</p>
 
 						<div className="home-hero-actions">
-							<a href="#products" className="home-hero-btn home-hero-btn--outline">
-								Xem deal đang diễn ra →
+							<a href="#products" className="home-hero-btn btn-cta-effect">
+								<span>Xem deal đang diễn ra</span>
+								<span className="btn-cta-effect__arrow" aria-hidden="true"> →</span>
 							</a>
 							<Link to="/login" className="home-hero-btn home-hero-btn--ghost">
 								Đăng nhập
@@ -529,7 +530,7 @@ export default function HomePageContent() {
 									</div>
 
 									<button type="button" className="home-product-action">
-										Đặt giá ngay
+										Mua ngay
 									</button>
 								</div>
 							</article>
