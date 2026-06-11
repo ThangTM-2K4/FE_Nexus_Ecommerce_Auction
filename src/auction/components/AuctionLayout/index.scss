@@ -1,0 +1,19 @@
+@use "../../styles/variables" as *;
+
+.auc-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-bg;
+
+  &__body {
+    display: flex;
+    flex: 1;
+  }
+
+  &__content {
+    flex: 1;
+    padding: 24px 32px;
+    overflow-x: hidden;
+  }
+}

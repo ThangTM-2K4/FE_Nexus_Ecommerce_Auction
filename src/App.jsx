@@ -11,6 +11,13 @@ import SellerDashboard from "./pages/sellerDashboard";
 import BuyerDashboard from "./pages/buyerDashboard";
 import AuthCallback from "./pages/authCallback";
 
+import AuctionBrowsePage from "./auction/pages/browsePage";
+import AuctionDetailPage from "./auction/pages/detailPage";
+import AuctionProfilePage from "./auction/pages/profilePage";
+import AuctionSellerPage from "./auction/pages/sellerPage";
+import AuctionMyBidsPage from "./auction/pages/myBidsPage";
+import AuctionCreatePage from "./auction/pages/createPage";
+
 function App() {
   return (
     <Routes>
@@ -44,6 +51,12 @@ function App() {
         path="/auth/callback"
         element={<AuthCallback />}
       />
+      <Route path="/auction/browse" element={<AuctionBrowsePage />} />
+      <Route path="/auction/detail/:id" element={<AuctionDetailPage />} />
+      <Route path="/auction/profile" element={<AuctionProfilePage />} />
+      <Route path="/auction/seller" element={<AuctionSellerPage />} />
+      <Route path="/auction/create" element={<AuctionCreatePage />} />
+      <Route path="/auction/my-bids" element={<AuctionMyBidsPage />} />
     </Routes>
   );
 }
