@@ -1,17 +1,14 @@
-import React, {useState,useEffect,} from "react";
-import {useNavigate,useSearchParams,} from "react-router-dom";
-import {FaEye,FaEyeSlash,} from "react-icons/fa";
-
-import { FcGoogle } from "react-icons/fc";
-
-import { toast } from "react-toastify";
-
-import { loginAPI } from "../../config/api";
-
-import "./index.scss";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
+import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
+import './index.scss';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [searchParams] = useSearchParams();
 
@@ -107,16 +104,7 @@ function LoginPage() {
     try {
       setLoading(true);
 
-      const user =
-        await loginAPI(
-          formData.login,
-          formData.password
-        );
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(user)
-      );
+      const user = await login(formData.login, formData.password);
 
       toast.success(
         "Đăng nhập thành công"
@@ -137,11 +125,15 @@ function LoginPage() {
             break;
 
           case "BUYER":
-            navigate("/buyer");
+            navigate("/");
+            break;
+
+          case "USER":
+            navigate("/");
             break;
 
           default:
-            navigate("/user");
+            navigate("/");
         }
       }, 1000);
     } catch (err) {

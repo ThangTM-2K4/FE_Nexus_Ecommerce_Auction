@@ -1,0 +1,66 @@
+// Ocean Depth palette
+$deep: #001D39;
+$navy: #0A4174;
+$steel: #49769F;
+$teal: #4E8EA2;
+$sage: #6EA2B3;
+$sky: #7BBDE8;
+$mist: #BDD8E9;
+
+// Semantic
+$ink: $deep;
+$ink-soft: $navy;
+$ink-muted: $steel;
+$ink-faint: $sage;
+
+$surface: #ffffff;
+$surface-soft: #f6fafd;
+$surface-muted: #edf4f9;
+$border: rgba($sage, 0.45);
+$border-soft: rgba($mist, 0.8);
+
+$accent: $sky;
+$accent-mid: $teal;
+$accent-dark: $navy;
+
+// Component aliases
+$blue: $sky;
+$blue-soft: $mist;
+$pink: $teal;
+$pink-soft: $sage;
+$purple: $steel;
+
+$accent-glow: rgba($sky, 0.32);
+$blue-glow: rgba($sky, 0.28);
+$teal-glow: rgba($teal, 0.3);
+$aqua-glow: $teal-glow;
+$rose-glow: $teal-glow;
+$pink-glow: $accent-glow;
+$purple-glow: rgba($steel, 0.3);
+
+$cyan-light: $mist;
+$cyan: $teal;
+
+$control-height: 48px;
+
+$radius-sm: 10px;
+$radius-md: 14px;
+$radius-lg: 20px;
+$radius-pill: 999px;
+
+$shadow-sm: 0 2px 12px rgba($deep, 0.08);
+$shadow-md: 0 8px 28px rgba($navy, 0.12);
+$shadow-lg: 0 16px 40px rgba($teal, 0.16);
+
+$ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+$brand-bar: linear-gradient(
+  90deg,
+  $deep 0%,
+  $navy 16%,
+  $steel 33%,
+  $teal 50%,
+  $sage 66%,
+  $sky 83%,
+  $mist 100%
+);
