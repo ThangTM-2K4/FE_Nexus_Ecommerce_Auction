@@ -1,0 +1,33 @@
+.seller-page {
+  margin-left: 260px;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.seller-revenue {
+  padding: 30px;
+}
+
+.revenue-cards {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+
+.card h3 {
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.card p {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2563eb;
+}

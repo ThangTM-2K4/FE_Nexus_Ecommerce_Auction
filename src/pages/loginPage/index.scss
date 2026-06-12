@@ -112,24 +112,22 @@
 .eye-btn:hover {
   color: #0a4174;
 }
-
 .forgot-password {
-  text-align: left;
-
-  margin-top: 8px;
   margin-bottom: 18px;
-
-  font-size: 14px;
-}
-
-.forgot-password a {
+  margin-top: 10px;
+  text-align: right;
   color: #0a4174;
-  text-decoration: none;
+  cursor: pointer;
   font-weight: 500;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: 0.2s;
 }
 
-.forgot-password a:hover {
+.forgot-password:hover {
   text-decoration: underline;
+  color: #001d39;
 }
 
 .error {

@@ -182,7 +182,7 @@ function RegisterPage() {
 
           {errors.email && (
             <p className="field-error">
-              ❌ {errors.email}
+               {errors.email}
             </p>
           )}
           <input
@@ -197,6 +197,11 @@ function RegisterPage() {
                 : ""
             }
           />
+          {errors.phone && (
+            <p className="field-error">
+               {errors.phone}
+            </p>
+          )}
 
           <div className="password-wrapper">
             <input
@@ -215,6 +220,11 @@ function RegisterPage() {
                   : ""
               }
             />
+            {errors.password && (
+              <p className="field-error">
+                 {errors.password}
+              </p>
+            )}
 
             <button
               type="button"
@@ -252,6 +262,12 @@ function RegisterPage() {
                   : ""
               }
             />
+            {errors.confirmPassword && (
+              <p className="field-error">
+                 {errors.confirmPassword}
+              </p>
+            )}
+            
 
             <button
               type="button"

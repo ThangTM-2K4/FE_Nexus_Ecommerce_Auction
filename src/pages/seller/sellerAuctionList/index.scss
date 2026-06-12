@@ -1,0 +1,110 @@
+.auction-page {
+  margin-left: 260px;
+  margin-top: 70px;
+
+  padding: 30px;
+}
+
+.page-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 25px;
+}
+
+.page-header h1 {
+  color: #001d39;
+}
+
+.page-header button {
+  border: none;
+
+  background: #0a4174;
+
+  color: white;
+
+  padding: 12px 20px;
+
+  border-radius: 12px;
+
+  cursor: pointer;
+}
+
+.table-card {
+  background: white;
+
+  border-radius: 20px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 4px 20px rgba(0,0,0,.08);
+}
+
+table {
+  width: 100%;
+
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f8fafc;
+}
+
+th,
+td {
+  padding: 18px;
+
+  text-align: left;
+
+  border-bottom: 1px solid #eee;
+}
+
+.status {
+  padding: 6px 12px;
+
+  border-radius: 30px;
+
+  font-size: 13px;
+}
+
+.active {
+  background: #dcfce7;
+
+  color: #15803d;
+}
+
+.ended {
+  background: #fee2e2;
+
+  color: #dc2626;
+}
+
+.view-btn,
+.edit-btn,
+.delete-btn {
+  border: none;
+
+  padding: 8px 12px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  margin-right: 8px;
+}
+
+.view-btn {
+  background: #dbeafe;
+}
+
+.edit-btn {
+  background: #fef3c7;
+}
+
+.delete-btn {
+  background: #fee2e2;
+}

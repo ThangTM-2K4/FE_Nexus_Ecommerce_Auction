@@ -159,6 +159,9 @@ function LoginPage() {
       toast.error(
         err.message || "Đăng nhập thất bại"
       );
+    
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -231,18 +234,26 @@ function LoginPage() {
             </p>
           )}
 
-          <div className="forgot-password">
+          <button
+            type="button"
+            className="forgot-password"
+            onClick={() => navigate("/forgot-password")}
+          >
             Quên mật khẩu?
-          </div>
+          </button>
 
           <button
             type="submit"
             className="login-btn"
             disabled={loading}
           >
-            {loading
-              ? "Đang đăng nhập..."
-              : "Đăng nhập"}
+            {loading ? (
+            <span className="spinner-text">
+              ⏳ Đang đăng nhập...
+            </span>
+          ) : (
+            "Đăng nhập"
+          )}
           </button>
 
           <div className="divider">
