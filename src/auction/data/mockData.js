@@ -92,11 +92,51 @@ export const productCategories = [
 ];
 
 export const sidebarMenuItems = [
-  { id: "bids", label: "My Bids", path: "/auction/my-bids", icon: "gavel" },
-  { id: "auctions", label: "My Auctions", path: "/auction/seller", icon: "tag" },
-  { id: "watchlist", label: "Watchlist", path: "/auction/browse", icon: "heart" },
-  { id: "profile", label: "Hồ sơ & Uy tín", path: "/auction/profile", icon: "user" },
-  { id: "settings", label: "Settings", path: "/auction/browse", icon: "settings" },
+  {
+    id: "browse",
+    label: "Duyệt đấu giá",
+    path: "/auction/browse",
+    icon: "compass",
+    section: "buy",
+  },
+  {
+    id: "bids",
+    label: "Đấu giá của tôi",
+    path: "/auction/my-bids",
+    icon: "gavel",
+    section: "buy",
+  },
+  {
+    id: "watchlist",
+    label: "Đang theo dõi",
+    path: "/auction/browse",
+    hash: "watchlist",
+    icon: "heart",
+    section: "buy",
+  },
+  {
+    id: "profile",
+    label: "Hồ sơ & Uy tín",
+    path: "/auction/profile",
+    icon: "user",
+    section: "buy",
+  },
+  {
+    id: "auctions",
+    label: "Phiên bán của tôi",
+    path: "/auction/seller",
+    icon: "tag",
+    sellerOnly: true,
+    section: "sell",
+  },
+  {
+    id: "create",
+    label: "Tạo đấu giá",
+    path: "/auction/create",
+    icon: "plus",
+    sellerOnly: true,
+    section: "sell",
+  },
 ];
 
 const auctionCatalog = {

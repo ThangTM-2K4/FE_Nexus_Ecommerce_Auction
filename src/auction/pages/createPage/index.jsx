@@ -207,7 +207,7 @@ export default function AuctionCreatePage() {
   ];
 
   return (
-    <AuctionLayout activeTab="selling" sidebarActive="auctions">
+    <AuctionLayout activeTab="selling" sidebarActive="create">
       <div className="auc-create-page">
         <div className="auc-create-page__pattern" aria-hidden />
 

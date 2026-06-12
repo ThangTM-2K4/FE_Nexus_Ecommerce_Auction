@@ -176,7 +176,7 @@ export default function Header() {
                 <span className="header-cart-badge">3</span>
               </a>
 
-              <a href="#auction" className="header-auction-cta btn-cta-effect" aria-label="Đấu giá trực tiếp">
+              <Link to="/auction/browse" className="header-auction-cta btn-cta-effect" aria-label="Đấu giá trực tiếp">
                 <span className="header-auction-live">
                   <span className="header-auction-dot" aria-hidden="true" />
                   LIVE
@@ -188,7 +188,7 @@ export default function Header() {
                     <span className="btn-cta-effect__arrow" aria-hidden="true"> →</span>
                   </strong>
                 </span>
-              </a>
+              </Link>
             </nav>
           </div>
         </div>
@@ -196,10 +196,10 @@ export default function Header() {
 
       <nav className="header-subnav" aria-label="Đấu giá nổi bật">
         <div className="header-shell header-subnav-shell">
-          <a href="#auction-hot" className="header-pill header-pill-hot">
+          <Link to="/auction/browse" className="header-pill header-pill-hot">
             <span className="header-pill-icon" aria-hidden="true">🔥</span>
             <strong>ĐẤU GIÁ HOT</strong>
-          </a>
+          </Link>
 
           <div className="header-subnav-links">
             <a href="#iphone-16">iPhone 16 Pro – Giá từ 1k</a>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
+import HomeSidebar from '../../components/homeSidebar';
 import './index.scss';
 
 const HOME_BANNERS = [
@@ -337,7 +338,9 @@ export default function HomePageContent() {
 	return (
 		<>
 			<Header />
-			<div className="home-page-content">
+			<div className="home-page-shell">
+				<HomeSidebar />
+				<div className="home-page-content">
 				<section className="home-hero" id="featured">
 				<div className="home-hero-top">
 					<div className="home-hero-copy">
@@ -354,10 +357,10 @@ export default function HomePageContent() {
 						</p>
 
 						<div className="home-hero-actions">
-							<a href="#products" className="home-hero-btn btn-cta-effect">
+							<Link to="/auction/browse" className="home-hero-btn btn-cta-effect">
 								<span>Xem deal đang diễn ra</span>
 								<span className="btn-cta-effect__arrow" aria-hidden="true"> →</span>
-							</a>
+							</Link>
 							<Link to="/login" className="home-hero-btn home-hero-btn--ghost">
 								Đăng nhập
 							</Link>
@@ -538,7 +541,8 @@ export default function HomePageContent() {
 					</div>
 				)}
 			</section>
-		</div>
+				</div>
+			</div>
 		<Footer />
 	</>
 );

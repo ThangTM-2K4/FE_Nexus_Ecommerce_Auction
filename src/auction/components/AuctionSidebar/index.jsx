@@ -3,19 +3,26 @@ import {
   FaGavel,
   FaTag,
   FaHeart,
-  FaCog,
   FaUser,
+  FaCompass,
+  FaPlus,
 } from "react-icons/fa";
 import { productCategories } from "../../data/mockData";
 import AuctionImage from "../AuctionImage";
 import "./index.scss";
 
 const icons = {
+  compass: FaCompass,
   gavel: FaGavel,
   tag: FaTag,
   heart: FaHeart,
-  settings: FaCog,
   user: FaUser,
+  plus: FaPlus,
+};
+
+const sectionLabels = {
+  buy: "Mua hàng",
+  sell: "Bán hàng",
 };
 
 const AuctionSidebar = ({
@@ -25,38 +32,60 @@ const AuctionSidebar = ({
 }) => {
   const navigate = useNavigate();
 
+  const sections = ["buy", "sell"].filter((section) =>
+    menuItems.some((item) => item.section === section)
+  );
+
+  const handleNavigate = (item) => {
+    if (item.hash) {
+      navigate({ pathname: item.path, hash: item.hash });
+      return;
+    }
+    navigate(item.path);
+  };
+
   return (
     <aside className="auc-sidebar">
-      <div className="auc-sidebar__section">
-        <h3>Danh mục</h3>
-        <ul className="auc-sidebar__menu">
-          {menuItems.map((item) => {
-            const Icon = icons[item.icon];
-            return (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  className={`auc-sidebar__item ${
-                    item.id === activeItem ? "active" : ""
-                  }`}
-                  onClick={() => navigate(item.path)}
-                >
-                  <Icon />
-                  <span>{item.label}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      {sections.map((section) => {
+        const items = menuItems.filter((item) => item.section === section);
+        if (!items.length) return null;
+
+        return (
+          <div key={section} className="auc-sidebar__section">
+            <h3>{sectionLabels[section]}</h3>
+            <ul className="auc-sidebar__menu">
+              {items.map((item) => {
+                const Icon = icons[item.icon];
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className={`auc-sidebar__item ${
+                        item.id === activeItem ? "active" : ""
+                      }`}
+                      onClick={() => handleNavigate(item)}
+                    >
+                      <Icon />
+                      <span>{item.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
 
       {showCategories && (
         <div className="auc-sidebar__section">
-          <h3>Sản phẩm</h3>
+          <h3>Danh mục</h3>
           <ul className="auc-sidebar__menu">
             {productCategories.map((cat) => (
               <li key={cat.id}>
-                <button type="button" className="auc-sidebar__item auc-sidebar__item--thumb">
+                <button
+                  type="button"
+                  className="auc-sidebar__item auc-sidebar__item--thumb"
+                >
                   <AuctionImage
                     src={cat.image}
                     alt={cat.label}

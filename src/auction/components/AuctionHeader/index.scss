@@ -112,20 +112,74 @@
     }
   }
 
+  &__auth {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__login {
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-primary;
+    text-decoration: none;
+    padding: 8px 12px;
+
+    &:hover {
+      color: $color-primary-dark;
+    }
+  }
+
+  &__register {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: $radius-md;
+    background: linear-gradient(135deg, $color-primary, $color-gradient-dark);
+
+    &:hover {
+      opacity: 0.92;
+    }
+  }
+
+  &__profile-wrap {
+    position: relative;
+  }
+
   &__avatar {
     width: 40px;
     height: 40px;
     border: 2px solid $color-border;
     border-radius: 50%;
     padding: 0;
-    overflow: hidden;
+    overflow: visible;
     cursor: pointer;
-    background: none;
+    background: linear-gradient(135deg, $color-gradient-light, $color-gradient-mid);
+    position: relative;
 
-    img {
+    &-initials {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: $color-primary-dark;
+      border-radius: 50%;
     }
+  }
+
+  &__seller-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $color-success;
+    border: 2px solid $color-bg-card;
   }
 }

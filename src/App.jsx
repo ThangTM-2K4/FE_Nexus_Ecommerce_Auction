@@ -23,6 +23,8 @@ import AuctionProfilePage from "./auction/pages/profilePage";
 import AuctionSellerPage from "./auction/pages/sellerPage";
 import AuctionMyBidsPage from "./auction/pages/myBidsPage";
 import AuctionCreatePage from "./auction/pages/createPage";
+import AuctionSellerRoute from "./auction/components/AuctionSellerRoute";
+import AuctionBuyRoute from "./auction/components/AuctionBuyRoute";
 
 function App() {
   return (
@@ -69,12 +71,54 @@ function App() {
       />
       <Route path="/buyer" element={<BuyerDashboard />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/auction/browse" element={<AuctionBrowsePage />} />
-      <Route path="/auction/detail/:id" element={<AuctionDetailPage />} />
-      <Route path="/auction/profile" element={<AuctionProfilePage />} />
-      <Route path="/auction/seller" element={<AuctionSellerPage />} />
-      <Route path="/auction/create" element={<AuctionCreatePage />} />
-      <Route path="/auction/my-bids" element={<AuctionMyBidsPage />} />
+      <Route
+        path="/auction/browse"
+        element={
+          <AuctionBuyRoute>
+            <AuctionBrowsePage />
+          </AuctionBuyRoute>
+        }
+      />
+      <Route
+        path="/auction/detail/:id"
+        element={
+          <AuctionBuyRoute>
+            <AuctionDetailPage />
+          </AuctionBuyRoute>
+        }
+      />
+      <Route
+        path="/auction/profile"
+        element={
+          <AuctionBuyRoute>
+            <AuctionProfilePage />
+          </AuctionBuyRoute>
+        }
+      />
+      <Route
+        path="/auction/seller"
+        element={
+          <AuctionSellerRoute>
+            <AuctionSellerPage />
+          </AuctionSellerRoute>
+        }
+      />
+      <Route
+        path="/auction/create"
+        element={
+          <AuctionSellerRoute>
+            <AuctionCreatePage />
+          </AuctionSellerRoute>
+        }
+      />
+      <Route
+        path="/auction/my-bids"
+        element={
+          <AuctionBuyRoute>
+            <AuctionMyBidsPage />
+          </AuctionBuyRoute>
+        }
+      />
     </Routes>
   );
 }

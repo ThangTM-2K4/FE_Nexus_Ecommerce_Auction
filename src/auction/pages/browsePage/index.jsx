@@ -1,18 +1,54 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AuctionLayout from "../../components/AuctionLayout";
 import AuctionCard from "../../components/AuctionCard";
 import { ongoingAuctions, watchlistItems } from "../../data/mockData";
 import { auctionImages } from "../../data/images";
 import AuctionImage from "../../components/AuctionImage";
+import { toast } from "react-toastify";
+import { useAuth } from "../../../context/AuthContext";
 import "./index.scss";
 
 export default function AuctionBrowsePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, isApprovedSeller, isSellerMode, switchAccountMode } =
+    useAuth();
+
+  const sidebarActive =
+    location.hash === "#watchlist" ? "watchlist" : "browse";
+
+  useEffect(() => {
+    if (location.hash !== "#watchlist") return;
+    const el = document.getElementById("watchlist");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [location.hash]);
+
+  const handleSellerCta = async () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    if (!isApprovedSeller) {
+      navigate("/profile/become-seller");
+      return;
+    }
+    if (!isSellerMode) {
+      try {
+        await switchAccountMode("SELLER");
+      } catch {
+        toast.error("Không thể chuyển sang hồ sơ Người bán");
+        return;
+      }
+    }
+    navigate("/auction/seller");
+    toast.success("Đã chuyển sang hồ sơ Người bán");
+  };
 
   return (
     <AuctionLayout
       activeTab="buying"
-      sidebarActive="watchlist"
+      sidebarActive={sidebarActive}
       showCategories
     >
       <div className="auc-browse">
@@ -59,15 +95,29 @@ export default function AuctionBrowsePage() {
         </section>
 
         <div className="auc-browse__bottom">
-          <section className="auc-browse__cta">
-            <h3>Bạn Có Vật Phẩm Muốn Bán?</h3>
-            <p>Đăng sản phẩm và bắt đầu đấu giá ngay hôm nay</p>
-            <button type="button" onClick={() => navigate("/auction/seller")}>
-              BẮT ĐẦU BÁN NGAY
-            </button>
-          </section>
+          {isApprovedSeller && isSellerMode ? (
+            <section className="auc-browse__cta">
+              <h3>Quản Lý Phiên Đấu Giá</h3>
+              <p>Tạo phiên mới hoặc theo dõi các đấu giá đang bán</p>
+              <button type="button" onClick={() => navigate("/auction/seller")}>
+                VÀO KÊNH BÁN
+              </button>
+            </section>
+          ) : (
+            <section className="auc-browse__cta">
+              <h3>Bạn Có Vật Phẩm Muốn Bán?</h3>
+              <p>Đăng sản phẩm và bắt đầu đấu giá ngay hôm nay</p>
+              <button type="button" onClick={handleSellerCta}>
+                {!isAuthenticated
+                  ? "ĐĂNG NHẬP ĐỂ BÁN"
+                  : isApprovedSeller
+                    ? "CHUYỂN SANG HỒ SƠ BÁN"
+                    : "ĐĂNG KÝ LÀM NGƯỜI BÁN"}
+              </button>
+            </section>
+          )}
 
-          <section className="auc-browse__watchlist">
+          <section id="watchlist" className="auc-browse__watchlist">
             <h3>ĐANG THEO DÕI</h3>
             <ul>
               {watchlistItems.map((item) => (
