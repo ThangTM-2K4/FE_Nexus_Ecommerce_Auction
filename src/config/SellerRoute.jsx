@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import SellerWaitingPage from '../pages/sellerWaitingPage';
-import SellerRejectedPage from '../pages/sellerRejectedPage';
+import SellerWaitingPage from '../pages/seller/sellerWaitingPage';
+import SellerRejectedPage from '../pages/seller/sellerRejectedPage';
 
 export default function SellerRoute({ children }) {
   const { isAuthenticated, user, isSellerMode } = useAuth();

@@ -70,7 +70,7 @@ export const login = async (loginValue, password) => {
   await mockDelay(800);
 
   const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
-  const allUsers = [...mockUsers, ...localUsers];
+  const allUsers = [...localUsers, ...mockUsers];
 
   const user = allUsers.find(
     (u) =>
@@ -91,7 +91,7 @@ export const register = async (userData) => {
   await mockDelay(800);
 
   const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
-  const allUsers = [...mockUsers, ...localUsers];
+  const allUsers = [...localUsers, ...mockUsers];
 
   const existedUser = allUsers.find(
     (u) => u.email === userData.email || u.phone === userData.phone
@@ -142,6 +142,20 @@ export const updateSessionUser = (updates) => {
 
   const updated = { ...current, ...updates };
   localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
+
+  const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
+  const index = localUsers.findIndex((u) => u.id === current.id);
+  if (index !== -1) {
+    localUsers[index] = { ...localUsers[index], ...updates };
+    localStorage.setItem('mockUsers', JSON.stringify(localUsers));
+  } else {
+    const staticUser = mockUsers.find((u) => u.id === current.id);
+    if (staticUser) {
+      localUsers.push({ ...staticUser, ...updates });
+      localStorage.setItem('mockUsers', JSON.stringify(localUsers));
+    }
+  }
+
   return updated;
 };
 
@@ -159,7 +173,7 @@ export const switchAccountMode = async (mode) => {
 
 export const syncUserFromStorage = (userId) => {
   const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
-  const allUsers = [...mockUsers, ...localUsers];
+  const allUsers = [...localUsers, ...mockUsers];
   const stored = allUsers.find((u) => u.id === userId);
   if (!stored) return getCurrentUser();
 

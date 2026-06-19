@@ -1,24 +1,74 @@
-.seller-content {
-  margin-left: 260px;
-  margin-top: 70px;
+@import '../../../styles/palette';
 
-  padding: 30px;
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(4, 1fr);
-
-  gap: 20px;
+.seller-dashboard {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $surface-soft;
 }
 
-.card {
-  background: white;
+.seller-dashboard-main {
+  flex: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2rem 1.5rem 3rem;
+}
 
-  border-radius: 20px;
+.seller-dashboard-hero {
+  margin-bottom: 2rem;
 
-  padding: 25px;
+  h1 {
+    font-size: 1.75rem;
+    color: $ink;
+    margin: 12px 0 8px;
+  }
 
-  box-shadow:
-    0 4px 20px rgba(0,0,0,.08);
+  p {
+    color: $ink-muted;
+    font-size: 0.9rem;
+  }
+}
+
+.seller-dashboard-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: $radius-pill;
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.seller-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.seller-dashboard-card {
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  padding: 1.5rem;
+  box-shadow: $shadow-sm;
+
+  h3 {
+    font-size: 0.85rem;
+    color: $ink-muted;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  small {
+    font-size: 0.75rem;
+    color: $ink-faint;
+  }
+}
+
+.seller-dashboard-stat {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: $accent-dark;
+  margin-bottom: 4px;
 }

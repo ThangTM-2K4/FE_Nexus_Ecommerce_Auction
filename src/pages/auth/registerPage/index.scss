@@ -1,0 +1,321 @@
+.register-page {
+  min-height: 100vh;
+
+  background: linear-gradient(
+    135deg,
+    #001d39 0%,
+    #0a4174 30%,
+    #49769f 60%,
+    #7bbde8 100%
+  );
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 30px;
+}
+
+.register-card {
+  width: 550px;
+
+  background: #ffffff;
+
+  padding: 40px;
+
+  border-radius: 24px;
+
+  box-shadow:
+    0 20px 50px rgba(0, 29, 57, 0.25);
+
+  border-top: 6px solid #0a4174;
+
+  animation: fadeIn 0.4s ease;
+}
+
+.register-card h1 {
+  text-align: center;
+
+  color: #001d39;
+
+  font-size: 34px;
+  font-weight: 700;
+
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+
+  color: #0a4174;
+
+  font-size: 18px;
+  font-weight: 600;
+
+  margin-bottom: 8px;
+}
+
+.description {
+  text-align: center;
+
+  color: #64748b;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+
+  margin-bottom: 28px;
+}
+
+.field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #001d39;
+  margin-bottom: 6px;
+
+  .required {
+    color: #ef4444;
+    font-weight: 700;
+  }
+}
+
+.register-card input {
+  width: 100%;
+
+  height: 52px;
+
+  padding: 0 16px;
+
+  border: 1px solid #d6dee6;
+  border-radius: 10px;
+
+  font-size: 15px;
+
+  margin-bottom: 14px;
+
+  box-sizing: border-box;
+
+  transition: all 0.3s ease;
+}
+
+.register-card input:focus {
+  outline: none;
+
+  border-color: #0a4174;
+
+  box-shadow: 0 0 0 4px rgba(10, 65, 116, 0.1);
+}
+
+.password-wrapper {
+  position: relative;
+
+  margin-bottom: 14px;
+}
+
+.eye-btn {
+  position: absolute;
+
+  right: 15px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+
+  cursor: pointer;
+
+  color: #64748b;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+}
+
+.eye-btn:hover {
+  color: #0a4174;
+}
+
+.role-group {
+  display: flex;
+  justify-content: center;
+
+  gap: 40px;
+
+  margin: 10px 0 20px;
+}
+
+.role-group label {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  color: #001d39;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.role-group input[type="radio"] {
+  width: auto;
+  height: auto;
+
+  margin: 0;
+}
+
+.error {
+  background: #fee2e2;
+
+  color: #dc2626;
+
+  padding: 12px;
+
+  border-radius: 8px;
+
+  margin-bottom: 15px;
+
+  font-size: 14px;
+}
+
+.register-btn {
+  width: 100%;
+
+  height: 54px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #001d39;
+
+  color: white;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+}
+
+.register-btn:hover {
+  background: #0a4174;
+
+  transform: translateY(-2px);
+}
+
+.register-link {
+  margin-top: 18px;
+
+  text-align: center;
+
+  font-size: 14px;
+
+  color: #64748b;
+}
+
+.register-link span {
+  color: #0a4174;
+
+  font-weight: 600;
+
+  margin-left: 6px;
+
+  cursor: pointer;
+}
+
+.register-link span:hover {
+  text-decoration: underline;
+}
+
+.login-footer {
+  margin-top: 28px;
+
+  padding-top: 20px;
+
+  border-top: 1px solid #e5e7eb;
+
+  text-align: center;
+}
+
+.login-footer p {
+  margin: 4px 0;
+}
+
+.login-footer p:first-child {
+  color: #001d39;
+
+  font-weight: 700;
+
+  font-size: 14px;
+}
+
+.login-footer p:nth-child(2) {
+  color: #4e8ea2;
+
+  font-weight: 600;
+}
+
+.login-footer p:last-child {
+  color: #64748b;
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin: 22px 0;
+
+  color: #6b7280;
+  font-size: 14px;
+}
+.google-btn:hover {
+  background: #f8fafc;
+
+  border-color: #0a4174;
+}
+.input-error {
+  border: 1px solid #ef4444 !important;
+  background: #fef2f2 !important;
+}
+
+.input-error:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px
+    rgba(239, 68, 68, 0.15) !important;
+}
+
+.field-error {
+  display: block;
+
+  color: #ef4444;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  margin: 6px 0 14px 4px;
+
+  line-height: 1.4;
+
+  position: static;
+}

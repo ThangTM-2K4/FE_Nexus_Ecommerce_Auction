@@ -1,0 +1,46 @@
+@use "../../../styles/_auction-variables" as *;
+
+.auc-footer {
+  background: $color-bg-card;
+  border-top: 1px solid $color-border-lighter;
+  margin-top: auto;
+
+  &__inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  &__logo {
+    font-weight: 700;
+    color: $color-primary-dark;
+    font-size: 15px;
+  }
+
+  p {
+    font-size: 12px;
+    color: $color-text-muted;
+    margin-top: 4px;
+  }
+
+  nav {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+
+    a {
+      font-size: 13px;
+      color: $color-text-muted;
+      text-decoration: none;
+
+      &:hover {
+        color: $color-primary;
+      }
+    }
+  }
+}

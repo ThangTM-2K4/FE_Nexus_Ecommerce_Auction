@@ -1,0 +1,169 @@
+@use "../../../styles/_seller-variables" as *;
+
+.slr-header {
+  background: $color-bg-card;
+  border-bottom: 1px solid $color-border-light;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  &__inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  &__logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: $color-primary-dark;
+    cursor: pointer;
+    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba($color-accent, 0.2);
+    color: $color-primary;
+  }
+
+  &__search {
+    flex: 1;
+    max-width: 420px;
+    position: relative;
+
+    svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $color-text-muted;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      height: 40px;
+      padding: 0 16px 0 40px;
+      border: 1px solid $color-border;
+      border-radius: $radius-md;
+      font-size: 14px;
+      background: $color-bg;
+
+      &:focus {
+        outline: none;
+        border-color: $color-primary;
+        box-shadow: 0 0 0 3px rgba($color-accent, 0.2);
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+  }
+
+  &__profile-wrap {
+    position: relative;
+  }
+
+  &__link {
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-text-secondary;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: $radius-sm;
+
+    &:hover {
+      background: rgba($color-accent, 0.12);
+      color: $color-primary;
+    }
+  }
+
+  &__bell {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: $color-bg;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: $color-text-secondary;
+    position: relative;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+
+  &__bell-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $color-danger;
+    border: 2px solid $color-bg-card;
+  }
+
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    border: 2px solid $color-border;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $color-gradient-light, $color-gradient-mid);
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+
+    span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      font-size: 13px;
+      font-weight: 700;
+      color: $color-primary-dark;
+    }
+  }
+
+  &__verified {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $color-success;
+    border: 2px solid $color-bg-card;
+    font-style: normal;
+  }
+}

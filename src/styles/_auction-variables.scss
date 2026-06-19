@@ -1,0 +1,44 @@
+@use "./palette" as p;
+
+// Re-map auction variables to the same palette as seller/home, so UI colors match.
+$color-primary-dark: p.$deep;
+$color-primary: p.$navy;
+$color-accent: p.$sky;
+$color-accent-mid: p.$teal;
+$color-gradient-light: p.$mist;
+$color-gradient-mid: p.$teal;
+$color-gradient-dark: p.$navy;
+
+$color-text: p.$deep;
+$color-text-muted: p.$ink-muted;
+$color-text-secondary: p.$steel;
+
+$color-border: p.$border;
+$color-border-light: p.$border-soft;
+$color-border-lighter: p.$border-soft;
+
+$color-bg: p.$surface-soft;
+$color-bg-card: p.$surface;
+$color-bg-sidebar: p.$surface-muted;
+
+$color-success: #16a34a;
+$color-success-bg: #dcfce7;
+$color-warning: #d97706;
+$color-warning-bg: #fef3c7;
+$color-danger: #ef4444;
+$color-danger-bg: #fee2e2;
+
+$color-gold: #b8860b;
+$color-gold-bg: #fef9e7;
+
+$radius-sm: p.$radius-sm;
+$radius-md: p.$radius-md;
+$radius-lg: p.$radius-lg;
+$radius-pill: p.$radius-pill;
+
+$shadow-sm: p.$shadow-sm;
+$shadow-md: p.$shadow-md;
+$shadow-lg: p.$shadow-lg;
+
+// Global ease used across auction SCSS.
+$ease: p.$ease;

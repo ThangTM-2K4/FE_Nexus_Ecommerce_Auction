@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { flushSync } from 'react-dom';
 import * as authService from '../services/authService';
 
 const AuthContext = createContext(null);
@@ -48,7 +49,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const updated = await authService.switchAccountMode(mode);
-      setUser(updated);
+      flushSync(() => setUser(updated));
       return updated;
     } finally {
       setLoading(false);

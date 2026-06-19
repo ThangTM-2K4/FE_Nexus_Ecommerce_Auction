@@ -1,0 +1,398 @@
+@use "../../../styles/_auction-variables" as *;
+
+.auc-detail {
+  &__breadcrumbs {
+    font-size: 12px;
+    color: $color-text-muted;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 32px;
+  }
+
+  &__main-image {
+    position: relative;
+    border-radius: $radius-lg;
+    overflow: hidden;
+    height: 420px;
+
+    img,
+    .auc-image {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: $color-primary-dark;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 4px;
+  }
+
+  &__thumbs {
+    display: flex;
+    gap: 10px;
+    margin: 12px 0 24px;
+
+    button {
+      width: 72px;
+      height: 72px;
+      border: 2px solid transparent;
+      border-radius: $radius-sm;
+      padding: 0;
+      overflow: hidden;
+      cursor: pointer;
+      background: none;
+
+      &.active { border-color: $color-primary; }
+
+      img,
+      .auc-image {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  &__specs {
+    h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: $color-primary-dark;
+      margin-bottom: 12px;
+    }
+
+    p {
+      font-size: 14px;
+      color: $color-text-muted;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+  }
+
+  &__specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    span {
+      display: block;
+      font-size: 11px;
+      color: $color-text-muted;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    strong {
+      font-size: 14px;
+      color: $color-primary-dark;
+    }
+  }
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__card {
+    background: $color-bg-card;
+    border: 1px solid $color-border-lighter;
+    border-radius: $radius-lg;
+    padding: 20px;
+
+    &--bid {
+      .label {
+        font-size: 11px;
+        color: $color-text-muted;
+        letter-spacing: 0.5px;
+      }
+
+      .price {
+        font-size: 32px;
+        font-weight: 700;
+        color: $color-primary-dark;
+        margin: 4px 0 16px;
+      }
+
+      .leader {
+        margin-bottom: 16px;
+
+        > span {
+          font-size: 11px;
+          color: $color-text-muted;
+          display: block;
+          margin-bottom: 6px;
+        }
+      }
+
+      .leader-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: $color-success-bg;
+        color: $color-success;
+        padding: 6px 12px 6px 6px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+
+        .leader-avatar {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+        }
+      }
+
+      .timer {
+        margin-bottom: 20px;
+
+        > span {
+          font-size: 11px;
+          color: $color-text-muted;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 4px;
+        }
+
+        strong {
+          font-size: 22px;
+          color: $color-danger;
+          display: block;
+          margin-bottom: 8px;
+        }
+      }
+
+      .timer-bar {
+        height: 4px;
+        background: $color-border-lighter;
+        border-radius: 2px;
+        overflow: hidden;
+
+        div {
+          height: 100%;
+          background: $color-danger;
+          border-radius: 2px;
+        }
+      }
+
+      .bid-form label {
+        font-size: 11px;
+        font-weight: 600;
+        color: $color-text-muted;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .bid-input {
+        display: flex;
+        align-items: center;
+        border: 1px solid $color-border;
+        border-radius: $radius-sm;
+        padding: 0 12px;
+        margin-bottom: 10px;
+        background: $color-bg;
+
+        span {
+          color: $color-text-muted;
+          font-weight: 600;
+        }
+
+        input {
+          flex: 1;
+          border: none;
+          background: none;
+          padding: 12px 8px;
+          font-size: 16px;
+          font-weight: 600;
+          color: $color-primary-dark;
+
+          &:focus { outline: none; }
+        }
+      }
+
+      .increments {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+
+        button {
+          flex: 1;
+          padding: 8px;
+          border: 1px solid $color-border;
+          border-radius: $radius-sm;
+          background: white;
+          font-size: 13px;
+          color: $color-text-muted;
+          cursor: pointer;
+
+          &:hover {
+            border-color: $color-primary;
+            color: $color-primary;
+          }
+        }
+      }
+
+      .confirm-btn {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: $radius-sm;
+        background: $color-primary-dark;
+        color: white;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+        &:hover { background: $color-primary; }
+      }
+
+      .disclaimer {
+        font-size: 11px;
+        color: $color-text-muted;
+        text-align: center;
+        margin-top: 10px;
+      }
+    }
+  }
+
+  &__title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: $color-primary-dark;
+      line-height: 1.3;
+    }
+
+    button {
+      background: none;
+      border: none;
+      color: $color-text-muted;
+      font-size: 18px;
+      cursor: pointer;
+
+      &:hover { color: $color-danger; }
+    }
+  }
+
+  &__seller {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    span {
+      display: block;
+      font-size: 11px;
+      color: $color-text-muted;
+      letter-spacing: 0.3px;
+    }
+
+    strong {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: $color-primary-dark;
+
+      svg { color: $color-primary; }
+    }
+  }
+
+  &__seller-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+
+    h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: $color-primary-dark;
+    }
+
+    a {
+      font-size: 12px;
+      color: $color-primary;
+      text-decoration: none;
+    }
+  }
+
+  .history-list {
+    list-style: none;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: $radius-sm;
+      margin-bottom: 6px;
+
+      &.leader { background: $color-success-bg; }
+
+      .history-user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .history-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      strong {
+        display: block;
+        font-size: 13px;
+        color: $color-primary-dark;
+      }
+
+      span {
+        font-size: 11px;
+        color: $color-text-muted;
+      }
+
+      em {
+        font-size: 14px;
+        font-weight: 700;
+        color: $color-primary-dark;
+        font-style: normal;
+      }
+    }
+  }
+}
+
+@media (max-width: 1000px) {
+  .auc-detail__grid { grid-template-columns: 1fr; }
+}

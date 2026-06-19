@@ -1,0 +1,71 @@
+@import '../../../styles/palette';
+
+.home-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: rgba($surface, 0.92);
+  border: 1px solid rgba($mist, 0.7);
+  border-radius: $radius-md;
+  padding: 16px 12px;
+  box-shadow: $shadow-sm;
+  align-self: start;
+  position: sticky;
+  top: 96px;
+
+  &__title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $ink-muted;
+    padding: 0 10px 10px;
+  }
+
+  &__menu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: $radius-sm;
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: $ink-muted;
+    text-decoration: none;
+    transition: background 0.2s $ease, color 0.2s $ease;
+
+    svg {
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      width: 16px;
+    }
+
+    &:hover {
+      background: rgba($sky, 0.12);
+      color: $accent-dark;
+    }
+
+    &.active {
+      background: linear-gradient(135deg, rgba($navy, 0.12), rgba($sky, 0.18));
+      color: $accent-dark;
+      font-weight: 700;
+    }
+
+    &.highlight {
+      color: $accent-dark;
+      font-weight: 600;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .home-sidebar {
+    display: none;
+  }
+}

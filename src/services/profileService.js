@@ -89,7 +89,7 @@ const saveProfile = (userId, profile) => {
 export const getProfile = async (userId) => {
   await mockDelay();
   const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
-  const allUsers = [...mockUsers, ...localUsers];
+  const allUsers = [...localUsers, ...mockUsers];
   const baseUser = allUsers.find((u) => u.id === userId);
   const stored = getStoredProfile(userId);
 
