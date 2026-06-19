@@ -1,0 +1,43 @@
+.seller-sidebar {
+  position: fixed;
+
+  left: 0;
+  top: 0;
+
+  width: 260px;
+  height: 100vh;
+
+  background: #001d39;
+
+  color: white;
+
+  padding: 20px;
+}
+
+.seller-sidebar h2 {
+  margin-bottom: 40px;
+}
+
+.seller-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-sidebar a {
+  color: white;
+  text-decoration: none;
+
+  padding: 14px;
+  border-radius: 12px;
+
+  transition: 0.3s;
+}
+
+.seller-sidebar a.active {
+  background: #0a4174;
+}
+
+.seller-sidebar a:hover {
+  background: #0a4174;
+}

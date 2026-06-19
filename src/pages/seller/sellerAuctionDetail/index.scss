@@ -1,0 +1,45 @@
+.detail-grid {
+  display: grid;
+
+  grid-template-columns: 2fr 1fr;
+
+  gap: 25px;
+
+  margin-bottom: 30px;
+}
+
+.product-card,
+.info-box,
+.bid-history {
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 20px;
+
+  box-shadow: 0 10px 25px rgba(0,0,0,.05);
+}
+
+.product-card img {
+  width: 100%;
+  border-radius: 15px;
+}
+
+.auction-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.info-box h4 {
+  color: #64748b;
+}
+
+.info-box h2 {
+  color: #001d39;
+}
+
+.bid-history table {
+  width: 100%;
+  margin-top: 20px;
+}
