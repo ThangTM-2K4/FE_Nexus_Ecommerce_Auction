@@ -1,0 +1,118 @@
+@import '../../../styles/palette';
+
+.header-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba($deep, 0.45);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.header-modal {
+  width: min(420px, 100%);
+  background: $surface;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+  overflow: hidden;
+}
+
+.header-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid $border-soft;
+
+  h3 {
+    font-size: 0.95rem;
+    color: $ink;
+  }
+}
+
+.header-modal-close {
+  border: 0;
+  background: transparent;
+  color: $ink-muted;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+.header-modal-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.header-modal-hint {
+  font-size: 0.82rem;
+  color: $ink-muted;
+  margin-bottom: 4px;
+
+  strong {
+    color: $ink;
+  }
+}
+
+.header-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid $border-soft;
+  border-radius: $radius-sm;
+  background: $surface-soft;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.2s $ease, background 0.2s $ease;
+
+  strong {
+    display: block;
+    font-size: 0.88rem;
+    color: $ink;
+  }
+
+  small {
+    display: block;
+    font-size: 0.72rem;
+    color: $ink-muted;
+    margin-top: 2px;
+  }
+
+  &:hover:not(.disabled) {
+    border-color: rgba($sky, 0.5);
+    background: rgba($sky, 0.08);
+  }
+
+  &.active {
+    border-color: $accent-dark;
+    background: rgba($sky, 0.12);
+  }
+
+  &.disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+.header-mode-option-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.header-mode-check {
+  margin-left: auto;
+  color: $accent-dark;
+  font-weight: 700;
+  font-size: 0.9rem;
+}

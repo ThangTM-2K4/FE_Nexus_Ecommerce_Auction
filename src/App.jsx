@@ -1,30 +1,31 @@
 import { Routes, Route } from 'react-router-dom';
 
-import LoginPage from './pages/loginPage';
-import RegisterPage from './pages/registerPage';
+import LoginPage from './pages/auth/loginPage';
+import RegisterPage from './pages/auth/registerPage';
 
-import HomePage from './pages/homePage';
-import ProfilePage from './pages/profilePage';
-import NotificationsPage from './pages/notificationsPage';
-import BecomeSellerPage from './pages/becomeSellerPage';
+import HomePage from './pages/homepage/homePage';
+import ProfilePage from './pages/user/profilePage';
+import NotificationsPage from './pages/user/notificationsPage';
+import BecomeSellerPage from './pages/seller/becomeSellerPage';
 
-import AdminDashboard from './pages/adminDashboard';
-import StaffDashboard from './pages/staffDashboard';
-import SellerDashboard from './pages/sellerDashboard';
-import BuyerDashboard from './pages/buyerDashboard';
-import AuthCallback from './pages/authCallback';
+import AdminDashboard from './pages/admin/adminDashboard';
+import StaffDashboard from './pages/staff/staffDashboard';
+import SellerDashboard from './pages/seller/sellerDashboard';
+import BuyerDashboard from './pages/user/buyerDashboard';
+import SellerHubRoutes from './config/SellerHubRoutes';
+import AuthCallback from './pages/auth/authCallback';
 
 import ProtectedRoute from './config/ProtectedRoute';
 import SellerRoute from './config/SellerRoute';
 
-import AuctionBrowsePage from "./auction/pages/browsePage";
-import AuctionDetailPage from "./auction/pages/detailPage";
-import AuctionProfilePage from "./auction/pages/profilePage";
-import AuctionSellerPage from "./auction/pages/sellerPage";
-import AuctionMyBidsPage from "./auction/pages/myBidsPage";
-import AuctionCreatePage from "./auction/pages/createPage";
-import AuctionSellerRoute from "./auction/components/AuctionSellerRoute";
-import AuctionBuyRoute from "./auction/components/AuctionBuyRoute";
+import AuctionBrowsePage from "./pages/auction/auctionBrowsePage";
+import AuctionDetailPage from "./pages/auction/auctionDetailPage";
+import AuctionProfilePage from "./pages/auction/auctionProfilePage";
+import AuctionSellerPage from "./pages/auction/auctionSellerPage";
+import AuctionMyBidsPage from "./pages/auction/auctionMyBidsPage";
+import AuctionCreatePage from "./pages/auction/auctionCreatePage";
+import AuctionSellerRoute from "./config/AuctionSellerRoute";
+import AuctionBuyRoute from "./config/AuctionBuyRoute";
 
 function App() {
   return (
@@ -66,6 +67,14 @@ function App() {
         element={
           <SellerRoute>
             <SellerDashboard />
+          </SellerRoute>
+        }
+      />
+      <Route
+        path="/seller-hub/*"
+        element={
+          <SellerRoute>
+            <SellerHubRoutes />
           </SellerRoute>
         }
       />
