@@ -1,22 +1,45 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import * as authService from '../services/authService';
 
 const AuthContext = createContext(null);
 
+const restoreSessionUser = () => {
+  if (authService.hadStoredSession() && !authService.isSessionValid()) {
+    authService.clearSession();
+    return null;
+  }
+
+  return authService.getCurrentUser();
+};
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => authService.getCurrentUser());
+  const navigate = useNavigate();
+  const [user, setUser] = useState(() => restoreSessionUser());
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const sessionExpired = authService.hadStoredSession() && !authService.isSessionValid();
+
+    if (sessionExpired) {
+      authService.clearSession();
+      setUser(null);
+
+      if (!window.location.pathname.includes('/login')) {
+        navigate('/login', { replace: true });
+      }
+      return;
+    }
+
     setUser(authService.getCurrentUser());
-  }, []);
+  }, [navigate]);
 
   const login = useCallback(async (loginValue, password) => {
     setLoading(true);
     try {
       const sessionUser = await authService.login(loginValue, password);
-      setUser(sessionUser);
+      flushSync(() => setUser(sessionUser));
       return sessionUser;
     } finally {
       setLoading(false);
@@ -34,7 +57,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const refreshUser = useCallback(() => {
-    const current = authService.getCurrentUser();
+    const current = restoreSessionUser();
     setUser(current);
     return current;
   }, []);
@@ -56,7 +79,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const isAuthenticated = Boolean(user);
+  const isAuthenticated = Boolean(user?.id);
   const isApprovedSeller = user?.sellerStatus === 'APPROVED';
   const currentMode = user?.currentMode || 'BUYER';
   const isBuyerMode = currentMode === 'BUYER';

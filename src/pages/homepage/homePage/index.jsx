@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import Header from '../../../components/homepage/header';
 import Footer from '../../../components/homepage/footer';
 import HomeSidebar from '../../../components/homepage/homeSidebar';
@@ -314,6 +315,7 @@ const loadMockProducts = () =>
 export default function HomePageContent() {
 	const [products, setProducts] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const { isAuthenticated } = useAuth();
 
 	useEffect(() => {
 		let mounted = true;
@@ -361,9 +363,11 @@ export default function HomePageContent() {
 								<span>Xem deal đang diễn ra</span>
 								<span className="btn-cta-effect__arrow" aria-hidden="true"> →</span>
 							</Link>
-							<Link to="/login" className="home-hero-btn home-hero-btn--ghost">
-								Đăng nhập
-							</Link>
+							{!isAuthenticated && (
+								<Link to="/login" className="home-hero-btn home-hero-btn--ghost">
+									Đăng nhập
+								</Link>
+							)}
 						</div>
 					</div>
 

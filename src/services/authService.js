@@ -1,134 +1,16 @@
-import { mockDelay } from './mockDelay';
+import api from '../config/api';
 
 const SESSION_KEY = 'user';
+const ACCESS_TOKEN_KEY = 'accessToken';
+const REFRESH_TOKEN_KEY = 'refreshToken';
+const EXPIRES_AT_KEY = 'expiresAt';
 
-export const mockUsers = [
-  {
-    id: 1,
-    email: 'admin@gmail.com',
-    phone: '0000000001',
-    password: '123456',
-    role: 'ADMIN',
-    fullName: 'Admin User',
-    username: 'admin',
-    isEmailVerified: true,
-    isPhoneVerified: true,
-    sellerStatus: null,
-    currentMode: 'BUYER',
-  },
-  {
-    id: 2,
-    email: 'staff@gmail.com',
-    phone: '0000000002',
-    password: '123456',
-    role: 'STAFF',
-    fullName: 'Staff User',
-    username: 'staff',
-    isEmailVerified: true,
-    isPhoneVerified: true,
-    sellerStatus: null,
-    currentMode: 'BUYER',
-  },
-  {
-  id: 3,
-  email: 'seller@gmail.com',
-  phone: '0000000003',
-  password: '123456',
-  role: 'SELLER',
-  fullName: 'Verified Seller',
-  username: 'verifiedseller',
-  isEmailVerified: true,
-  isPhoneVerified: true,
-  sellerStatus: 'APPROVED',
-  currentMode: 'SELLER',
-  bankAccount: {
-    bankName: 'Vietcombank',
-    accountNumber: '123456789',
-  },
-},
-  {
-    id: 4,
-    email: 'buyer@gmail.com',
-    phone: '0000000004',
-    password: '123456',
-    role: 'BUYER',
-    fullName: 'John Doe',
-    username: 'johndoe',
-    isEmailVerified: true,
-    isPhoneVerified: false,
-    sellerStatus: null,
-    currentMode: 'BUYER',
-  },
-];
+const SESSION_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 
-const toSessionUser = (user) => {
-  const { password, ...session } = user;
-  return session;
-};
-
-export const login = async (loginValue, password) => {
-  await mockDelay(800);
-
-  const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
-  const allUsers = [...localUsers, ...mockUsers];
-
-  const user = allUsers.find(
-    (u) =>
-      (u.phone === loginValue || u.email === loginValue) &&
-      u.password === password
-  );
-
-  if (!user) {
-    throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác');
-  }
-
-  const sessionUser = toSessionUser(user);
-  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-  return sessionUser;
-};
-
-export const register = async (userData) => {
-  await mockDelay(800);
-
-  const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
-  const allUsers = [...localUsers, ...mockUsers];
-
-  const existedUser = allUsers.find(
-    (u) => u.email === userData.email || u.phone === userData.phone
-  );
-
-  if (existedUser) {
-    throw new Error('Email hoặc số điện thoại đã tồn tại');
-  }
-
-  const newUser = {
-    id: Date.now(),
-    fullName: userData.fullName,
-    email: userData.email,
-    phone: userData.phone,
-    password: userData.password,
-    role: userData.role || 'BUYER',
-    username: userData.email.split('@')[0],
-    isEmailVerified: false,
-    isPhoneVerified: false,
-    sellerStatus: null,
-    currentMode: 'BUYER',
-  };
-
-  localUsers.push(newUser);
-  localStorage.setItem('mockUsers', JSON.stringify(localUsers));
-
-  return toSessionUser(newUser);
-};
-
-export const logout = async () => {
-  await mockDelay(200);
-  localStorage.removeItem(SESSION_KEY);
-};
-
-export const getCurrentUser = () => {
+const readStoredUser = () => {
   const raw = localStorage.getItem(SESSION_KEY);
   if (!raw) return null;
+
   try {
     return JSON.parse(raw);
   } catch {
@@ -136,31 +18,246 @@ export const getCurrentUser = () => {
   }
 };
 
-export const updateSessionUser = (updates) => {
-  const current = getCurrentUser();
-  if (!current) return null;
+const unwrapAuthPayload = (payload) => {
+  if (!payload || typeof payload !== 'object') return null;
 
-  const updated = { ...current, ...updates };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
-
-  const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
-  const index = localUsers.findIndex((u) => u.id === current.id);
-  if (index !== -1) {
-    localUsers[index] = { ...localUsers[index], ...updates };
-    localStorage.setItem('mockUsers', JSON.stringify(localUsers));
-  } else {
-    const staticUser = mockUsers.find((u) => u.id === current.id);
-    if (staticUser) {
-      localUsers.push({ ...staticUser, ...updates });
-      localStorage.setItem('mockUsers', JSON.stringify(localUsers));
-    }
+  if (
+    payload.data &&
+    typeof payload.data === 'object' &&
+    (payload.data.accessToken || payload.data.user || payload.data.userId || payload.data.id)
+  ) {
+    return payload.data;
   }
 
+  if (payload.result && typeof payload.result === 'object') {
+    return payload.result;
+  }
+
+  return payload;
+};
+
+const extractUserSource = (authPayload) => {
+  if (!authPayload) return null;
+
+  if (authPayload.user && typeof authPayload.user === 'object') {
+    return authPayload.user;
+  }
+
+  if (authPayload.userInfo && typeof authPayload.userInfo === 'object') {
+    return authPayload.userInfo;
+  }
+
+  if (authPayload.userId || authPayload.id || authPayload.email || authPayload.fullName) {
+    const { accessToken, refreshToken, token, ...rest } = authPayload;
+    return rest;
+  }
+
+  return null;
+};
+
+const normalizeSessionUser = (userSource, previousUser = null) => {
+  if (!userSource) return previousUser;
+
+  const id = userSource.id ?? userSource.userId ?? previousUser?.id ?? previousUser?.userId;
+  const role =
+    userSource.role ??
+    userSource.roles?.[0] ??
+    previousUser?.role ??
+    'BUYER';
+
+  return {
+    ...previousUser,
+    ...userSource,
+    id,
+    fullName: userSource.fullName ?? userSource.name ?? previousUser?.fullName ?? '',
+    email: userSource.email ?? previousUser?.email ?? '',
+    phone: userSource.phone ?? userSource.phoneNumber ?? previousUser?.phone ?? '',
+    username:
+      userSource.username ??
+      userSource.email?.split('@')[0] ??
+      previousUser?.username ??
+      '',
+    role,
+    roles: userSource.roles ?? previousUser?.roles,
+    sellerStatus: userSource.sellerStatus ?? previousUser?.sellerStatus ?? null,
+    currentMode: userSource.currentMode ?? previousUser?.currentMode ?? 'BUYER',
+    isEmailVerified:
+      userSource.isEmailVerified ??
+      userSource.emailVerified ??
+      previousUser?.isEmailVerified ??
+      false,
+    isPhoneVerified:
+      userSource.isPhoneVerified ??
+      userSource.phoneVerified ??
+      previousUser?.isPhoneVerified ??
+      false,
+  };
+};
+
+const saveSession = (payload) => {
+  const authPayload = unwrapAuthPayload(payload);
+  if (!authPayload) return null;
+
+  const previousUser = readStoredUser();
+  const userSource = extractUserSource(authPayload);
+  const user = normalizeSessionUser(userSource, previousUser);
+
+  const accessToken = authPayload.accessToken ?? authPayload.token;
+  const refreshToken = authPayload.refreshToken;
+
+  if (user?.id) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  }
+
+  if (accessToken) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  }
+
+  if (refreshToken) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
+
+  localStorage.setItem(EXPIRES_AT_KEY, String(Date.now() + SESSION_DURATION_MS));
+
+  return user;
+};
+
+export const clearSession = () => {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(EXPIRES_AT_KEY);
+};
+
+export const isSessionValid = () => {
+  const expiresAt = localStorage.getItem(EXPIRES_AT_KEY);
+  if (!expiresAt) return false;
+  return Date.now() < Number(expiresAt);
+};
+
+export const hadStoredSession = () => {
+  return Boolean(
+    localStorage.getItem(EXPIRES_AT_KEY) ||
+      localStorage.getItem(ACCESS_TOKEN_KEY) ||
+      localStorage.getItem(SESSION_KEY)
+  );
+};
+
+export const login = async (loginValue, password) => {
+  const { data } = await api.post('/auth/login', {
+    emailOrPhone: loginValue,
+    password,
+  });
+
+  if (!data) {
+    throw new Error('Đăng nhập thất bại');
+  }
+
+  const user = saveSession(data);
+
+  if (!user?.id) {
+    throw new Error('Đăng nhập thất bại - không nhận được thông tin người dùng');
+  }
+
+  return user;
+};
+
+export const register = async ({ fullName, email, phone, password }) => {
+  const { data } = await api.post('/auth/register', {
+    fullName,
+    email,
+    phoneNumber: phone,
+    password,
+  });
+
+  return data;
+};
+
+export const verifyEmail = async ({ email, otp }) => {
+  const { data } = await api.post('/auth/verify-email', {
+    email,
+    otpCode: otp,
+  });
+
+  return data;
+};
+
+export const resendEmailOtp = async (email) => {
+  const { data } = await api.post('/auth/verify-email', {
+    email,
+    otpCode: '',
+  });
+
+  return data;
+};
+
+export const getGoogleLoginUrl = () => `${api.defaults.baseURL}/auth/google/login`;
+
+export const exchangeCode = async (code) => {
+  const { data } = await api.post('/auth/exchange-code', { code });
+
+  if (!data) {
+    throw new Error('Đăng nhập Google thất bại');
+  }
+
+  const user = saveSession(data);
+
+  if (!user?.id) {
+    throw new Error('Đăng nhập Google thất bại');
+  }
+
+  return user;
+};
+
+export const refreshToken = async () => {
+  const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+  if (!storedRefreshToken) {
+    throw new Error('Refresh token không tồn tại');
+  }
+
+  const { data } = await api.post('/auth/refresh-token', {
+    refreshToken: storedRefreshToken,
+  });
+
+  if (data) {
+    saveSession(data);
+  }
+
+  return data;
+};
+
+export const logout = async () => {
+  const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+  try {
+    if (storedRefreshToken) {
+      await api.post('/auth/logout', { refreshToken: storedRefreshToken });
+    }
+  } catch {
+    /* clear local session even when API fails */
+  }
+
+  clearSession();
+};
+
+export const getCurrentUser = () => {
+  if (!isSessionValid()) {
+    return null;
+  }
+
+  return readStoredUser();
+};
+
+export const updateSessionUser = (updates) => {
+  const current = getCurrentUser() ?? readStoredUser();
+  if (!current) return null;
+
+  const updated = normalizeSessionUser({ ...current, ...updates }, current);
+  localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
   return updated;
 };
 
 export const switchAccountMode = async (mode) => {
-  await mockDelay(200);
   const current = getCurrentUser();
   if (!current) throw new Error('Chưa đăng nhập');
 
@@ -169,15 +266,4 @@ export const switchAccountMode = async (mode) => {
   }
 
   return updateSessionUser({ currentMode: mode });
-};
-
-export const syncUserFromStorage = (userId) => {
-  const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
-  const allUsers = [...localUsers, ...mockUsers];
-  const stored = allUsers.find((u) => u.id === userId);
-  if (!stored) return getCurrentUser();
-
-  const sessionUser = toSessionUser(stored);
-  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-  return sessionUser;
 };

@@ -72,7 +72,7 @@
     border-radius: $radius-sm;
     font-size: 0.82rem;
     font-weight: 500;
-    color: $ink;
+    color: $ink !important;
     text-decoration: none;
     transition: background 0.2s $ease;
     border: 0;

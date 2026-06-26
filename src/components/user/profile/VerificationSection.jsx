@@ -8,9 +8,8 @@ export default function VerificationSection({ userId, profile, onUpdate }) {
   const handleVerifyEmail = async () => {
     setLoading('email');
     try {
-      const updated = await profileService.verifyEmail(userId);
-      onUpdate(updated);
-      toast.success('Xác minh email thành công (mock)');
+      await profileService.requestEmailVerification(userId);
+      toast.success('Mã OTP đã được gửi đến email của bạn');
     } catch {
       toast.error('Xác minh email thất bại');
     } finally {
@@ -23,7 +22,7 @@ export default function VerificationSection({ userId, profile, onUpdate }) {
     try {
       const updated = await profileService.verifyNationalId(userId);
       onUpdate(updated);
-      toast.success('Xác minh CMND/CCCD thành công (mock)');
+      toast.success('Xác minh CMND/CCCD thành công');
     } catch {
       toast.error('Xác minh CMND/CCCD thất bại');
     } finally {
@@ -36,7 +35,7 @@ export default function VerificationSection({ userId, profile, onUpdate }) {
     try {
       const updated = await profileService.verifyPhone(userId);
       onUpdate(updated);
-      toast.success('Xác minh số điện thoại thành công (mock)');
+      toast.success('Xác minh số điện thoại thành công');
     } catch {
       toast.error('Xác minh số điện thoại thất bại');
     } finally {

@@ -26,7 +26,7 @@ export default function ProfileDropdown({ onClose }) {
   const handleLogout = async () => {
     await logout();
     onClose?.();
-    navigate('/');
+    navigate('/login', { replace: true });
   };
 
   const handleSwitchMode = async (mode) => {

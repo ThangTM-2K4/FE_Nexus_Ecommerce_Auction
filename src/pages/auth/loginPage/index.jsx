@@ -4,6 +4,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../../context/AuthContext';
+import { getGoogleLoginUrl } from '../../../services/authService';
 import './index.scss';
 
 function LoginPage() {
@@ -87,8 +88,7 @@ function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href =
-      "http://localhost:5101/api/v1/auth/google/login";
+    window.location.href = getGoogleLoginUrl();
   };
 
   const handleLogin = async (e) => {
@@ -105,13 +105,14 @@ function LoginPage() {
       setLoading(true);
 
       const user = await login(formData.login, formData.password);
+      const role = user?.roles?.[0] || user?.role;
 
       toast.success(
         "Đăng nhập thành công"
       );
 
       setTimeout(() => {
-        switch (user.role) {
+        switch (role) {
           case "ADMIN":
             navigate("/admin");
             break;
@@ -137,28 +138,24 @@ function LoginPage() {
         }
       }, 1000);
     } catch (err) {
+      const message =
+        err.response?.data?.message || err.message || 'Đăng nhập thất bại';
 
       const newErrors = {};
 
-      if (
-        err.message?.includes("Email")
-      ) {
-        newErrors.login =
-          "Email không tồn tại";
+      if (message.includes('Email') || message.includes('email')) {
+        newErrors.login = 'Email không tồn tại';
       }
 
-      if (
-        err.message?.includes("Password")
-      ) {
-        newErrors.password =
-          "Mật khẩu không chính xác";
+      if (message.includes('Password') || message.includes('mật khẩu')) {
+        newErrors.password = 'Mật khẩu không chính xác';
       }
 
       setErrors(newErrors);
 
-      toast.error(
-        err.message || "Đăng nhập thất bại"
-      );
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 

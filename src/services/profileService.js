@@ -1,74 +1,7 @@
-import { mockDelay } from './mockDelay';
-import { mockUsers, updateSessionUser } from './authService';
+import api from '../config/api';
+import { getCurrentUser, updateSessionUser } from './authService';
 
-const profileKey = (userId) => `mockProfile_${userId}`;
-
-const defaultProfiles = {
-  1: {
-    avatar: null,
-    fullName: 'Admin User',
-    username: 'admin',
-    email: 'admin@gmail.com',
-    phone: '0000000001',
-    dateOfBirth: '1990-01-15',
-    gender: 'male',
-    address: '123 Admin Street, Hà Nội',
-    isEmailVerified: true,
-    isPhoneVerified: true,
-    isNationalIdVerified: true,
-    bankAccount: {
-      bankName: 'Vietcombank',
-      accountNumber: '0123456789',
-      accountHolder: 'Admin User',
-    },
-  },
-  2: {
-    avatar: null,
-    fullName: 'Staff User',
-    username: 'staff',
-    email: 'staff@gmail.com',
-    phone: '0000000002',
-    dateOfBirth: '1992-06-20',
-    gender: 'female',
-    address: '456 Staff Avenue, TP.HCM',
-    isEmailVerified: true,
-    isPhoneVerified: true,
-    isNationalIdVerified: true,
-    bankAccount: null,
-  },
-  3: {
-    avatar: null,
-    fullName: 'Verified Seller',
-    username: 'verifiedseller',
-    email: 'seller@gmail.com',
-    phone: '0000000003',
-    dateOfBirth: '1988-03-10',
-    gender: 'male',
-    address: '789 Seller Road, Đà Nẵng',
-    isEmailVerified: true,
-    isPhoneVerified: true,
-    isNationalIdVerified: true,
-    bankAccount: {
-      bankName: 'Techcombank',
-      accountNumber: '9876543210',
-      accountHolder: 'Verified Seller',
-    },
-  },
-  4: {
-    avatar: null,
-    fullName: 'John Doe',
-    username: 'johndoe',
-    email: 'buyer@gmail.com',
-    phone: '0000000004',
-    dateOfBirth: '1995-11-25',
-    gender: 'male',
-    address: '12 Buyer Lane, Hà Nội',
-    isEmailVerified: true,
-    isPhoneVerified: false,
-    isNationalIdVerified: false,
-    bankAccount: null,
-  },
-};
+const profileKey = (userId) => `profile_${userId}`;
 
 const getStoredProfile = (userId) => {
   const raw = localStorage.getItem(profileKey(userId));
@@ -79,37 +12,37 @@ const getStoredProfile = (userId) => {
       /* fall through */
     }
   }
-  return defaultProfiles[userId] || null;
+  return null;
 };
 
 const saveProfile = (userId, profile) => {
   localStorage.setItem(profileKey(userId), JSON.stringify(profile));
 };
 
-export const getProfile = async (userId) => {
-  await mockDelay();
-  const localUsers = JSON.parse(localStorage.getItem('mockUsers')) || [];
-  const allUsers = [...localUsers, ...mockUsers];
-  const baseUser = allUsers.find((u) => u.id === userId);
-  const stored = getStoredProfile(userId);
+const buildProfileFromUser = (user) => ({
+  avatar: user.avatar || null,
+  fullName: user.fullName || '',
+  username: user.username || '',
+  email: user.email || '',
+  phone: user.phone || user.phoneNumber || '',
+  dateOfBirth: user.dateOfBirth || '',
+  gender: user.gender || '',
+  address: user.address || '',
+  isEmailVerified: user.isEmailVerified ?? false,
+  isPhoneVerified: user.isPhoneVerified ?? false,
+  isNationalIdVerified: user.isNationalIdVerified ?? false,
+  bankAccount: user.bankAccount || null,
+});
 
+export const getProfile = async (userId) => {
+  const stored = getStoredProfile(userId);
   if (stored) return stored;
 
-  if (baseUser) {
-    const profile = {
-      avatar: null,
-      fullName: baseUser.fullName,
-      username: baseUser.username,
-      email: baseUser.email,
-      phone: baseUser.phone,
-      dateOfBirth: '',
-      gender: '',
-      address: '',
-      isEmailVerified: baseUser.isEmailVerified,
-      isPhoneVerified: baseUser.isPhoneVerified,
-      isNationalIdVerified: false,
-      bankAccount: null,
-    };
+  const sessionUser = getCurrentUser();
+  const sessionUserId = sessionUser?.id ?? sessionUser?.userId;
+
+  if (sessionUser && sessionUserId === userId) {
+    const profile = buildProfileFromUser(sessionUser);
     saveProfile(userId, profile);
     return profile;
   }
@@ -118,7 +51,6 @@ export const getProfile = async (userId) => {
 };
 
 export const updateProfile = async (userId, data) => {
-  await mockDelay();
   const current = await getProfile(userId);
   const updated = { ...current, ...data };
   saveProfile(userId, updated);
@@ -135,28 +67,30 @@ export const updateProfile = async (userId, data) => {
   return updated;
 };
 
-export const verifyEmail = async (userId) => {
-  await mockDelay(1200);
-  return updateProfile(userId, { isEmailVerified: true });
+export const requestEmailVerification = async (userId) => {
+  const profile = await getProfile(userId);
+
+  await api.post('/auth/verify-email', {
+    email: profile.email,
+    otpCode: '',
+  });
+
+  return profile;
 };
 
 export const verifyPhone = async (userId) => {
-  await mockDelay(1200);
   return updateProfile(userId, { isPhoneVerified: true });
 };
 
 export const verifyNationalId = async (userId) => {
-  await mockDelay(1200);
   return updateProfile(userId, { isNationalIdVerified: true });
 };
 
 export const saveBankAccount = async (userId, bankAccount) => {
-  await mockDelay();
   return updateProfile(userId, { bankAccount });
 };
 
 export const removeBankAccount = async (userId) => {
-  await mockDelay();
   return updateProfile(userId, { bankAccount: null });
 };
 
@@ -183,6 +117,5 @@ const mockActivity = {
 };
 
 export const getActivityHistory = async () => {
-  await mockDelay();
   return mockActivity;
 };

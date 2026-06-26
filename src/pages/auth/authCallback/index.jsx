@@ -1,89 +1,57 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useAuth } from '../../../context/AuthContext';
+import { exchangeCode } from '../../../services/authService';
 
 function AuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   useEffect(() => {
-    const code =
-      searchParams.get("code");
+    const code = searchParams.get("code");
 
     if (!code) {
-      navigate("/");
+      navigate("/login?error=google_login_failed", { replace: true });
       return;
     }
 
-    exchangeCode(code);
-  }, []);
+    const handleExchange = async () => {
+      try {
+        const user = await exchangeCode(code);
+        refreshUser();
 
-  const exchangeCode = async (
-    code
-  ) => {
-    try {
-      const response = await fetch(
-        "http://localhost:5101/api/v1/auth/exchange-code",
-        {
-          method: "POST",
+        const role = user?.roles?.[0] || user?.role;
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+        switch (role) {
+          case "ADMIN":
+            navigate("/admin", { replace: true });
+            break;
 
-          body: JSON.stringify({
-            code,
-          }),
+          case "STAFF":
+            navigate("/staff", { replace: true });
+            break;
+
+          case "SELLER":
+            navigate("/seller-hub", { replace: true });
+            break;
+
+          case "BUYER":
+            navigate("/", { replace: true });
+            break;
+
+          default:
+            navigate("/", { replace: true });
         }
-      );
-
-      const data =
-        await response.json();
-
-      localStorage.setItem(
-        "accessToken",
-        data.accessToken
-      );
-
-      localStorage.setItem(
-        "refreshToken",
-        data.refreshToken
-      );
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
-
-      const role =
-        data.user.roles?.[0];
-
-      switch (role) {
-        case "ADMIN":
-          navigate("/admin");
-          break;
-
-        case "STAFF":
-          navigate("/staff");
-          break;
-
-        case "SELLER":
-          navigate("/seller-hub");
-          break;
-
-        case "BUYER":
-          navigate("/buyer");
-          break;
-
-        default:
-          navigate("/");
+      } catch {
+        toast.error("Đăng nhập Google thất bại");
+        navigate("/login?error=google_login_failed", { replace: true });
       }
-    } catch (error) {
-      navigate(
-        "/?error=google_login_failed"
-      );
-    }
-  };
+    };
+
+    handleExchange();
+  }, [searchParams, navigate, refreshUser]);
 
   return (
     <div>
