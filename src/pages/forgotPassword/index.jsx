@@ -90,7 +90,7 @@ function ForgotPasswordPage() {
         <span
           className="back-login"
           onClick={() =>
-            navigate("/")
+            navigate("/login")
           }
         >
           ← Quay lại đăng nhập

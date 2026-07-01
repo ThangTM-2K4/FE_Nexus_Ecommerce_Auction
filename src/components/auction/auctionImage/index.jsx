@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { auctionImages } from "../../../data/auctionImages";
 import "./index.scss";
 
@@ -9,6 +9,10 @@ const AuctionImage = ({
   ...props
 }) => {
   const [imgSrc, setImgSrc] = useState(src);
+
+  useEffect(() => {
+    setImgSrc(src);
+  }, [src]);
 
   return (
     <img
@@ -27,4 +31,3 @@ const AuctionImage = ({
 };
 
 export default AuctionImage;
-

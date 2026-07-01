@@ -1,5 +1,4 @@
-@import '../../../styles/palette';
-
+@use "../../../styles/palette" as *;
 .footer {
   position: relative;
   margin-top: 5rem;

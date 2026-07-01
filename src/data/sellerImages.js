@@ -1,16 +1,25 @@
-const base = "/images/auction";
+const AVATAR = "/images/avatars";
+const BANNER = "/images/banners";
+const WATCH = "/images/products/watches";
+const ELECTRONIC = "/images/products/electronics";
+const COLLECTIBLE = "/images/products/collectibles";
+const ARTWORK = "/images/products/artworks";
 
 export const sellerImages = {
-  hero: `${base}/hero.jpg`,
-  seller: `${base}/avatar-seller.jpg`,
-  macbook: `${base}/macbook.jpg`,
-  iphone: `${base}/iphone.jpg`,
-  rolex: `${base}/rolex.jpg`,
-  omega: `${base}/omega.jpg`,
-  pokemon: `${base}/pokemon.jpg`,
-  painting: `${base}/painting.jpg`,
-  leica: `${base}/leica.jpg`,
-  createBg: `${base}/create-bg.jpg`,
-  catTech: `${base}/cat-tech.jpg`,
-  catFashion: `${base}/cat-fashion.jpg`,
+  banner: `${BANNER}/hero.jpg`,
+
+  seller: `${AVATAR}/avatar-seller.jpg`,
+
+  rolex: `${WATCH}/rolex.jpg`,
+  rolexDatejust: `${WATCH}/rolex-datejust.jpg`,
+  omega: `${WATCH}/omega.jpg`,
+
+  iphone: `${ELECTRONIC}/iphone.jpg`,
+  ipad: `${ELECTRONIC}/ipad.jpg`,
+  macbook: `${ELECTRONIC}/macbook.jpg`,
+
+  leica: `${COLLECTIBLE}/leica.jpg`,
+  pokemon: `${COLLECTIBLE}/pokemon.jpg`,
+
+  painting: `${ARTWORK}/painting.jpg`,
 };

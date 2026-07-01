@@ -1,5 +1,4 @@
 import './index.scss';
-import logoImage from '../../../assets/logo.png';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
@@ -157,7 +156,11 @@ export default function Header() {
         <div className="header-shell header-main-shell">
           <Link to="/" className="header-brand" aria-label="Shop Auction — Trang chủ">
             <span className="header-brand-mark">
-              <img className="header-brand-image" src={logoImage} alt="" />
+               <img
+                  className="header-brand-image"
+                  src="/images/logo/logo.png"
+                  alt="Shop Auction"
+                />
             </span>
             <span className="header-brand-text">
               <strong>

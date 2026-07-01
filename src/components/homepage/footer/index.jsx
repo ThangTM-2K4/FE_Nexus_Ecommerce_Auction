@@ -1,5 +1,5 @@
 import './index.scss';
-import logoImage from '../../../assets/Logo.png';
+
 import { Link } from 'react-router-dom';
 
 const FOOTER_STATS = [
@@ -17,7 +17,11 @@ export default function Footer() {
         <section className="footer-brand" aria-labelledby="footer-brand-heading">
           <Link to="/" className="footer-logo" aria-label="Shop Auction — Trang chủ">
             <span className="footer-logo-mark">
-              <img className="footer-logo-image" src={logoImage} alt="" />
+              <img
+                className="footer-logo-image"
+                src="/images/logo/logo.png"
+                alt="Shop Auction"
+              />
             </span>
             <span className="footer-logo-text">
               <strong>
