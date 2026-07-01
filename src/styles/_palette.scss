@@ -121,17 +121,30 @@ $color-bg: $surface;
 $color-surface: $surface;
 $color-surface-soft: $surface-soft;
 $color-surface-muted: $surface-muted;
+$color-bg-card: $surface;
+$color-bg-sidebar: $surface-muted;
 
 $color-text: $ink;
 $color-text-soft: $ink-soft;
 $color-text-muted: $ink-muted;
+$color-text-secondary: $steel;
 
-$color-primary: $accent;
-$color-primary-dark: $accent-dark;
+$color-primary: $navy;
+$color-primary-dark: $deep;
 $color-secondary: $accent-mid;
+$color-accent: $sky;
+$color-accent-mid: $teal;
 
 $color-border: $border;
 $color-border-soft: $border-soft;
+$color-border-light: $border-soft;
+
+$color-gradient-light: $mist;
+$color-gradient-mid: $teal;
+
+$color-success-bg: #dcfce7;
+$color-warning-bg: #fef3c7;
+$color-danger-bg: #fee2e2;
 
 $color-success: #22c55e;
 $color-warning: #f59e0b;

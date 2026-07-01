@@ -1,0 +1,36 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-kpi {
+  background: $color-bg;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  padding: 16px;
+
+  span {
+    display: block;
+    font-size: 12px;
+    color: $color-text-muted;
+    margin-bottom: 6px;
+  }
+
+  strong {
+    font-size: 22px;
+    color: $color-primary-dark;
+  }
+
+  small {
+    display: block;
+    font-size: 11px;
+    color: $color-text-muted;
+    margin-top: 4px;
+  }
+
+  &.highlight {
+    background: linear-gradient(135deg, rgba($color-accent, 0.12), rgba($color-accent-mid, 0.08));
+    border-color: rgba($color-accent, 0.35);
+  }
+
+  &.warn strong {
+    color: $color-warning;
+  }
+}

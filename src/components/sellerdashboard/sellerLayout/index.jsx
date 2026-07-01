@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import SellerHeader from "../sellerHeader";
 import SellerSidebar from "../sellerSidebar";
-import "../../../styles/palette.scss";
+import "../../../styles/seller/_dashboard.scss";
 import "./index.scss";
 
 const SellerLayout = () => {

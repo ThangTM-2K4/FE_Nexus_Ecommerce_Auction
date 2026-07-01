@@ -15,8 +15,22 @@ import ProfilePage from "./pages/user/profilePage";
 import NotificationsPage from "./pages/user/notificationsPage";
 import BuyerDashboard from "./pages/user/buyerDashboard";
 
+import BecomeSellerPage from "./pages/seller/becomeSellerPage";
+import SellerDashboard from "./pages/seller/sellerDashboard";
+import SellerHubRoutes from "./config/SellerHubRoutes";
+
 import AdminDashboard from "./pages/admin/adminDashboard";
-import StaffDashboard from "./pages/staff/staffDashboard";
+
+import StaffLayout from "./components/staff/staffLayout";
+import StaffOverview from "./pages/staff/staffOverview";
+import StaffSellerReview from "./pages/staff/staffSellerReview";
+import StaffAuctionModeration from "./pages/staff/staffAuctionModeration";
+import StaffDisputes from "./pages/staff/staffDisputes";
+import {
+  StaffOrders,
+  StaffReports,
+  StaffNotifications,
+} from "./pages/staff/staffPlaceholder";
 
 import AuctionBrowsePage from "./pages/auction/auctionBrowsePage";
 import AuctionDetailPage from "./pages/auction/auctionDetailPage";
@@ -26,6 +40,7 @@ import AuctionMyBidsPage from "./pages/auction/auctionMyBidsPage";
 import AuctionCreatePage from "./pages/auction/auctionCreatePage";
 
 import ProtectedRoute from "./config/ProtectedRoute";
+import SellerRoute from "./config/SellerRoute";
 
 function App() {
   return (
@@ -71,6 +86,15 @@ function App() {
           }
         />
 
+        <Route
+          path="/profile/become-seller"
+          element={
+            <ProtectedRoute>
+              <BecomeSellerPage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Buyer */}
         <Route path="/buyer" element={<BuyerDashboard />} />
 
@@ -85,10 +109,70 @@ function App() {
         {/* Admin */}
         <Route path="/admin" element={<AdminDashboard />} />
 
-        {/* Staff */}
-        <Route path="/staff" element={<StaffDashboard />} />
-
       </Route>
+
+   {/* seller - dã ket noi api }
+      <Route
+        path="/seller"
+        element={
+          <SellerRoute>
+            <SellerDashboard />
+          </SellerRoute>
+        }
+      />
+      <Route
+        path="/seller-hub/*"
+        element={
+          <SellerRoute>
+            <SellerHubRoutes />
+          </SellerRoute>
+        }
+      />
+    */}
+
+    {/*chạy thử seller hub */}
+    <Route
+      path="/seller"
+      element={<SellerDashboard />}
+    />
+
+    <Route
+      path="/seller-hub/*"
+      element={<SellerHubRoutes />}
+    />
+
+
+      {/* Staff Hub — kết nối API  
+      <Route
+        path="/staff"
+        element={
+          <ProtectedRoute allowedRoles={["STAFF", "ADMIN"]}>
+            <StaffLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<StaffOverview />} />
+        <Route path="overview" element={<StaffOverview />} />
+        <Route path="seller-review" element={<StaffSellerReview />} />
+        <Route path="auctions" element={<StaffAuctionModeration />} />
+        <Route path="disputes" element={<StaffDisputes />} />
+        <Route path="orders" element={<StaffOrders />} />
+        <Route path="reports" element={<StaffReports />} />
+        <Route path="notifications" element={<StaffNotifications />} />
+      </Route>
+      */}
+      
+{/*chạy thử staff hub */}
+    <Route path="/staff" element={<StaffLayout />}>
+      <Route index element={<StaffOverview />} />
+      <Route path="overview" element={<StaffOverview />} />
+      <Route path="seller-review" element={<StaffSellerReview />} />
+      <Route path="auctions" element={<StaffAuctionModeration />} />
+      <Route path="disputes" element={<StaffDisputes />} />
+      <Route path="orders" element={<StaffOrders />} />
+      <Route path="reports" element={<StaffReports />} />
+      <Route path="notifications" element={<StaffNotifications />} />
+    </Route>
 
     </Routes>
   );

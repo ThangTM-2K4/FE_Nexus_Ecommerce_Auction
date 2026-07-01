@@ -1,0 +1,92 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-auctions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__empty {
+    padding: 40px;
+    text-align: center;
+    color: $color-text-muted;
+  }
+
+  &__table-wrap {
+    overflow-x: auto;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-sm;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th,
+    td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid $color-border-light;
+    }
+
+    th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: $color-text-muted;
+      background: $color-bg;
+    }
+
+    tbody tr:hover {
+      background: rgba($color-accent, 0.04);
+    }
+  }
+
+  &__severity {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+
+    &--high {
+      background: rgba($color-danger, 0.12);
+      color: $color-danger;
+    }
+
+    &--medium {
+      background: rgba($color-warning, 0.15);
+      color: $color-warning;
+    }
+
+    &--low {
+      background: rgba($color-text-muted, 0.12);
+      color: $color-text-muted;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    white-space: nowrap;
+
+    button {
+      border: none;
+      padding: 6px 12px;
+      border-radius: $radius-sm;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: $color-bg;
+      border: 1px solid $color-border;
+      color: $color-danger;
+
+      &.keep {
+        background: linear-gradient(135deg, $color-primary, $color-accent-mid);
+        color: #fff;
+        border: none;
+      }
+    }
+  }
+}

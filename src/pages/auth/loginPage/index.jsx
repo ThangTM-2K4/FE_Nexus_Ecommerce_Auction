@@ -118,7 +118,7 @@ function LoginPage() {
             break;
 
           case "STAFF":
-            navigate("/staff");
+            navigate("/staff/overview");
             break;
 
           case "SELLER":
