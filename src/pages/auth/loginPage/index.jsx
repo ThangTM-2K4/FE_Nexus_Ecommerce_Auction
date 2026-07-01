@@ -191,9 +191,9 @@ function LoginPage() {
               className={errors.login ? "input-error" : ""}
             />
 
-            <p className="field-error">
+            <div className="field-error">
               {errors.login || "\u00A0"}
-            </p>
+            </div>
           </div>
 
           <div className="form-group">
@@ -216,9 +216,9 @@ function LoginPage() {
               </button>
             </div>
 
-            <p className="field-error">
+            <div className="field-error">
               {errors.password || "\u00A0"}
-            </p>
+            </div>
           </div>
 
           <button
