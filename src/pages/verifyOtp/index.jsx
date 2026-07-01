@@ -55,6 +55,16 @@ function VerifyOtpPage() {
   return (
     <div className="otp-page">
       <div className="otp-card">
+
+        <span
+          className="back-forgot"
+          onClick={() =>
+            navigate("/forgot-password")
+          }
+        >
+          ← Quay lại
+        </span>
+
         <h1>Xác Thực OTP</h1>
 
         <p>
@@ -102,15 +112,6 @@ function VerifyOtpPage() {
           onClick={handleResendOtp}
         >
           Gửi lại OTP
-        </span>
-
-        <span
-          className="back-forgot"
-          onClick={() =>
-            navigate("/forgot-password")
-          }
-        >
-          ← Quay lại
         </span>
       </div>
     </div>

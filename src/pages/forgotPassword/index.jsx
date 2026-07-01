@@ -48,6 +48,16 @@ function ForgotPasswordPage() {
   return (
     <div className="forgot-page">
       <div className="forgot-card">
+
+         <span
+          className="back-login"
+          onClick={() =>
+            navigate("/login")
+          }
+        >
+          ← Quay lại đăng nhập
+          </span>
+          
         <h1>Quên Mật Khẩu</h1>
 
         <p>
@@ -86,15 +96,6 @@ function ForgotPasswordPage() {
             Gửi mã OTP
           </button>
         </form>
-
-        <span
-          className="back-login"
-          onClick={() =>
-            navigate("/login")
-          }
-        >
-          ← Quay lại đăng nhập
-        </span>
       </div>
     </div>
   );

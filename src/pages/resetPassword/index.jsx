@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 import "./index.scss";
@@ -18,6 +18,11 @@ function ResetPasswordPage() {
 
   const [errors, setErrors] =
     useState({});
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -103,29 +108,34 @@ function ResetPasswordPage() {
             </p>
           )}
 
+          <div className="confirm-password-wrapper">
+            
           <input
-            type="password"
+            type={showConfirmPassword ? "text" : "password"}
             placeholder="Xác nhận mật khẩu"
-            value={
-              confirmPassword
-            }
+            value={confirmPassword}
             onChange={(e) => {
-              setConfirmPassword(
-                e.target.value
-              );
+              setConfirmPassword(e.target.value);
 
               setErrors({
                 ...errors,
-                confirmPassword:
-                  "",
+                confirmPassword: "",
               });
             }}
             className={
-              errors.confirmPassword
-                ? "input-error"
-                : ""
+              errors.confirmPassword ? "input-error" : ""
             }
           />
+
+          <span
+            className="eye-icon"
+            onClick={() =>
+              setShowConfirmPassword(!showConfirmPassword)
+            }
+          >
+            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+          </span>
+        </div>
 
           {errors.confirmPassword && (
             <p className="field-error">

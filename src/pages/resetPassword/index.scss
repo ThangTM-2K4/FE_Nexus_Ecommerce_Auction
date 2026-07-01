@@ -25,8 +25,6 @@
 
   border-radius: 24px;
 
-  border-top: 6px solid #0a4174;
-
   box-shadow: 0 20px 50px rgba(0, 29, 57, 0.25);
 }
 
@@ -72,6 +70,32 @@
 
 .reset-card button:hover {
   background: #0a4174;
+}
+
+.confirm-password-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.confirm-password-wrapper input {
+  width: 100%;
+  padding-right: 45px;
+  margin-bottom: 0;
+  box-sizing: border-box;
+}
+
+.eye-icon {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #8a8a8a;
+  font-size: 18px;
+}
+
+.eye-icon:hover {
+  color: #001d39;
 }
 
 .input-error {
