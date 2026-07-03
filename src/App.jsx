@@ -5,9 +5,10 @@ import Layout from "./layout";
 import LoginPage from "./pages/auth/loginPage";
 import RegisterPage from "./pages/auth/registerPage";
 import AuthCallback from "./pages/auth/authCallback";
-import ForgotPassword from "./pages/forgotPassword";
-import VerifyOtp from "./pages/verifyOtp";
-import ResetPassword from "./pages/resetPassword";
+import ForgotPassword from "./pages/auth/forgotPassword";
+import VerifyOtp from "./pages/auth/forgotVerifyOtp";
+import ResetPassword from "./pages/auth/resetPassword";
+import RegisterVerifyOtpPage from "./pages/auth/registerVerityOtp";
 
 import HomePage from "./pages/homepage/homePage";
 
@@ -56,6 +57,7 @@ function App() {
       <Route path="/verify-otp" element={<VerifyOtp />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/register-verify-otp" element={<RegisterVerifyOtpPage />} />
 
       {/* ==========================
           Layout dùng chung
@@ -161,7 +163,7 @@ function App() {
         <Route path="notifications" element={<StaffNotifications />} />
       </Route>
       */}
-      
+
 {/*chạy thử staff hub */}
     <Route path="/staff" element={<StaffLayout />}>
       <Route index element={<StaffOverview />} />
