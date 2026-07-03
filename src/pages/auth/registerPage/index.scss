@@ -107,18 +107,20 @@
 .password-wrapper {
   position: relative;
   display: flex;
+  align-items: center;
   margin-bottom: 14px;
 }
 
 .password-wrapper input {
   width: 100%;
   padding-right: 48px; // chừa chỗ cho icon
+  margin-bottom: 0; // margin handled by wrapper
 }
 
 .eye-btn {
   position: absolute;
 
-  right: 15px; 
+  right: 15px;
   top: 50%;
 
   transform: translateY(-50%);
@@ -134,7 +136,10 @@
   align-items: center;
   justify-content: center;
 
-  font-size: 18px;;
+  font-size: 18px;
+
+  padding: 0;
+  line-height: 1;
 }
 
 .eye-btn:hover {
