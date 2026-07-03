@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { useAuth } from '../../../context/AuthContext';
-import * as sellerService from '../../../services/sellerService';
-import Header from '../../../components/homepage/header';
-import Footer from '../../../components/homepage/footer';
-import '../becomeSellerPage/index.scss';
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useAuth } from "../../../context/AuthContext";
+import * as sellerService from "../../../services/sellerService";
+import Header from "../../../components/homepage/header";
+import Footer from "../../../components/homepage/footer";
+import "../becomeSellerPage/index.scss";
 
 export default function SellerWaitingPage() {
   const { user } = useAuth();
@@ -26,8 +26,14 @@ export default function SellerWaitingPage() {
           {application && (
             <>
               <div className="seller-status-meta">
-                <div><span>Mã đơn</span><strong>{application.applicationId}</strong></div>
-                <div><span>Ngày nộp</span><strong>{new Date(application.submittedAt).toLocaleString('vi-VN')}</strong></div>
+                <div>
+                  <span>Mã đơn</span>
+                  <strong>{application.applicationId}</strong>
+                </div>
+                <div>
+                  <span>Ngày nộp</span>
+                  <strong>{new Date(application.submittedAt).toLocaleString("vi-VN")}</strong>
+                </div>
               </div>
               <div className="seller-timeline">
                 <h3>Tiến trình</h3>
@@ -36,14 +42,16 @@ export default function SellerWaitingPage() {
                     <span className="seller-timeline-dot" />
                     <div>
                       <strong>{item.step}</strong>
-                      {item.date && <small>{new Date(item.date).toLocaleString('vi-VN')}</small>}
+                      {item.date && <small>{new Date(item.date).toLocaleString("vi-VN")}</small>}
                     </div>
                   </div>
                 ))}
               </div>
             </>
           )}
-          <Link to="/profile/become-seller" className="seller-action-btn">Xem chi tiết đơn</Link>
+          <Link to="/profile/become-seller" className="seller-action-btn">
+            Xem chi tiết đơn
+          </Link>
         </div>
       </main>
       <Footer />

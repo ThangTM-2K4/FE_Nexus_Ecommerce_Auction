@@ -1,7 +1,7 @@
-import PageHeader from "../../../components/seller/sellerPageHeader";
-import AnimatedValue from "../../../components/seller/sellerAnimatedValue";
-import AnimatedBar from "../../../components/seller/sellerAnimatedBar";
-import MiniStat from "../../../components/seller/sellerMiniStat";
+import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
+import AnimatedValue from "../../../components/sellerdashboard/sellerAnimatedValue";
+import AnimatedBar from "../../../components/sellerdashboard/sellerAnimatedBar";
+import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import {
   reviewSummary,
   recentReviews,
@@ -19,7 +19,9 @@ export default function ReviewsPage() {
       <section className="slr-section">
         <div className="slr-review-summary">
           <div className="slr-review-score">
-            <strong><AnimatedValue value={reviewSummary.averageRating} /></strong>
+            <strong>
+              <AnimatedValue value={reviewSummary.averageRating} />
+            </strong>
             <span>★ Trung bình</span>
           </div>
           <MiniStat label="Tổng đánh giá" value={reviewSummary.totalReviews} delay={60} />
@@ -77,7 +79,9 @@ export default function ReviewsPage() {
                     <strong>{r.user}</strong>
                     <span>★ {r.rating}</span>
                   </div>
-                  <p>{r.product} — {r.comment}</p>
+                  <p>
+                    {r.product} — {r.comment}
+                  </p>
                   <time>{r.time}</time>
                 </article>
               ))}
@@ -87,7 +91,9 @@ export default function ReviewsPage() {
               {complaints.map((c) => (
                 <article key={c.user}>
                   <strong>{c.user}</strong>
-                  <p>{c.issue} ({c.product})</p>
+                  <p>
+                    {c.issue} ({c.product})
+                  </p>
                   <span className="badge">{c.status}</span>
                 </article>
               ))}
@@ -95,7 +101,9 @@ export default function ReviewsPage() {
               {flaggedProducts.map((p) => (
                 <article key={p.name}>
                   <strong>{p.name}</strong>
-                  <p>{p.complaints} khiếu nại · ★ {p.rating}</p>
+                  <p>
+                    {p.complaints} khiếu nại · ★ {p.rating}
+                  </p>
                 </article>
               ))}
             </div>

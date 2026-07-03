@@ -1,0 +1,27 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-page-header {
+  &__kicker {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $color-text-muted;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: $color-primary-dark;
+  }
+
+  p {
+    font-size: 14px;
+    color: $color-text-muted;
+    margin-top: 6px;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+}

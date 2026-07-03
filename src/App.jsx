@@ -1,22 +1,37 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from "react-router-dom";
 
-import LoginPage from './pages/auth/loginPage';
-import RegisterPage from './pages/auth/registerPage';
+import Layout from "./layout";
 
-import HomePage from './pages/homepage/homePage';
-import ProfilePage from './pages/user/profilePage';
-import NotificationsPage from './pages/user/notificationsPage';
-import BecomeSellerPage from './pages/seller/becomeSellerPage';
+import LoginPage from "./pages/auth/loginPage";
+import RegisterPage from "./pages/auth/registerPage";
+import AuthCallback from "./pages/auth/authCallback";
+import ForgotPassword from "./pages/auth/forgotPassword";
+import VerifyOtp from "./pages/auth/forgotVerifyOtp";
+import ResetPassword from "./pages/auth/resetPassword";
+import RegisterVerifyOtpPage from "./pages/auth/registerVerityOtp";
 
-import AdminDashboard from './pages/admin/adminDashboard';
-import StaffDashboard from './pages/staff/staffDashboard';
-import SellerDashboard from './pages/seller/sellerDashboard';
-import BuyerDashboard from './pages/user/buyerDashboard';
-import SellerHubRoutes from './config/SellerHubRoutes';
-import AuthCallback from './pages/auth/authCallback';
+import HomePage from "./pages/homepage/homePage";
 
-import ProtectedRoute from './config/ProtectedRoute';
-import SellerRoute from './config/SellerRoute';
+import ProfilePage from "./pages/user/profilePage";
+import NotificationsPage from "./pages/user/notificationsPage";
+import BuyerDashboard from "./pages/user/buyerDashboard";
+
+import BecomeSellerPage from "./pages/seller/becomeSellerPage";
+import SellerDashboard from "./pages/seller/sellerDashboard";
+import SellerHubRoutes from "./config/SellerHubRoutes";
+
+import AdminDashboard from "./pages/admin/adminDashboard";
+
+import StaffLayout from "./components/staff/staffLayout";
+import StaffOverview from "./pages/staff/staffOverview";
+import StaffSellerReview from "./pages/staff/staffSellerReview";
+import StaffAuctionModeration from "./pages/staff/staffAuctionModeration";
+import StaffDisputes from "./pages/staff/staffDisputes";
+import {
+  StaffOrders,
+  StaffReports,
+  StaffNotifications,
+} from "./pages/staff/staffPlaceholder";
 
 import AuctionBrowsePage from "./pages/auction/auctionBrowsePage";
 import AuctionDetailPage from "./pages/auction/auctionDetailPage";
@@ -24,44 +39,81 @@ import AuctionProfilePage from "./pages/auction/auctionProfilePage";
 import AuctionSellerPage from "./pages/auction/auctionSellerPage";
 import AuctionMyBidsPage from "./pages/auction/auctionMyBidsPage";
 import AuctionCreatePage from "./pages/auction/auctionCreatePage";
-import AuctionSellerRoute from "./config/AuctionSellerRoute";
-import AuctionBuyRoute from "./config/AuctionBuyRoute";
+
+import ProtectedRoute from "./config/ProtectedRoute";
+import SellerRoute from "./config/SellerRoute";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/home" element={<HomePage />} />
+
+      {/* ==========================
+          Auth Pages
+      ========================== */}
+
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/verify-otp" element={<VerifyOtp />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/register-verify-otp" element={<RegisterVerifyOtpPage />} />
 
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile/notifications"
-        element={
-          <ProtectedRoute>
-            <NotificationsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile/become-seller"
-        element={
-          <ProtectedRoute>
-            <BecomeSellerPage />
-          </ProtectedRoute>
-        }
-      />
+      {/* ==========================
+          Layout dùng chung
+      ========================== */}
 
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/staff" element={<StaffDashboard />} />
+      <Route element={<Layout />}>
+
+        {/* Home */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/home" element={<HomePage />} />
+
+        {/* User */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/become-seller"
+          element={
+            <ProtectedRoute>
+              <BecomeSellerPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Buyer */}
+        <Route path="/buyer" element={<BuyerDashboard />} />
+
+        {/* Auction */}
+        <Route path="/auction/browse" element={<AuctionBrowsePage />} />
+        <Route path="/auction/detail/:id" element={<AuctionDetailPage />} />
+        <Route path="/auction/profile" element={<AuctionProfilePage />} />
+        <Route path="/auction/my-bids" element={<AuctionMyBidsPage />} />
+        <Route path="/auction/seller" element={<AuctionSellerPage />} />
+        <Route path="/auction/create" element={<AuctionCreatePage />} />
+
+        {/* Admin */}
+        <Route path="/admin" element={<AdminDashboard />} />
+
+      </Route>
+
+   {/* seller - dã ket noi api }
       <Route
         path="/seller"
         element={
@@ -78,56 +130,52 @@ function App() {
           </SellerRoute>
         }
       />
-      <Route path="/buyer" element={<BuyerDashboard />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
+    */}
+
+    {/*chạy thử seller hub */}
+    <Route
+      path="/seller"
+      element={<SellerDashboard />}
+    />
+
+    <Route
+      path="/seller-hub/*"
+      element={<SellerHubRoutes />}
+    />
+
+
+      {/* Staff Hub — kết nối API  
       <Route
-        path="/auction/browse"
+        path="/staff"
         element={
-          <AuctionBuyRoute>
-            <AuctionBrowsePage />
-          </AuctionBuyRoute>
+          <ProtectedRoute allowedRoles={["STAFF", "ADMIN"]}>
+            <StaffLayout />
+          </ProtectedRoute>
         }
-      />
-      <Route
-        path="/auction/detail/:id"
-        element={
-          <AuctionBuyRoute>
-            <AuctionDetailPage />
-          </AuctionBuyRoute>
-        }
-      />
-      <Route
-        path="/auction/profile"
-        element={
-          <AuctionBuyRoute>
-            <AuctionProfilePage />
-          </AuctionBuyRoute>
-        }
-      />
-      <Route
-        path="/auction/seller"
-        element={
-          <AuctionSellerRoute>
-            <AuctionSellerPage />
-          </AuctionSellerRoute>
-        }
-      />
-      <Route
-        path="/auction/create"
-        element={
-          <AuctionSellerRoute>
-            <AuctionCreatePage />
-          </AuctionSellerRoute>
-        }
-      />
-      <Route
-        path="/auction/my-bids"
-        element={
-          <AuctionBuyRoute>
-            <AuctionMyBidsPage />
-          </AuctionBuyRoute>
-        }
-      />
+      >
+        <Route index element={<StaffOverview />} />
+        <Route path="overview" element={<StaffOverview />} />
+        <Route path="seller-review" element={<StaffSellerReview />} />
+        <Route path="auctions" element={<StaffAuctionModeration />} />
+        <Route path="disputes" element={<StaffDisputes />} />
+        <Route path="orders" element={<StaffOrders />} />
+        <Route path="reports" element={<StaffReports />} />
+        <Route path="notifications" element={<StaffNotifications />} />
+      </Route>
+      */}
+
+{/*chạy thử staff hub */}
+    <Route path="/staff" element={<StaffLayout />}>
+      <Route index element={<StaffOverview />} />
+      <Route path="overview" element={<StaffOverview />} />
+      <Route path="seller-review" element={<StaffSellerReview />} />
+      <Route path="auctions" element={<StaffAuctionModeration />} />
+      <Route path="disputes" element={<StaffDisputes />} />
+      <Route path="orders" element={<StaffOrders />} />
+      <Route path="reports" element={<StaffReports />} />
+      <Route path="notifications" element={<StaffNotifications />} />
+    </Route>
+
     </Routes>
   );
 }

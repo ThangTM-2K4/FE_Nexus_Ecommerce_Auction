@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import PageHeader from "../../../components/seller/sellerPageHeader";
-import AnimatedValue from "../../../components/seller/sellerAnimatedValue";
-import AnimatedBar from "../../../components/seller/sellerAnimatedBar";
+import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
+import AnimatedValue from "../../../components/sellerdashboard/sellerAnimatedValue";
+import AnimatedBar from "../../../components/sellerdashboard/sellerAnimatedBar";
 import {
   revenueSummary,
   revenueTrend,
@@ -46,23 +46,33 @@ export default function RevenuePage() {
         <div className="slr-revenue-metrics">
           <div>
             <span>Gross Revenue</span>
-            <strong><AnimatedValue value={revenueSummary.grossRevenue} /></strong>
+            <strong>
+              <AnimatedValue value={revenueSummary.grossRevenue} />
+            </strong>
           </div>
           <div>
             <span>Net Revenue</span>
-            <strong><AnimatedValue value={revenueSummary.netRevenue} /></strong>
+            <strong>
+              <AnimatedValue value={revenueSummary.netRevenue} />
+            </strong>
           </div>
           <div>
             <span>Commission Fee</span>
-            <strong><AnimatedValue value={revenueSummary.commissionFee} /></strong>
+            <strong>
+              <AnimatedValue value={revenueSummary.commissionFee} />
+            </strong>
           </div>
           <div>
             <span>Refund Amount</span>
-            <strong><AnimatedValue value={revenueSummary.refundAmount} /></strong>
+            <strong>
+              <AnimatedValue value={revenueSummary.refundAmount} />
+            </strong>
           </div>
           <div className="highlight">
             <span>Profit</span>
-            <strong><AnimatedValue value={revenueSummary.profit} /></strong>
+            <strong>
+              <AnimatedValue value={revenueSummary.profit} />
+            </strong>
             <small>Revenue − Commission − Refunds</small>
           </div>
         </div>
@@ -89,7 +99,9 @@ export default function RevenuePage() {
                 <li key={c.label} style={{ animationDelay: `${i * 80}ms` }}>
                   <span className="dot" style={{ opacity: c.value / 40 }} />
                   <span>{c.label}</span>
-                  <strong><AnimatedValue value={`${c.value}%`} /></strong>
+                  <strong>
+                    <AnimatedValue value={`${c.value}%`} />
+                  </strong>
                   <em>{c.amount}</em>
                 </li>
               ))}
@@ -103,12 +115,11 @@ export default function RevenuePage() {
                 <div key={p.label} className="slr-bar-chart__item">
                   <span className="label">{p.label}</span>
                   <div className="bar-wrap">
-                    <AnimatedBar
-                      percent={(p.value / maxProduct) * 100}
-                      delay={i * 100}
-                    />
+                    <AnimatedBar percent={(p.value / maxProduct) * 100} delay={i * 100} />
                   </div>
-                  <span className="val"><AnimatedValue value={p.value} />M</span>
+                  <span className="val">
+                    <AnimatedValue value={p.value} />M
+                  </span>
                 </div>
               ))}
             </div>

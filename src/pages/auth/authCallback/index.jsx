@@ -30,7 +30,7 @@ function AuthCallback() {
             break;
 
           case "STAFF":
-            navigate("/staff", { replace: true });
+            navigate("/staff/overview", { replace: true });
             break;
 
           case "SELLER":

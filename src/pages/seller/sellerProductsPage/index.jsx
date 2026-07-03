@@ -1,5 +1,5 @@
-import PageHeader from "../../../components/seller/sellerPageHeader";
-import MiniStat from "../../../components/seller/sellerMiniStat";
+import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
+import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { productStats, topProducts, productList } from "../../../data/sellerMockData";
 
 export default function ProductsPage() {

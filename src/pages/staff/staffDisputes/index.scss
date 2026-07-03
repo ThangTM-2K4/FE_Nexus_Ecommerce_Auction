@@ -1,0 +1,125 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-disputes {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__empty {
+    padding: 40px;
+    text-align: center;
+    color: $color-text-muted;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  &__card {
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-lg;
+    padding: 20px;
+    box-shadow: $shadow-sm;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+
+      h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: $color-primary-dark;
+      }
+
+      p {
+        font-size: 12px;
+        color: $color-text-muted;
+        margin-top: 2px;
+      }
+
+      span {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        height: fit-content;
+
+        &.overdue {
+          background: rgba($color-danger, 0.12);
+          color: $color-danger;
+        }
+
+        &.sla {
+          background: rgba($color-accent, 0.15);
+          color: $color-primary;
+        }
+      }
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+
+      div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      dt {
+        font-size: 11px;
+        color: $color-text-muted;
+      }
+
+      dd {
+        font-size: 13px;
+        font-weight: 600;
+        color: $color-primary-dark;
+      }
+    }
+
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid $color-border-light;
+
+      small {
+        font-size: 11px;
+        color: $color-text-muted;
+      }
+
+      button {
+        border: none;
+        background: linear-gradient(135deg, $color-primary, $color-accent-mid);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 8px 14px;
+        border-radius: $radius-sm;
+        cursor: pointer;
+      }
+    }
+  }
+
+  &__issue {
+    font-size: 14px;
+    color: $color-text-secondary;
+    line-height: 1.5;
+    padding: 10px 12px;
+    background: $color-bg;
+    border-radius: $radius-sm;
+    border-left: 3px solid $color-accent-mid;
+  }
+}

@@ -144,19 +144,31 @@ export const hadStoredSession = () => {
 };
 
 export const login = async (loginValue, password) => {
-  const { data } = await api.post('/auth/login', {
+  // 1. Đăng nhập
+  const { data } = await api.post("/auth/login", {
     emailOrPhone: loginValue,
     password,
   });
 
-  if (!data) {
-    throw new Error('Đăng nhập thất bại');
+  if (!data?.data?.accessToken) {
+    throw new Error("Đăng nhập thất bại");
   }
 
-  const user = saveSession(data);
+  // 2. Lưu accessToken, refreshToken, expiresAt
+  saveSession(data);
+
+  // 3. Gọi API lấy thông tin người dùng
+  const { data: me } = await api.get("/users/me");
+
+  if (!me) {
+    throw new Error("Không lấy được thông tin người dùng");
+  }
+
+  // 4. Lưu thông tin user
+  const user = saveSession(me);
 
   if (!user?.id) {
-    throw new Error('Đăng nhập thất bại - không nhận được thông tin người dùng');
+    throw new Error("Không nhận được thông tin người dùng");
   }
 
   return user;

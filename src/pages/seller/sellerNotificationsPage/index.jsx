@@ -1,5 +1,5 @@
-import PageHeader from "../../../components/seller/sellerPageHeader";
-import MiniStat from "../../../components/seller/sellerMiniStat";
+import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
+import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { sellerNotifications, notificationSummary } from "../../../data/sellerMockData";
 import { sellerImages } from "../../../data/sellerImages";
 
@@ -30,9 +30,7 @@ export default function NotificationsPage() {
                   className={`slr-noti-item ${n.unread ? "unread" : ""}`}
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
-                  <span className={`slr-noti-type slr-noti-type--${n.type}`}>
-                    {n.type}
-                  </span>
+                  <span className={`slr-noti-type slr-noti-type--${n.type}`}>{n.type}</span>
                   <div>
                     <strong>{n.title}</strong>
                     <p>{n.message}</p>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import PageHeader from "../../../components/seller/sellerPageHeader";
-import AnimatedValue from "../../../components/seller/sellerAnimatedValue";
-import KpiCard from "../../../components/seller/sellerKpiCard";
+import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
+import AnimatedValue from "../../../components/sellerdashboard/sellerAnimatedValue";
+import KpiCard from "../../../components/sellerdashboard/sellerKpiCard";
 import {
   conversionFunnel,
   salesKpis,
@@ -20,10 +20,7 @@ export default function PerformancePage() {
 
   return (
     <div className="slr-page">
-      <PageHeader
-        title="Hiệu quả bán hàng"
-        subtitle="Conversion funnel và KPI hiệu suất"
-      />
+      <PageHeader title="Hiệu quả bán hàng" subtitle="Conversion funnel và KPI hiệu suất" />
 
       <section className="slr-section">
         <div className="slr-page-split">
@@ -41,7 +38,9 @@ export default function PerformancePage() {
                           : "0%",
                       }}
                     >
-                      <strong><AnimatedValue value={step.value} /></strong>
+                      <strong>
+                        <AnimatedValue value={step.value} />
+                      </strong>
                       <span>{step.label}</span>
                       {step.rate && <em>↓ {step.rate}</em>}
                     </div>
@@ -77,7 +76,9 @@ export default function PerformancePage() {
                 <tbody>
                   {channelPerformance.map((c) => (
                     <tr key={c.channel}>
-                      <td><strong>{c.channel}</strong></td>
+                      <td>
+                        <strong>{c.channel}</strong>
+                      </td>
                       <td>{c.views.toLocaleString("vi-VN")}</td>
                       <td>{c.clicks.toLocaleString("vi-VN")}</td>
                       <td className="pos">{c.conversion}</td>

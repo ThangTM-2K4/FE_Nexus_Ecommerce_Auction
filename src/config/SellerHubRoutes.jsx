@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import SellerLayout from "../components/seller/sellerLayout";
+import SellerLayout from "../components/sellerdashboard/sellerLayout";
 import OverviewPage from "../pages/seller/sellerOverviewPage";
 import RevenuePage from "../pages/seller/sellerRevenuePage";
 import ProductsPage from "../pages/seller/sellerProductsPage";

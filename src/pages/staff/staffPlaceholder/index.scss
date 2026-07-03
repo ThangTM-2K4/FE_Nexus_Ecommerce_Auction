@@ -1,0 +1,57 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__box {
+    padding: 48px 24px;
+    text-align: center;
+    background: $color-bg-card;
+    border: 1px dashed $color-border;
+    border-radius: $radius-lg;
+    color: $color-text-muted;
+    font-size: 14px;
+  }
+}
+
+.stf-notifications {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+
+    &.unread {
+      border-left: 3px solid $color-accent;
+      background: rgba($color-accent, 0.06);
+    }
+
+    strong {
+      display: block;
+      font-size: 14px;
+      color: $color-primary-dark;
+      margin-bottom: 4px;
+    }
+
+    p {
+      font-size: 13px;
+      color: $color-text-muted;
+    }
+
+    span {
+      font-size: 12px;
+      color: $color-text-muted;
+      white-space: nowrap;
+    }
+  }
+}

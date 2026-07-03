@@ -1,7 +1,7 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import SellerWaitingPage from '../pages/seller/sellerWaitingPage';
-import SellerRejectedPage from '../pages/seller/sellerRejectedPage';
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import SellerWaitingPage from "../pages/seller/sellerWaitingPage";
+import SellerRejectedPage from "../pages/seller/sellerRejectedPage";
 
 export default function SellerRoute({ children }) {
   const { isAuthenticated, user, isSellerMode } = useAuth();
@@ -16,19 +16,19 @@ export default function SellerRoute({ children }) {
     return <Navigate to="/profile/become-seller" replace />;
   }
 
-  if (sellerStatus === 'PENDING') {
+  if (sellerStatus === "PENDING") {
     return <SellerWaitingPage />;
   }
 
-  if (sellerStatus === 'REJECTED') {
+  if (sellerStatus === "REJECTED") {
     return <SellerRejectedPage />;
   }
 
-  if (sellerStatus === 'APPROVED' && !isSellerMode) {
+  if (sellerStatus === "APPROVED" && !isSellerMode) {
     return <Navigate to="/" replace />;
   }
 
-  if (sellerStatus === 'APPROVED') {
+  if (sellerStatus === "APPROVED") {
     return children;
   }
 

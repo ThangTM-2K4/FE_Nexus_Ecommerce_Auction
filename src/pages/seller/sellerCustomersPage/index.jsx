@@ -1,6 +1,6 @@
-import PageHeader from "../../../components/seller/sellerPageHeader";
-import MiniStat from "../../../components/seller/sellerMiniStat";
-import KpiCard from "../../../components/seller/sellerKpiCard";
+import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
+import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
+import KpiCard from "../../../components/sellerdashboard/sellerKpiCard";
 import {
   customerStats,
   topCustomers,
@@ -60,7 +60,9 @@ export default function CustomersPage() {
                 <tbody>
                   {customerSegments.map((s) => (
                     <tr key={s.segment}>
-                      <td><strong>{s.segment}</strong></td>
+                      <td>
+                        <strong>{s.segment}</strong>
+                      </td>
                       <td>{s.count.toLocaleString("vi-VN")}</td>
                       <td>{s.spend}</td>
                       <td className={s.negative ? "neg" : "pos"}>{s.growth}</td>

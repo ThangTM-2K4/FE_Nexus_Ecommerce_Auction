@@ -1,4 +1,7 @@
-// Ocean Depth palette
+//=====================================================
+// Ocean Depth Palette
+//=====================================================
+
 $deep: #001D39;
 $navy: #0A4174;
 $steel: #49769F;
@@ -7,7 +10,10 @@ $sage: #6EA2B3;
 $sky: #7BBDE8;
 $mist: #BDD8E9;
 
-// Semantic
+//=====================================================
+// Semantic Colors
+//=====================================================
+
 $ink: $deep;
 $ink-soft: $navy;
 $ink-muted: $steel;
@@ -16,6 +22,7 @@ $ink-faint: $sage;
 $surface: #ffffff;
 $surface-soft: #f6fafd;
 $surface-muted: #edf4f9;
+
 $border: rgba($sage, 0.45);
 $border-soft: rgba($mist, 0.8);
 
@@ -23,36 +30,77 @@ $accent: $sky;
 $accent-mid: $teal;
 $accent-dark: $navy;
 
-// Component aliases
+//=====================================================
+// Component Colors
+//=====================================================
+
 $blue: $sky;
 $blue-soft: $mist;
+
 $pink: $teal;
 $pink-soft: $sage;
+
 $purple: $steel;
+
+$cyan: $teal;
+$cyan-light: $mist;
+
+//=====================================================
+// Glow
+//=====================================================
 
 $accent-glow: rgba($sky, 0.32);
 $blue-glow: rgba($sky, 0.28);
-$teal-glow: rgba($teal, 0.3);
+$teal-glow: rgba($teal, 0.30);
 $aqua-glow: $teal-glow;
 $rose-glow: $teal-glow;
 $pink-glow: $accent-glow;
-$purple-glow: rgba($steel, 0.3);
+$purple-glow: rgba($steel, 0.30);
 
-$cyan-light: $mist;
-$cyan: $teal;
+//=====================================================
+// Layout
+//=====================================================
+
+$sidebar-width: 260px;
+$sidebar-collapse-width: 90px;
+
+$header-height: 72px;
+
+$content-width: 1440px;
 
 $control-height: 48px;
+
+//=====================================================
+// Radius
+//=====================================================
 
 $radius-sm: 10px;
 $radius-md: 14px;
 $radius-lg: 20px;
+$radius-xl: 28px;
 $radius-pill: 999px;
 
-$shadow-sm: 0 2px 12px rgba($deep, 0.08);
-$shadow-md: 0 8px 28px rgba($navy, 0.12);
-$shadow-lg: 0 16px 40px rgba($teal, 0.16);
+//=====================================================
+// Shadow
+//=====================================================
 
-$ease: cubic-bezier(0.4, 0, 0.2, 1);
+$shadow-sm: 0 2px 12px rgba($deep, .08);
+$shadow-md: 0 8px 28px rgba($navy, .12);
+$shadow-lg: 0 16px 40px rgba($teal, .16);
+
+//=====================================================
+// Animation
+//=====================================================
+
+$ease: cubic-bezier(.4,0,.2,1);
+
+$transition-fast: .2s ease;
+$transition: .3s ease;
+$transition-slow: .45s ease;
+
+//=====================================================
+// Gradient
+//=====================================================
 
 $brand-bar: linear-gradient(
   90deg,
@@ -64,3 +112,86 @@ $brand-bar: linear-gradient(
   $sky 83%,
   $mist 100%
 );
+
+//=====================================================
+// Compatibility
+//=====================================================
+
+$color-bg: $surface;
+$color-surface: $surface;
+$color-surface-soft: $surface-soft;
+$color-surface-muted: $surface-muted;
+$color-bg-card: $surface;
+$color-bg-sidebar: $surface-muted;
+
+$color-text: $ink;
+$color-text-soft: $ink-soft;
+$color-text-muted: $ink-muted;
+$color-text-secondary: $steel;
+
+$color-primary: $navy;
+$color-primary-dark: $deep;
+$color-secondary: $accent-mid;
+$color-accent: $sky;
+$color-accent-mid: $teal;
+
+$color-border: $border;
+$color-border-soft: $border-soft;
+$color-border-light: $border-soft;
+
+$color-gradient-light: $mist;
+$color-gradient-mid: $teal;
+
+$color-success-bg: #dcfce7;
+$color-warning-bg: #fef3c7;
+$color-danger-bg: #fee2e2;
+
+$color-success: #22c55e;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+$color-info: $sky;
+
+//=====================================================
+// Seller Dashboard
+//=====================================================
+
+$card-gap: 24px;
+
+$card-radius: $radius-lg;
+
+$card-shadow: $shadow-md;
+$card-shadow-hover: $shadow-lg;
+
+//=====================================================
+// Mixins
+//=====================================================
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin glass {
+  background: rgba(255,255,255,.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+@mixin card-hover {
+  transition: all .3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+@mixin button-hover {
+  transition: all .3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}

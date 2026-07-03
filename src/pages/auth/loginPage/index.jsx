@@ -88,7 +88,8 @@ function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = getGoogleLoginUrl();
+    window.location.href =
+      "http://localhost:5101/api/v1/auth/google/login";
   };
 
   const handleLogin = async (e) => {
@@ -105,24 +106,23 @@ function LoginPage() {
       setLoading(true);
 
       const user = await login(formData.login, formData.password);
-      const role = user?.roles?.[0] || user?.role;
 
       toast.success(
         "Đăng nhập thành công"
       );
 
       setTimeout(() => {
-        switch (role) {
+        switch (user.role) {
           case "ADMIN":
             navigate("/admin");
             break;
 
           case "STAFF":
-            navigate("/staff");
+            navigate("/staff/overview");
             break;
 
           case "SELLER":
-            navigate("/seller-hub");
+            navigate("/seller");
             break;
 
           case "BUYER":
@@ -138,22 +138,29 @@ function LoginPage() {
         }
       }, 1000);
     } catch (err) {
-      const message =
-        err.response?.data?.message || err.message || 'Đăng nhập thất bại';
 
       const newErrors = {};
 
-      if (message.includes('Email') || message.includes('email')) {
-        newErrors.login = 'Email không tồn tại';
+      if (
+        err.message?.includes("Email")
+      ) {
+        newErrors.login =
+          "Email không tồn tại";
       }
 
-      if (message.includes('Password') || message.includes('mật khẩu')) {
-        newErrors.password = 'Mật khẩu không chính xác';
+      if (
+        err.message?.includes("Password")
+      ) {
+        newErrors.password =
+          "Mật khẩu không chính xác";
       }
 
       setErrors(newErrors);
 
-      toast.error(message);
+      toast.error(
+        err.message || "Đăng nhập thất bại"
+      );
+    
     } finally {
       setLoading(false);
     }
@@ -174,72 +181,66 @@ function LoginPage() {
         </p>
 
         <form onSubmit={handleLogin}>
-          <input
-            type="text"
-            name="login"
-            placeholder="Email hoặc Số điện thoại"
-            value={formData.login}
-            onChange={handleChange}
-            className={errors.login ? "input-error" : ""}
-          />
-
-          {errors.login && (
-            <p className="field-error">
-               {errors.login}
-            </p>
-          )}
-
-          <div className="password-wrapper">
+          <div className="form-group">
             <input
-              type={
-                showPassword
-                  ? "text"
-                  : "password"
-              }
-              name="password"
-              placeholder="Mật khẩu"
-              value={formData.password}
+              type="text"
+              name="login"
+              placeholder="Email hoặc Số điện thoại"
+              value={formData.login}
               onChange={handleChange}
-              className={
-                errors.password
-                  ? "input-error"
-                  : ""
-              }
+              className={errors.login ? "input-error" : ""}
             />
 
-            <button
-              type="button"
-              className="eye-btn"
-              onClick={() =>
-                setShowPassword(!showPassword)
-              }
-            >
-              {showPassword ? (
-                <FaEyeSlash />
-              ) : (
-                <FaEye />
-              )}
-            </button>
+            <div className="field-error">
+              {errors.login || "\u00A0"}
+            </div>
           </div>
 
-          {errors.password && (
-            <p className="field-error">
-               {errors.password}
-            </p>
-          )}
+          <div className="form-group">
+            <div className="password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Mật khẩu"
+                value={formData.password}
+                onChange={handleChange}
+                className={errors.password ? "input-error" : ""}
+              />
 
-          <div className="forgot-password">
+              <button
+                type="button"
+                className="eye-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+
+            <div className="field-error">
+              {errors.password || "\u00A0"}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="forgot-password"
+            onClick={() => navigate("/forgot-password")}
+          >
             Quên mật khẩu?
-          </div>
+          </button>
 
           <button
             type="submit"
             className="login-btn"
             disabled={loading}
           >
-            {loading
-              ? "Đang đăng nhập..."
-              : "Đăng nhập"}
+            {loading ? (
+              <span className="spinner-text">
+                ⏳ Đang đăng nhập...
+              </span>
+            ) : (
+              "Đăng nhập"
+            )}
           </button>
 
           <div className="divider">
@@ -249,9 +250,7 @@ function LoginPage() {
           <button
             type="button"
             className="google-btn"
-            onClick={
-              handleGoogleLogin
-            }
+            onClick={handleGoogleLogin}
           >
             <FcGoogle size={22} />
             Đăng nhập bằng Google
@@ -259,33 +258,16 @@ function LoginPage() {
 
           <div className="register-link">
             Chưa có tài khoản?
-
-            <span
-              onClick={() =>
-                navigate(
-                  "/register"
-                )
-              }
-            >
+            <span onClick={() => navigate("/register")}>
               Đăng ký ngay
             </span>
           </div>
 
           <div className="login-footer">
+            <p>© 2026 Hệ Thống Đấu Giá Thương Mại Điện Tử</p>
+            <p>An toàn • Minh bạch • Hiệu quả</p>
             <p>
-              © 2026 Hệ Thống Đấu Giá
-              Thương Mại Điện Tử
-            </p>
-
-            <p>
-              An toàn • Minh bạch •
-              Hiệu quả
-            </p>
-
-            <p>
-              Kết nối người mua và
-              người bán trên nền tảng
-              đấu giá trực tuyến
+              Kết nối người mua và người bán trên nền tảng đấu giá trực tuyến
             </p>
           </div>
         </form>

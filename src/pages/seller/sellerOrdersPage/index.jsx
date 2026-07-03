@@ -1,19 +1,11 @@
-import PageHeader from "../../../components/seller/sellerPageHeader";
-import AnimatedValue from "../../../components/seller/sellerAnimatedValue";
-import AnimatedBar from "../../../components/seller/sellerAnimatedBar";
-import KpiCard from "../../../components/seller/sellerKpiCard";
+import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
+import AnimatedValue from "../../../components/sellerdashboard/sellerAnimatedValue";
+import AnimatedBar from "../../../components/sellerdashboard/sellerAnimatedBar";
+import KpiCard from "../../../components/sellerdashboard/sellerKpiCard";
 import { orderStats, recentOrders, ordersByDay, formatCurrency } from "../../../data/sellerMockData";
 import { sellerImages } from "../../../data/sellerImages";
 
 const statusClass = {
-  "Chờ xử lý": "pending",
-  "Đã xác nhận": "confirmed",
-  "Đang giao hàng": "shipping",
-  "Đã giao": "delivered",
-  "Hoàn thành": "completed",
-  "Đã hủy": "cancelled",
-  "Trả hàng": "refunded",
-  // Fallback for mock data original keys
   Pending: "pending",
   Confirmed: "confirmed",
   Shipping: "shipping",
@@ -59,7 +51,9 @@ export default function OrdersPage() {
               style={{ animationDelay: `${i * 50}ms` }}
             >
               <span>{s.label}</span>
-              <strong><AnimatedValue value={s.value} /></strong>
+              <strong>
+                <AnimatedValue value={s.value} />
+              </strong>
             </div>
           ))}
         </div>
@@ -98,7 +92,9 @@ export default function OrdersPage() {
               <tbody>
                 {recentOrders.map((o) => (
                   <tr key={o.id}>
-                    <td><strong>{o.id}</strong></td>
+                    <td>
+                      <strong>{o.id}</strong>
+                    </td>
                     <td>
                       <div className="slr-product-cell">
                         <img src={o.image} alt="" />

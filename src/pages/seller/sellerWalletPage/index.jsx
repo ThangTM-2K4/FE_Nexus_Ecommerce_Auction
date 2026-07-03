@@ -1,5 +1,5 @@
-import PageHeader from "../../../components/seller/sellerPageHeader";
-import AnimatedValue from "../../../components/seller/sellerAnimatedValue";
+import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
+import AnimatedValue from "../../../components/sellerdashboard/sellerAnimatedValue";
 import {
   walletStats,
   transactions,
@@ -19,15 +19,21 @@ export default function WalletPage() {
         <div className="slr-wallet-cards">
           <div className="slr-wallet-card primary">
             <span>Available Balance</span>
-            <strong><AnimatedValue value={walletStats.availableBalance} /></strong>
+            <strong>
+              <AnimatedValue value={walletStats.availableBalance} />
+            </strong>
           </div>
           <div className="slr-wallet-card">
             <span>Pending Balance</span>
-            <strong><AnimatedValue value={walletStats.pendingBalance} /></strong>
+            <strong>
+              <AnimatedValue value={walletStats.pendingBalance} />
+            </strong>
           </div>
           <div className="slr-wallet-card">
             <span>Withdrawn Amount</span>
-            <strong><AnimatedValue value={walletStats.withdrawnAmount} /></strong>
+            <strong>
+              <AnimatedValue value={walletStats.withdrawnAmount} />
+            </strong>
           </div>
         </div>
 

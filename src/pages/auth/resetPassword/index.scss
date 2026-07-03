@@ -1,0 +1,111 @@
+.reset-page {
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 30px;
+
+  background: linear-gradient(
+    135deg,
+    #001d39 0%,
+    #0a4174 30%,
+    #49769f 60%,
+    #7bbde8 100%
+  );
+}
+
+.reset-card {
+  width: 500px;
+
+  background: white;
+
+  padding: 40px;
+
+  border-radius: 24px;
+
+  box-shadow: 0 20px 50px rgba(0, 29, 57, 0.25);
+}
+
+.reset-card h1 {
+  text-align: center;
+
+  color: #001d39;
+
+  margin-bottom: 30px;
+}
+
+.reset-card input {
+  width: 100%;
+
+  height: 52px;
+
+  padding: 0 16px;
+
+  border: 1px solid #d6dee6;
+
+  border-radius: 10px;
+
+  margin-bottom: 20px;
+}
+
+.reset-card button {
+  width: 100%;
+
+  height: 52px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #001d39;
+
+  color: white;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.reset-card button:hover {
+  background: #0a4174;
+}
+
+.confirm-password-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.confirm-password-wrapper input {
+  width: 100%;
+  padding-right: 45px;
+  margin-bottom: 0;
+  box-sizing: border-box;
+}
+
+.eye-icon {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #8a8a8a;
+  font-size: 18px;
+}
+
+.eye-icon:hover {
+  color: #001d39;
+}
+
+.input-error {
+  border: 1px solid #ef4444 !important;
+}
+
+.field-error {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: -8px;
+  margin-bottom: 12px;
+  text-align: left;
+}

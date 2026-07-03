@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaBell, FaSearch } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext";
 import ProfileDropdown from "../../homepage/header/ProfileDropdown";
-import logoImage from "../../../assets/logo.png";
 import "./index.scss";
 
 const AuctionHeader = ({ activeTab = "buying" }) => {
@@ -47,7 +46,10 @@ const AuctionHeader = ({ activeTab = "buying" }) => {
         <div className="auc-header__left">
           <Link to="/auction/browse" className="auc-header__brand">
             <span className="auc-header__brand-mark">
-              <img src={logoImage} alt="" />
+              <img
+                src="/images/logo/logo.png"
+                alt="Shop Auction"
+              />
             </span>
             <span className="auc-header__brand-text">
               <strong>

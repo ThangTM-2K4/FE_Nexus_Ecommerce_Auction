@@ -1,5 +1,5 @@
-import StatCard from "../../../components/seller/sellerStatCard";
-import AnimatedValue from "../../../components/seller/sellerAnimatedValue";
+import StatCard from "../../../components/sellerdashboard/sellerStatCard";
+import AnimatedValue from "../../../components/sellerdashboard/sellerAnimatedValue";
 import {
   overviewStats,
   revenueSummary,
@@ -15,28 +15,40 @@ export default function OverviewPage() {
         <div>
           <span className="slr-dashboard__kicker">Bảng điều khiển người bán</span>
           <h1>Tổng quan kinh doanh</h1>
-          <p>Theo dõi doanh thu, đơn hàng, sản phẩm và hiệu quả bán hàng theo thời gian thực.</p>
+          <p>
+            Theo dõi doanh thu, đơn hàng, sản phẩm và hiệu quả bán hàng theo thời gian thực.
+          </p>
         </div>
         <div className="slr-dashboard__hero-cards">
           <div>
             <small>Doanh thu</small>
-            <strong><AnimatedValue value={revenueSummary.netRevenue} /></strong>
+            <strong>
+              <AnimatedValue value={revenueSummary.netRevenue} />
+            </strong>
           </div>
           <div>
             <small>Đơn hàng</small>
-            <strong><AnimatedValue value={orderStats.total} /></strong>
+            <strong>
+              <AnimatedValue value={orderStats.total} />
+            </strong>
           </div>
           <div>
             <small>Sản phẩm</small>
-            <strong><AnimatedValue value={productStats.total} /></strong>
+            <strong>
+              <AnimatedValue value={productStats.total} />
+            </strong>
           </div>
           <div>
             <small>Khách hàng</small>
-            <strong><AnimatedValue value={customerStats.total} /></strong>
+            <strong>
+              <AnimatedValue value={customerStats.total} />
+            </strong>
           </div>
           <div>
             <small>Chuyển đổi</small>
-            <strong><AnimatedValue value="4.8%" /></strong>
+            <strong>
+              <AnimatedValue value="4.8%" />
+            </strong>
           </div>
         </div>
       </div>

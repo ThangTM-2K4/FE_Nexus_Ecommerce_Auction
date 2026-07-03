@@ -11,18 +11,14 @@ function RegisterPage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
 
   const [errors, setErrors] = useState({});
-  const [otpErrors, setOtpErrors] = useState({});
-
-  const [isWaitingForOTP, setIsWaitingForOTP] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState("");
-  const [otpInput, setOtpInput] = useState("");
-  const [resendCountdown, setResendCountdown] = useState(0);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -112,106 +108,55 @@ function RegisterPage() {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
+        role: "BUYER",
       });
 
       toast.success(
-        "Đăng ký thành công! Vui lòng xác minh email."
+        "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản."
       );
 
-      setRegisteredEmail(formData.email);
-      setIsWaitingForOTP(true);
-      setOtpInput("");
-      setOtpErrors({});
-      setResendCountdown(60);
+      setTimeout(() => {
+        navigate("/register-verify-otp", {
+          state: {
+            email: formData.email,
+          },
+        }
+        );
+      }, 1500);
     } catch (err) {
       toast.error(
-        err.response?.data?.message || err.message || "Đăng ký thất bại"
+        err.message || "Đăng ký thất bại"
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-
-    if (!otpInput.trim()) {
-      setOtpErrors({ otp: "Vui lòng nhập mã OTP" });
-      return;
-    }
-
-    try {
-      setOtpLoading(true);
-      setOtpErrors({});
-
-      await verifyEmail({ email: registeredEmail, otp: otpInput });
-
-      toast.success("Email đã được xác minh thành công!");
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 1000);
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || err.message || "Xác minh email thất bại";
-      setOtpErrors({ otp: errorMessage });
-      toast.error(errorMessage);
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  const handleResendOTP = async () => {
-    try {
-      await resendEmailOtp(registeredEmail);
-
-      toast.info("Mã OTP mới đã được gửi đến email của bạn.");
-      setResendCountdown(60);
-    } catch (err) {
-      toast.error("Gửi lại mã OTP thất bại. Vui lòng thử lại.");
-    }
-  };
-
-  useEffect(() => {
-    let interval;
-    if (resendCountdown > 0) {
-      interval = setInterval(() => {
-        setResendCountdown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [resendCountdown]);
-
   const handleGoogleRegister = () => {
-    window.location.href = getGoogleLoginUrl();
+    window.location.href =
+      "http://localhost:5101/api/v1/auth/google/login";
   };
 
   return (
     <div className="register-page">
       <div className="register-card">
-        {!isWaitingForOTP ? (
-          <>
-            <h1>Tạo Tài Khoản</h1>
+        <h1>Tạo Tài Khoản</h1>
 
-            <p className="subtitle">
-              Hệ thống Đấu giá Thương mại Điện tử
-            </p>
+        <p className="subtitle">
+          Hệ thống Đấu giá Thương mại Điện tử
+        </p>
 
-            <p className="description">
-              Tham gia đấu giá, mua bán và quản lý
-              giao dịch trên nền tảng đấu giá trực
-              tuyến.
-            </p>
+        <p className="description">
+          Tham gia đấu giá, mua bán và quản lý
+          giao dịch trên nền tảng đấu giá trực
+          tuyến.
+        </p>
 
-            <form onSubmit={handleRegister}>
-          <label className="field-label" htmlFor="fullName">
-            Họ và tên <span className="required">*</span>
-          </label>
+        <form onSubmit={handleRegister}>
           <input
-            id="fullName"
             type="text"
             name="fullName"
-            placeholder="Nhập họ và tên"
+            placeholder="Họ và tên"
             value={formData.fullName}
             onChange={handleChange}
             className={
@@ -227,14 +172,10 @@ function RegisterPage() {
             </p>
           )}
 
-          <label className="field-label" htmlFor="email">
-            Email <span className="required">*</span>
-          </label>
           <input
-            id="email"
             type="email"
             name="email"
-            placeholder="Nhập email"
+            placeholder="Email"
             value={formData.email}
             onChange={handleChange}
             className={
@@ -246,17 +187,13 @@ function RegisterPage() {
 
           {errors.email && (
             <p className="field-error">
-              ❌ {errors.email}
+               {errors.email}
             </p>
           )}
-          <label className="field-label" htmlFor="phone">
-            Số điện thoại <span className="required">*</span>
-          </label>
           <input
-            id="phone"
             type="tel"
             name="phone"
-            placeholder="Nhập số điện thoại"
+            placeholder="Số điện thoại"
             value={formData.phone}
             onChange={handleChange}
             className={
@@ -265,85 +202,64 @@ function RegisterPage() {
                 : ""
             }
           />
+          {errors.phone && (
+            <p className="field-error">
+               {errors.phone}
+            </p>
+          )}
 
-          <label className="field-label" htmlFor="password">
-            Mật khẩu <span className="required">*</span>
-          </label>
-          <div className="password-wrapper">
-            <input
-              id="password"
-              type={
-                showPassword
-                  ? "text"
-                  : "password"
-              }
-              name="password"
-              placeholder="Tối thiểu 6 ký tự"
-              value={formData.password}
-              onChange={handleChange}
-              className={
-                errors.password
-                  ? "input-error"
-                  : ""
-              }
-            />
+          <div className="password-field">
+            <div className="password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Mật khẩu"
+                value={formData.password}
+                onChange={handleChange}
+                className={errors.password ? "input-error" : ""}
+              />
 
-            <button
-              type="button"
-              className="eye-btn"
-              onClick={() =>
-                setShowPassword(
-                  !showPassword
-                )
-              }
-            >
-              {showPassword ? (
-                <FaEyeSlash />
-              ) : (
-                <FaEye />
-              )}
-            </button>
+              <button
+                type="button"
+                className="eye-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+
+            {errors.password && (
+              <p className="field-error">{errors.password}</p>
+            )}
           </div>
 
-          <label className="field-label" htmlFor="confirmPassword">
-            Xác nhận mật khẩu <span className="required">*</span>
-          </label>
-          <div className="password-wrapper">
-            <input
-              id="confirmPassword"
-              type={
-                showConfirmPassword
-                  ? "text"
-                  : "password"
-              }
-              name="confirmPassword"
-              placeholder="Nhập lại mật khẩu"
-              value={
-                formData.confirmPassword
-              }
-              onChange={handleChange}
-              className={
-                errors.confirmPassword
-                  ? "input-error"
-                  : ""
-              }
-            />
+          <div className="password-field">
+            <div className="password-wrapper">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="Xác nhận mật khẩu"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={errors.confirmPassword ? "input-error" : ""}
+              />
 
-            <button
-              type="button"
-              className="eye-btn"
-              onClick={() =>
-                setShowConfirmPassword(
-                  !showConfirmPassword
-                )
-              }
-            >
-              {showConfirmPassword ? (
-                <FaEyeSlash />
-              ) : (
-                <FaEye />
-              )}
-            </button>
+              <button
+                type="button"
+                className="eye-btn"
+                onClick={() =>
+                  setShowConfirmPassword(!showConfirmPassword)
+                }
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+
+            {errors.confirmPassword && (
+              <p className="field-error">
+                {errors.confirmPassword}
+              </p>
+            )}
           </div>
 
           <button
@@ -355,6 +271,8 @@ function RegisterPage() {
               ? "Đang đăng ký..."
               : "Đăng ký"}
           </button>
+
+
 
           <div className="divider">
             HOẶC
@@ -394,118 +312,9 @@ function RegisterPage() {
               Kết nối người mua và người bán trên nền tảng đấu giá trực tuyến
             </p>
           </div>
-            </form>
-          </>
-        ) : (
-          <>
-            <h1>Xác Minh Email</h1>
-
-            <p className="subtitle">
-              Đăng ký thành công
-            </p>
-
-            <p className="description">
-              Vui lòng kiểm tra email của bạn.
-              <br />
-              Nhập mã OTP được gửi đến:
-              <br />
-              <strong>{registeredEmail}</strong>
-            </p>
-
-            <form onSubmit={handleVerifyOTP}>
-              <label className="field-label" htmlFor="otpEmail">
-                Email
-              </label>
-              <input
-                id="otpEmail"
-                type="email"
-                value={registeredEmail}
-                readOnly
-                className="input-readonly"
-              />
-
-              <label className="field-label" htmlFor="otp">
-                Mã OTP <span className="required">*</span>
-              </label>
-              <input
-                id="otp"
-                type="text"
-                placeholder="Nhập mã OTP gồm 6 chữ số"
-                value={otpInput}
-                onChange={(e) => {
-                  setOtpInput(e.target.value);
-                  setOtpErrors((prev) => ({
-                    ...prev,
-                    otp: "",
-                  }));
-                }}
-                className={otpErrors.otp ? "input-error" : ""}
-                maxLength="6"
-              />
-
-              {otpErrors.otp && (
-                <p className="field-error">
-                  ❌ {otpErrors.otp}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                className="register-btn"
-                disabled={otpLoading}
-              >
-                {otpLoading
-                  ? "Đang xác minh..."
-                  : "Xác Minh OTP"}
-              </button>
-
-              <div className="resend-otp-container">
-                {resendCountdown > 0 ? (
-                  <p className="resend-countdown">
-                    Gửi lại mã OTP trong {resendCountdown}s
-                  </p>
-                ) : (
-                  <button
-                    type="button"
-                    className="resend-btn"
-                    onClick={handleResendOTP}
-                  >
-                    Gửi lại mã OTP
-                  </button>
-                )}
-              </div>
-
-              <div className="register-link">
-                <span
-                  onClick={() => {
-                    setIsWaitingForOTP(false);
-                    setOtpInput("");
-                    setOtpErrors({});
-                  }}
-                >
-                  ← Quay lại
-                </span>
-              </div>
-
-              <div className="login-footer">
-                <p>
-                  © 2026 Hệ Thống Đấu Giá Thương Mại Điện Tử
-                </p>
-
-                <p>
-                  An toàn • Minh bạch • Hiệu quả
-                </p>
-
-                <p>
-                  Kết nối người mua và người bán trên nền tảng đấu giá trực tuyến
-                </p>
-              </div>
-            </form>
-          </>
-        )}
+        </form>
       </div>
     </div>
   );
 }
-
 export default RegisterPage;
