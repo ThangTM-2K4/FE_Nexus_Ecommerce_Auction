@@ -1,13 +1,19 @@
+@use '../../../styles/palette' as *;
+
 .admin-dashboard {
-  background: linear-gradient(135deg, rgba(255, 175, 204, 0.15), rgba(205, 180, 219, 0.1));
-  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    rgba($blush-pink, 0.35),
+    rgba($lavender, 0.22)
+  );
+  border-radius: $radius-lg;
   padding: 2rem;
-  border: 1.5px solid rgba(255, 175, 204, 0.3);
-  box-shadow: 0 12px 30px rgba(255, 175, 204, 0.1);
+  border: 1.5px solid rgba($lavender, 0.45);
+  box-shadow: $shadow-md;
   backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  transition: $transition;
 
   &:hover {
-    box-shadow: 0 16px 40px rgba(255, 175, 204, 0.15);
+    box-shadow: $shadow-lg;
   }
 }

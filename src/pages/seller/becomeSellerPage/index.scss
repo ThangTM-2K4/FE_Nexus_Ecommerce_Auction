@@ -53,7 +53,7 @@
   }
 
   &.approved {
-    border-top: 4px solid #22c55e;
+    border-top: 4px solid $color-success;
   }
 
   &.pending {
@@ -61,11 +61,11 @@
   }
 
   &.rejected {
-    border-top: 4px solid #dc2626;
+    border-top: 4px solid $live-red;
   }
 
   &.blocked {
-    border-top: 4px solid #eab308;
+    border-top: 4px solid $color-warning;
   }
 }
 
@@ -116,7 +116,7 @@
   align-items: flex-start;
 
   &.completed .seller-timeline-dot {
-    background: #22c55e;
+    background: $color-success;
   }
 
   &.current .seller-timeline-dot {
@@ -179,8 +179,8 @@
     }
 
     &.reject {
-      color: #dc2626;
-      border-color: rgba(#dc2626, 0.3);
+      color: $live-red;
+      border-color: rgba($live-red, 0.3);
     }
   }
 }
@@ -213,11 +213,11 @@
     font-size: 0.9rem;
 
     &.done {
-      color: #15803d;
+      color: $color-success;
     }
 
     &.pending {
-      color: #a16207;
+      color: $color-warning;
     }
   }
 }
@@ -248,7 +248,7 @@
   }
 
   &.done {
-    color: #15803d;
+    color: $color-success;
   }
 }
 

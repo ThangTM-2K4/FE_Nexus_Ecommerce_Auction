@@ -15,11 +15,11 @@
 
 // ─── Top bar ─────────────────────────────────────────────
 .header-topbar {
-  background: linear-gradient(90deg, $deep 0%, $navy 100%);
-  color: rgba(255, 255, 255, 0.82);
+  background: $gradient-hero;
+  color: rgba(255, 255, 255, 0.88);
   font-size: 0.72rem;
   font-weight: 500;
-  border-bottom: 1px solid rgba($sky, 0.15);
+  border-bottom: 1px solid rgba($sage, 0.35);
 }
 
 .header-topbar-shell {
@@ -87,9 +87,9 @@
 
 // ─── Main bar ────────────────────────────────────────────
 .header-main {
-  background: rgba($surface, 0.94);
+  background: rgba($surface, 0.92);
   backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba($mist, 0.7);
+  border-bottom: 1px solid rgba($sage, 0.55);
   box-shadow: $shadow-sm;
 }
 
@@ -291,6 +291,7 @@
 }
 
 .header-auction-cta {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -299,34 +300,126 @@
   border-radius: $radius-md;
   text-decoration: none;
   flex-shrink: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: $gradient-live;
+  border: 1.5px solid rgba($live-red, 0.55);
+  box-shadow: $shadow-live;
+  transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba($live-red-hot, 0.22) 50%,
+      transparent 70%
+    );
+    animation: live-shimmer 2.4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: calc(#{$radius-md} - 1px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba($live-red-hot, 0.85);
+    box-shadow:
+      0 12px 36px rgba($indigo, 0.32),
+      0 0 36px rgba($live-red, 0.55);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .header-auction-live {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
   border-radius: $radius-pill;
-  background: rgba($deep, 0.25);
-  color: #ef4444;
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, $live-red-hot 0%, $live-red 48%, $live-red-deep 100%);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 0 0 1px rgba($live-red-deep, 0.35),
+    0 2px 14px rgba($live-red, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  text-shadow: 0 1px 2px rgba($live-red-deep, 0.45);
+  animation: live-badge-glow 1.8s ease-in-out infinite;
 }
 
 .header-auction-dot {
-  width: 6px;
-  height: 6px;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #ef4444;
-  animation: live-pulse 1.4s ease-in-out infinite;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+  animation: live-dot-beat 1.2s ease-in-out infinite, live-pulse-ring 1.6s ease-out infinite;
+}
+
+@keyframes live-badge-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba($live-red-deep, 0.35),
+      0 2px 14px rgba($live-red, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba($live-red-deep, 0.35),
+      0 0 22px rgba($live-red, 0.85),
+      0 4px 18px rgba($live-red, 0.75),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+}
+
+@keyframes live-dot-beat {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.82);
+    opacity: 0.88;
+  }
 }
 
 @keyframes live-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.75); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.78);
+  }
 }
 
 .header-auction-copy {
@@ -338,10 +431,10 @@
   small {
     font-size: 0.62rem;
     font-weight: 600;
-    opacity: 0.92;
+    opacity: 0.95;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: rgba(255, 255, 255, 0.92);
+    letter-spacing: 0.06em;
+    color: rgba($lavender, 0.92);
   }
 
   strong {
@@ -350,7 +443,18 @@
     font-size: 0.88rem;
     font-weight: 800;
     color: #fff;
+    text-shadow: 0 1px 2px rgba($eggplant, 0.25);
   }
+}
+
+.btn-cta-effect__arrow {
+  display: inline-block;
+  margin-left: 2px;
+  transition: transform $transition-fast;
+}
+
+.header-auction-cta:hover .btn-cta-effect__arrow {
+  transform: translateX(3px);
 }
 
 // ─── Sub nav ─────────────────────────────────────────────
@@ -563,7 +667,7 @@
   height: 16px;
   padding: 0 4px;
   border-radius: $radius-pill;
-  background: linear-gradient(135deg, #ef4444, #f97316);
+  background: linear-gradient(135deg, $live-red-hot, $live-red);
   color: #fff;
   font-size: 0.6rem;
   font-weight: 700;
@@ -599,7 +703,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #22c55e;
+  background: $color-success;
   border: 1.5px solid $navy;
 }
 
@@ -864,14 +968,14 @@
   }
 
   .header-profile-logout {
-    color: #dc2626;
+    color: $live-red;
     margin-top: 4px;
     border-top: 1px solid $border-soft;
     border-radius: 0;
     padding-top: 14px;
 
     &:hover {
-      background: rgba(220, 38, 38, 0.06);
+      background: rgba($live-red, 0.06);
     }
   }
 

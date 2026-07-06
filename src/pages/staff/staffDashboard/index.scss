@@ -1,12 +1,14 @@
+@use '../../../styles/palette' as *;
+
 .staff-dashboard {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background:
-    radial-gradient(circle at 20% 50%, rgba(205, 180, 219, 0.2), transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(189, 224, 254, 0.15), transparent 50%),
-    linear-gradient(135deg, #f9fafb 0%, #f5f8fa 100%);
-  
+    radial-gradient(circle at 20% 50%, rgba($blush-pink, 0.35), transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba($sky-pale, 0.35), transparent 50%),
+    linear-gradient(135deg, $surface-soft 0%, $surface 100%);
+
   .staff-main {
     flex: 1;
     padding: 2.5rem 2rem;

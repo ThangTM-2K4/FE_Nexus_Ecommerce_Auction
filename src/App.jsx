@@ -11,6 +11,7 @@ import ResetPassword from "./pages/auth/resetPassword";
 import RegisterVerifyOtpPage from "./pages/auth/registerVerityOtp";
 
 import HomePage from "./pages/homepage/homePage";
+import ProductDetailPage from "./pages/productDetailPage";
 
 import ProfilePage from "./pages/user/profilePage";
 import NotificationsPage from "./pages/user/notificationsPage";
@@ -68,6 +69,7 @@ function App() {
         {/* Home */}
         <Route path="/" element={<HomePage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/product/:id" element={<ProductDetailPage />} />
 
         {/* User */}
         <Route

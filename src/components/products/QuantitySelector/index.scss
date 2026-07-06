@@ -1,0 +1,68 @@
+@use '../../../styles/palette' as *;
+
+.quantity-selector__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: $ink-muted;
+  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+}
+
+.quantity-selector__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.quantity-selector__control {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  overflow: hidden;
+
+  button {
+    width: 32px;
+    background: $surface-soft;
+    color: $ink-muted;
+    font-size: 1rem;
+    transition: background $transition-fast;
+
+    &:hover:not(:disabled) {
+      background: $surface-muted;
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  input {
+    width: 52px;
+    border: none;
+    border-left: 1px solid $border;
+    border-right: 1px solid $border;
+    text-align: center;
+    font-size: 0.88rem;
+    color: $ink;
+    background: $surface;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+.quantity-selector__stock {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $color-success;
+
+  &--out {
+    color: $color-danger;
+  }
+}

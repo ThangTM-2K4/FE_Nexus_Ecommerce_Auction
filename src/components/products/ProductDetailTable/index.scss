@@ -1,0 +1,57 @@
+@use '../../../styles/palette' as *;
+
+.product-detail-table {
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  padding: 20px 24px;
+}
+
+.product-detail-table__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $ink-soft;
+  margin-bottom: 16px;
+  letter-spacing: 0.03em;
+}
+
+.product-detail-table__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-detail-table__row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid $border-soft;
+  font-size: 0.85rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  dt {
+    color: $ink-muted;
+  }
+
+  dd {
+    color: $ink;
+  }
+}
+
+.product-detail-table__link {
+  color: $accent-dark;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+@media (max-width: 640px) {
+  .product-detail-table__row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

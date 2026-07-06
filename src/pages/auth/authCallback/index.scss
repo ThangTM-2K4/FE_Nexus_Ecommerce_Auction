@@ -1,55 +1,34 @@
+@use '../../../styles/palette' as *;
+@use '../../../styles/auth-theme' as auth;
+
 .callback-page {
-  min-height: 100vh;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  background: linear-gradient(
-    135deg,
-    #001d39,
-    #0a4174,
-    #49769f
-  );
+  @include auth.auth-page-shell;
 }
 
 .callback-card {
+  @include auth.auth-card;
   width: 400px;
-
-  background: white;
-
+  max-width: 90vw;
   padding: 40px;
-
-  border-radius: 20px;
-
   text-align: center;
-
-  box-shadow:
-    0 15px 40px
-    rgba(0, 0, 0, 0.15);
 }
 
 .callback-card h2 {
-  color: #001d39;
-
+  @include auth.auth-title;
   margin-top: 20px;
 }
 
 .callback-card p {
-  color: #64748b;
+  @include auth.auth-muted-text;
 }
 
 .spinner {
   width: 60px;
   height: 60px;
-
   margin: auto;
-
-  border: 5px solid #e5e7eb;
-  border-top: 5px solid #0a4174;
-
+  border: 5px solid auth.$auth-divider;
+  border-top: 5px solid $raspberry;
   border-radius: 50%;
-
   animation: spin 1s linear infinite;
 }
 

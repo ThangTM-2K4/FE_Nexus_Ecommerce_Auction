@@ -49,8 +49,8 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     setLoading(true);
     try {
+      flushSync(() => setUser(null));
       await authService.logout();
-      setUser(null);
     } finally {
       setLoading(false);
     }

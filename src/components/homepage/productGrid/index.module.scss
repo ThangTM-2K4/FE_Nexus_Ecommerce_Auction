@@ -1,0 +1,107 @@
+@use '../../../styles/palette' as *;
+
+.section {
+  margin-top: 8px;
+}
+
+.header {
+  padding: 8px 4px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $deep;
+  letter-spacing: 0.03em;
+  position: relative;
+  padding-left: 10px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 14px;
+    border-radius: $radius-pill;
+    background: $gradient-accent;
+  }
+}
+
+.viewAll {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $navy;
+  white-space: nowrap;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $teal;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--product-columns, 6), minmax(0, 1fr));
+  gap: 8px;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 8px;
+}
+
+.btnLoadMore,
+.btnLoginMore {
+  min-width: 220px;
+  padding: 11px 32px;
+  border-radius: $radius-sm;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background $transition-fast, color $transition-fast, border-color $transition-fast,
+    box-shadow $transition-fast;
+}
+
+.btnLoadMore {
+  border: 1.5px solid $teal;
+  color: $deep;
+  background: rgba($mist, 0.6);
+
+  &:hover {
+    background: $gradient-accent;
+    color: $surface;
+    border-color: transparent;
+    box-shadow: $shadow-accent;
+  }
+}
+
+.btnLoginMore {
+  border: 1.5px solid $navy;
+  color: $deep;
+  background: linear-gradient(135deg, rgba($mist, 0.9) 0%, $surface 100%);
+
+  &:hover {
+    background: $gradient-hero;
+    color: $surface;
+    border-color: transparent;
+    box-shadow: $shadow-md;
+  }
+}

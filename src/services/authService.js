@@ -241,15 +241,17 @@ export const refreshToken = async () => {
 export const logout = async () => {
   const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
-  try {
-    if (storedRefreshToken) {
-      await api.post('/auth/logout', { refreshToken: storedRefreshToken });
-    }
-  } catch {
-    /* clear local session even when API fails */
+  clearSession();
+
+  if (!storedRefreshToken) {
+    return;
   }
 
-  clearSession();
+  try {
+    await api.post('/auth/logout', { refreshToken: storedRefreshToken });
+  } catch {
+    /* session already cleared locally */
+  }
 };
 
 export const getCurrentUser = () => {

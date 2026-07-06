@@ -7,7 +7,7 @@
   background:
     radial-gradient(circle at 20% 50%, rgba($sky, 0.12), transparent 50%),
     radial-gradient(circle at 80% 80%, rgba($teal, 0.08), transparent 50%),
-    linear-gradient(135deg, $surface-soft 0%, #f5f8fa 100%);
+    linear-gradient(135deg, $surface-soft 0%, $surface 100%);
 
   .profile-main {
     flex: 1;
@@ -116,11 +116,11 @@
 
   &--danger {
     background: transparent;
-    border: 1px solid rgba(#dc2626, 0.4);
-    color: #dc2626;
+    border: 1px solid rgba($live-red, 0.4);
+    color: $live-red;
 
     &:hover {
-      background: rgba(#dc2626, 0.06);
+      background: rgba($live-red, 0.06);
     }
   }
 
@@ -260,12 +260,12 @@
 
   &.verified {
     background: rgba(34, 197, 94, 0.15);
-    color: #15803d;
+    color: $color-success;
   }
 
   &.unverified {
     background: rgba(234, 179, 8, 0.15);
-    color: #a16207;
+    color: $color-warning;
   }
 
   &.pending {
@@ -274,8 +274,8 @@
   }
 
   &.rejected {
-    background: rgba(#dc2626, 0.1);
-    color: #dc2626;
+    background: rgba($live-red, 0.1);
+    color: $live-red;
   }
 }
 
@@ -315,7 +315,7 @@
   border: 1px solid rgba(234, 179, 8, 0.3);
   border-radius: $radius-sm;
   font-size: 0.85rem;
-  color: #a16207;
+  color: $color-warning;
 }
 
 .profile-seller-desc {
@@ -393,11 +393,11 @@
     color: $ink;
 
     &.negative {
-      color: #dc2626;
+      color: $live-red;
     }
 
     &.positive {
-      color: #15803d;
+      color: $color-success;
     }
   }
 }
@@ -408,7 +408,7 @@
 
   &--won,
   &--active {
-    color: #15803d;
+    color: $color-success;
   }
 
   &--lost {
@@ -471,12 +471,12 @@
 
   &.rank-silver {
     background: rgba(148, 163, 184, 0.25);
-    color: #475569;
+    color: $ink-muted;
   }
 
   &.rank-gold {
     background: rgba(234, 179, 8, 0.2);
-    color: #a16207;
+    color: $color-warning;
   }
 
   &.rank-platinum {
@@ -532,11 +532,11 @@
   transition: width 0.3s $ease;
 
   &.rank-silver {
-    background: linear-gradient(90deg, #94a3b8, #cbd5e1);
+    background: linear-gradient(90deg, $slate, $sky-pale);
   }
 
   &.rank-gold {
-    background: linear-gradient(90deg, #eab308, #fbbf24);
+    background: linear-gradient(90deg, $raspberry, $blush-pink);
   }
 
   &.rank-platinum {

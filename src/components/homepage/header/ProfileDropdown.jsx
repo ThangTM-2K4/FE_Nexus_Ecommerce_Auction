@@ -23,10 +23,17 @@ export default function ProfileDropdown({ onClose }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     onClose?.();
-    navigate('/login', { replace: true });
+
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch {
+      navigate('/login', { replace: true });
+    }
   };
 
   const handleSwitchMode = async (mode) => {
