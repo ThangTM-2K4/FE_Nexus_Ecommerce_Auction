@@ -1,0 +1,110 @@
+@use "../../../styles/auction-variables" as *;
+
+.adm-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 12px;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+    flex: 0 1 260px;
+    min-width: 160px;
+    max-width: 280px;
+
+    svg {
+      color: $color-text-muted;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    input {
+      border: none;
+      background: none;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+      min-width: 0;
+      color: $color-text;
+
+      &::placeholder {
+        color: $color-text-muted;
+      }
+    }
+  }
+
+  &__filter {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+    background: $color-bg-card;
+    font-size: 13px;
+    color: $color-text;
+    cursor: pointer;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__btn {
+    height: 36px;
+    padding: 0 16px;
+    border: none;
+    border-radius: $radius-sm;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    &--primary {
+      background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+      color: #fff;
+    }
+
+    &--secondary {
+      background: $color-bg;
+      color: $color-text;
+      border: 1px solid $color-border-light;
+    }
+
+    &--danger {
+      background: $color-danger-bg;
+      color: $color-danger;
+    }
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}

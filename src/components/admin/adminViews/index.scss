@@ -1,0 +1,1436 @@
+@use "../../../styles/auction-variables" as *;
+
+// ── User cards ──
+.adm-user-card {
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 18px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba($color-primary, 0.1);
+    border-color: rgba($color-primary, 0.2);
+  }
+
+  &__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    h3 { font-size: 15px; font-weight: 700; color: $color-primary-dark; }
+  }
+
+  &__sub { font-size: 12px; color: $color-text-muted; margin-top: 2px; }
+
+  &__meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+
+    dt { font-size: 10px; color: $color-text-muted; }
+    dd { font-size: 13px; font-weight: 600; color: $color-text; }
+  }
+
+  &__tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: $color-bg;
+    color: $color-text-muted;
+    align-self: flex-start;
+    margin-bottom: 10px;
+
+    &.on { background: rgba($color-success, 0.12); color: $color-success; }
+  }
+
+  &__footer {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid $color-border-light;
+
+    button {
+      padding: 5px 12px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: $color-bg;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover { border-color: $color-primary; color: $color-primary; }
+      &.primary { color: $color-primary; }
+      &.success { color: $color-success; }
+      &.danger { color: $color-danger; &:hover { background: $color-danger-bg; } }
+    }
+  }
+}
+
+.adm-user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+// ── Product cards ──
+.adm-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.adm-seller-group {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: $color-bg;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid $color-border-light;
+  }
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: $color-primary-dark;
+      margin: 0 0 4px;
+    }
+
+    p {
+      font-size: 12px;
+      color: $color-text-muted;
+      margin: 0;
+
+      strong {
+        color: $color-text-secondary;
+        font-weight: 600;
+      }
+    }
+  }
+
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-md;
+    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__stat {
+    padding: 8px 12px;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+    text-align: center;
+    min-width: 88px;
+
+    span {
+      display: block;
+      font-size: 10px;
+      color: $color-text-muted;
+      margin-bottom: 2px;
+    }
+
+    strong {
+      font-size: 16px;
+      font-weight: 800;
+      color: $color-primary-dark;
+    }
+
+    &--warn {
+      border-color: rgba($color-warning, 0.4);
+      background: rgba($color-warning, 0.06);
+
+      strong {
+        color: $color-warning;
+      }
+    }
+  }
+
+  &__grid {
+    margin-bottom: 0;
+  }
+
+  &--inventory {
+    background: linear-gradient(135deg, rgba($color-primary, 0.03), rgba($color-accent-mid, 0.02));
+  }
+}
+
+.adm-product-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+  &:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.08); }
+
+  &__img {
+    height: 100px;
+    background: linear-gradient(145deg, rgba($color-primary, 0.06), rgba($color-accent, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid $color-border-light;
+  }
+
+  &__thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: $radius-md;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+
+    small { font-size: 10px; color: $color-text-muted; }
+  }
+
+  &__brand {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba($color-primary, 0.08);
+    color: $color-primary;
+    margin-top: 4px;
+  }
+
+  &__body {
+    padding: 14px;
+    h3 { font-size: 14px; font-weight: 700; color: $color-primary-dark; margin: 0 0 4px; line-height: 1.35; }
+  }
+
+  &__seller { font-size: 12px; color: $color-text-muted; }
+
+  &__price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    strong { font-size: 15px; color: $color-primary; }
+    span { font-size: 11px; color: $color-text-muted; }
+  }
+
+  footer {
+    display: flex;
+    gap: 4px;
+    padding: 10px 14px;
+    border-top: 1px solid $color-border-light;
+    flex-wrap: wrap;
+
+    button {
+      padding: 4px 10px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      &.success { color: $color-success; }
+      &.danger { color: $color-danger; }
+      &.primary { color: $color-primary; }
+      &:hover { background: $color-bg; }
+    }
+  }
+}
+
+// ── Auction cards ──
+.adm-auction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.adm-auction-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 18px;
+  position: relative;
+  transition: all 0.25s ease;
+
+  &.live {
+    border-color: rgba($color-danger, 0.35);
+    box-shadow: 0 0 0 1px rgba($color-danger, 0.1);
+  }
+
+  &:hover { transform: translateY(-2px); }
+
+  &__pulse {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 10px;
+    font-weight: 800;
+    color: $color-danger;
+    animation: adm-pulse 1.5s ease infinite;
+  }
+
+  header {
+    margin-bottom: 14px;
+    small { font-size: 11px; color: $color-text-muted; }
+    h3 { font-size: 15px; font-weight: 700; color: $color-primary-dark; margin: 4px 0; }
+    p { font-size: 12px; color: $color-text-muted; }
+  }
+
+  &__prices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+
+    div {
+      padding: 10px;
+      background: $color-bg;
+      border-radius: $radius-sm;
+      span { display: block; font-size: 10px; color: $color-text-muted; }
+      strong { font-size: 14px; color: $color-text; }
+      &.current strong { color: $color-primary; font-size: 16px; }
+    }
+  }
+
+  &__bar {
+    height: 4px;
+    background: $color-bg;
+    border-radius: 2px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  &__bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, $color-accent, $color-primary);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  &__meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: $color-text-muted;
+    margin-bottom: 10px;
+  }
+
+  footer {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid $color-border-light;
+
+    button {
+      padding: 5px 10px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: $color-bg;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      &.danger { color: $color-danger; }
+      &.primary { color: $color-primary; }
+    }
+  }
+}
+
+@keyframes adm-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+// ── Order timeline ──
+.adm-order-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-left: 20px;
+  border-left: 2px solid $color-border-light;
+
+  &__item {
+    position: relative;
+    padding: 0 0 20px 24px;
+  }
+
+  &__dot {
+    position: absolute;
+    left: -27px;
+    top: 18px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: $color-primary;
+    border: 2px solid $color-bg-card;
+    box-shadow: 0 0 0 2px $color-primary;
+  }
+
+  &__card {
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-lg;
+    padding: 16px;
+    transition: all 0.25s ease;
+
+    &:hover { border-color: rgba($color-primary, 0.3); box-shadow: 0 4px 16px rgba($color-primary, 0.06); }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    p { font-size: 13px; color: $color-text-secondary; margin-bottom: 8px; }
+    small { font-size: 11px; color: $color-text-muted; }
+  }
+
+  &__details {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: $color-text-muted;
+    strong { color: $color-primary; font-size: 14px; margin-left: auto; }
+  }
+
+  footer {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid $color-border-light;
+
+    button {
+      padding: 4px 10px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      &.success { color: $color-success; }
+      &.danger { color: $color-danger; }
+    }
+  }
+}
+
+// ── Bid feed ──
+.adm-bid-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-lg;
+    transition: all 0.25s ease;
+
+    &:hover { border-color: rgba($color-primary, 0.25); }
+    &.warn { border-left: 3px solid $color-danger; background: rgba($color-danger, 0.03); }
+  }
+
+  &__amount {
+    font-size: 16px;
+    font-weight: 800;
+    color: $color-primary;
+    white-space: nowrap;
+    min-width: 120px;
+  }
+
+  &__body {
+    flex: 1;
+    strong { display: block; font-size: 14px; color: $color-primary-dark; }
+    > span { font-size: 12px; color: $color-text-muted; }
+  }
+
+  &__meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: $color-text-muted;
+    flex-wrap: wrap;
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    button {
+      padding: 4px 10px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      &.danger { color: $color-danger; }
+    }
+  }
+}
+
+// ── Wallet cards ──
+.adm-wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.adm-wallet-card {
+  background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+  border-radius: $radius-lg;
+  padding: 20px;
+  color: #fff;
+  transition: transform 0.25s ease;
+
+  &:hover { transform: scale(1.02); }
+
+  header h3 { font-size: 16px; font-weight: 700; }
+  header span { font-size: 11px; opacity: 0.8; }
+
+  &__balance {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 16px 0;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+    dt { font-size: 10px; opacity: 0.7; }
+    dd { font-size: 12px; font-weight: 600; }
+  }
+
+  footer {
+    display: flex;
+    gap: 8px;
+    button {
+      padding: 6px 14px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: $radius-sm;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      &:hover { background: rgba(255,255,255,0.2); }
+    }
+  }
+}
+
+// ── Fee cards ──
+.adm-fee-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.adm-fee-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover {
+    border-color: $color-accent;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba($color-accent, 0.15);
+  }
+
+  &__type { font-size: 11px; color: $color-text-muted; text-transform: uppercase; letter-spacing: 0.05em; }
+  h3 { font-size: 15px; font-weight: 700; color: $color-primary-dark; margin: 6px 0; }
+  &__value { font-size: 32px; font-weight: 800; color: $color-primary; margin: 8px 0; }
+  p { font-size: 12px; color: $color-text-muted; margin-bottom: 12px; }
+  button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: $radius-sm;
+    background: $color-bg;
+    font-size: 12px;
+    font-weight: 600;
+    color: $color-primary;
+    cursor: pointer;
+  }
+}
+
+// ── Coupon tickets ──
+.adm-coupon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.adm-coupon-ticket {
+  display: flex;
+  background: $color-bg-card;
+  border: 2px dashed rgba($color-accent, 0.5);
+  border-radius: $radius-lg;
+  overflow: hidden;
+  transition: transform 0.25s ease;
+
+  &:hover { transform: scale(1.01); }
+  &.expired { opacity: 0.6; border-color: $color-border; }
+
+  &__left {
+    width: 100px;
+    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+
+    strong { font-size: 22px; font-weight: 800; }
+    span { font-size: 11px; opacity: 0.9; }
+  }
+
+  &__right {
+    flex: 1;
+    padding: 16px;
+    code { font-size: 16px; font-weight: 700; color: $color-primary-dark; }
+    p { font-size: 12px; color: $color-text-muted; margin: 4px 0 8px; }
+  }
+
+  &__usage { margin: 8px 0; }
+  &__bar {
+    height: 4px;
+    background: $color-bg;
+    border-radius: 2px;
+    margin-bottom: 4px;
+    div { height: 100%; background: $color-accent; border-radius: 2px; transition: width 0.4s ease; }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    button {
+      padding: 4px 12px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      cursor: pointer;
+      &.danger { color: $color-danger; }
+    }
+  }
+}
+
+// ── Review cards ──
+.adm-review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.adm-review-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 18px;
+  transition: all 0.25s ease;
+
+  &:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+
+  &__stars { color: #f59e0b; font-size: 16px; margin-bottom: 8px; }
+  &__comment { font-size: 14px; color: $color-text; font-style: italic; line-height: 1.5; margin-bottom: 12px; }
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 10px;
+    strong { font-size: 13px; color: $color-primary-dark; }
+    span { font-size: 11px; color: $color-text-muted; }
+  }
+
+  footer {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid $color-border-light;
+    button {
+      padding: 4px 12px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      cursor: pointer;
+      &.danger { color: $color-danger; }
+    }
+  }
+}
+
+// ── Fraud alerts ──
+.adm-fraud-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adm-fraud-alert {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  border: 1px solid $color-border-light;
+  transition: all 0.25s ease;
+
+  &.severity-high {
+    border-color: rgba($color-danger, 0.4);
+    background: linear-gradient(135deg, rgba($color-danger, 0.04), $color-bg-card);
+  }
+
+  &:hover { transform: translateX(4px); }
+
+  &__icon { font-size: 28px; flex-shrink: 0; }
+  &__body { flex: 1; }
+  &__body header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  &__body p { font-size: 13px; color: $color-text-secondary; margin-bottom: 8px; }
+  &__meta { display: flex; gap: 12px; font-size: 11px; color: $color-text-muted; flex-wrap: wrap; }
+
+  footer {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+    button {
+      padding: 5px 12px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      &.danger { color: $color-danger; }
+      &.primary { color: $color-primary; }
+    }
+  }
+}
+
+// ── Kanban ──
+.adm-kanban {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  align-items: flex-start;
+
+  &__col {
+    background: $color-bg;
+    border-radius: $radius-lg;
+    padding: 14px;
+    min-height: 200px;
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      h3 { font-size: 13px; font-weight: 700; color: $color-primary-dark; }
+      span {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: rgba($color-primary, 0.1);
+        color: $color-primary;
+        font-weight: 700;
+      }
+    }
+
+    &--open header span { background: rgba($color-accent, 0.15); color: $color-primary; }
+    &--pending header span { background: $color-warning-bg; color: $color-warning; }
+    &--closed header span { background: $color-bg; color: $color-text-muted; }
+    &--high header span { background: $color-danger-bg; color: $color-danger; }
+  }
+
+  &__cards { display: flex; flex-direction: column; gap: 10px; }
+
+  &__card {
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+    padding: 14px;
+    transition: all 0.2s ease;
+    cursor: default;
+
+    &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); transform: translateY(-1px); }
+    h4 { font-size: 13px; font-weight: 600; color: $color-primary-dark; margin: 6px 0 4px; }
+    p { font-size: 12px; color: $color-text-muted; }
+    small { font-size: 11px; color: $color-text-muted; }
+    footer {
+      display: flex;
+      gap: 4px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      button {
+        padding: 3px 8px;
+        border: 1px solid $color-border-light;
+        border-radius: $radius-sm;
+        background: none;
+        font-size: 10px;
+        cursor: pointer;
+        &.success { color: $color-success; }
+        &.danger { color: $color-danger; }
+        &.primary { color: $color-primary; }
+      }
+    }
+  }
+}
+
+// ── Audit timeline ──
+.adm-audit-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 8px 0;
+}
+
+.adm-audit-item {
+  display: flex;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 20px;
+
+  &__line {
+    position: absolute;
+    left: 7px;
+    top: 20px;
+    bottom: 0;
+    width: 2px;
+    background: $color-border-light;
+  }
+
+  &:last-child &__line { display: none; }
+
+  &__dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: $color-accent;
+    border: 3px solid $color-bg-card;
+    flex-shrink: 0;
+    margin-top: 4px;
+    z-index: 1;
+  }
+
+  &__card {
+    flex: 1;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+    padding: 14px 16px;
+    transition: all 0.25s ease;
+
+    &:hover { border-color: rgba($color-primary, 0.2); }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      strong { font-size: 13px; color: $color-primary-dark; }
+      span { font-size: 11px; color: $color-text-muted; }
+    }
+    p { font-size: 13px; color: $color-text-secondary; margin-bottom: 8px; em { color: $color-primary; font-style: normal; font-weight: 600; } }
+    small { font-size: 11px; color: $color-text-muted; }
+  }
+
+  &__diff {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    .old { color: $color-danger; text-decoration: line-through; }
+    .arrow { color: $color-text-muted; }
+    .new { color: $color-success; font-weight: 600; }
+  }
+}
+
+// ── Inventory gauge ──
+.adm-inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.adm-inventory-gauge {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 18px;
+  text-align: center;
+  transition: all 0.25s ease;
+
+  &.empty { border-color: rgba($color-danger, 0.4); }
+  &.low { border-color: rgba($color-warning, 0.4); }
+  &:hover { transform: translateY(-2px); }
+
+  header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; text-align: left; }
+  header h3 { font-size: 13px; font-weight: 700; color: $color-primary-dark; }
+  > p { font-size: 11px; color: $color-text-muted; text-align: left; margin-bottom: 12px; }
+
+  &__ring {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 12px;
+
+    svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+    circle { fill: none; stroke-width: 8; }
+    .bg { stroke: $color-bg; }
+    .fill { stroke: $color-accent; stroke-dasharray: 264; transition: stroke-dashoffset 0.6s ease; }
+    strong {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: $color-primary-dark;
+    }
+  }
+
+  dl {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 12px;
+    dt { font-size: 10px; color: $color-text-muted; }
+    dd { font-size: 14px; font-weight: 700; color: $color-text; }
+  }
+
+  button {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: $radius-sm;
+    background: $color-bg;
+    font-size: 12px;
+    font-weight: 600;
+    color: $color-primary;
+    cursor: pointer;
+    &:hover { background: rgba($color-primary, 0.08); }
+  }
+}
+
+// ── Category tree ──
+.adm-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adm-category-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  transition: all 0.2s ease;
+
+  &.child { margin-left: 28px; border-left: 3px solid $color-accent; }
+  &:hover { border-color: rgba($color-primary, 0.25); transform: translateX(3px); }
+
+  &__order {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: $color-bg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: $color-text-muted;
+    flex-shrink: 0;
+  }
+
+  &__body { flex: 1; h3 { font-size: 14px; font-weight: 600; color: $color-primary-dark; } p { font-size: 12px; color: $color-text-muted; } }
+
+  &__actions {
+    display: flex;
+    gap: 4px;
+    button {
+      padding: 4px 10px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      cursor: pointer;
+      &.danger { color: $color-danger; }
+    }
+  }
+}
+
+// ── Brand chips ──
+.adm-brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.adm-brand-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 14px;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  transition: all 0.25s ease;
+
+  &:hover { transform: scale(1.04); border-color: $color-accent; box-shadow: 0 6px 20px rgba($color-accent, 0.12); }
+
+  &__logo {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $color-primary, $color-accent);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  h3 { font-size: 15px; font-weight: 700; color: $color-primary-dark; }
+  > span { font-size: 11px; color: $color-text-muted; margin: 4px 0 8px; }
+
+  &__actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 10px;
+    button {
+      padding: 3px 8px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 10px;
+      cursor: pointer;
+      &.danger { color: $color-danger; }
+    }
+  }
+}
+
+// ── Notifications ──
+.adm-notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adm-notif-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  transition: all 0.25s ease;
+
+  &:hover { border-color: rgba($color-primary, 0.2); transform: translateX(4px); }
+  &.draft { opacity: 0.75; border-style: dashed; }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-md;
+    background: $color-bg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  &__body {
+    flex: 1;
+    strong { display: block; font-size: 14px; color: $color-primary-dark; }
+    p { font-size: 12px; color: $color-text-muted; }
+    small { font-size: 11px; color: $color-text-muted; }
+  }
+}
+
+// ── Banner gallery ──
+.adm-banner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.adm-banner-preview {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  transition: all 0.25s ease;
+
+  &:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+
+  &__visual {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+  }
+
+  &.type-Trangchủ .adm-banner-preview__visual {
+    background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+  }
+
+  &.type-Khuyếnmãi .adm-banner-preview__visual {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+  }
+
+  &.type-Sựkiện .adm-banner-preview__visual {
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  }
+
+  &__body {
+    padding: 14px;
+    h3 { font-size: 14px; font-weight: 700; color: $color-primary-dark; margin-bottom: 4px; }
+    p { font-size: 12px; color: $color-text-muted; }
+    small { font-size: 11px; color: $color-text-muted; display: block; margin: 6px 0; }
+    footer { display: flex; gap: 6px; margin-top: 10px; }
+    button {
+      padding: 5px 12px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      cursor: pointer;
+      &.danger { color: $color-danger; }
+    }
+  }
+}
+
+// ── Content docs ──
+.adm-content-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adm-content-doc {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  transition: all 0.2s ease;
+
+  &:hover { border-color: rgba($color-primary, 0.25); padding-left: 22px; }
+
+  &__type {
+    padding: 6px 12px;
+    border-radius: $radius-sm;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: $color-bg;
+    color: $color-text-muted;
+    flex-shrink: 0;
+
+    &.type-Blog { background: rgba($color-accent, 0.15); color: $color-primary; }
+    &.type-FAQ { background: $color-success-bg; color: $color-success; }
+    &.type-Điềukhoản { background: rgba($color-primary, 0.1); color: $color-primary-dark; }
+  }
+
+  &__body { flex: 1; h3 { font-size: 14px; font-weight: 600; color: $color-primary-dark; } small { font-size: 11px; color: $color-text-muted; } }
+  &__actions {
+    display: flex;
+    gap: 4px;
+    button {
+      padding: 4px 10px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      cursor: pointer;
+      &.danger { color: $color-danger; }
+    }
+  }
+}
+
+// ── Payment cards ──
+.adm-payment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adm-payment-card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  border-left: 4px solid $color-accent;
+  transition: all 0.25s ease;
+
+  &:hover { transform: translateX(4px); box-shadow: 0 4px 16px rgba($color-accent, 0.1); }
+
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  code { font-size: 12px; color: $color-text-muted; }
+  &__amount { font-size: 22px; font-weight: 800; color: $color-primary; margin-bottom: 4px; }
+  p { font-size: 13px; color: $color-text-secondary; margin-bottom: 8px; }
+  &__meta { display: flex; gap: 14px; font-size: 11px; color: $color-text-muted; margin-bottom: 10px; }
+
+  footer {
+    display: flex;
+    gap: 6px;
+    button {
+      padding: 4px 12px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      cursor: pointer;
+      &.primary { color: $color-primary; }
+    }
+  }
+}
+
+// ── Withdrawal cards ──
+.adm-withdrawal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.adm-withdrawal-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 20px;
+  transition: all 0.25s ease;
+
+  &:hover { border-color: rgba($color-primary, 0.3); }
+
+  &__amount { font-size: 26px; font-weight: 800; color: $color-primary; margin-bottom: 8px; }
+  h3 { font-size: 15px; font-weight: 700; color: $color-primary-dark; }
+  p { font-size: 12px; color: $color-text-muted; margin: 4px 0; }
+  small { font-size: 11px; color: $color-text-muted; }
+
+  footer {
+    display: flex;
+    gap: 6px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid $color-border-light;
+    button {
+      padding: 6px 14px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      &.success { color: $color-success; border-color: rgba($color-success, 0.3); }
+      &.danger { color: $color-danger; border-color: rgba($color-danger, 0.3); }
+    }
+  }
+}
+
+// ── Auction order cards ──
+.adm-auction-order-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.adm-auction-order-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 18px;
+  transition: all 0.25s ease;
+
+  &:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    strong { font-size: 14px; color: $color-primary-dark; }
+    span { font-size: 11px; color: $color-text-muted; }
+  }
+
+  &__winner {
+    margin-bottom: 8px;
+    span { display: block; font-size: 10px; color: $color-text-muted; text-transform: uppercase; }
+    strong { font-size: 15px; color: $color-text; }
+  }
+
+  &__price { font-size: 20px; font-weight: 800; color: $color-primary; margin-bottom: 14px; }
+
+  &__pipeline {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+
+    div {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: $radius-sm;
+      background: $color-bg;
+      color: $color-text-muted;
+
+      &.active { background: rgba($color-warning, 0.15); color: $color-warning; }
+      &.done { background: rgba($color-success, 0.12); color: $color-success; }
+    }
+  }
+
+  footer {
+    display: flex;
+    gap: 6px;
+    button {
+      padding: 5px 12px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: none;
+      font-size: 11px;
+      cursor: pointer;
+      &.success { color: $color-success; }
+      &.danger { color: $color-danger; }
+    }
+  }
+}
+
+// ── Shipping ──
+.adm-shipping-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.adm-shipping-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.25s ease;
+
+  &:hover { transform: translateY(-3px); border-color: $color-accent; }
+
+  &__icon { font-size: 32px; margin-bottom: 8px; }
+  h3 { font-size: 15px; font-weight: 700; color: $color-primary-dark; }
+  &__fee { font-size: 20px; font-weight: 800; color: $color-primary; margin: 8px 0; }
+  p { font-size: 12px; color: $color-text-muted; margin-bottom: 10px; }
+  button {
+    margin-top: 10px;
+    padding: 6px 16px;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-sm;
+    background: none;
+    font-size: 12px;
+    cursor: pointer;
+  }
+}
+
+.adm-zone-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.adm-zone-item {
+  padding: 14px 16px;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  transition: all 0.2s ease;
+
+  &:hover { border-color: rgba($color-primary, 0.25); }
+  h4 { font-size: 14px; font-weight: 600; color: $color-primary-dark; margin-bottom: 6px; }
+  div { display: flex; justify-content: space-between; strong { color: $color-primary; } span { font-size: 12px; color: $color-text-muted; } }
+}

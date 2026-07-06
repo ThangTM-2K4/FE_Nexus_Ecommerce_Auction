@@ -1,0 +1,73 @@
+@use "../../../styles/auction-variables" as *;
+
+.adm-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 4px;
+  background: $color-bg;
+  border-radius: $radius-md;
+  border: 1px solid $color-border-light;
+  margin-bottom: 16px;
+  position: relative;
+
+  &__item {
+    position: relative;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    border-radius: $radius-sm;
+    font-size: 13px;
+    color: $color-text-muted;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.25s ease, background 0.25s ease, transform 0.2s ease;
+
+    &:hover {
+      color: $color-primary;
+      background: rgba($color-primary, 0.06);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    &.active {
+      color: $color-primary-dark;
+      font-weight: 600;
+    }
+  }
+
+  &__indicator {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, $color-primary, $color-accent);
+    animation: adm-tab-indicator 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  &__count {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: rgba($color-primary, 0.1);
+    color: $color-primary;
+    font-weight: 600;
+    transition: background 0.25s ease;
+  }
+
+  &__item.active &__count {
+    background: rgba($color-primary, 0.18);
+  }
+}
+
+@keyframes adm-tab-indicator {
+  from { width: 0; opacity: 0; }
+  to { width: 20px; opacity: 1; }
+}

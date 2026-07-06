@@ -19,7 +19,7 @@ import BecomeSellerPage from "./pages/seller/becomeSellerPage";
 import SellerDashboard from "./pages/seller/sellerDashboard";
 import SellerHubRoutes from "./config/SellerHubRoutes";
 
-import AdminDashboard from "./pages/admin/adminDashboard";
+import AdminRoutes from "./config/AdminRoutes";
 
 import StaffLayout from "./components/staff/staffLayout";
 import StaffOverview from "./pages/staff/staffOverview";
@@ -106,9 +106,6 @@ function App() {
         <Route path="/auction/seller" element={<AuctionSellerPage />} />
         <Route path="/auction/create" element={<AuctionCreatePage />} />
 
-        {/* Admin */}
-        <Route path="/admin" element={<AdminDashboard />} />
-
       </Route>
 
    {/* seller - dã ket noi api }
@@ -141,6 +138,8 @@ function App() {
       element={<SellerHubRoutes />}
     />
 
+    {/* Admin Hub */}
+    <Route path="/admin/*" element={<AdminRoutes />} />
 
       {/* Staff Hub — kết nối API  
       <Route

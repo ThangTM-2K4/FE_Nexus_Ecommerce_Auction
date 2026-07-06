@@ -1,0 +1,300 @@
+@use "../../../styles/auction-variables" as *;
+
+.adm-table-wrap {
+  overflow-x: auto;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  background: $color-bg-card;
+}
+
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $color-text-muted;
+    background: $color-bg;
+    border-bottom: 1px solid $color-border-light;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid $color-border-light;
+    color: $color-text-secondary;
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover {
+    background: rgba($color-primary, 0.03);
+  }
+
+  tbody tr.clickable {
+    cursor: pointer;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px !important;
+    color: $color-text-muted;
+  }
+}
+
+.adm-actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+
+  button {
+    padding: 4px 10px;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-sm;
+    background: $color-bg;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    color: $color-text-secondary;
+
+    &:hover {
+      border-color: $color-primary;
+      color: $color-primary;
+    }
+
+    &.danger {
+      color: $color-danger;
+      border-color: rgba($color-danger, 0.3);
+
+      &:hover {
+        background: $color-danger-bg;
+      }
+    }
+
+    &.success {
+      color: $color-success;
+      border-color: rgba($color-success, 0.3);
+
+      &:hover {
+        background: $color-success-bg;
+      }
+    }
+
+    &.primary {
+      color: $color-primary;
+      border-color: rgba($color-primary, 0.3);
+
+      &:hover {
+        background: rgba($color-primary, 0.08);
+      }
+    }
+  }
+}
+
+.adm-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+
+  dt {
+    font-size: 11px;
+    color: $color-text-muted;
+    margin-bottom: 2px;
+  }
+
+  dd {
+    font-size: 13px;
+    color: $color-text;
+    font-weight: 500;
+  }
+}
+
+.adm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: $color-text-muted;
+
+    input,
+    select,
+    textarea {
+      padding: 9px 12px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      font-size: 13px;
+      color: $color-text;
+      background: $color-bg;
+
+      &:focus {
+        outline: none;
+        border-color: $color-primary;
+      }
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 8px;
+
+    button {
+      padding: 9px 18px;
+      border: none;
+      border-radius: $radius-sm;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+
+      &.save {
+        background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+        color: #fff;
+      }
+
+      &.cancel {
+        background: $color-bg;
+        border: 1px solid $color-border-light;
+        color: $color-text-muted;
+      }
+    }
+  }
+}
+
+.adm-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.adm-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 18px;
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    gap: 12px;
+
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: $color-primary-dark;
+    }
+
+    p {
+      font-size: 12px;
+      color: $color-text-muted;
+      margin-top: 2px;
+    }
+  }
+
+  footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid $color-border-light;
+    flex-wrap: wrap;
+  }
+}
+
+.adm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm-top-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+    font-size: 13px;
+
+    strong {
+      color: $color-primary-dark;
+    }
+
+    span {
+      color: $color-text-muted;
+      font-size: 12px;
+    }
+  }
+}
+
+.adm-perm-matrix {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 10px 12px;
+      border: 1px solid $color-border-light;
+      text-align: center;
+    }
+
+    th {
+      background: $color-bg;
+      font-weight: 700;
+      color: $color-text-muted;
+    }
+
+    td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: $color-primary-dark;
+    }
+
+    .yes {
+      color: $color-success;
+      font-weight: 700;
+    }
+
+    .no {
+      color: $color-text-muted;
+    }
+  }
+}
