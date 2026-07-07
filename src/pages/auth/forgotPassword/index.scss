@@ -17,56 +17,82 @@
 }
 
 .forgot-card {
-  width: 500px;
+  width: 440px;
+  max-width: 100%;
 
   background: white;
 
-  padding: 40px;
+  padding: 36px 36px 32px;
 
-  border-radius: 24px;
-
+  border-radius: 20px;
 
   box-shadow: 0 20px 50px rgba(0, 29, 57, 0.25);
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.forgot-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: rgba(10, 65, 116, 0.1);
+  color: #0a4174;
+  font-size: 26px;
 }
 
 .forgot-card h1 {
   text-align: center;
 
   color: #001d39;
-
-  margin-bottom: 12px;
+  font-size: 22px;
+  margin-bottom: 6px;
 }
 
 .forgot-card p {
-    
+
   text-align: center;
 
   color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
 
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 
 .forgot-card .field-error {
   color: #ef4444 !important;
 }
 
+.forgot-card form {
+  display: flex;
+  flex-direction: column;
+}
+
 .forgot-card input {
   width: 100%;
 
-  height: 52px;
+  height: 50px;
 
   padding: 0 16px;
 
   border: 1px solid #d6dee6;
   border-radius: 10px;
 
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
 .forgot-card button {
   width: 100%;
 
-  height: 52px;
+  height: 50px;
 
   border: none;
 
@@ -79,6 +105,10 @@
   font-weight: 700;
 
   cursor: pointer;
+
+  margin-top: 8px;
+
+  transition: background .2s ease;
 }
 
 .forgot-card button:hover {
@@ -92,7 +122,7 @@
 
   width: fit-content;
 
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 
   color: #0a4174;
 
@@ -109,9 +139,8 @@
   transform: translateX(-3px);
 }
 
-input {
+.forgot-page input {
   width: 100%;
-  height: 52px;
 
   padding: 0 16px;
 
@@ -125,7 +154,7 @@ input {
   transition: all 0.3s ease;
 }
 
-input:focus {
+.forgot-page input:focus {
   outline: none;
 
   border-color: #0a4174;
@@ -133,25 +162,24 @@ input:focus {
   box-shadow: 0 0 0 4px rgba(10, 65, 116, 0.1);
 }
 
-.input-error {
+.forgot-page .input-error {
   border: 1px solid #ef4444 !important;
 }
 
-.field-error {
+.forgot-page .field-error {
   display: block;
 
   width: 100%;
 
   color: #ef4444;
 
-  font-size: 13px;
+  font-size: 12px;
 
   font-weight: 500;
 
   text-align: left !important;
 
-  margin-top: -12px;
-  margin-bottom: 15px;
+  margin: 0 0 10px;
 
   padding-left: 4px;
 }

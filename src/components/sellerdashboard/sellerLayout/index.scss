@@ -2,17 +2,33 @@
 
 .slr-layout {
   min-height: 100vh;
+  max-width: 100vw;
+  overflow-x: hidden;
   background: $color-bg;
 
   &__body {
-    display: flex;
-    max-width: 1440px;
-    margin: 0 auto;
+    display: block;
   }
 
   &__content {
-    flex: 1;
-    min-width: 0;
+    margin-left: 250px;
     padding: 24px;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 900px) {
+  .slr-layout {
+    &__content {
+      margin-left: 0;
+      padding: 16px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .slr-layout__content {
+    padding: 12px;
   }
 }

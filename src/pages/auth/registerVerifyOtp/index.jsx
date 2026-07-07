@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { verifyEmail, resendEmailOtp } from "../../../services/authService";
+import OtpInput from "../../../components/auth/OtpInput";
 
 import "./index.scss";
+
+const RESEND_SECONDS = 60;
 
 function RegisterVerifyOtpPage() {
   const navigate = useNavigate();
@@ -13,6 +16,13 @@ function RegisterVerifyOtpPage() {
 
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
+  const [cooldown, setCooldown] = useState(RESEND_SECONDS);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   const handleVerify = async (e) => {
     e.preventDefault();
@@ -56,11 +66,12 @@ function RegisterVerifyOtpPage() {
 };
 
   const handleResendOtp = async () => {
+    if (cooldown > 0) return;
     try {
-      // TODO: gọi API resend OTP
-       await resendEmailOtp(email);
+      await resendEmailOtp(email);
 
       toast.success("Đã gửi lại mã OTP");
+      setCooldown(RESEND_SECONDS);
     } catch (err) {
       toast.error("Không thể gửi lại OTP");
     }
@@ -77,6 +88,8 @@ function RegisterVerifyOtpPage() {
           ← Quay lại
         </span>
 
+        <span className="otp-icon" aria-hidden="true">✉️</span>
+
         <h1>Xác Thực Email</h1>
 
         <p>Mã OTP đã được gửi đến:</p>
@@ -86,17 +99,13 @@ function RegisterVerifyOtpPage() {
         </p>
 
         <form onSubmit={handleVerify}>
-          <input
-            type="text"
-            maxLength={6}
-            placeholder="Nhập OTP"
+          <OtpInput
             value={otp}
-            className={error ? "input-error" : ""}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, "");
+            onChange={(value) => {
               setOtp(value);
               setError("");
             }}
+            error={Boolean(error)}
           />
 
           {error && (
@@ -111,10 +120,10 @@ function RegisterVerifyOtpPage() {
         </form>
 
         <span
-          className="resend"
+          className={`resend ${cooldown > 0 ? "disabled" : ""}`}
           onClick={handleResendOtp}
         >
-          Gửi lại OTP
+          {cooldown > 0 ? `Gửi lại OTP sau ${cooldown}s` : "Gửi lại OTP"}
         </span>
 
       </div>

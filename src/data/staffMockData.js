@@ -1,6 +1,7 @@
 export const sidebarMenuItems = [
   { id: "overview", label: "Tổng quan", icon: "grid", path: "/staff/overview" },
   { id: "seller-review", label: "Duyệt người bán", icon: "userCheck", path: "/staff/seller-review" },
+  { id: "product-review", label: "Duyệt sản phẩm", icon: "box", path: "/staff/product-review" },
   { id: "auctions", label: "Kiểm duyệt đấu giá", icon: "gavel", path: "/staff/auctions" },
   { id: "disputes", label: "Khiếu nại & tranh chấp", icon: "flag", path: "/staff/disputes" },
   { id: "orders", label: "Giám sát đơn hàng", icon: "cart", path: "/staff/orders" },

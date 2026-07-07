@@ -1,5 +1,6 @@
 import { mockDelay } from './mockDelay';
 import { updateSessionUser } from './authService';
+import { syncBankFromSellerApplication } from './bankAccountService';
 
 const applicationKey = (userId) => `mockSellerApplication_${userId}`;
 
@@ -32,6 +33,8 @@ export const submitSellerApplication = async (userId, applicationData) => {
 
   localStorage.setItem(applicationKey(userId), JSON.stringify(application));
   updateSessionUser({ sellerStatus: 'PENDING' });
+
+  await syncBankFromSellerApplication(userId, application);
 
   return application;
 };
@@ -89,10 +92,11 @@ export const simulateAdminRejection = async (userId, reason, adminNote) => {
 export const checkSellerPreconditions = (profile) => ({
   emailVerified: profile?.isEmailVerified === true,
   phoneVerified: profile?.isPhoneVerified === true,
+  nationalIdVerified: profile?.isNationalIdVerified === true,
   bankAccountAdded: profile?.bankAccount != null,
 });
 
 export const allPreconditionsMet = (profile) => {
   const checks = checkSellerPreconditions(profile);
-  return checks.emailVerified && checks.phoneVerified && checks.bankAccountAdded;
+  return checks.emailVerified && checks.phoneVerified && checks.nationalIdVerified;
 };

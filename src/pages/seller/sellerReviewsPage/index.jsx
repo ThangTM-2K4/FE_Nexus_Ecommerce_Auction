@@ -14,7 +14,7 @@ import {
 export default function ReviewsPage() {
   return (
     <div className="slr-page">
-      <PageHeader title="Đánh giá và phản hồi" subtitle="Rating, reviews và khiếu nại" />
+      <PageHeader title="Đánh giá và phản hồi" subtitle="Đánh giá, nhận xét và khiếu nại" />
 
       <section className="slr-section">
         <div className="slr-review-summary">
@@ -45,29 +45,31 @@ export default function ReviewsPage() {
               ))}
             </div>
             <h4>Sản phẩm được đánh giá</h4>
-            <table className="slr-table slr-table--compact">
-              <thead>
-                <tr>
-                  <th>Sản phẩm</th>
-                  <th>Rating</th>
-                  <th>Reviews</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reviewedProducts.map((p) => (
-                  <tr key={p.name}>
-                    <td>
-                      <div className="slr-product-cell">
-                        <img src={p.image} alt="" />
-                        <span>{p.name}</span>
-                      </div>
-                    </td>
-                    <td className="pos">★ {p.rating}</td>
-                    <td>{p.reviews}</td>
+            <div className="slr-table-wrap">
+              <table className="slr-table slr-table--compact">
+                <thead>
+                  <tr>
+                    <th>Sản phẩm</th>
+                    <th>Đánh giá</th>
+                    <th>Lượt đánh giá</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {reviewedProducts.map((p) => (
+                    <tr key={p.name}>
+                      <td>
+                        <div className="slr-product-cell">
+                          <img src={p.image} alt="" />
+                          <span>{p.name}</span>
+                        </div>
+                      </td>
+                      <td className="pos">★ {p.rating}</td>
+                      <td>{p.reviews}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="slr-table-col">

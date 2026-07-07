@@ -78,41 +78,43 @@ export default function OrdersPage() {
         <div className="slr-page-split">
           <div className="slr-panel-card">
             <h4>Đơn hàng gần đây</h4>
-            <table className="slr-table slr-table--compact">
-              <thead>
-                <tr>
-                  <th>Mã đơn</th>
-                  <th>Sản phẩm</th>
-                  <th>Khách hàng</th>
-                  <th>Giá trị</th>
-                  <th>Trạng thái</th>
-                  <th>Thời gian</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((o) => (
-                  <tr key={o.id}>
-                    <td>
-                      <strong>{o.id}</strong>
-                    </td>
-                    <td>
-                      <div className="slr-product-cell">
-                        <img src={o.image} alt="" />
-                        <span>{o.product}</span>
-                      </div>
-                    </td>
-                    <td>{o.customer}</td>
-                    <td>{formatCurrency(o.amount)}</td>
-                    <td>
-                      <span className={`slr-status slr-status--${statusClass[o.status]}`}>
-                        {statusTranslate[o.status] || o.status}
-                      </span>
-                    </td>
-                    <td className="muted">{o.date}</td>
+            <div className="slr-table-wrap">
+              <table className="slr-table slr-table--compact">
+                <thead>
+                  <tr>
+                    <th>Mã đơn</th>
+                    <th>Sản phẩm</th>
+                    <th>Khách hàng</th>
+                    <th>Giá trị</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentOrders.map((o) => (
+                    <tr key={o.id}>
+                      <td>
+                        <strong>{o.id}</strong>
+                      </td>
+                      <td>
+                        <div className="slr-product-cell">
+                          <img src={o.image} alt="" />
+                          <span>{o.product}</span>
+                        </div>
+                      </td>
+                      <td>{o.customer}</td>
+                      <td>{formatCurrency(o.amount)}</td>
+                      <td>
+                        <span className={`slr-status slr-status--${statusClass[o.status]}`}>
+                          {statusTranslate[o.status] || o.status}
+                        </span>
+                      </td>
+                      <td className="muted">{o.date}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <aside className="slr-aside-panel">

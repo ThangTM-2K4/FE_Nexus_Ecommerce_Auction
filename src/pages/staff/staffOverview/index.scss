@@ -38,34 +38,6 @@
     opacity: 0.8;
   }
 
-  &__hero-stats {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    width: 100%;
-    max-width: 360px;
-
-    > div {
-      background: rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: $radius-md;
-      padding: 12px 18px;
-
-      small {
-        display: block;
-        font-size: 11px;
-        opacity: 0.8;
-        margin-bottom: 4px;
-      }
-
-      strong {
-        font-size: 22px;
-        font-weight: 700;
-      }
-    }
-  }
-
   &__kpis {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

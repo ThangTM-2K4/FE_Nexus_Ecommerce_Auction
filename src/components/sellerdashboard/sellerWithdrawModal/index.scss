@@ -1,0 +1,359 @@
+@use "../../../styles/seller/variables" as *;
+
+.slr-withdraw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba($color-primary-dark, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: slr-fade-in 0.2s ease;
+}
+
+.slr-withdraw-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  animation: slr-slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 24px 24px 0;
+
+    h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: $color-primary-dark;
+    }
+
+    p {
+      font-size: 13px;
+      color: $color-text-muted;
+      margin-top: 4px;
+    }
+  }
+
+  &__close {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: $color-bg;
+    border-radius: 50%;
+    cursor: pointer;
+    color: $color-text-muted;
+    font-size: 14px;
+
+    &:hover {
+      background: $color-danger-bg;
+      color: $color-danger;
+    }
+  }
+
+  &__body {
+    padding: 20px 24px 24px;
+  }
+
+  &__footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+}
+
+.slr-withdraw-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba($color-accent, 0.12), rgba($color-accent-mid, 0.08));
+  border: 1px solid rgba($color-accent, 0.3);
+  border-radius: $radius-md;
+  margin-bottom: 20px;
+
+  span {
+    font-size: 13px;
+    color: $color-text-muted;
+  }
+
+  strong {
+    font-size: 18px;
+    font-weight: 700;
+    color: $color-primary;
+  }
+}
+
+.slr-withdraw-type {
+  border: none;
+  margin: 0 0 20px;
+  padding: 0;
+
+  legend {
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-primary-dark;
+    margin-bottom: 10px;
+  }
+
+  &__options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  &__options button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 2px solid $color-border-light;
+    background: $color-bg;
+    border-radius: $radius-md;
+    cursor: pointer;
+    text-align: left;
+    transition: $transition-fast;
+
+    strong {
+      display: block;
+      font-size: 13px;
+      color: $color-primary-dark;
+    }
+
+    small {
+      font-size: 11px;
+      color: $color-text-muted;
+    }
+
+    &.active {
+      border-color: $color-primary;
+      background: rgba($color-accent, 0.1);
+    }
+  }
+
+  &__icon {
+    font-size: 20px;
+    line-height: 1;
+  }
+}
+
+.slr-withdraw-accounts {
+  margin-bottom: 20px;
+
+  > label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-primary-dark;
+    margin-bottom: 10px;
+  }
+}
+
+.slr-withdraw-account {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 2px solid $color-border-light;
+  border-radius: $radius-md;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  input {
+    margin-top: 4px;
+    accent-color: $color-primary;
+  }
+
+  strong {
+    display: block;
+    font-size: 13px;
+    color: $color-primary-dark;
+  }
+
+  span {
+    display: block;
+    font-size: 12px;
+    color: $color-text-muted;
+    margin-top: 2px;
+  }
+
+  em {
+    display: block;
+    font-size: 11px;
+    color: $color-text-muted;
+    font-style: normal;
+    margin-top: 2px;
+  }
+
+  &.selected {
+    border-color: $color-primary;
+    background: rgba($color-accent, 0.08);
+  }
+}
+
+.slr-withdraw-amount {
+  margin-bottom: 16px;
+
+  > label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-primary-dark;
+    margin-bottom: 8px;
+  }
+
+  &__input {
+    display: flex;
+    align-items: center;
+    border: 2px solid $color-border;
+    border-radius: $radius-md;
+    overflow: hidden;
+    background: $color-bg;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      padding: 12px 16px;
+      font-size: 18px;
+      font-weight: 700;
+      color: $color-primary-dark;
+      background: transparent;
+
+      &:focus {
+        outline: none;
+      }
+    }
+
+    span {
+      padding: 0 16px;
+      font-size: 16px;
+      font-weight: 600;
+      color: $color-text-muted;
+    }
+  }
+
+  &__quick {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+
+    button {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid $color-border;
+      background: $color-bg;
+      border-radius: $radius-sm;
+      font-size: 12px;
+      font-weight: 600;
+      color: $color-primary;
+      cursor: pointer;
+
+      &:hover {
+        background: rgba($color-accent, 0.12);
+      }
+    }
+  }
+}
+
+.slr-withdraw-info {
+  list-style: none;
+  padding: 12px 14px;
+  background: $color-bg;
+  border-radius: $radius-md;
+  font-size: 12px;
+  color: $color-text-muted;
+
+  li {
+    padding: 3px 0;
+
+    strong {
+      color: $color-primary-dark;
+    }
+  }
+}
+
+.slr-withdraw-error {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: $color-danger-bg;
+  color: $color-danger;
+  border-radius: $radius-sm;
+  font-size: 13px;
+}
+
+.slr-withdraw-empty {
+  font-size: 13px;
+  color: $color-text-muted;
+  padding: 12px 14px;
+  background: $color-bg;
+  border-radius: $radius-md;
+  margin-bottom: 8px;
+}
+
+.slr-withdraw-btn {
+  padding: 10px 20px;
+  border-radius: $radius-md;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: $transition-fast;
+
+  &--ghost {
+    background: $color-bg;
+    border: 1px solid $color-border;
+    color: $color-text-muted;
+
+    &:hover {
+      background: $color-border-light;
+    }
+  }
+
+  &--primary {
+    background: $color-primary-dark;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: $color-primary;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+@keyframes slr-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slr-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .slr-withdraw-type__options {
+    grid-template-columns: 1fr;
+  }
+}
