@@ -6,8 +6,9 @@ import "./index.scss";
 
 const SellerLayout = () => {
   const location = useLocation();
-  const activeId =
-    location.pathname.split("/").filter(Boolean).pop() || "overview";
+  const segments = location.pathname.split("/").filter(Boolean);
+  const hubIdx = segments.indexOf("seller-hub");
+  const activeId = hubIdx >= 0 && segments[hubIdx + 1] ? segments[hubIdx + 1] : "overview";
 
   return (
     <div className="slr-layout">

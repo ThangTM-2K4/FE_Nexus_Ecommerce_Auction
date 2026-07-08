@@ -144,7 +144,7 @@ export const hadStoredSession = () => {
 };
 
 export const login = async (loginValue, password) => {
-  // 1. Đăng nhập
+  // 1. Log in
   const { data } = await api.post("/auth/login", {
     emailOrPhone: loginValue,
     password,
@@ -154,17 +154,17 @@ export const login = async (loginValue, password) => {
     throw new Error("Đăng nhập thất bại");
   }
 
-  // 2. Lưu accessToken, refreshToken, expiresAt
+  // 2. Save accessToken, refreshToken, expiresAt
   saveSession(data);
 
-  // 3. Gọi API lấy thông tin người dùng
+  // 3. Call the API to fetch user info
   const { data: me } = await api.get("/users/me");
 
   if (!me) {
     throw new Error("Không lấy được thông tin người dùng");
   }
 
-  // 4. Lưu thông tin user
+  // 4. Save user info
   const user = saveSession(me);
 
   if (!user?.id) {
@@ -173,7 +173,7 @@ export const login = async (loginValue, password) => {
 
   return user;
 };
-
+//registerOtp
 export const register = async ({ fullName, email, phone, password }) => {
   const { data } = await api.post('/auth/register', {
     fullName,
@@ -202,6 +202,8 @@ export const resendEmailOtp = async (email) => {
 
   return data;
 };
+// forgotOtp not implemented yet
+
 
 export const getGoogleLoginUrl = () => `${api.defaults.baseURL}/auth/google/login`;
 

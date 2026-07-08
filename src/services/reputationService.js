@@ -88,7 +88,7 @@ export const calculateSellerRank = (score) => {
   return 'Silver';
 };
 
-export const canApplySeller = (buyerScore) => buyerScore >= 50;
+export const canApplySeller = (buyerScore) => buyerScore >= 7;
 
 export const canJoinAuction = (buyerScore, startingPrice) => {
   const rank = calculateBuyerRank(buyerScore);

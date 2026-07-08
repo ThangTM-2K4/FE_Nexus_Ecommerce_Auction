@@ -1,0 +1,164 @@
+@use '../../../styles/palette' as *;
+@use '../../../styles/auth-theme' as auth;
+
+.otp-page {
+  @include auth.auth-page-shell;
+}
+
+.otp-card {
+  width: 440px;
+  max-width: 100%;
+
+  background: white;
+
+  padding: 36px 36px 32px;
+
+  border-radius: 20px;
+
+  box-shadow: 0 20px 50px rgba(0, 29, 57, 0.25);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.otp-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: rgba(10, 65, 116, 0.1);
+  font-size: 24px;
+}
+
+.otp-card h1 {
+  @include auth.auth-title;
+  text-align: center;
+  color: #001d39;
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.otp-card p {
+  @include auth.auth-muted-text;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.account-info {
+  font-weight: 700;
+  color: #0a4174;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.otp-card form {
+  display: flex;
+  flex-direction: column;
+}
+
+.otp-card button {
+  @include auth.auth-primary-btn;
+  width: 100%;
+
+  height: 50px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #001d39;
+
+  color: white;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  margin-top: 8px;
+
+  transition: background .2s ease;
+}
+
+.otp-card button:hover {
+  background: #0a4174;
+}
+
+.resend {
+  @include auth.auth-link;
+  display: block;
+  text-align: center;
+  margin-top: 18px;
+  color: #0a4174;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.resend:hover {
+  text-decoration: underline;
+}
+
+.resend.disabled {
+  color: #94a3b8;
+  cursor: default;
+  pointer-events: none;
+}
+
+.back-auth {
+  @include auth.auth-link;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform $transition-fast;
+
+  cursor: pointer;
+
+  transition: all .25s ease;
+}
+
+.back-auth:hover {
+  color: #0d5ea8;
+  transform: translateX(-3px);
+}
+
+.back-forgot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  width: fit-content;
+
+  margin-bottom: 14px;
+
+  color: #0a4174;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: all .25s ease;
+}
+
+.back-forgot:hover {
+  color: #0d5ea8;
+  transform: translateX(-3px);
+}
+
+.otp-card .field-error {
+  color: #ef4444;
+  font-size: 12px;
+  text-align: center;
+  margin: 0 0 10px;
+}

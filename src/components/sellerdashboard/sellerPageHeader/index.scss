@@ -3,6 +3,21 @@
 .slr-page-header {
   margin-bottom: 24px;
 
+  &--with-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
   &__kicker {
     display: inline-block;
     font-size: 11px;

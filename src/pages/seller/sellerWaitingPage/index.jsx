@@ -21,6 +21,11 @@ export default function SellerWaitingPage() {
       <Header />
       <main className="become-seller-main">
         <div className="seller-status-card pending">
+          <img
+            src="/images/seller/status/pending.svg"
+            alt=""
+            className="seller-status-illustration"
+          />
           <h1>Đang chờ phê duyệt</h1>
           <p>Đơn đăng ký người bán của bạn đang được xem xét. Vui lòng quay lại sau.</p>
           {application && (

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaThLarge,
@@ -9,6 +10,10 @@ import {
   FaStar,
   FaBell,
   FaWallet,
+  FaStore,
+  FaChevronDown,
+  FaCog,
+  FaQuestionCircle,
 } from "react-icons/fa";
 import { sidebarMenuItems } from "../../../data/sellerMockData";
 import "./index.scss";
@@ -23,10 +28,30 @@ const icons = {
   star: FaStar,
   bell: FaBell,
   wallet: FaWallet,
+  store: FaStore,
+  settings: FaCog,
+  help: FaQuestionCircle,
+};
+
+const findGroupIdByChild = (activeId) => {
+  const group = sidebarMenuItems.find((item) =>
+    item.children?.some((child) => child.id === activeId)
+  );
+  return group?.id ?? null;
 };
 
 const SellerSidebar = ({ activeId }) => {
   const navigate = useNavigate();
+  const [openGroupId, setOpenGroupId] = useState(() => findGroupIdByChild(activeId));
+
+  useEffect(() => {
+    const groupId = findGroupIdByChild(activeId);
+    if (groupId) setOpenGroupId(groupId);
+  }, [activeId]);
+
+  const toggleGroup = (id) => {
+    setOpenGroupId((prev) => (prev === id ? null : id));
+  };
 
   return (
     <aside className="slr-sidebar">
@@ -35,13 +60,53 @@ const SellerSidebar = ({ activeId }) => {
         <ul className="slr-sidebar__menu">
           {sidebarMenuItems.map((item) => {
             const Icon = icons[item.icon];
+
+            if (item.children) {
+              const isOpen = openGroupId === item.id;
+              const hasActiveChild = item.children.some((child) => child.id === activeId);
+
+              return (
+                <li key={item.id} className="slr-sidebar__group">
+                  <button
+                    type="button"
+                    className={`slr-sidebar__item slr-sidebar__item--group ${
+                      hasActiveChild ? "active-group" : ""
+                    }`}
+                    onClick={() => toggleGroup(item.id)}
+                    aria-expanded={isOpen}
+                  >
+                    <Icon />
+                    <span>{item.label}</span>
+                    <FaChevronDown className={`slr-sidebar__chevron ${isOpen ? "open" : ""}`} />
+                  </button>
+                  <div className={`slr-sidebar__submenu-wrap ${isOpen ? "open" : ""}`}>
+                    <div className="slr-sidebar__submenu-inner">
+                      <ul className="slr-sidebar__submenu">
+                        {item.children.map((child) => (
+                          <li key={child.id}>
+                            <button
+                              type="button"
+                              className={`slr-sidebar__subitem ${
+                                activeId === child.id ? "active" : ""
+                              }`}
+                              onClick={() => navigate(child.path)}
+                            >
+                              {child.label}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </li>
+              );
+            }
+
             return (
               <li key={item.id}>
                 <button
                   type="button"
-                  className={`slr-sidebar__item ${
-                    activeId === item.id ? "active" : ""
-                  }`}
+                  className={`slr-sidebar__item ${activeId === item.id ? "active" : ""}`}
                   onClick={() => navigate(item.path)}
                 >
                   <Icon />
@@ -51,11 +116,6 @@ const SellerSidebar = ({ activeId }) => {
             );
           })}
         </ul>
-      </div>
-
-      <div className="slr-sidebar__footer">
-        <p>Nâng cấp gói Seller Pro</p>
-        <button type="button">Xem gói dịch vụ</button>
       </div>
     </aside>
   );

@@ -1,8 +1,10 @@
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import './SwitchAccountModal.scss';
 
 export default function SwitchAccountModal({ onClose, onSwitch }) {
   const { user, isBuyerMode, isSellerMode, isApprovedSeller, loading } = useAuth();
+  const navigate = useNavigate();
 
   const sellerStatus = user?.sellerStatus;
 
@@ -13,6 +15,11 @@ export default function SwitchAccountModal({ onClose, onSwitch }) {
       return;
     }
     onSwitch?.(mode);
+  };
+
+  const goToBecomeSeller = () => {
+    onClose?.();
+    navigate('/profile/become-seller');
   };
 
   return (
@@ -50,13 +57,18 @@ export default function SwitchAccountModal({ onClose, onSwitch }) {
           </button>
 
           {sellerStatus == null && (
-            <div className="header-mode-option disabled">
+            <button
+              type="button"
+              className="header-mode-option"
+              onClick={goToBecomeSeller}
+            >
               <span className="header-mode-option-icon">🏪</span>
               <div>
                 <strong>Chế độ Người bán</strong>
                 <small>Trở thành Người bán để kích hoạt</small>
               </div>
-            </div>
+              <span className="header-mode-arrow" aria-hidden="true">→</span>
+            </button>
           )}
 
           {sellerStatus === 'PENDING' && (
@@ -70,13 +82,18 @@ export default function SwitchAccountModal({ onClose, onSwitch }) {
           )}
 
           {sellerStatus === 'REJECTED' && (
-            <div className="header-mode-option disabled">
+            <button
+              type="button"
+              className="header-mode-option"
+              onClick={goToBecomeSeller}
+            >
               <span className="header-mode-option-icon">✕</span>
               <div>
                 <strong>Chế độ Người bán</strong>
-                <small>Đơn đăng ký bị từ chối</small>
+                <small>Đơn bị từ chối — bấm để nộp lại</small>
               </div>
-            </div>
+              <span className="header-mode-arrow" aria-hidden="true">→</span>
+            </button>
           )}
 
           {isApprovedSeller && (

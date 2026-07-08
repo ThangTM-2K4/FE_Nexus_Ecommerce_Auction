@@ -1,0 +1,481 @@
+@use "../../../styles/palette" as *;
+
+.slr-cp__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: $color-text-muted;
+  margin-bottom: 16px;
+
+  .sep {
+    color: $color-text-muted;
+  }
+
+  .current {
+    color: $color-primary-dark;
+    font-weight: 600;
+  }
+}
+
+.slr-cp__layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.slr-cp__tips {
+  width: 232px;
+  flex-shrink: 0;
+  background: $color-bg;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  padding: 16px;
+  position: sticky;
+  top: 84px;
+
+  h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: $color-primary-dark;
+    margin-bottom: 12px;
+  }
+
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: $color-text-muted;
+
+    &.done {
+      color: $color-text;
+
+      .slr-cp__tip-dot {
+        border-color: $color-success;
+        background: $color-success;
+
+        &::after {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+.slr-cp__tip-dot {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 1.5px solid $color-border;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: radial-gradient(circle at center, #fff 0 2px, transparent 2px);
+  }
+}
+
+.slr-cp__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.slr-cp__tabs {
+  display: flex;
+  gap: 4px;
+  background: $color-bg;
+  border: 1px solid $color-border-light;
+  border-bottom: none;
+  border-radius: $radius-md $radius-md 0 0;
+  padding: 0 8px;
+  overflow-x: auto;
+
+  button {
+    padding: 14px 16px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: $color-text-muted;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: $transition-fast;
+
+    &:hover {
+      color: $color-primary;
+    }
+
+    &.active {
+      color: $color-primary;
+      border-bottom-color: $color-primary;
+    }
+  }
+}
+
+.slr-create-product__card {
+  margin-top: 0;
+  border-radius: 0 0 $radius-md $radius-md;
+}
+
+.slr-cp__section {
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: $color-primary-dark;
+    margin-bottom: 16px;
+  }
+
+  &--placeholder p {
+    font-size: 13px;
+    color: $color-text-muted;
+  }
+}
+
+.slr-cp__row {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 8px 24px;
+  padding: 18px 0;
+  border-bottom: 1px solid $color-border-light;
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.slr-cp__row-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: $color-text;
+  padding-top: 8px;
+
+  .required {
+    color: $color-danger;
+    font-weight: 700;
+  }
+}
+
+.slr-cp__row-body {
+  min-width: 0;
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: $control-height;
+    padding: 0 14px;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    font-size: 14px;
+    font-family: inherit;
+    color: $color-text;
+    box-sizing: border-box;
+    transition: $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 4px rgba($color-accent, 0.15);
+    }
+  }
+
+  textarea {
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 96px;
+  }
+
+  select {
+    cursor: pointer;
+  }
+
+  .input-error {
+    border-color: $color-danger !important;
+  }
+
+  .field-error {
+    display: block;
+    color: $color-danger;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+}
+
+.slr-cp__ratio-toggle {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $color-text-muted;
+    cursor: pointer;
+
+    &.selected {
+      color: $color-primary;
+      font-weight: 600;
+    }
+  }
+
+  input[type="radio"] {
+    width: auto;
+    min-height: auto;
+    accent-color: $color-primary;
+  }
+}
+
+.slr-cp__link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: $color-primary;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  white-space: nowrap;
+
+  &:hover {
+    color: $color-primary-dark;
+  }
+}
+
+.slr-cp__inline-field {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.slr-cp__input-counter {
+  position: relative;
+
+  input {
+    padding-right: 64px;
+  }
+}
+
+.slr-cp__counter {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: $color-text-muted;
+
+  &--block {
+    position: static;
+    display: block;
+    transform: none;
+    margin-top: 6px;
+    text-align: right;
+  }
+}
+
+.slr-cp__hint-list {
+  list-style: disc;
+  padding-left: 18px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: $color-text-muted;
+}
+
+.slr-create-image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.slr-cp__upload-slot {
+  position: relative;
+  flex-shrink: 0;
+  width: 88px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  overflow: hidden;
+  border: 1px dashed $color-border;
+  border-radius: $radius-sm;
+  background: $color-bg;
+  font-size: 11px;
+  font-weight: 600;
+  color: $color-primary;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:hover {
+    border-color: $color-primary;
+    background: rgba($color-accent, 0.08);
+  }
+
+  &.filled {
+    border-style: solid;
+    border-color: $color-success;
+    color: $color-success;
+    padding: 0;
+  }
+
+  &--cover {
+    width: 120px;
+    aspect-ratio: 3 / 4;
+  }
+
+  &--video {
+    width: 160px;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+.slr-create-image-hint {
+  display: block;
+  margin-top: 10px;
+  font-size: 11px;
+  color: $color-text-muted;
+}
+
+.slr-create-condition-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    font-size: 13px;
+    font-weight: 500;
+    color: $color-text;
+    cursor: pointer;
+    transition: $transition-fast;
+    margin-bottom: 0;
+
+    &:hover {
+      border-color: $color-primary;
+      background: rgba($color-accent, 0.06);
+    }
+
+    &.selected {
+      border-color: $color-primary;
+      background: rgba($color-accent, 0.12);
+      font-weight: 700;
+    }
+  }
+
+  input[type="radio"] {
+    width: auto;
+    min-height: auto;
+    margin: 0;
+  }
+}
+
+.slr-create-product__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid $color-border-light;
+}
+
+.slr-btn-plain {
+  height: 44px;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  color: $color-text-muted;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+.slr-btn-outline {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+  background: transparent;
+  color: $color-primary;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    background: $color-bg-sidebar;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 900px) {
+  .slr-cp__layout {
+    flex-direction: column;
+  }
+
+  .slr-cp__tips {
+    width: 100%;
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .slr-cp__row {
+    grid-template-columns: 1fr;
+  }
+
+  .slr-create-condition-group {
+    grid-template-columns: 1fr;
+  }
+}

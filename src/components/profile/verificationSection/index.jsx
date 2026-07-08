@@ -8,8 +8,9 @@ export default function VerificationSection({ userId, profile, onUpdate }) {
   const handleVerifyEmail = async () => {
     setLoading('email');
     try {
-      await profileService.requestEmailVerification(userId);
-      toast.success('Mã OTP đã được gửi đến email của bạn');
+      const updated = await profileService.requestEmailVerification(userId);
+      onUpdate(updated);
+      toast.success('Xác minh email thành công');
     } catch {
       toast.error('Xác minh email thất bại');
     } finally {

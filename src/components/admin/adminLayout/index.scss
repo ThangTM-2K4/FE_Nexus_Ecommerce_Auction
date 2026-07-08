@@ -1,3 +1,18 @@
-.admin-layout {
-  /* TODO: Add admin layout styles */
+@use "../../../styles/auction-variables" as *;
+
+.adm-layout {
+  min-height: 100vh;
+  background: $color-bg;
+
+  &__body {
+    display: flex;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+    padding: 24px;
+  }
 }

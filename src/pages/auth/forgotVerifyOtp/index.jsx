@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {useNavigate,useLocation,} from "react-router-dom";
 
 import { toast } from "react-toastify";
+import OtpInput from "../../../components/auth/OtpInput";
 
 import "./index.scss";
+
+const RESEND_SECONDS = 60;
 
 function VerifyOtpPage() {
   const navigate = useNavigate();
@@ -15,6 +18,13 @@ function VerifyOtpPage() {
   const [otp, setOtp] = useState("");
   const [error, setError] =
     useState("");
+  const [cooldown, setCooldown] = useState(RESEND_SECONDS);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   const handleVerify = (e) => {
     e.preventDefault();
@@ -47,9 +57,11 @@ function VerifyOtpPage() {
   };
 
   const handleResendOtp = () => {
+    if (cooldown > 0) return;
     toast.success(
       "Đã gửi lại mã OTP"
     );
+    setCooldown(RESEND_SECONDS);
   };
 
   return (
@@ -65,6 +77,8 @@ function VerifyOtpPage() {
           ← Quay lại
         </span>
 
+        <span className="otp-icon" aria-hidden="true">🔑</span>
+
         <h1>Xác Thực OTP</h1>
 
         <p>
@@ -76,24 +90,13 @@ function VerifyOtpPage() {
         </p>
 
         <form onSubmit={handleVerify}>
-          <input
-            type="text"
-            maxLength={6}
-            placeholder="Nhập OTP"
+          <OtpInput
             value={otp}
-            className={
-              error ? "input-error" : ""
-            }
-            onChange={(e) => {
-              const value =
-                e.target.value.replace(
-                  /\D/g,
-                  ""
-                );
-
+            onChange={(value) => {
               setOtp(value);
               setError("");
             }}
+            error={Boolean(error)}
           />
 
           {error && (
@@ -108,10 +111,10 @@ function VerifyOtpPage() {
         </form>
 
         <span
-          className="resend"
+          className={`resend ${cooldown > 0 ? "disabled" : ""}`}
           onClick={handleResendOtp}
         >
-          Gửi lại OTP
+          {cooldown > 0 ? `Gửi lại OTP sau ${cooldown}s` : "Gửi lại OTP"}
         </span>
       </div>
     </div>

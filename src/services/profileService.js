@@ -68,14 +68,15 @@ export const updateProfile = async (userId, data) => {
 };
 
 export const requestEmailVerification = async (userId) => {
-  const profile = await getProfile(userId);
+  // Connect to the real API when the backend is ready; mocked for now to test the local seller flow:
+  // const profile = await getProfile(userId);
+  // await api.post('/auth/verify-email', {
+  //   email: profile.email,
+  //   otpCode: '',
+  // });
+  // return profile;
 
-  await api.post('/auth/verify-email', {
-    email: profile.email,
-    otpCode: '',
-  });
-
-  return profile;
+  return updateProfile(userId, { isEmailVerified: true });
 };
 
 export const verifyPhone = async (userId) => {

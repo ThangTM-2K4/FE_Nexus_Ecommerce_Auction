@@ -5,7 +5,7 @@ import SwitchAccountModal from './SwitchAccountModal';
 import './ProfileDropdown.scss';
 
 export default function ProfileDropdown({ onClose }) {
-  const { user, logout, isApprovedSeller, switchAccountMode } = useAuth();
+  const { user, logout, isApprovedSeller, isBuyerMode, switchAccountMode } = useAuth();
   const navigate = useNavigate();
   const panelRef = useRef(null);
   const [showSwitchModal, setShowSwitchModal] = useState(false);

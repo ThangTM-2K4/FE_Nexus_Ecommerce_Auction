@@ -1,3 +1,157 @@
-.admin-header {
-  /* TODO: Add admin header styles */
+@use "../../../styles/auction-variables" as *;
+
+.adm-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: $color-bg-card;
+  border-bottom: 1px solid $color-border-light;
+  height: 64px;
+
+  &__inner {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  &__logo {
+    font-size: 18px;
+    font-weight: 800;
+    color: $color-primary-dark;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  &__badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 4px 8px;
+    border-radius: $radius-sm;
+    background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+    color: #fff;
+  }
+
+  &__search {
+    flex: 1 1 auto;
+    max-width: 320px;
+    min-width: 180px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    background: $color-bg;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+
+    svg {
+      color: $color-text-muted;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: none;
+      font-size: 13px;
+      outline: none;
+      color: $color-text;
+
+      &::placeholder {
+        color: $color-text-muted;
+        font-size: 12px;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  &__role {
+    font-size: 12px;
+    padding: 6px 10px;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-sm;
+    background: $color-bg;
+    color: $color-text;
+    cursor: pointer;
+  }
+
+  &__link {
+    font-size: 13px;
+    padding: 6px 12px;
+    border: none;
+    background: none;
+    color: $color-text-muted;
+    cursor: pointer;
+    border-radius: $radius-sm;
+
+    &:hover {
+      background: rgba($color-primary, 0.08);
+      color: $color-primary;
+    }
+  }
+
+  &__bell {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: $color-bg;
+    border-radius: $radius-sm;
+    color: $color-text-muted;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+
+  &__bell-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: $color-danger;
+  }
+
+  &__profile-wrap {
+    position: relative;
+  }
+
+  &__avatar {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
 }

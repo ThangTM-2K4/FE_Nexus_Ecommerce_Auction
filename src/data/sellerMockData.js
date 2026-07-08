@@ -1,13 +1,109 @@
 export const sidebarMenuItems = [
   { id: "overview", label: "Tổng quan", icon: "grid", path: "/seller-hub/overview" },
-  { id: "revenue", label: "Doanh thu", icon: "chart", path: "/seller-hub/revenue" },
-  { id: "products", label: "Sản phẩm", icon: "box", path: "/seller-hub/products" },
-  { id: "orders", label: "Đơn hàng", icon: "cart", path: "/seller-hub/orders" },
-  { id: "customers", label: "Khách hàng", icon: "users", path: "/seller-hub/customers" },
-  { id: "performance", label: "Hiệu quả bán hàng", icon: "target", path: "/seller-hub/performance" },
-  { id: "reviews", label: "Đánh giá", icon: "star", path: "/seller-hub/reviews" },
-  { id: "notifications", label: "Thông báo", icon: "bell", path: "/seller-hub/notifications" },
-  { id: "wallet", label: "Ví & thanh toán", icon: "wallet", path: "/seller-hub/wallet" },
+  {
+    id: "shop-management",
+    label: "Quản Lý Shop",
+    icon: "store",
+    children: [
+      { id: "shop-rating", label: "Đánh Giá Shop", path: "/seller-hub/shop-rating" },
+      { id: "shop-profile", label: "Hồ Sơ Shop", path: "/seller-hub/shop-profile" },
+      { id: "shop-decoration", label: "Trang Trí Shop", path: "/seller-hub/shop-decoration" },
+      { id: "shop-categories", label: "Danh Mục Của Shop", path: "/seller-hub/shop-categories" },
+      { id: "media-library", label: "Kho Hình Ảnh/Video", path: "/seller-hub/media-library" },
+      { id: "my-reports", label: "Báo Cáo Của Tôi", path: "/seller-hub/my-reports" },
+      { id: "products", label: "Sản phẩm", path: "/seller-hub/products" },
+    ],
+  },
+  {
+    id: "sales",
+    label: "Bán Hàng",
+    icon: "cart",
+    children: [
+      { id: "orders", label: "Đơn hàng", path: "/seller-hub/orders" },
+      { id: "customers", label: "Khách hàng", path: "/seller-hub/customers" },
+      { id: "performance", label: "Hiệu quả bán hàng", path: "/seller-hub/performance" },
+    ],
+  },
+  {
+    id: "finance",
+    label: "Tài Chính",
+    icon: "wallet",
+    children: [
+      { id: "revenue", label: "Doanh thu", path: "/seller-hub/revenue" },
+      { id: "wallet", label: "Ví & thanh toán", path: "/seller-hub/wallet" },
+    ],
+  },
+  {
+    id: "customer-care",
+    label: "Chăm Sóc Khách Hàng",
+    icon: "star",
+    children: [
+      { id: "reviews", label: "Đánh giá", path: "/seller-hub/reviews" },
+      { id: "notifications", label: "Thông báo", path: "/seller-hub/notifications" },
+    ],
+  },
+  {
+    id: "shop-settings",
+    label: "Thiết Lập Shop",
+    icon: "settings",
+    children: [
+      { id: "general-settings", label: "Cài Đặt Chung", path: "/seller-hub/general-settings" },
+      { id: "shipping-settings", label: "Cài Đặt Vận Chuyển", path: "/seller-hub/shipping-settings" },
+    ],
+  },
+  { id: "help", label: "Trợ Giúp", icon: "help", path: "/seller-hub/help" },
+];
+
+export const categoryStaffInfo = {
+  email: "nganhang.dienthoai@shopee.vn",
+  updatedAt: "15:40 30/05/2023",
+};
+
+export const shopRatingSummary = {
+  overallScore: 4.8,
+  totalRatings: 3260,
+  responseRate: 96,
+  responseTime: "vài giờ",
+  shipOnTimeRate: 98,
+  violations: 0,
+};
+
+export const shopDecorationSections = [
+  { id: "banner", label: "Banner trang Shop", active: true, note: "Hiển thị ở đầu trang Shop" },
+  { id: "featured", label: "Sản phẩm nổi bật", active: true, note: "Tối đa 8 sản phẩm ghim" },
+  { id: "voucher", label: "Mã giảm giá Shop", active: false, note: "Chưa có voucher nào đang chạy" },
+  { id: "collection", label: "Bộ sưu tập theo mùa", active: false, note: "Gom nhóm sản phẩm theo chủ đề" },
+];
+
+export const myReports = [
+  { id: "r1", name: "Báo cáo doanh thu", desc: "Doanh thu, phí sàn và lợi nhuận theo ngày", linkLabel: "Xem Doanh thu", path: "/seller-hub/revenue" },
+  { id: "r2", name: "Báo cáo đơn hàng", desc: "Tình trạng và tỉ lệ hoàn thành đơn hàng", linkLabel: "Xem Đơn hàng", path: "/seller-hub/orders" },
+  { id: "r3", name: "Báo cáo hiệu quả sản phẩm", desc: "Sản phẩm bán chạy, tồn kho, lượt xem", linkLabel: "Xem Sản phẩm", path: "/seller-hub/products" },
+];
+
+export const shippingSettingsOptions = [
+  { id: "ghn", label: "Giao Hàng Nhanh (GHN)", type: "standard", desc: "2-4 ngày", fee: "20.000đ", enabled: true },
+  { id: "ghtk", label: "Giao Hàng Tiết Kiệm (GHTK)", type: "standard", desc: "3-5 ngày", fee: "16.000đ", enabled: true },
+  { id: "jt", label: "J&T Express", type: "standard", desc: "1-3 ngày", fee: "22.000đ", enabled: false },
+  { id: "viettelpost", label: "Viettel Post", type: "standard", desc: "2-4 ngày", fee: "18.000đ", enabled: false },
+  { id: "grab", label: "Grab Express", type: "instant", desc: "Hoả tốc nội thành, 1-2 giờ", fee: "45.000đ", enabled: false },
+  { id: "be", label: "Be Delivery", type: "instant", desc: "Hoả tốc nội thành, 1-2 giờ", fee: "40.000đ", enabled: false },
+  { id: "xanhsm", label: "Xanh SM Ship", type: "instant", desc: "Hoả tốc nội thành, 1-2 giờ", fee: "42.000đ", enabled: false },
+  { id: "loship", label: "Loship", type: "instant", desc: "Giao trong ngày, nội thành", fee: "35.000đ", enabled: false },
+  { id: "freeship", label: "Miễn phí vận chuyển từ 500.000đ", type: "promo", desc: "Áp dụng đơn từ 500.000đ", fee: "0đ", enabled: false },
+];
+
+export const generalSettingsOptions = [
+  { id: "vacationMode", label: "Chế độ tạm nghỉ (ẩn Shop khỏi tìm kiếm)", enabled: false },
+  { id: "autoReply", label: "Tự động trả lời tin nhắn khi vắng mặt", enabled: true },
+  { id: "showRating", label: "Hiển thị điểm đánh giá Shop công khai", enabled: true },
+];
+
+export const helpTopics = [
+  { id: "t1", question: "Làm sao để cập nhật thông tin thuế?", hint: "Vào Hồ Sơ Shop > Thông tin Thuế", path: "/seller-hub/shop-profile" },
+  { id: "t2", question: "Khi nào tôi nhận được tiền bán hàng?", hint: "Xem chi tiết tại Ví & thanh toán", path: "/seller-hub/wallet" },
+  { id: "t3", question: "Vì sao đơn hàng của tôi bị hủy?", hint: "Kiểm tra trạng thái tại Đơn hàng", path: "/seller-hub/orders" },
+  { id: "t4", question: "Làm sao để đổi phí vận chuyển?", hint: "Cấu hình tại Cài Đặt Vận Chuyển", path: "/seller-hub/shipping-settings" },
 ];
 
 export const overviewStats = [
@@ -23,6 +119,9 @@ export const overviewStats = [
   { id: "active-products", label: "Sản phẩm đang bán", value: "128", group: "products" },
   { id: "out-of-stock", label: "Sản phẩm hết hàng", value: "14", group: "products", negative: true },
   { id: "total-customers", label: "Tổng khách hàng", value: "1.842", trend: "+24", group: "customers" },
+  { id: "new-customers", label: "Khách mới (30 ngày)", value: "124", trend: "+18%", group: "customers" },
+  { id: "returning-customers", label: "Khách quay lại", value: "618", trend: "33.6%", group: "customers" },
+  { id: "vip-customers", label: "Khách VIP", value: "48", group: "customers" },
   { id: "total-views", label: "Tổng lượt xem SP", value: "284.500", trend: "+18%", group: "traffic" },
   { id: "total-bids", label: "Tổng lượt đấu giá", value: "12.480", trend: "+9.3%", group: "traffic" },
   { id: "conversion", label: "Tỷ lệ chuyển đổi", value: "4.8%", trend: "+0.3%", group: "traffic" },
@@ -100,6 +199,10 @@ export const productList = [
   { name: "MacBook Pro M3 14\"", sku: "MBP-M3", price: "42.990.000đ", stock: 12, sold: 67, views: 11200, rating: 4.9 },
   { name: "Pokémon Charizard 1st Ed", sku: "PKM-CHZ", price: "18.500.000đ", stock: 1, sold: 3, views: 7650, rating: 5.0 },
 ];
+
+export const lowStockAlerts = productList
+  .filter((p) => p.stock <= 5)
+  .map((p) => ({ sku: p.sku, name: p.name, stock: p.stock }));
 
 export const orderStats = {
   pending: 12,
@@ -199,6 +302,24 @@ export const withdrawals = [
 
 export const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";
+
+export const formatCompactCurrency = (value) => {
+  const abs = Math.abs(value);
+  const fmt = (n, suffix) =>
+    `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 }).format(n)} ${suffix}`;
+
+  if (abs >= 1_000_000_000) return fmt(value / 1_000_000_000, "tỷ");
+  if (abs >= 1_000_000) return fmt(value / 1_000_000, "tr");
+  if (abs >= 10_000) return fmt(value / 1_000, "nghìn");
+  return formatCurrency(value);
+};
+
+export const walletConfig = {
+  minWithdraw: 100_000,
+  maxWithdraw: 500_000_000,
+  feePercent: 0,
+  processingDays: "1–3 ngày làm việc",
+};
 
 export const recentOrders = [
   {

@@ -30,8 +30,8 @@ export default function BecomeSellerSection({ profile, application }) {
         </div>
         <div className="profile-seller-approved">
           <span className="profile-badge verified">✓ Người bán đã được phê duyệt</span>
-          <p>Bạn có thể truy cập Seller Dashboard để quản lý cửa hàng và phiên đấu giá.</p>
-          <Link to="/seller" className="profile-btn profile-btn--primary">Mở Seller Dashboard</Link>
+          <p>Bạn có thể truy cập Kênh Người Bán để quản lý cửa hàng và phiên đấu giá.</p>
+          <Link to="/seller" className="profile-btn profile-btn--primary">Mở Kênh Người Bán</Link>
         </div>
       </section>
     );
@@ -77,7 +77,7 @@ export default function BecomeSellerSection({ profile, application }) {
 
       {!scoreLoading && !canApply && (
         <div className="profile-warning-card">
-          ⚠ Cần ít nhất 50 điểm uy tín Người mua (hiện tại: {buyerScore} điểm)
+          ⚠ Cần ít nhất 7 điểm uy tín Người mua (hiện tại: {buyerScore} điểm)
         </div>
       )}
 

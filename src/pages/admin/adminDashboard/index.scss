@@ -1,19 +1,112 @@
-@use '../../../styles/palette' as *;
+@use "../../../styles/auction-variables" as *;
 
-.admin-dashboard {
-  background: linear-gradient(
-    135deg,
-    rgba($blush-pink, 0.35),
-    rgba($lavender, 0.22)
-  );
-  border-radius: $radius-lg;
-  padding: 2rem;
-  border: 1.5px solid rgba($lavender, 0.45);
-  box-shadow: $shadow-md;
-  backdrop-filter: blur(10px);
-  transition: $transition;
+.adm-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 
-  &:hover {
-    box-shadow: $shadow-lg;
+  &__hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 24px;
+    background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+    border-radius: $radius-lg;
+    color: #fff;
+
+    h2 {
+      font-size: 22px;
+      margin: 6px 0 8px;
+    }
+
+    p {
+      font-size: 14px;
+      opacity: 0.9;
+      max-width: 560px;
+      line-height: 1.5;
+    }
+  }
+
+  &__kicker {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.8;
+  }
+
+  &__hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: $radius-sm;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+
+      &:first-child {
+        background: $color-accent;
+        color: $color-primary-dark;
+      }
+
+      &:last-child {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+    }
+  }
+
+  &__kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  &__charts {
+    header {
+      margin-bottom: 16px;
+
+      h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: $color-primary-dark;
+      }
+
+      p {
+        font-size: 13px;
+        color: $color-text-muted;
+        margin-top: 4px;
+      }
+    }
+  }
+
+  &__charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+
+    @media (max-width: 1100px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.adm-chart-wrap {
+  min-width: 0;
+
+  &--wide {
+    grid-column: span 2;
+
+    @media (max-width: 1100px) {
+      grid-column: span 1;
+    }
   }
 }

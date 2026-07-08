@@ -1,0 +1,133 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-product-review {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__empty {
+    padding: 40px;
+    text-align: center;
+    color: $color-text-muted;
+    background: $color-bg-card;
+    border-radius: $radius-lg;
+    border: 1px solid $color-border-light;
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+
+  &__card {
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-lg;
+    padding: 20px;
+    box-shadow: $shadow-sm;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+
+      h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: $color-primary-dark;
+      }
+
+      p {
+        font-size: 13px;
+        color: $color-text-muted;
+        margin-top: 2px;
+      }
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+
+      div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      dt {
+        font-size: 11px;
+        color: $color-text-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      dd {
+        font-size: 13px;
+        color: $color-primary-dark;
+        font-weight: 600;
+      }
+    }
+  }
+
+  &__status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba($color-warning, 0.15);
+    color: $color-warning;
+    height: fit-content;
+  }
+
+  &__desc {
+    font-size: 13px;
+
+    strong {
+      display: block;
+      margin-bottom: 4px;
+      color: $color-text-secondary;
+    }
+
+    p {
+      color: $color-text-muted;
+      line-height: 1.5;
+    }
+  }
+
+  footer {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+
+    button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: $radius-sm;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      &.approve {
+        background: linear-gradient(135deg, $color-primary, $color-accent-mid);
+        color: #fff;
+      }
+
+      &.reject {
+        background: $color-bg;
+        border: 1px solid $color-border;
+        color: $color-danger;
+      }
+    }
+  }
+}

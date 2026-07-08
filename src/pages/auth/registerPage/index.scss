@@ -62,11 +62,10 @@
   align-items: center;
   margin-bottom: 14px;
 
-  input {
-    width: 100%;
-    padding-right: 48px;
-    margin-bottom: 0;
-  }
+.password-wrapper input {
+  width: 100%;
+  padding-right: 48px; // leave room for the icon
+  margin-bottom: 0; // margin handled by wrapper
 }
 
 .eye-btn {
@@ -188,9 +187,15 @@
   @include auth.auth-input-error;
 }
 
-.field-error {
-  @include auth.auth-field-error;
+.register-card .field-error {
   display: block;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
   margin: 6px 0 14px 4px;
   line-height: 1.4;
+
+}
+
 }

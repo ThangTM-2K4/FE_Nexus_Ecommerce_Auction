@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import * as profileService from '../../../services/profileService';
+import { getSellerBankAccounts } from '../../../services/bankAccountService';
 
 const emptyForm = { bankName: '', accountNumber: '', accountHolder: '' };
 
@@ -34,6 +35,7 @@ export default function BankAccountSection({ userId, profile, onUpdate }) {
     setSaving(true);
     try {
       const updated = await profileService.saveBankAccount(userId, form);
+      await getSellerBankAccounts(userId);
       onUpdate(updated);
       setEditing(false);
       toast.success('Lưu tài khoản ngân hàng thành công');

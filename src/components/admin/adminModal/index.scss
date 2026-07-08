@@ -1,0 +1,64 @@
+@use "../../../styles/auction-variables" as *;
+
+.adm-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.adm-modal {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+
+  &--wide {
+    max-width: 720px;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid $color-border-light;
+
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: $color-primary-dark;
+    }
+  }
+
+  &__close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: $color-bg;
+    border-radius: $radius-sm;
+    font-size: 20px;
+    cursor: pointer;
+    color: $color-text-muted;
+    line-height: 1;
+
+    &:hover {
+      background: $color-danger-bg;
+      color: $color-danger;
+    }
+  }
+
+  &__body {
+    padding: 20px 22px;
+    overflow-y: auto;
+  }
+}

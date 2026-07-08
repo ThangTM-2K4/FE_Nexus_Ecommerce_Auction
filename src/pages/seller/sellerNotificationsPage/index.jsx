@@ -3,6 +3,15 @@ import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { sellerNotifications, notificationSummary } from "../../../data/sellerMockData";
 import { sellerImages } from "../../../data/sellerImages";
 
+const notiTypeLabel = {
+  order: "Đơn hàng",
+  stock: "Tồn kho",
+  reject: "Từ chối",
+  complaint: "Khiếu nại",
+  payment: "Thanh toán",
+  auction: "Đấu giá",
+};
+
 export default function NotificationsPage() {
   return (
     <div className="slr-page">
@@ -30,7 +39,9 @@ export default function NotificationsPage() {
                   className={`slr-noti-item ${n.unread ? "unread" : ""}`}
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
-                  <span className={`slr-noti-type slr-noti-type--${n.type}`}>{n.type}</span>
+                  <span className={`slr-noti-type slr-noti-type--${n.type}`}>
+                    {notiTypeLabel[n.type] || n.type}
+                  </span>
                   <div>
                     <strong>{n.title}</strong>
                     <p>{n.message}</p>
@@ -52,44 +63,46 @@ export default function NotificationsPage() {
             <div className="slr-panel-card">
               <h4>Mẹo bán hàng</h4>
               <ul className="slr-tips-list">
-                <li>Phản hồi đơn Pending trong vòng 2 giờ để tăng rating</li>
+                <li>Phản hồi đơn đang chờ trong vòng 2 giờ để tăng đánh giá</li>
                 <li>Cập nhật tồn kho trước phiên đấu giá trực tiếp</li>
                 <li>Gửi email nhắc khách hàng quay lại sau 7 ngày</li>
               </ul>
             </div>
             <div className="slr-panel-card">
               <h4>Thông báo theo loại</h4>
-              <table className="slr-table slr-table--compact">
-                <thead>
-                  <tr>
-                    <th>Loại</th>
-                    <th>Số lượng</th>
-                    <th>Tuần này</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Đơn hàng</td>
-                    <td>42</td>
-                    <td className="pos">+12</td>
-                  </tr>
-                  <tr>
-                    <td>Tồn kho</td>
-                    <td>8</td>
-                    <td className="pos">+3</td>
-                  </tr>
-                  <tr>
-                    <td>Đấu giá</td>
-                    <td>15</td>
-                    <td className="pos">+5</td>
-                  </tr>
-                  <tr>
-                    <td>Khiếu nại</td>
-                    <td>3</td>
-                    <td className="neg">+1</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="slr-table-wrap">
+                <table className="slr-table slr-table--compact">
+                  <thead>
+                    <tr>
+                      <th>Loại</th>
+                      <th>Số lượng</th>
+                      <th>Tuần này</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Đơn hàng</td>
+                      <td>42</td>
+                      <td className="pos">+12</td>
+                    </tr>
+                    <tr>
+                      <td>Tồn kho</td>
+                      <td>8</td>
+                      <td className="pos">+3</td>
+                    </tr>
+                    <tr>
+                      <td>Đấu giá</td>
+                      <td>15</td>
+                      <td className="pos">+5</td>
+                    </tr>
+                    <tr>
+                      <td>Khiếu nại</td>
+                      <td>3</td>
+                      <td className="neg">+1</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </aside>
         </div>

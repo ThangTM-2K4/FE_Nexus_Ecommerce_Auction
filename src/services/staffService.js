@@ -70,6 +70,45 @@ export const rejectSellerApplication = async (userId, reason, adminNote) => {
   return simulateAdminRejection(userId, reason, adminNote);
 };
 
+const PRODUCTS_PREFIX = 'mockSellerProducts_';
+
+export const getPendingProducts = async () => {
+  await mockDelay();
+  const pending = [];
+
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!key?.startsWith(PRODUCTS_PREFIX)) continue;
+
+    const userId = key.replace(PRODUCTS_PREFIX, '');
+    const raw = localStorage.getItem(key);
+    let products = [];
+    try {
+      products = JSON.parse(raw) || [];
+    } catch {
+      products = [];
+    }
+
+    products
+      .filter((p) => p.status === 'PENDING')
+      .forEach((p) => pending.push({ ...p, userId }));
+  }
+
+  return pending.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+};
+
+export const approveProduct = async (userId, productId) => {
+  await mockDelay(600);
+  const { updateProductStatus } = await import('./productService');
+  return updateProductStatus(userId, productId, 'APPROVED');
+};
+
+export const rejectProduct = async (userId, productId, reason) => {
+  await mockDelay(600);
+  const { updateProductStatus } = await import('./productService');
+  return updateProductStatus(userId, productId, 'REJECTED', reason);
+};
+
 export const getFlaggedAuctions = async () => {
   await mockDelay();
   return mockFlaggedAuctions;
