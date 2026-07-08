@@ -1,0 +1,90 @@
+@use '../../../styles/palette' as *;
+
+.slider {
+  width: 100%;
+}
+
+.viewport {
+  position: relative;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  aspect-ratio: 796.66 / 235;
+  background: $surface-muted;
+
+  &:hover {
+    .arrow {
+      opacity: 1;
+    }
+  }
+}
+
+.track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.45s $ease;
+}
+
+.slide {
+  flex: 0 0 100%;
+  height: 100%;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba($deep, 0.45);
+  color: $surface;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity $transition-fast, background $transition-fast;
+  z-index: 2;
+
+  &:hover {
+    background: rgba($deep, 0.65);
+  }
+}
+
+.arrowPrev {
+  left: 10px;
+}
+
+.arrowNext {
+  right: 10px;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-pill;
+  background: rgba($steel, 0.35);
+  padding: 0;
+  transition: width $transition-fast, background $transition-fast;
+
+  &Active {
+    width: 20px;
+    background: $gradient-accent;
+    box-shadow: $shadow-accent;
+  }
+}

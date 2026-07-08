@@ -1,0 +1,49 @@
+@use '../../../styles/palette' as *;
+
+.account-profile-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid $border-soft;
+}
+
+.account-profile-summary__identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  h2 {
+    font-size: 1.1rem;
+    color: $ink;
+    margin-bottom: 4px;
+  }
+
+  p {
+    font-size: 0.82rem;
+    color: $ink-muted;
+    word-break: break-all;
+  }
+}
+
+.account-profile-summary__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $raspberry, $lavender);
+  color: $surface;
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .account-profile-summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

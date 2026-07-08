@@ -1,0 +1,83 @@
+@use '../../../../styles/palette' as *;
+
+.address-card {
+  padding: 1rem 1.25rem;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  background: $surface;
+}
+
+.address-card__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.address-card__name {
+  font-weight: 700;
+  color: $ink;
+  margin-right: 10px;
+}
+
+.address-card__phone {
+  color: $ink-muted;
+  font-size: 0.88rem;
+}
+
+.address-card__tags {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.address-card__type {
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border-radius: $radius-pill;
+  background: rgba($lavender, 0.3);
+  color: $accent-dark;
+  font-weight: 600;
+}
+
+.address-card__default {
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border-radius: $radius-pill;
+  background: rgba($raspberry, 0.12);
+  color: $raspberry;
+  font-weight: 700;
+}
+
+.address-card__line {
+  font-size: 0.88rem;
+  color: $ink-muted;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.address-card__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  button {
+    border: 0;
+    background: transparent;
+    color: $raspberry;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.address-card__set-default {
+  color: $accent-dark !important;
+}

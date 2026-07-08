@@ -1,0 +1,71 @@
+@use '../../../styles/palette' as *;
+
+.common-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba($indigo, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.common-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  background: $surface;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.common-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid $border-soft;
+}
+
+.common-modal__back,
+.common-modal__close {
+  border: 0;
+  background: transparent;
+  font-size: 1.1rem;
+  color: $ink-muted;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  font-family: inherit;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+.common-modal__title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  color: $ink;
+  margin: 0;
+}
+
+.common-modal__body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.common-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid $border-soft;
+}

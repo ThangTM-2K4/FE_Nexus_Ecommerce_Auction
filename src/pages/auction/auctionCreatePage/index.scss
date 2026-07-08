@@ -1,3 +1,4 @@
+@use "../../../styles/palette" as p;
 @use "../../../styles/_auction-variables" as *;
 
 .auc-create-page {
@@ -11,10 +12,10 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(circle at 10% 15%, rgba(189, 216, 233, 0.55), transparent 42%),
-      radial-gradient(circle at 90% 80%, rgba(123, 189, 232, 0.4), transparent 48%),
-      radial-gradient(circle at 70% 30%, rgba(78, 142, 162, 0.12), transparent 35%),
-      linear-gradient(135deg, #f5f9fc 0%, #eef4f9 50%, #f0f6fa 100%);
+      radial-gradient(circle at 10% 15%, rgba(p.$blush-pink, 0.45), transparent 42%),
+      radial-gradient(circle at 90% 80%, rgba(p.$sky-pale, 0.42), transparent 48%),
+      radial-gradient(circle at 70% 30%, rgba(p.$lavender, 0.18), transparent 35%),
+      p.$gradient-page;
     z-index: 0;
     pointer-events: none;
   }
@@ -312,7 +313,7 @@
 
       &.error {
         border-color: $color-danger;
-        background: #fff5f5;
+        background: $color-danger-bg;
       }
     }
 
@@ -382,7 +383,7 @@
 
     &.error {
       border-color: $color-danger;
-      background: #fff5f5;
+      background: $color-danger-bg;
     }
   }
 

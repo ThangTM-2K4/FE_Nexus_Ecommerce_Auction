@@ -1,0 +1,48 @@
+@use '../../../styles/palette' as *;
+
+.personal-info-cccd {
+  width: 100%;
+}
+
+.personal-info-cccd__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $ink;
+  margin: 0 0 10px;
+}
+
+.personal-info-cccd__desc {
+  font-size: 0.85rem;
+  color: $ink-muted;
+  line-height: 1.55;
+  max-width: 720px;
+}
+
+.personal-info-cccd__divider {
+  border: 0;
+  border-top: 1px solid $border-soft;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.personal-info-cccd__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 560px;
+}
+
+.personal-info-cccd__address-wrap {
+  position: relative;
+}
+
+.personal-info-cccd__counter {
+  display: block;
+  text-align: right;
+  font-size: 0.78rem;
+  color: $ink-faint;
+  margin-top: 4px;
+}
+
+.personal-info-cccd__actions {
+  margin-top: 1.5rem;
+}

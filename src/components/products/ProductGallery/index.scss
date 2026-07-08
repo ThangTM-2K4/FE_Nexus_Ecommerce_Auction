@@ -1,0 +1,149 @@
+@use '../../../styles/palette' as *;
+
+.product-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-gallery__main {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: $surface-muted;
+  border-radius: $radius-sm;
+  overflow: hidden;
+}
+
+.product-gallery__main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-gallery__video-badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: $surface;
+  background: rgba($deep, 0.25);
+  pointer-events: none;
+}
+
+.product-gallery__thumbs-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.product-gallery__thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  flex: 1;
+  scroll-behavior: smooth;
+}
+
+.product-gallery__thumb {
+  position: relative;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border: 2px solid transparent;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  padding: 0;
+  background: $surface-muted;
+  transition: border-color $transition-fast;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &--active {
+    border-color: $accent-dark;
+  }
+}
+
+.product-gallery__thumb-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba($deep, 0.35);
+  color: $surface;
+  font-size: 0.75rem;
+}
+
+.product-gallery__thumb-arrow {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid $border;
+  color: $ink-muted;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: $surface;
+
+  &:hover {
+    border-color: $accent;
+    color: $accent-dark;
+  }
+}
+
+.product-gallery__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  flex-wrap: wrap;
+}
+
+.product-gallery__share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.product-gallery__share-label {
+  font-size: 0.78rem;
+  color: $ink-muted;
+}
+
+.product-gallery__share-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid $border;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: $ink-muted;
+  text-transform: uppercase;
+  background: $surface;
+
+  &:hover {
+    background: $surface-soft;
+    color: $accent-dark;
+  }
+}
+
+.product-gallery__like {
+  font-size: 0.78rem;
+  color: $ink-muted;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    color: $color-danger;
+  }
+}

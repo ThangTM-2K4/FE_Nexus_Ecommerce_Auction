@@ -55,6 +55,7 @@ api.interceptors.response.use(
     if (
       requestUrl.includes('/auth/refresh-token') ||
       requestUrl.includes('/auth/login') ||
+      requestUrl.includes('/auth/logout') ||
       requestUrl.includes('/auth/register') ||
       requestUrl.includes('/auth/verify-email') ||
       requestUrl.includes('/auth/exchange-code')

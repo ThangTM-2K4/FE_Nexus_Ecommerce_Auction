@@ -1,0 +1,128 @@
+@use '../../../styles/palette' as *;
+
+.shop-info-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px;
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  flex-wrap: wrap;
+}
+
+.shop-info-card__main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 240px;
+}
+
+.shop-info-card__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid $border-soft;
+}
+
+.shop-info-card__name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shop-info-card__name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: $ink;
+}
+
+.shop-info-card__badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: $accent-dark;
+  border: 1px solid rgba($accent, 0.45);
+  border-radius: $radius-pill;
+  padding: 1px 6px;
+}
+
+.shop-info-card__status {
+  font-size: 0.75rem;
+  color: $ink-muted;
+  margin-top: 4px;
+}
+
+.shop-info-card__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.shop-info-card__btn {
+  padding: 7px 14px;
+  border-radius: $radius-sm;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: background $transition-fast, color $transition-fast, border-color $transition-fast;
+
+  &--outline {
+    border: 1px solid $accent-dark;
+    color: $accent-dark;
+    background: transparent;
+
+    &:hover {
+      background: rgba($sky, 0.12);
+    }
+  }
+
+  &--solid {
+    border: 1px solid $accent-dark;
+    background: $accent-dark;
+    color: $surface;
+
+    &:hover {
+      background: $navy;
+      border-color: $navy;
+    }
+  }
+}
+
+.shop-info-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(100px, 1fr));
+  gap: 12px 20px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.shop-info-card__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.shop-info-card__stat-label {
+  font-size: 0.68rem;
+  color: $ink-muted;
+}
+
+.shop-info-card__stat-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $accent-dark;
+}
+
+@media (max-width: 768px) {
+  .shop-info-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .shop-info-card__stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

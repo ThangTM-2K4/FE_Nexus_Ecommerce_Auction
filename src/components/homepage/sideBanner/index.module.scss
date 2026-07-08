@@ -1,0 +1,41 @@
+@use '../../../styles/palette' as *;
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  min-height: 0;
+}
+
+.banner {
+  flex: 1;
+  display: block;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  aspect-ratio: 398.34 / 115;
+  background: $surface-muted;
+  min-height: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform $transition;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .side {
+    flex-direction: row;
+  }
+
+  .banner {
+    flex: 1;
+  }
+}

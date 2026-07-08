@@ -1,0 +1,41 @@
+@use '../../../styles/palette' as *;
+
+.account-trust-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  background: $surface-soft;
+
+  &--loading {
+    color: $ink-muted;
+    font-size: 0.85rem;
+  }
+}
+
+.account-trust-bar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.account-trust-bar__label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $ink;
+}
+
+.account-trust-bar__meta {
+  font-size: 0.78rem;
+  color: $ink-muted;
+  line-height: 1.45;
+
+  strong {
+    color: $accent-dark;
+    font-weight: 700;
+  }
+}

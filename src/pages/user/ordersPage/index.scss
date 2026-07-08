@@ -1,0 +1,23 @@
+@use '../../../styles/palette' as *;
+
+.account-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 20% 50%, rgba($blush-pink, 0.25), transparent 50%),
+    linear-gradient(135deg, $surface-soft 0%, $surface 100%);
+}
+
+.account-page__main {
+  flex: 1;
+  padding: 2rem 1.5rem 3rem;
+  width: 100%;
+}
+
+.account-page__loading {
+  text-align: center;
+  color: $ink-muted;
+  padding: 2rem;
+  font-size: 0.88rem;
+}

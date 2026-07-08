@@ -1,0 +1,137 @@
+@use 'palette' as *;
+
+.profile-section {
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  padding: 1.5rem;
+  box-shadow: $shadow-sm;
+}
+
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+
+  h2 {
+    font-size: 1.1rem;
+    color: $ink;
+  }
+}
+
+.profile-section-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: $radius-sm;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: all 0.2s $ease;
+
+  &--primary {
+    background: linear-gradient(135deg, $navy, $teal);
+    color: $surface;
+
+    &:hover:not(.disabled) {
+      box-shadow: $shadow-md;
+    }
+  }
+
+  &--outline {
+    background: transparent;
+    border: 1px solid $border;
+    color: $accent-dark;
+
+    &:hover {
+      background: rgba($sky, 0.1);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $ink-muted;
+
+    &:hover {
+      color: $ink;
+    }
+  }
+
+  &--danger {
+    background: transparent;
+    border: 1px solid rgba($live-red, 0.4);
+    color: $live-red;
+
+    &:hover {
+      background: rgba($live-red, 0.06);
+    }
+  }
+
+  &--sm {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $ink-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  span {
+    font-size: 0.9rem;
+    color: $ink;
+  }
+
+  input,
+  select {
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid $border-soft;
+    border-radius: $radius-sm;
+    font-size: 0.88rem;
+    font-family: inherit;
+    color: $ink;
+
+    &:focus {
+      outline: none;
+      border-color: $accent-dark;
+      box-shadow: 0 0 0 3px rgba($sky, 0.2);
+    }
+  }
+}
+
+.profile-empty-hint {
+  color: $ink-muted;
+  font-size: 0.88rem;
+}

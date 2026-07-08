@@ -1,0 +1,82 @@
+@use '../../../styles/palette' as *;
+
+.review-list {
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  padding: 20px 24px;
+}
+
+.review-list__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $ink-soft;
+  margin-bottom: 16px;
+  letter-spacing: 0.03em;
+}
+
+.review-list__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $border-soft;
+}
+
+.review-list__score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.review-list__score-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: $color-danger;
+  line-height: 1;
+}
+
+.review-list__score-label {
+  font-size: 0.75rem;
+  color: $ink-muted;
+}
+
+.review-list__score-stars {
+  color: $color-warning;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.review-list__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+.review-list__filter {
+  padding: 6px 12px;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  font-size: 0.78rem;
+  color: $ink-muted;
+  background: $surface;
+  transition: border-color $transition-fast, color $transition-fast, background $transition-fast;
+
+  &:hover {
+    border-color: $accent;
+    color: $accent-dark;
+  }
+
+  &--active {
+    border-color: $accent-dark;
+    color: $accent-dark;
+    background: rgba($sky, 0.1);
+  }
+}
+
+.review-list__items {
+  margin-top: 4px;
+}

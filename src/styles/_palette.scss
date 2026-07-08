@@ -1,61 +1,78 @@
 //=====================================================
-// Ocean Depth Palette
+// Raspberry Bloom Palette
+// #B35A8A · #F6B7C7 · #B6A5CE · #523F77 · #7880AE · #A3BBD7
 //=====================================================
 
-$deep: #001D39;
-$navy: #0A4174;
-$steel: #49769F;
-$teal: #4E8EA2;
-$sage: #6EA2B3;
-$sky: #7BBDE8;
-$mist: #BDD8E9;
+$raspberry: #B35A8A;
+$blush-pink: #F6B7C7;
+$lavender: #B6A5CE;
+$indigo: #523F77;
+$slate: #7880AE;
+$sky-pale: #A3BBD7;
+$live-red: #FF2247;
+$live-red-hot: #FF4D6D;
+$live-red-deep: #C81030;
+
+// Legacy token aliases (giữ tên cũ để SCSS con không vỡ)
+$deep: $indigo;
+$navy: $indigo;
+$steel: $slate;
+$teal: $raspberry;
+$sage: $lavender;
+$sky: $raspberry;
+$mist: $blush-pink;
+$orchid: $raspberry;
+$amethyst: $lavender;
+$eggplant: $indigo;
+$navy-deep: $indigo;
+$royal: $slate;
+$periwinkle: $sky-pale;
 
 //=====================================================
 // Semantic Colors
 //=====================================================
 
-$ink: $deep;
-$ink-soft: $navy;
-$ink-muted: $steel;
-$ink-faint: $sage;
+$ink: $indigo;
+$ink-soft: #6a5589;
+$ink-muted: $slate;
+$ink-faint: $lavender;
 
 $surface: #ffffff;
-$surface-soft: #f6fafd;
-$surface-muted: #edf4f9;
+$surface-soft: #faf5f8;
+$surface-muted: rgba($blush-pink, 0.55);
 
-$border: rgba($sage, 0.45);
-$border-soft: rgba($mist, 0.8);
+$border: rgba($lavender, 0.45);
+$border-soft: rgba($sky-pale, 0.75);
 
-$accent: $sky;
-$accent-mid: $teal;
-$accent-dark: $navy;
+$accent: $raspberry;
+$accent-mid: $lavender;
+$accent-dark: $indigo;
+$accent-light: $sky-pale;
 
 //=====================================================
 // Component Colors
 //=====================================================
 
-$blue: $sky;
-$blue-soft: $mist;
-
-$pink: $teal;
-$pink-soft: $sage;
-
-$purple: $steel;
-
-$cyan: $teal;
-$cyan-light: $mist;
+$blue: $slate;
+$blue-soft: $sky-pale;
+$pink: $raspberry;
+$pink-soft: $blush-pink;
+$purple: $lavender;
+$cyan: $sky-pale;
+$cyan-light: $blush-pink;
 
 //=====================================================
-// Glow
+// Glow & Highlights
 //=====================================================
 
-$accent-glow: rgba($sky, 0.32);
-$blue-glow: rgba($sky, 0.28);
-$teal-glow: rgba($teal, 0.30);
+$accent-glow: rgba($raspberry, 0.36);
+$blue-glow: rgba($sky-pale, 0.42);
+$teal-glow: rgba($raspberry, 0.32);
 $aqua-glow: $teal-glow;
-$rose-glow: $teal-glow;
-$pink-glow: $accent-glow;
-$purple-glow: rgba($steel, 0.30);
+$rose-glow: rgba($blush-pink, 0.4);
+$pink-glow: $rose-glow;
+$purple-glow: rgba($lavender, 0.35);
+$live-glow: rgba($live-red, 0.62);
 
 //=====================================================
 // Layout
@@ -63,11 +80,8 @@ $purple-glow: rgba($steel, 0.30);
 
 $sidebar-width: 260px;
 $sidebar-collapse-width: 90px;
-
 $header-height: 72px;
-
 $content-width: 1440px;
-
 $control-height: 48px;
 
 //=====================================================
@@ -84,19 +98,20 @@ $radius-pill: 999px;
 // Shadow
 //=====================================================
 
-$shadow-sm: 0 2px 12px rgba($deep, .08);
-$shadow-md: 0 8px 28px rgba($navy, .12);
-$shadow-lg: 0 16px 40px rgba($teal, .16);
+$shadow-sm: 0 2px 14px rgba($indigo, 0.08);
+$shadow-md: 0 10px 32px rgba($indigo, 0.11);
+$shadow-lg: 0 18px 48px rgba($indigo, 0.16);
+$shadow-accent: 0 8px 26px rgba($raspberry, 0.28);
+$shadow-live: 0 6px 24px rgba($indigo, 0.28), 0 0 28px rgba($live-red, 0.38);
 
 //=====================================================
 // Animation
 //=====================================================
 
-$ease: cubic-bezier(.4,0,.2,1);
-
-$transition-fast: .2s ease;
-$transition: .3s ease;
-$transition-slow: .45s ease;
+$ease: cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fast: 0.2s ease;
+$transition: 0.3s ease;
+$transition-slow: 0.45s ease;
 
 //=====================================================
 // Gradient
@@ -104,13 +119,29 @@ $transition-slow: .45s ease;
 
 $brand-bar: linear-gradient(
   90deg,
-  $deep 0%,
-  $navy 16%,
-  $steel 33%,
-  $teal 50%,
-  $sage 66%,
-  $sky 83%,
-  $mist 100%
+  $indigo 0%,
+  $slate 28%,
+  $raspberry 52%,
+  $lavender 78%,
+  $blush-pink 100%
+);
+
+$gradient-hero: linear-gradient(135deg, $indigo 0%, $slate 42%, $raspberry 100%);
+$gradient-accent: linear-gradient(135deg, $raspberry 0%, $lavender 52%, $sky-pale 100%);
+$gradient-live: linear-gradient(135deg, $indigo 0%, #3d2f5c 38%, $raspberry 100%);
+
+$gradient-surface: linear-gradient(
+  180deg,
+  rgba($blush-pink, 0.42) 0%,
+  $surface-soft 42%,
+  $surface 100%
+);
+
+$gradient-page: linear-gradient(
+  180deg,
+  #fdf8fa 0%,
+  $surface-soft 40%,
+  rgba($blush-pink, 0.55) 100%
 );
 
 //=====================================================
@@ -129,36 +160,34 @@ $color-text-soft: $ink-soft;
 $color-text-muted: $ink-muted;
 $color-text-secondary: $steel;
 
-$color-primary: $navy;
-$color-primary-dark: $deep;
-$color-secondary: $accent-mid;
-$color-accent: $sky;
-$color-accent-mid: $teal;
+$color-primary: $raspberry;
+$color-primary-dark: $indigo;
+$color-secondary: $lavender;
+$color-accent: $raspberry;
+$color-accent-mid: $lavender;
 
 $color-border: $border;
 $color-border-soft: $border-soft;
 $color-border-light: $border-soft;
 
-$color-gradient-light: $mist;
-$color-gradient-mid: $teal;
+$color-gradient-light: $blush-pink;
+$color-gradient-mid: $lavender;
 
-$color-success-bg: #dcfce7;
-$color-warning-bg: #fef3c7;
-$color-danger-bg: #fee2e2;
+$color-success-bg: #ecf8f0;
+$color-warning-bg: #fef6e8;
+$color-danger-bg: #fdeeee;
 
-$color-success: #22c55e;
-$color-warning: #f59e0b;
-$color-danger: #ef4444;
-$color-info: $sky;
+$color-success: #1fa968;
+$color-warning: #d4920a;
+$color-danger: $live-red;
+$color-info: $slate;
 
 //=====================================================
 // Seller Dashboard
 //=====================================================
 
 $card-gap: 24px;
-
 $card-radius: $radius-lg;
-
 $card-shadow: $shadow-md;
 $card-shadow-hover: $shadow-lg;
 
@@ -173,13 +202,14 @@ $card-shadow-hover: $shadow-lg;
 }
 
 @mixin glass {
-  background: rgba(255,255,255,.75);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba($sky-pale, 0.55);
 }
 
 @mixin card-hover {
-  transition: all .3s ease;
+  transition: transform $transition, box-shadow $transition, border-color $transition-fast;
 
   &:hover {
     transform: translateY(-4px);
@@ -188,10 +218,49 @@ $card-shadow-hover: $shadow-lg;
 }
 
 @mixin button-hover {
-  transition: all .3s ease;
+  transition: transform $transition-fast, box-shadow $transition-fast;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: $shadow-md;
+    box-shadow: $shadow-accent;
+  }
+}
+
+@mixin accent-ring {
+  box-shadow: 0 0 0 3px rgba($raspberry, 0.22);
+}
+
+@mixin surface-card {
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+}
+
+@mixin live-pulse-ring {
+  animation: live-pulse-ring 1.6s ease-out infinite;
+}
+
+@keyframes live-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.85);
+    opacity: 1;
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes live-shimmer {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-12deg);
   }
 }

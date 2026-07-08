@@ -1,19 +1,8 @@
+@use '../../../styles/palette' as *;
+@use '../../../styles/auth-theme' as auth;
+
 .otp-page {
-  min-height: 100vh;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  padding: 30px;
-
-  background: linear-gradient(
-    135deg,
-    #001d39 0%,
-    #0a4174 30%,
-    #49769f 60%,
-    #7bbde8 100%
-  );
+  @include auth.auth-page-shell;
 }
 
 .otp-card {
@@ -47,19 +36,18 @@
 }
 
 .otp-card h1 {
+  @include auth.auth-title;
   text-align: center;
-
   color: #001d39;
   font-size: 22px;
   margin-bottom: 6px;
 }
 
 .otp-card p {
+  @include auth.auth-muted-text;
   text-align: center;
-
   color: #64748b;
   font-size: 14px;
-
   margin-bottom: 4px;
 }
 
@@ -76,6 +64,7 @@
 }
 
 .otp-card button {
+  @include auth.auth-primary-btn;
   width: 100%;
 
   height: 50px;
@@ -102,6 +91,7 @@
 }
 
 .resend {
+  @include auth.auth-link;
   display: block;
   text-align: center;
   margin-top: 18px;
@@ -122,18 +112,15 @@
 }
 
 .back-auth {
+  @include auth.auth-link;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-
   width: fit-content;
-
   margin-bottom: 14px;
-
-  color: #0a4174;
-
   font-size: 13px;
   font-weight: 600;
+  transition: transform $transition-fast;
 
   cursor: pointer;
 

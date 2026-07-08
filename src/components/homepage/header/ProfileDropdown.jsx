@@ -23,10 +23,17 @@ export default function ProfileDropdown({ onClose }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     onClose?.();
-    navigate('/login', { replace: true });
+
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch {
+      navigate('/login', { replace: true });
+    }
   };
 
   const handleSwitchMode = async (mode) => {
@@ -68,8 +75,6 @@ export default function ProfileDropdown({ onClose }) {
 
   const menuItems = [
     { to: '/profile', label: 'Hồ sơ của tôi' },
-    { to: '/profile/notifications', label: 'Trung tâm thông báo' },
-    isBuyerMode ? { to: '/profile#purchases', label: 'Lịch sử mua hàng' } : null,
     becomeSellerItem(),
     { action: 'switch', label: 'Chuyển tài khoản' },
   ].filter(Boolean);

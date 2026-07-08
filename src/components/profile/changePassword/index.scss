@@ -1,0 +1,29 @@
+@use '../../../styles/palette' as *;
+
+.change-password {
+  width: 100%;
+}
+
+.change-password__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $ink;
+  margin: 0;
+}
+
+.change-password__divider {
+  border: 0;
+  border-top: 1px solid $border-soft;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.change-password__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 480px;
+}
+
+.change-password__actions {
+  margin-top: 0.5rem;
+}

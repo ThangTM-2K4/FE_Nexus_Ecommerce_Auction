@@ -7,16 +7,19 @@
 }
 
 :root {
-  --deep: #001D39;
-  --navy: #0A4174;
-  --steel: #49769F;
-  --teal: #4E8EA2;
-  --sage: #6EA2B3;
-  --sky: #7BBDE8;
-  --mist: #BDD8E9;
-  --ink-muted: #49769F;
-  --surface: #ffffff;
-  --surface-soft: #f6fafd;
+  --deep: #{$deep};
+  --navy: #{$navy};
+  --steel: #{$steel};
+  --teal: #{$teal};
+  --sage: #{$sage};
+  --sky: #{$sky};
+  --mist: #{$mist};
+  --lavender: #{$lavender};
+  --raspberry: #{$raspberry};
+  --live-red: #{$live-red};
+  --ink-muted: #{$ink-muted};
+  --surface: #{$surface};
+  --surface-soft: #{$surface-soft};
 }
 
 html,
@@ -25,10 +28,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background:
-    radial-gradient(ellipse 65% 45% at 10% 0%, rgba(123, 189, 232, 0.28), transparent),
-    radial-gradient(ellipse 55% 40% at 90% 5%, rgba(78, 142, 162, 0.15), transparent),
-    radial-gradient(ellipse 75% 50% at 50% 100%, rgba(189, 216, 233, 0.4), transparent),
-    linear-gradient(180deg, #fafcfe 0%, #f0f7fb 100%);
+    radial-gradient(ellipse 68% 48% at 6% -4%, rgba($blush-pink, 0.45), transparent 52%),
+    radial-gradient(ellipse 52% 42% at 94% 2%, rgba($sky-pale, 0.38), transparent 48%),
+    radial-gradient(ellipse 78% 52% at 50% 100%, rgba($lavender, 0.35), transparent 58%),
+    $gradient-page;
   color: var(--deep);
   min-height: 100%;
 }
@@ -47,8 +50,4 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

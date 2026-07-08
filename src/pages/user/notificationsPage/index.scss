@@ -1,49 +1,9 @@
-@use "../../../styles/palette" as *;
+@use '../../../styles/palette' as *;
 
-.notifications-page {
-  min-height: 100vh;
+.notifications-toolbar {
   display: flex;
-  flex-direction: column;
-  background: $surface-soft;
-}
-
-.notifications-main {
-  flex: 1;
-  max-width: 720px;
-  margin: 0 auto;
-  width: 100%;
-  padding: 2rem 1.5rem 3rem;
-}
-
-.notifications-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-
-  h1 {
-    font-size: 1.5rem;
-    color: $ink;
-    margin: 8px 0 4px;
-  }
-
-  p {
-    color: $ink-muted;
-    font-size: 0.88rem;
-  }
-}
-
-.notifications-back {
-  font-size: 0.82rem;
-  color: $accent-dark;
-  text-decoration: none;
-  font-weight: 600;
-
-  &:hover {
-    color: $teal;
-  }
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
 }
 
 .notifications-mark-all {
@@ -58,33 +18,8 @@
   font-family: inherit;
 
   &:hover {
-    background: rgba($sky, 0.1);
-  }
-}
-
-.notifications-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-
-  button {
-    border: 0;
-    background: $surface;
-    border: 1px solid $border-soft;
-    padding: 8px 16px;
-    border-radius: $radius-pill;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: $ink-muted;
-    cursor: pointer;
-    font-family: inherit;
-
-    &.active {
-      background: rgba($sky, 0.2);
-      border-color: rgba($sky, 0.4);
-      color: $accent-dark;
-    }
+    background: rgba($raspberry, 0.08);
+    border-color: rgba($raspberry, 0.35);
   }
 }
 
@@ -95,15 +30,14 @@
 }
 
 .notifications-item {
-  background: $surface;
+  background: $surface-soft;
   border: 1px solid $border-soft;
   border-radius: $radius-md;
   padding: 1.25rem;
-  box-shadow: $shadow-sm;
 
   &.unread {
-    border-left: 3px solid $sky;
-    background: rgba($sky, 0.04);
+    border-left: 3px solid $raspberry;
+    background: rgba($blush-pink, 0.2);
   }
 
   h3 {
@@ -122,7 +56,7 @@
     margin-top: 10px;
     border: 0;
     background: transparent;
-    color: $accent-dark;
+    color: $raspberry;
     font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
@@ -130,7 +64,7 @@
     padding: 0;
 
     &:hover {
-      color: $teal;
+      text-decoration: underline;
     }
   }
 }
@@ -154,23 +88,18 @@
   border-radius: $radius-pill;
 
   &--auction {
-    background: rgba($sky, 0.25);
-    color: $accent-dark;
+    background: rgba($raspberry, 0.15);
+    color: $raspberry;
   }
 
   &--order {
-    background: rgba($teal, 0.2);
-    color: $navy;
+    background: rgba($lavender, 0.35);
+    color: $accent-dark;
   }
 
+  &--promotion,
   &--system {
-    background: rgba($sage, 0.25);
-    color: $steel;
+    background: rgba($blush-pink, 0.55);
+    color: $accent-dark;
   }
-}
-
-.notifications-empty {
-  text-align: center;
-  color: $ink-muted;
-  padding: 3rem;
 }

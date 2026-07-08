@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { toast } from 'react-toastify';
@@ -9,7 +9,10 @@ import './index.scss';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+
+  const redirectTo = location.state?.redirectTo;
 
   const [searchParams] = useSearchParams();
 
@@ -112,6 +115,11 @@ function LoginPage() {
       );
 
       setTimeout(() => {
+        if (redirectTo) {
+          navigate(redirectTo, { replace: true });
+          return;
+        }
+
         switch (user.role) {
           case "ADMIN":
             navigate("/admin");
@@ -267,7 +275,7 @@ function LoginPage() {
             <p>© 2026 Hệ Thống Đấu Giá Thương Mại Điện Tử</p>
             <p>An toàn • Minh bạch • Hiệu quả</p>
             <p>
-              Kết nối người mua và người bán trên nền tảng đấu giá trực tuyến
+              Đây là sản phẩm học tập không phục vụ cho mục đích thương mại đời sống
             </p>
           </div>
         </form>

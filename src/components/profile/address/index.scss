@@ -1,0 +1,65 @@
+@use '../../../styles/palette' as *;
+
+.address-page {
+  width: 100%;
+}
+
+.address-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $ink;
+    margin: 0;
+  }
+}
+
+.address-page__divider {
+  border: 0;
+  border-top: 1px solid $border-soft;
+  margin: 1.25rem 0;
+}
+
+.address-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1rem;
+  text-align: center;
+
+  p {
+    color: $ink-muted;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+  }
+}
+
+.address-page__empty-icon {
+  font-size: 4rem;
+  opacity: 0.7;
+}
+
+.address-page__loading {
+  text-align: center;
+  color: $ink-muted;
+  padding: 2rem;
+}
+
+.address-page__back {
+  border: 0;
+  background: transparent;
+  color: $ink-muted;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: capitalize;
+
+  &:hover {
+    color: $ink;
+  }
+}

@@ -1,21 +1,31 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import * as notificationService from '../../../services/notificationService';
 import Header from '../../../components/homepage/header';
 import Footer from '../../../components/homepage/footer';
+import AccountLayout from '../../../components/profile/accountLayout';
+import FilterTabs from '../../../components/profile/filterTabs';
+import EmptyState from '../../../components/profile/emptyState';
+import '../ordersPage/index.scss';
 import './index.scss';
+
+const NOTIFICATION_TABS = [
+  { key: 'order', label: 'Cập nhật đơn hàng', types: ['order'] },
+  { key: 'promotion', label: 'Khuyến mãi', types: ['promotion', 'system'] },
+  { key: 'auction', label: 'Đấu giá', types: ['auction'] },
+];
 
 const TYPE_LABELS = {
   auction: 'Đấu giá',
   order: 'Đơn hàng',
+  promotion: 'Khuyến mãi',
   system: 'Hệ thống',
 };
 
 export default function NotificationsPage() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
-  const [filter, setFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState('order');
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -30,7 +40,12 @@ export default function NotificationsPage() {
     load();
   }, [user?.id]);
 
-  const filtered = notifications.filter((n) => filter === 'all' || n.type === filter);
+  const currentTab = NOTIFICATION_TABS.find((tab) => tab.key === activeTab);
+  const filtered = useMemo(() => {
+    if (!currentTab) return notifications;
+    return notifications.filter((n) => currentTab.types.includes(n.type));
+  }, [notifications, currentTab]);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleMarkRead = async (id) => {
@@ -44,64 +59,54 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="notifications-page">
+    <div className="account-page">
       <Header />
-      <main className="notifications-main">
-        <div className="notifications-header">
-          <div>
-            <Link to="/profile" className="notifications-back">← Quay lại hồ sơ</Link>
-            <h1>Trung tâm thông báo</h1>
-            <p>{unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : 'Tất cả đã đọc'}</p>
+      <main className="account-page__main">
+        <AccountLayout
+          title="Thông Báo"
+          description={unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : 'Tất cả đã đọc'}
+        >
+          <div className="notifications-toolbar">
+            {unreadCount > 0 && (
+              <button type="button" className="notifications-mark-all" onClick={handleMarkAll}>
+                Đánh dấu tất cả đã đọc
+              </button>
+            )}
           </div>
-          {unreadCount > 0 && (
-            <button type="button" className="notifications-mark-all" onClick={handleMarkAll}>
-              Đánh dấu tất cả đã đọc
-            </button>
-          )}
-        </div>
 
-        <div className="notifications-tabs">
-          {[
-            { key: 'all', label: 'Tất cả' },
-            { key: 'auction', label: 'Đấu giá' },
-            { key: 'order', label: 'Đơn hàng' },
-            { key: 'system', label: 'Hệ thống' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              className={filter === tab.key ? 'active' : ''}
-              onClick={() => setFilter(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+          <FilterTabs
+            tabs={NOTIFICATION_TABS}
+            activeKey={activeTab}
+            onChange={setActiveTab}
+          />
 
-        <div className="notifications-list">
-          {loading && <p className="notifications-empty">Đang tải...</p>}
-          {!loading && filtered.length === 0 && (
-            <p className="notifications-empty">Không có thông báo</p>
-          )}
-          {!loading &&
-            filtered.map((item) => (
-              <article key={item.id} className={`notifications-item ${item.read ? 'read' : 'unread'}`}>
-                <div className="notifications-item-meta">
-                  <span className={`notifications-type notifications-type--${item.type}`}>
-                    {TYPE_LABELS[item.type]}
-                  </span>
-                  <time>{new Date(item.createdAt).toLocaleString('vi-VN')}</time>
-                </div>
-                <h3>{item.title}</h3>
-                <p>{item.message}</p>
-                {!item.read && (
-                  <button type="button" onClick={() => handleMarkRead(item.id)}>
-                    Đánh dấu đã đọc
-                  </button>
-                )}
-              </article>
-            ))}
-        </div>
+          <div className="notifications-list">
+            {loading && <p className="account-page__loading">Đang tải...</p>}
+
+            {!loading && filtered.length === 0 && (
+              <EmptyState icon="🔔" title="Không có thông báo" />
+            )}
+
+            {!loading &&
+              filtered.map((item) => (
+                <article key={item.id} className={`notifications-item ${item.read ? 'read' : 'unread'}`}>
+                  <div className="notifications-item-meta">
+                    <span className={`notifications-type notifications-type--${item.type}`}>
+                      {TYPE_LABELS[item.type] || item.type}
+                    </span>
+                    <time>{new Date(item.createdAt).toLocaleString('vi-VN')}</time>
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.message}</p>
+                  {!item.read && (
+                    <button type="button" onClick={() => handleMarkRead(item.id)}>
+                      Đánh dấu đã đọc
+                    </button>
+                  )}
+                </article>
+              ))}
+          </div>
+        </AccountLayout>
       </main>
       <Footer />
     </div>

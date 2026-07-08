@@ -1,0 +1,50 @@
+@use '../../../styles/palette' as *;
+
+.variant-selector__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: $ink-muted;
+  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+}
+
+.variant-selector__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.variant-selector__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid $border-soft;
+  border-radius: $radius-sm;
+  background: $surface;
+  min-width: 0;
+  transition: border-color $transition-fast, background $transition-fast;
+
+  &:hover {
+    border-color: $accent;
+  }
+
+  &--active {
+    border-color: $accent-dark;
+    background: rgba($sky, 0.12);
+  }
+}
+
+.variant-selector__img {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.variant-selector__name {
+  font-size: 0.82rem;
+  color: $ink;
+  white-space: nowrap;
+}

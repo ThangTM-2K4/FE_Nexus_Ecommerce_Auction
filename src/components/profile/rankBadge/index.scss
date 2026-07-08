@@ -1,0 +1,32 @@
+@use '../../../styles/palette' as *;
+
+.account-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: $radius-pill;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  &.rank-silver {
+    background: rgba($color-warning, 0.15);
+    color: $color-warning;
+  }
+
+  &.rank-gold {
+    background: rgba($color-warning, 0.18);
+    color: $color-warning;
+  }
+
+  &.rank-platinum {
+    background: rgba($lavender, 0.35);
+    color: $accent-dark;
+  }
+
+  &.rank-diamond {
+    background: rgba($raspberry, 0.18);
+    color: $raspberry;
+  }
+}

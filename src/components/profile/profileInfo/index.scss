@@ -1,0 +1,105 @@
+@use '../../../styles/palette' as *;
+
+.profile-info {
+  width: 100%;
+}
+
+.profile-info__grid {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 2rem;
+  align-items: start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-info__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.25rem;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-info__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  input,
+  select {
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid $border-soft;
+    border-radius: $radius-sm;
+    font-size: 0.88rem;
+    font-family: inherit;
+    color: $ink;
+
+    &:focus {
+      outline: none;
+      border-color: $raspberry;
+      box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
+    }
+  }
+}
+
+.profile-info__avatar-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.profile-info__avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $raspberry, $lavender);
+  color: $surface;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.profile-info__upload-btn {
+  border: 1px solid $border;
+  background: $surface;
+  color: $ink;
+  padding: 8px 16px;
+  border-radius: $radius-sm;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover {
+    border-color: $raspberry;
+    color: $raspberry;
+  }
+}
+
+.profile-info__upload-hint {
+  font-size: 0.72rem;
+  color: $ink-muted;
+  line-height: 1.4;
+}
+
+.profile-info__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid $border-soft;
+}

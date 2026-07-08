@@ -1,0 +1,88 @@
+@use '../../../styles/palette' as *;
+
+.bank-page {
+  width: 100%;
+}
+
+.bank-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $ink;
+    margin: 0;
+  }
+}
+
+.bank-page__divider {
+  border: 0;
+  border-top: 1px solid $border-soft;
+  margin: 1.25rem 0;
+}
+
+.bank-page__empty {
+  text-align: center;
+  color: $ink-muted;
+  font-size: 0.95rem;
+  padding: 4rem 1rem;
+}
+
+.bank-page__loading {
+  text-align: center;
+  color: $ink-muted;
+  padding: 2rem;
+}
+
+.bank-page__back-link {
+  border: 0;
+  background: transparent;
+  color: $ink-muted;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: uppercase;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+.bank-page__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bank-page__item {
+  padding: 1rem;
+  border: 1px solid $border-soft;
+  border-radius: $radius-sm;
+  background: $surface-soft;
+  font-size: 0.88rem;
+  color: $ink;
+
+  p {
+    margin: 4px 0 0;
+    color: $ink-muted;
+  }
+}
+
+.bank-page__default {
+  margin-left: 8px;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: $radius-pill;
+  background: rgba($raspberry, 0.12);
+  color: $raspberry;
+  font-weight: 700;
+}

@@ -1,0 +1,10 @@
+.address-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: none;
+
+  @media (max-width: 1024px) {
+    gap: 10px;
+  }
+}
