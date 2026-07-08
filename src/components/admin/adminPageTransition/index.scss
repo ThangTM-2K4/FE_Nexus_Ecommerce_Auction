@@ -1,0 +1,57 @@
+@use "../../../styles/auction-variables" as *;
+
+@keyframes adm-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes adm-view-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes adm-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.adm-page-transition {
+  animation: adm-page-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.adm-view-transition {
+  animation: adm-view-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.adm-stagger-grid {
+  display: grid;
+  gap: 14px;
+
+  > * {
+    animation: adm-stagger-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+    @for $i from 1 through 20 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{($i - 1) * 0.05}s;
+      }
+    }
+  }
+}

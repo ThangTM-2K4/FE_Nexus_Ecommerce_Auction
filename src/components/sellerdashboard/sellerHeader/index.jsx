@@ -33,7 +33,7 @@ const SellerHeader = () => {
             role="button"
             tabIndex={0}
           >
-            Seller Hub
+            Shop Auction
           </h1>
           <span className="slr-header__badge">Kênh Người Bán</span>
         </div>

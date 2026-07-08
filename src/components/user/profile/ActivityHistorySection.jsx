@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as profileService from '../../../services/profileService';
+import { useAuth } from '../../../context/AuthContext';
 
-const TABS = [
+const ALL_TABS = [
   { key: 'auctions', label: 'Lịch sử đấu giá', id: 'auctions' },
   { key: 'bids', label: 'Lịch sử đặt giá', id: 'bids' },
   { key: 'purchases', label: 'Lịch sử mua hàng', id: 'purchases' },
@@ -12,6 +13,11 @@ const formatPrice = (n) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
 
 export default function ActivityHistorySection() {
+  const { isSellerMode } = useAuth();
+  const TABS = useMemo(
+    () => (isSellerMode ? ALL_TABS.filter((t) => t.key !== 'purchases') : ALL_TABS),
+    [isSellerMode]
+  );
   const [activeTab, setActiveTab] = useState('auctions');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,10 +31,17 @@ export default function ActivityHistorySection() {
 
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
+    if (hash === 'purchases' && isSellerMode) return;
     if (TABS.some((t) => t.id === hash)) {
       setActiveTab(hash === 'auctions' ? 'auctions' : hash === 'purchases' ? 'purchases' : hash);
     }
-  }, []);
+  }, [TABS, isSellerMode]);
+
+  useEffect(() => {
+    if (isSellerMode && activeTab === 'purchases') {
+      setActiveTab('auctions');
+    }
+  }, [isSellerMode, activeTab]);
 
   const renderTable = () => {
     if (loading) return <p className="profile-empty-hint">Đang tải...</p>;

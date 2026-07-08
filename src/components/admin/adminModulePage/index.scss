@@ -1,0 +1,80 @@
+@use "../../../styles/auction-variables" as *;
+
+.adm-module {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__card {
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-lg;
+    padding: 20px;
+
+    &--wide {
+      grid-column: 1 / -1;
+    }
+
+    h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: $color-primary-dark;
+      margin-bottom: 12px;
+    }
+  }
+
+  &__list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    li {
+      font-size: 13px;
+      color: $color-text-secondary;
+      padding-left: 14px;
+      position: relative;
+      line-height: 1.4;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 7px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: $color-accent;
+      }
+    }
+
+    &--cols {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 8px 16px;
+    }
+  }
+
+  &__notice {
+    padding: 16px 20px;
+    background: rgba($color-accent, 0.08);
+    border: 1px dashed rgba($color-accent, 0.4);
+    border-radius: $radius-md;
+    text-align: center;
+
+    p {
+      font-size: 13px;
+      color: $color-text-muted;
+    }
+  }
+}

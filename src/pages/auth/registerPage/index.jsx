@@ -4,7 +4,7 @@ import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { register, verifyEmail, resendEmailOtp, getGoogleLoginUrl } from "../../../services/authService";
+import { register } from "../../../services/authService";
 import "./index.scss";
 
 function RegisterPage() {
@@ -108,7 +108,6 @@ function RegisterPage() {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
-        role: "BUYER",
       });
 
       toast.success(

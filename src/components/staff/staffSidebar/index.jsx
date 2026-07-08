@@ -7,6 +7,7 @@ import {
   FaShoppingCart,
   FaShieldAlt,
   FaBell,
+  FaBox,
 } from "react-icons/fa";
 import { sidebarMenuItems } from "../../../data/staffMockData";
 import "./index.scss";
@@ -19,6 +20,7 @@ const icons = {
   cart: FaShoppingCart,
   shield: FaShieldAlt,
   bell: FaBell,
+  box: FaBox,
 };
 
 const StaffSidebar = ({ activeId }) => {

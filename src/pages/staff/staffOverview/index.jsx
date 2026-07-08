@@ -27,6 +27,10 @@ const StaffOverview = () => {
     return "/staff/reports";
   };
 
+  const pendingSellers = overviewStats.find((s) => s.id === "pending-sellers")?.value ?? "0";
+  const flaggedAuctions = overviewStats.find((s) => s.id === "flagged-auctions")?.value ?? "0";
+  const openDisputes = overviewStats.find((s) => s.id === "open-disputes")?.value ?? "0";
+
   return (
     <div className="stf-overview">
       <StaffPageHeader
@@ -40,23 +44,9 @@ const StaffOverview = () => {
           <span className="stf-overview__kicker">Hôm nay</span>
           <h2>Chào mừng trở lại, đội vận hành</h2>
           <p>
-            Bạn có 12 đơn đăng ký seller, 5 phiên đấu giá bị báo cáo và 8 khiếu nại
-            đang mở cần xử lý.
+            Bạn có {pendingSellers} đơn đăng ký seller, {flaggedAuctions} phiên đấu giá bị báo cáo
+            và {openDisputes} khiếu nại đang mở cần xử lý — chi tiết ở các thẻ bên dưới.
           </p>
-        </div>
-        <div className="stf-overview__hero-stats">
-          <div>
-            <small>Chờ duyệt</small>
-            <strong>12</strong>
-          </div>
-          <div>
-            <small>Báo cáo</small>
-            <strong>5</strong>
-          </div>
-          <div>
-            <small>Khiếu nại</small>
-            <strong>8</strong>
-          </div>
         </div>
       </section>
 

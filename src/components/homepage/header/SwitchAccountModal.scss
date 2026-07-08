@@ -116,3 +116,15 @@
   font-weight: 700;
   font-size: 0.9rem;
 }
+
+.header-mode-arrow {
+  margin-left: auto;
+  color: $ink-muted;
+  font-size: 1rem;
+  transition: transform 0.2s $ease;
+}
+
+.header-mode-option:hover .header-mode-arrow {
+  transform: translateX(3px);
+  color: $accent-dark;
+}

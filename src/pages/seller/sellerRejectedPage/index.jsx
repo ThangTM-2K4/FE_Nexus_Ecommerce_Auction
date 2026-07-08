@@ -21,6 +21,11 @@ export default function SellerRejectedPage() {
       <Header />
       <main className="become-seller-main">
         <div className="seller-status-card rejected">
+          <img
+            src="/images/seller/status/rejected.svg"
+            alt=""
+            className="seller-status-illustration"
+          />
           <h1>Đơn đăng ký bị từ chối</h1>
           {application && (
             <>

@@ -292,7 +292,7 @@ background: linear-gradient(
   }
 }
 
-.field-error {
+.login-card .field-error {
   display: block;
   min-height: 18px;
 
@@ -302,6 +302,7 @@ background: linear-gradient(
   color: #ef4444;
   font-size: 13px;
   font-weight: 500;
+  text-align: left;
 }
 
 .input-error {
