@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import Select from '../../../common/select';
 import Input from '../../../common/input';
 import Checkbox from '../../../common/checkbox';
-import { BANK_OPTIONS, BRANCH_OPTIONS } from '../../../../services/bankAccountService';
+import { BANK_OPTIONS } from '../../../../data/bankOptions';
+import { BRANCH_OPTIONS } from '../../../../data/mockBankAccounts';
 import './index.scss';
 
 const emptyForm = {
@@ -24,6 +25,27 @@ export default function BankAccountForm({ initial, onSubmit }) {
       setForm(emptyForm);
     }
   }, [initial]);
+
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7573/ingest/6a36bee6-8fdb-46c9-a0c0-b55c9704312f', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '239b2f' },
+      body: JSON.stringify({
+        sessionId: '239b2f',
+        runId: 'post-fix',
+        hypothesisId: 'A',
+        location: 'bankAccountForm/index.jsx:mount',
+        message: 'BankAccountForm mounted with options',
+        data: {
+          bankOptionsCount: BANK_OPTIONS?.length ?? 0,
+          branchKeys: Object.keys(BRANCH_OPTIONS || {}),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, []);
+  // #endregion
 
   const handleChange = (e) => {
     const { name, value } = e.target;

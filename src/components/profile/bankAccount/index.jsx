@@ -19,6 +19,21 @@ export default function BankAccountPage() {
     const data = await bankAccountService.getBankAccounts(user.id);
     setAccounts(data);
     setLoading(false);
+    // #region agent log
+    fetch('http://127.0.0.1:7573/ingest/6a36bee6-8fdb-46c9-a0c0-b55c9704312f', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '239b2f' },
+      body: JSON.stringify({
+        sessionId: '239b2f',
+        runId: 'post-fix',
+        hypothesisId: 'F',
+        location: 'bankAccount/index.jsx:load',
+        message: 'Bank accounts loaded',
+        data: { count: data?.length ?? 0 },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
   };
 
   useEffect(() => {

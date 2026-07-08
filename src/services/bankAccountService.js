@@ -188,3 +188,31 @@ export const getCurrentUserBankAccounts = async () => {
   if (!user?.id) return [];
   return getSellerBankAccounts(user.id);
 };
+
+export const getBankAccounts = getSellerBankAccounts;
+
+export const addBankAccount = async (userId, formData) => {
+  await addSellerBankAccount(userId, {
+    type: "personal",
+    bankName: formData.bankCode || formData.bankName || "",
+    accountNumber: formData.accountNumber,
+    accountHolder: formData.accountHolder,
+  });
+  const accounts = await getSellerBankAccounts(userId);
+  // #region agent log
+  fetch("http://127.0.0.1:7573/ingest/6a36bee6-8fdb-46c9-a0c0-b55c9704312f", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "239b2f" },
+    body: JSON.stringify({
+      sessionId: "239b2f",
+      runId: "post-fix",
+      hypothesisId: "F",
+      location: "bankAccountService.js:addBankAccount",
+      message: "addBankAccount completed",
+      data: { accountCount: accounts.length },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  return accounts;
+};
