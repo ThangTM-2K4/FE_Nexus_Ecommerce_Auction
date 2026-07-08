@@ -33,7 +33,7 @@ const StaffHeader = () => {
             role="button"
             tabIndex={0}
           >
-            Staff Hub
+            Shop Auction
           </h1>
           <span className="stf-header__badge">Kênh Nhân Viên</span>
         </div>

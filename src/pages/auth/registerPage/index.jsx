@@ -4,7 +4,7 @@ import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { register, verifyEmail, resendEmailOtp, getGoogleLoginUrl } from "../../../services/authService";
+import { register } from "../../../services/authService";
 import "./index.scss";
 
 function RegisterPage() {
@@ -103,20 +103,24 @@ function RegisterPage() {
     try {
       setLoading(true);
 
-      await registerAPI({
+      await register({
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
-        role: "BUYER",
       });
 
       toast.success(
-        "Đăng ký tài khoản thành công 🎉"
+        "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản."
       );
 
       setTimeout(() => {
-        navigate("/login");
+        navigate("/register-verify-otp", {
+          state: {
+            email: formData.email,
+          },
+        }
+        );
       }, 1500);
     } catch (err) {
       toast.error(
@@ -266,6 +270,8 @@ function RegisterPage() {
               ? "Đang đăng ký..."
               : "Đăng ký"}
           </button>
+
+
 
           <div className="divider">
             HOẶC

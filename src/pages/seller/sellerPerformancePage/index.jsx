@@ -20,13 +20,13 @@ export default function PerformancePage() {
 
   return (
     <div className="slr-page">
-      <PageHeader title="Hiệu quả bán hàng" subtitle="Conversion funnel và KPI hiệu suất" />
+      <PageHeader title="Hiệu quả bán hàng" subtitle="Phễu chuyển đổi và KPI hiệu suất" />
 
       <section className="slr-section">
         <div className="slr-page-split">
           <div className="slr-table-col">
             <div className="slr-panel-card">
-              <h4>Conversion Funnel</h4>
+              <h4>Phễu chuyển đổi</h4>
               <div className="slr-funnel">
                 {conversionFunnel.map((step, i) => (
                   <div key={step.label} className="slr-funnel__step">
@@ -63,57 +63,61 @@ export default function PerformancePage() {
           <div className="slr-table-col">
             <div className="slr-panel-card">
               <h4>Hiệu suất theo kênh</h4>
-              <table className="slr-table slr-table--compact">
-                <thead>
-                  <tr>
-                    <th>Kênh</th>
-                    <th>Lượt xem</th>
-                    <th>Click</th>
-                    <th>Chuyển đổi</th>
-                    <th>Doanh thu</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {channelPerformance.map((c) => (
-                    <tr key={c.channel}>
-                      <td>
-                        <strong>{c.channel}</strong>
-                      </td>
-                      <td>{c.views.toLocaleString("vi-VN")}</td>
-                      <td>{c.clicks.toLocaleString("vi-VN")}</td>
-                      <td className="pos">{c.conversion}</td>
-                      <td>{c.revenue}</td>
+              <div className="slr-table-wrap">
+                <table className="slr-table slr-table--compact">
+                  <thead>
+                    <tr>
+                      <th>Kênh</th>
+                      <th>Lượt xem</th>
+                      <th>Lượt click</th>
+                      <th>Chuyển đổi</th>
+                      <th>Doanh thu</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {channelPerformance.map((c) => (
+                      <tr key={c.channel}>
+                        <td>
+                          <strong>{c.channel}</strong>
+                        </td>
+                        <td>{c.views.toLocaleString("vi-VN")}</td>
+                        <td>{c.clicks.toLocaleString("vi-VN")}</td>
+                        <td className="pos">{c.conversion}</td>
+                        <td>{c.revenue}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div className="slr-panel-card">
               <h4>Sản phẩm được click nhiều</h4>
-              <table className="slr-table slr-table--compact">
-                <thead>
-                  <tr>
-                    <th>Sản phẩm</th>
-                    <th>Click</th>
-                    <th>CTR</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topClickedProducts.map((p) => (
-                    <tr key={p.name}>
-                      <td>
-                        <div className="slr-product-cell">
-                          <img src={p.image} alt="" />
-                          <span>{p.name}</span>
-                        </div>
-                      </td>
-                      <td>{p.clicks.toLocaleString("vi-VN")}</td>
-                      <td className="pos">{p.ctr}</td>
+              <div className="slr-table-wrap">
+                <table className="slr-table slr-table--compact">
+                  <thead>
+                    <tr>
+                      <th>Sản phẩm</th>
+                      <th>Lượt click</th>
+                      <th>CTR</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {topClickedProducts.map((p) => (
+                      <tr key={p.name}>
+                        <td>
+                          <div className="slr-product-cell">
+                            <img src={p.image} alt="" />
+                            <span>{p.name}</span>
+                          </div>
+                        </td>
+                        <td>{p.clicks.toLocaleString("vi-VN")}</td>
+                        <td className="pos">{p.ctr}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

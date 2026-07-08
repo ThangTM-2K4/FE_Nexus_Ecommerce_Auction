@@ -17,55 +17,68 @@
 }
 
 .otp-card {
-  width: 500px;
+  width: 440px;
+  max-width: 100%;
 
   background: white;
 
-  padding: 40px;
+  padding: 36px 36px 32px;
 
-  border-radius: 24px;
+  border-radius: 20px;
 
   box-shadow: 0 20px 50px rgba(0, 29, 57, 0.25);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.otp-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: rgba(10, 65, 116, 0.1);
+  font-size: 24px;
 }
 
 .otp-card h1 {
   text-align: center;
 
   color: #001d39;
-
-  margin-bottom: 12px;
+  font-size: 22px;
+  margin-bottom: 6px;
 }
 
 .otp-card p {
   text-align: center;
 
   color: #64748b;
+  font-size: 14px;
 
-  margin-bottom: 25px;
+  margin-bottom: 4px;
 }
 
-.otp-card input {
-  width: 100%;
-
-  height: 60px;
-
-  text-align: center;
-
-  letter-spacing: 10px;
-
-  font-size: 22px;
-
-  border: 1px solid #d6dee6;
-
-  border-radius: 10px;
-
+.account-info {
+  font-weight: 700;
+  color: #0a4174;
   margin-bottom: 20px;
+  text-align: center;
+}
+
+.otp-card form {
+  display: flex;
+  flex-direction: column;
 }
 
 .otp-card button {
   width: 100%;
 
-  height: 52px;
+  height: 50px;
 
   border: none;
 
@@ -78,6 +91,10 @@
   font-weight: 700;
 
   cursor: pointer;
+
+  margin-top: 8px;
+
+  transition: background .2s ease;
 }
 
 .otp-card button:hover {
@@ -86,43 +103,46 @@
 
 .resend {
   display: block;
-
-  margin-top: 20px;
-
   text-align: center;
-
-  color: #0a4174;
-
-  cursor: pointer;
-
-  font-weight: 600;
-}
-
-.account-info {
-  font-weight: 700;
-  color: #0a4174;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.otp-error {
-  color: #ef4444;
-  font-size: 14px;
-  margin-top: -10px;
-  margin-bottom: 12px;
-}
-
-.resend {
-  display: block;
-  text-align: center;
-  margin-top: 20px;
+  margin-top: 18px;
   color: #0a4174;
   cursor: pointer;
   font-weight: 600;
+  font-size: 13px;
 }
 
 .resend:hover {
   text-decoration: underline;
+}
+
+.resend.disabled {
+  color: #94a3b8;
+  cursor: default;
+  pointer-events: none;
+}
+
+.back-auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  width: fit-content;
+
+  margin-bottom: 14px;
+
+  color: #0a4174;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: all .25s ease;
+}
+
+.back-auth:hover {
+  color: #0d5ea8;
+  transform: translateX(-3px);
 }
 
 .back-forgot {
@@ -149,14 +169,9 @@
   transform: translateX(-3px);
 }
 
-.input-error {
-  border: 1px solid #ef4444 !important;
-}
-
-.field-error {
+.otp-card .field-error {
   color: #ef4444;
-  font-size: 13px;
-  margin-top: -8px;
-  margin-bottom: 12px;
-  text-align: left;
+  font-size: 12px;
+  text-align: center;
+  margin: 0 0 10px;
 }

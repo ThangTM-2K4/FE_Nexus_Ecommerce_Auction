@@ -5,7 +5,7 @@ import SwitchAccountModal from './SwitchAccountModal';
 import './ProfileDropdown.scss';
 
 export default function ProfileDropdown({ onClose }) {
-  const { user, logout, isApprovedSeller, switchAccountMode } = useAuth();
+  const { user, logout, isApprovedSeller, isBuyerMode, switchAccountMode } = useAuth();
   const navigate = useNavigate();
   const panelRef = useRef(null);
   const [showSwitchModal, setShowSwitchModal] = useState(false);
@@ -69,7 +69,7 @@ export default function ProfileDropdown({ onClose }) {
   const menuItems = [
     { to: '/profile', label: 'Hồ sơ của tôi' },
     { to: '/profile/notifications', label: 'Trung tâm thông báo' },
-    { to: '/profile#purchases', label: 'Lịch sử mua hàng' },
+    isBuyerMode ? { to: '/profile#purchases', label: 'Lịch sử mua hàng' } : null,
     becomeSellerItem(),
     { action: 'switch', label: 'Chuyển tài khoản' },
   ].filter(Boolean);

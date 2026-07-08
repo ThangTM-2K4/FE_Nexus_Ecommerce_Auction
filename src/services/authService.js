@@ -144,24 +144,36 @@ export const hadStoredSession = () => {
 };
 
 export const login = async (loginValue, password) => {
-  const { data } = await api.post('/auth/login', {
+  // 1. Log in
+  const { data } = await api.post("/auth/login", {
     emailOrPhone: loginValue,
     password,
   });
 
-  if (!data) {
-    throw new Error('Đăng nhập thất bại');
+  if (!data?.data?.accessToken) {
+    throw new Error("Đăng nhập thất bại");
   }
 
-  const user = saveSession(data);
+  // 2. Save accessToken, refreshToken, expiresAt
+  saveSession(data);
+
+  // 3. Call the API to fetch user info
+  const { data: me } = await api.get("/users/me");
+
+  if (!me) {
+    throw new Error("Không lấy được thông tin người dùng");
+  }
+
+  // 4. Save user info
+  const user = saveSession(me);
 
   if (!user?.id) {
-    throw new Error('Đăng nhập thất bại - không nhận được thông tin người dùng');
+    throw new Error("Không nhận được thông tin người dùng");
   }
 
   return user;
 };
-
+//registerOtp
 export const register = async ({ fullName, email, phone, password }) => {
   const { data } = await api.post('/auth/register', {
     fullName,
@@ -190,6 +202,8 @@ export const resendEmailOtp = async (email) => {
 
   return data;
 };
+// forgotOtp not implemented yet
+
 
 export const getGoogleLoginUrl = () => `${api.defaults.baseURL}/auth/google/login`;
 

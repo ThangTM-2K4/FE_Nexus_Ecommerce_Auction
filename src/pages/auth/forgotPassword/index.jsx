@@ -49,15 +49,17 @@ function ForgotPasswordPage() {
     <div className="forgot-page">
       <div className="forgot-card">
 
-         <span
+        <span
           className="back-login"
           onClick={() =>
             navigate("/login")
           }
         >
           ← Quay lại đăng nhập
-          </span>
-          
+        </span>
+
+        <span className="forgot-icon" aria-hidden="true">🔒</span>
+
         <h1>Quên Mật Khẩu</h1>
 
         <p>

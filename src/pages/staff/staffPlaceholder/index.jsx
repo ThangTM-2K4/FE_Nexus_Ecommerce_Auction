@@ -6,7 +6,7 @@ const StaffPlaceholder = ({ kicker, title, subtitle }) => (
   <div className="stf-placeholder">
     <StaffPageHeader kicker={kicker} title={title} subtitle={subtitle} />
     <div className="stf-placeholder__box">
-      <p>Trang đang được phát triển. Dữ liệu mock sẽ được kết nối API sau.</p>
+      <p>Trang đang được phát triển. Dữ liệu giả lập sẽ được kết nối API sau.</p>
     </div>
   </div>
 );

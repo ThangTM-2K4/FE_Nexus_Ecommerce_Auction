@@ -28,12 +28,12 @@ export default function CustomersPage() {
 
         <div className="slr-metrics-grid slr-metrics-grid--3">
           <KpiCard
-            label="Retention Rate"
+            label="Tỷ lệ giữ chân KH"
             value={`${customerStats.retentionRate}%`}
             delay={0}
           />
           <KpiCard
-            label="Repeat Purchase"
+            label="Tỷ lệ mua lại"
             value={`${customerStats.repeatPurchaseRate}%`}
             delay={80}
           />
@@ -48,50 +48,54 @@ export default function CustomersPage() {
           <div className="slr-table-col">
             <div className="slr-panel-card">
               <h4>Phân khúc khách hàng</h4>
-              <table className="slr-table slr-table--compact">
-                <thead>
-                  <tr>
-                    <th>Phân khúc</th>
-                    <th>Số lượng</th>
-                    <th>Chi tiêu</th>
-                    <th>Tăng trưởng</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {customerSegments.map((s) => (
-                    <tr key={s.segment}>
-                      <td>
-                        <strong>{s.segment}</strong>
-                      </td>
-                      <td>{s.count.toLocaleString("vi-VN")}</td>
-                      <td>{s.spend}</td>
-                      <td className={s.negative ? "neg" : "pos"}>{s.growth}</td>
+              <div className="slr-table-wrap">
+                <table className="slr-table slr-table--compact">
+                  <thead>
+                    <tr>
+                      <th>Phân khúc</th>
+                      <th>Số lượng</th>
+                      <th>Chi tiêu</th>
+                      <th>Tăng trưởng</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {customerSegments.map((s) => (
+                      <tr key={s.segment}>
+                        <td>
+                          <strong>{s.segment}</strong>
+                        </td>
+                        <td>{s.count.toLocaleString("vi-VN")}</td>
+                        <td>{s.spend}</td>
+                        <td className={s.negative ? "neg" : "pos"}>{s.growth}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div className="slr-panel-card">
               <h4>Top khách hàng</h4>
-              <table className="slr-table slr-table--compact">
-                <thead>
-                  <tr>
-                    <th>Khách hàng</th>
-                    <th>Số đơn</th>
-                    <th>Chi tiêu</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topCustomers.map((c) => (
-                    <tr key={c.name}>
-                      <td>{c.name}</td>
-                      <td>{c.orders}</td>
-                      <td>{c.spent}</td>
+              <div className="slr-table-wrap">
+                <table className="slr-table slr-table--compact">
+                  <thead>
+                    <tr>
+                      <th>Khách hàng</th>
+                      <th>Số đơn</th>
+                      <th>Chi tiêu</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {topCustomers.map((c) => (
+                      <tr key={c.name}>
+                        <td>{c.name}</td>
+                        <td>{c.orders}</td>
+                        <td>{c.spent}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -105,32 +109,34 @@ export default function CustomersPage() {
             </div>
             <div className="slr-panel-card">
               <h4>Khách hàng mới</h4>
-              <table className="slr-table slr-table--compact">
-                <thead>
-                  <tr>
-                    <th>Khách hàng</th>
-                    <th>Đơn</th>
-                    <th>Ngày tham gia</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentCustomers.map((c) => (
-                    <tr key={c.email}>
-                      <td>
-                        <div className="slr-product-cell">
-                          <img src={c.avatar} alt="" className="round" />
-                          <span>
-                            <strong>{c.name}</strong>
-                            <em>{c.email}</em>
-                          </span>
-                        </div>
-                      </td>
-                      <td>{c.orders}</td>
-                      <td className="muted">{c.joined}</td>
+              <div className="slr-table-wrap">
+                <table className="slr-table slr-table--compact">
+                  <thead>
+                    <tr>
+                      <th>Khách hàng</th>
+                      <th>Đơn</th>
+                      <th>Ngày tham gia</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {recentCustomers.map((c) => (
+                      <tr key={c.email}>
+                        <td>
+                          <div className="slr-product-cell">
+                            <img src={c.avatar} alt="" className="round" />
+                            <span>
+                              <strong>{c.name}</strong>
+                              <em>{c.email}</em>
+                            </span>
+                          </div>
+                        </td>
+                        <td>{c.orders}</td>
+                        <td className="muted">{c.joined}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </aside>
         </div>

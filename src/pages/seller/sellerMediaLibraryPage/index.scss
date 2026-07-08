@@ -1,0 +1,31 @@
+@use "../../../styles/palette" as *;
+
+.slr-media-library__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.slr-media-library__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: $radius-sm;
+    border: 1px solid $color-border-light;
+  }
+
+  span {
+    font-size: 11px;
+    color: $color-text-muted;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

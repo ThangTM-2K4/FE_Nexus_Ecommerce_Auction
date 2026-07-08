@@ -5,9 +5,10 @@ import Layout from "./layout";
 import LoginPage from "./pages/auth/loginPage";
 import RegisterPage from "./pages/auth/registerPage";
 import AuthCallback from "./pages/auth/authCallback";
-import ForgotPassword from "./pages/forgotPassword";
-import VerifyOtp from "./pages/verifyOtp";
-import ResetPassword from "./pages/resetPassword";
+import ForgotPassword from "./pages/auth/forgotPassword";
+import VerifyOtp from "./pages/auth/forgotVerifyOtp";
+import ResetPassword from "./pages/auth/resetPassword";
+import RegisterVerifyOtpPage from "./pages/auth/registerVerifyOtp";
 
 import HomePage from "./pages/homepage/homePage";
 
@@ -24,6 +25,7 @@ import AdminRoutes from "./config/AdminRoutes";
 import StaffLayout from "./components/staff/staffLayout";
 import StaffOverview from "./pages/staff/staffOverview";
 import StaffSellerReview from "./pages/staff/staffSellerReview";
+import StaffProductReview from "./pages/staff/staffProductReview";
 import StaffAuctionModeration from "./pages/staff/staffAuctionModeration";
 import StaffDisputes from "./pages/staff/staffDisputes";
 import {
@@ -56,9 +58,10 @@ function App() {
       <Route path="/verify-otp" element={<VerifyOtp />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/register-verify-otp" element={<RegisterVerifyOtpPage />} />
 
       {/* ==========================
-          Layout dùng chung
+          Shared layout
       ========================== */}
 
       <Route element={<Layout />}>
@@ -108,7 +111,7 @@ function App() {
 
       </Route>
 
-   {/* seller - dã ket noi api }
+   {/* Seller — already connected to the real API
       <Route
         path="/seller"
         element={
@@ -127,7 +130,7 @@ function App() {
       />
     */}
 
-    {/*chạy thử seller hub */}
+    {/* Testing seller hub */}
     <Route
       path="/seller"
       element={<SellerDashboard />}
@@ -138,10 +141,7 @@ function App() {
       element={<SellerHubRoutes />}
     />
 
-    {/* Admin Hub */}
-    <Route path="/admin/*" element={<AdminRoutes />} />
-
-      {/* Staff Hub — kết nối API  
+      {/* Staff Hub — connect to the real API
       <Route
         path="/staff"
         element={
@@ -153,6 +153,7 @@ function App() {
         <Route index element={<StaffOverview />} />
         <Route path="overview" element={<StaffOverview />} />
         <Route path="seller-review" element={<StaffSellerReview />} />
+        <Route path="product-review" element={<StaffProductReview />} />
         <Route path="auctions" element={<StaffAuctionModeration />} />
         <Route path="disputes" element={<StaffDisputes />} />
         <Route path="orders" element={<StaffOrders />} />
@@ -160,12 +161,13 @@ function App() {
         <Route path="notifications" element={<StaffNotifications />} />
       </Route>
       */}
-      
-{/*chạy thử staff hub */}
+
+{/* Testing staff hub */}
     <Route path="/staff" element={<StaffLayout />}>
       <Route index element={<StaffOverview />} />
       <Route path="overview" element={<StaffOverview />} />
       <Route path="seller-review" element={<StaffSellerReview />} />
+      <Route path="product-review" element={<StaffProductReview />} />
       <Route path="auctions" element={<StaffAuctionModeration />} />
       <Route path="disputes" element={<StaffDisputes />} />
       <Route path="orders" element={<StaffOrders />} />

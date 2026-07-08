@@ -24,7 +24,7 @@ export const auctionImages = {
     bidder2: `${AVATAR}/avatar-5.jpg`,
     bidder3: `${AVATAR}/avatar-6.jpg`,
 
-    // Thêm để tương thích với sellerMockData.js
+    // Added for compatibility with sellerMockData.js
     bidder4: `${AVATAR}/avatar-4.jpg`,
     bidder5: `${AVATAR}/avatar-5.jpg`,
     bidder6: `${AVATAR}/avatar-6.jpg`,
