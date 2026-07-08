@@ -1,0 +1,72 @@
+@use '../../../../styles/palette' as *;
+
+.address-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.address-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.address-form__map {
+  height: 160px;
+  border: 1px dashed $border;
+  border-radius: $radius-sm;
+  background: $surface-soft;
+  display: grid;
+  place-items: center;
+}
+
+.address-form__map-btn {
+  border: 1px solid $border;
+  background: $surface;
+  color: $raspberry;
+  padding: 8px 16px;
+  border-radius: $radius-sm;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.address-form__type {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  > span {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $ink;
+  }
+}
+
+.address-form__type-btns {
+  display: flex;
+  gap: 8px;
+
+  button {
+    padding: 8px 16px;
+    border: 1px solid $border-soft;
+    border-radius: $radius-sm;
+    background: $surface;
+    font-size: 0.82rem;
+    cursor: pointer;
+    font-family: inherit;
+    color: $ink-muted;
+
+    &.is-active {
+      border-color: $raspberry;
+      color: $raspberry;
+      background: rgba($raspberry, 0.06);
+    }
+  }
+}

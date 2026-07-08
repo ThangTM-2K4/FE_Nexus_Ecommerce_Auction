@@ -110,6 +110,13 @@ export const getNextRank = (rank) => {
   return idx < order.length - 1 ? order[idx + 1] : null;
 };
 
+export const getPointsToNextRank = (score, rank) => {
+  const nextRank = getNextRank(rank);
+  if (!nextRank) return 0;
+  const nextMin = RANK_THRESHOLDS[nextRank].min;
+  return Math.max(0, nextMin - score);
+};
+
 const getStoredReputation = (userId) => {
   const raw = localStorage.getItem(reputationKey(userId));
   if (raw) {

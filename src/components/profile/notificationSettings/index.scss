@@ -1,0 +1,24 @@
+@use '../../../styles/palette' as *;
+
+.notif-settings {
+  width: 100%;
+}
+
+.notif-settings__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $ink;
+  margin: 0;
+}
+
+.notif-settings__divider {
+  border: 0;
+  border-top: 1px solid $border-soft;
+  margin: 1.25rem 0;
+}
+
+.notif-settings__loading {
+  color: $ink-muted;
+  padding: 2rem;
+  text-align: center;
+}

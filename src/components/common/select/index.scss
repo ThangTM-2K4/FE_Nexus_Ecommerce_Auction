@@ -1,0 +1,32 @@
+@use '../../../styles/palette' as *;
+
+.common-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.common-select__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $ink;
+}
+
+.common-select__field {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid $border-soft;
+  border-radius: $radius-sm;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: $ink;
+  width: 100%;
+  background: $surface;
+
+  &:focus {
+    outline: none;
+    border-color: $raspberry;
+    box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
+  }
+}

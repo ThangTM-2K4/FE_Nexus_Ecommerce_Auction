@@ -309,7 +309,7 @@ function RegisterPage() {
             </p>
 
             <p>
-              Kết nối người mua và người bán trên nền tảng đấu giá trực tuyến
+              Đây là sản phẩm học tập không phục vụ cho mục đích thương mại đời sống
             </p>
           </div>
         </form>

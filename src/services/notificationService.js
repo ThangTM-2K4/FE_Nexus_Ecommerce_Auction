@@ -51,6 +51,14 @@ const seedNotifications = [
     read: true,
     createdAt: '2026-06-01T08:00:00',
   },
+  {
+    id: 7,
+    type: 'promotion',
+    title: 'Flash Sale cuối tuần',
+    message: 'Giảm thêm 15% cho đơn từ 199K — áp dụng hôm nay.',
+    read: false,
+    createdAt: '2026-06-10T08:00:00',
+  },
 ];
 
 const getStored = (userId) => {

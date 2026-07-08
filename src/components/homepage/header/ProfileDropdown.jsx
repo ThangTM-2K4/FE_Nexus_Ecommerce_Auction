@@ -75,8 +75,6 @@ export default function ProfileDropdown({ onClose }) {
 
   const menuItems = [
     { to: '/profile', label: 'Hồ sơ của tôi' },
-    { to: '/profile/notifications', label: 'Trung tâm thông báo' },
-    { to: '/profile#purchases', label: 'Lịch sử mua hàng' },
     becomeSellerItem(),
     { action: 'switch', label: 'Chuyển tài khoản' },
   ].filter(Boolean);

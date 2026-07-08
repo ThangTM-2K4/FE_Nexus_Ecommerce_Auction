@@ -1,0 +1,40 @@
+@use '../../../styles/palette' as *;
+
+.privacy-settings {
+  width: 100%;
+}
+
+.privacy-settings__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $ink;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.privacy-settings__divider {
+  border: 0;
+  border-top: 1px solid $border-soft;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.privacy-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+
+.privacy-settings__label {
+  font-size: 0.95rem;
+  color: $ink;
+}
+
+.privacy-settings__modal-text {
+  font-size: 0.9rem;
+  color: $ink-muted;
+  line-height: 1.55;
+  margin: 0;
+}

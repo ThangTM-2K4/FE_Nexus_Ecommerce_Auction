@@ -1,40 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import * as profileService from '../../../services/profileService';
-import * as sellerService from '../../../services/sellerService';
 import Header from '../../../components/homepage/header';
 import Footer from '../../../components/homepage/footer';
-import PersonalInfoSection from '../../../components/user/profile/PersonalInfoSection';
-import VerificationSection from '../../../components/user/profile/VerificationSection';
-import BankAccountSection from '../../../components/user/profile/BankAccountSection';
-import ActivityHistorySection from '../../../components/user/profile/ActivityHistorySection';
-import BecomeSellerSection from '../../../components/user/profile/BecomeSellerSection';
-import ReputationOverviewSection from '../../../components/user/profile/ReputationOverviewSection';
+import AccountLayout from '../../../components/profile/accountLayout';
+import ProfileInfo from '../../../components/profile/profileInfo';
+import BuyerTrustScore from '../../../components/profile/buyerTrustScore';
+import '../ordersPage/index.scss';
 import './index.scss';
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
   const [profile, setProfile] = useState(null);
-  const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const loadData = async () => {
+  useEffect(() => {
     if (!user?.id) return;
     setLoading(true);
-    try {
-      const [profileData, appData] = await Promise.all([
-        profileService.getProfile(user.id),
-        sellerService.getSellerApplication(user.id),
-      ]);
-      setProfile(profileData);
-      setApplication(appData);
-    } finally {
+    profileService.getProfile(user.id).then((data) => {
+      setProfile(data);
       setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
+    });
   }, [user?.id]);
 
   const handleProfileUpdate = (updated) => {
@@ -44,10 +30,10 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="profile-page">
+      <div className="account-page">
         <Header />
-        <main className="profile-main">
-          <p className="profile-loading">Đang tải hồ sơ...</p>
+        <main className="account-page__main">
+          <p className="account-page__loading">Đang tải hồ sơ...</p>
         </main>
         <Footer />
       </div>
@@ -55,37 +41,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="profile-page">
+    <div className="account-page">
       <Header />
-      <main className="profile-main">
-        <div className="profile-hero">
-          <h1>Hồ sơ của tôi</h1>
-          <p>Quản lý thông tin cá nhân, xác minh tài khoản và lịch sử hoạt động</p>
-        </div>
-
-        <div className="profile-layout">
-          <ReputationOverviewSection
-            profile={profile}
-            sellerStatus={user.sellerStatus}
-          />
-          <PersonalInfoSection
-            userId={user.id}
-            profile={profile}
-            onUpdate={handleProfileUpdate}
-          />
-          <VerificationSection
-            userId={user.id}
-            profile={profile}
-            onUpdate={handleProfileUpdate}
-          />
-          <BankAccountSection
-            userId={user.id}
-            profile={profile}
-            onUpdate={handleProfileUpdate}
-          />
-          <BecomeSellerSection profile={profile} application={application} />
-          <ActivityHistorySection />
-        </div>
+      <main className="account-page__main">
+        <AccountLayout title="Hồ Sơ" description="Quản lý thông tin tài khoản của bạn">
+          <ProfileInfo userId={user.id} profile={profile} onUpdate={handleProfileUpdate} />
+          <BuyerTrustScore />
+        </AccountLayout>
       </main>
       <Footer />
     </div>

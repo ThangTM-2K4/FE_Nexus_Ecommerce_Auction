@@ -15,7 +15,15 @@ import ProductDetailPage from "./pages/productDetailPage";
 
 import ProfilePage from "./pages/user/profilePage";
 import NotificationsPage from "./pages/user/notificationsPage";
-import BuyerDashboard from "./pages/user/buyerDashboard";
+import OrdersPage from "./pages/user/ordersPage";
+import BankAccountRoutePage from "./pages/user/bankAccountPage";
+import AddressRoutePage from "./pages/user/addressPage";
+import NotificationSettingsRoutePage from "./pages/user/notificationSettingsPage";
+import PersonalInfoRoutePage from "./pages/user/personalInfoPage";
+import ChangePasswordRoutePage from "./pages/user/changePasswordPage";
+import PrivacySettingsRoutePage from "./pages/user/privacySettingsPage";
+import VouchersPage from "./pages/user/vouchersPage";
+import CoinsPage from "./pages/user/coinsPage";
 
 import BecomeSellerPage from "./pages/seller/becomeSellerPage";
 import SellerDashboard from "./pages/seller/sellerDashboard";
@@ -91,6 +99,87 @@ function App() {
         />
 
         <Route
+          path="/profile/orders"
+          element={
+            <ProtectedRoute>
+              <OrdersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/bank"
+          element={
+            <ProtectedRoute>
+              <BankAccountRoutePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/address"
+          element={
+            <ProtectedRoute>
+              <AddressRoutePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/notification-settings"
+          element={
+            <ProtectedRoute>
+              <NotificationSettingsRoutePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/personal-info"
+          element={
+            <ProtectedRoute>
+              <PersonalInfoRoutePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePasswordRoutePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/privacy"
+          element={
+            <ProtectedRoute>
+              <PrivacySettingsRoutePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/vouchers"
+          element={
+            <ProtectedRoute>
+              <VouchersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/coins"
+          element={
+            <ProtectedRoute>
+              <CoinsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/profile/become-seller"
           element={
             <ProtectedRoute>
@@ -99,8 +188,8 @@ function App() {
           }
         />
 
-        {/* Buyer */}
-        <Route path="/buyer" element={<BuyerDashboard />} />
+        {/* Buyer
+        <Route path="/buyer" element={<BuyerDashboard />} /> */}
 
         {/* Auction */}
         <Route path="/auction/browse" element={<AuctionBrowsePage />} />

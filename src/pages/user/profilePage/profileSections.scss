@@ -1,0 +1,391 @@
+@use "../../../styles/palette" as *;
+
+.profile-section {
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  padding: 1.5rem;
+  box-shadow: $shadow-sm;
+}
+
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+
+  h2 {
+    font-size: 1.1rem;
+    color: $ink;
+  }
+}
+
+.profile-section-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: $radius-sm;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: all 0.2s $ease;
+
+  &--primary {
+    background: linear-gradient(135deg, $navy, $teal);
+    color: #fff;
+
+    &:hover:not(.disabled) {
+      box-shadow: $shadow-md;
+    }
+  }
+
+  &--outline {
+    background: transparent;
+    border: 1px solid $border;
+    color: $accent-dark;
+
+    &:hover {
+      background: rgba($sky, 0.1);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $ink-muted;
+
+    &:hover {
+      color: $ink;
+    }
+  }
+
+  &--danger {
+    background: transparent;
+    border: 1px solid rgba($live-red, 0.4);
+    color: $live-red;
+
+    &:hover {
+      background: rgba($live-red, 0.06);
+    }
+  }
+
+  &--sm {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.profile-personal-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 1.5rem;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-avatar-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $teal, $sky);
+  color: $deep;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $ink-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  span {
+    font-size: 0.9rem;
+    color: $ink;
+  }
+
+  input,
+  select {
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid $border-soft;
+    border-radius: $radius-sm;
+    font-size: 0.88rem;
+    font-family: inherit;
+    color: $ink;
+
+    &:focus {
+      outline: none;
+      border-color: $accent-dark;
+      box-shadow: 0 0 0 3px rgba($sky, 0.2);
+    }
+  }
+}
+
+.profile-verify-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-verify-card {
+  padding: 1rem;
+  border: 1px solid $border-soft;
+  border-radius: $radius-sm;
+  background: $surface-soft;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-verify-info {
+  strong {
+    display: block;
+    font-size: 0.85rem;
+    color: $ink;
+  }
+
+  span {
+    font-size: 0.82rem;
+    color: $ink-muted;
+  }
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 12px;
+  border-radius: $radius-pill;
+  font-size: 0.75rem;
+  font-weight: 700;
+
+  &.verified {
+    background: rgba($color-success, 0.15);
+    color: $color-success;
+  }
+
+  &.unverified {
+    background: rgba($color-warning, 0.15);
+    color: $color-warning;
+  }
+
+  &.pending {
+    background: rgba($sky, 0.2);
+    color: $accent-dark;
+  }
+
+  &.rejected {
+    background: rgba($live-red, 0.1);
+    color: $live-red;
+  }
+}
+
+.profile-bank-form,
+.profile-bank-display {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-bank-display div {
+  font-size: 0.9rem;
+  color: $ink;
+
+  strong {
+    color: $ink-muted;
+    font-weight: 600;
+    margin-right: 8px;
+  }
+}
+
+.profile-empty-hint {
+  color: $ink-muted;
+  font-size: 0.88rem;
+}
+
+.profile-precondition-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.profile-warning-card {
+  padding: 10px 14px;
+  background: rgba($color-warning, 0.1);
+  border: 1px solid rgba($color-warning, 0.3);
+  border-radius: $radius-sm;
+  font-size: 0.85rem;
+  color: $color-warning;
+}
+
+.profile-seller-desc {
+  color: $ink-muted;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.profile-seller-approved,
+.profile-seller-pending,
+.profile-seller-rejected {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+
+  p {
+    font-size: 0.88rem;
+    color: $ink-muted;
+    line-height: 1.5;
+  }
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid $border-soft;
+  padding-bottom: 8px;
+
+  button {
+    border: 0;
+    background: transparent;
+    padding: 8px 14px;
+    border-radius: $radius-pill;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $ink-muted;
+    cursor: pointer;
+    font-family: inherit;
+
+    &.active {
+      background: rgba($sky, 0.2);
+      color: $accent-dark;
+    }
+  }
+}
+
+.profile-table-wrap {
+  overflow-x: auto;
+}
+
+.profile-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba($mist, 0.6);
+  }
+
+  th {
+    color: $ink-muted;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+
+  td {
+    color: $ink;
+
+    &.negative {
+      color: $live-red;
+    }
+
+    &.positive {
+      color: $color-success;
+    }
+  }
+}
+
+.profile-status {
+  font-weight: 600;
+  font-size: 0.78rem;
+
+  &--won,
+  &--active {
+    color: $color-success;
+  }
+
+  &--lost {
+    color: $ink-muted;
+  }
+}
+
+.profile-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: $radius-pill;
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  &.buyer {
+    background: rgba($sky, 0.2);
+    color: $accent-dark;
+  }
+
+  &.seller {
+    background: rgba($teal, 0.2);
+    color: $navy;
+  }
+}

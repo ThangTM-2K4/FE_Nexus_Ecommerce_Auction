@@ -1,0 +1,47 @@
+@use '../../../styles/palette' as *;
+
+.account-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.account-layout__content {
+  flex: 1;
+  min-width: 0;
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  padding: 1.5rem;
+}
+
+.account-layout__header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid $border-soft;
+
+  h1 {
+    font-size: 1.25rem;
+    color: $ink;
+    margin-bottom: 4px;
+  }
+
+  p {
+    font-size: 0.88rem;
+    color: $ink-muted;
+  }
+}
+
+@media (max-width: 1024px) {
+  .account-layout {
+    flex-direction: column;
+  }
+
+  .account-layout__content {
+    padding: 1.25rem 1rem;
+  }
+}

@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import App from './App.jsx';
-import ScrollToTop from './components/ScrollToTop.jsx';
+import ScrollToTop from './components/profile/scrollToTop';
 import { AuthProvider } from './context/AuthContext.jsx';
 import './App.scss';
 

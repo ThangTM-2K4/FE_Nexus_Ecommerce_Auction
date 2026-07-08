@@ -1,0 +1,54 @@
+@use '../../../styles/palette' as *;
+
+.common-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: $radius-sm;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: background $transition-fast, opacity $transition-fast;
+
+  &--accent {
+    background: $raspberry;
+    color: $surface;
+
+    &:hover:not(.is-disabled) {
+      background: $live-red-hot;
+    }
+
+    &.is-disabled {
+      background: rgba($raspberry, 0.35);
+      cursor: not-allowed;
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $ink-muted;
+
+    &:hover:not(.is-disabled) {
+      color: $ink;
+    }
+  }
+
+  &--outline {
+    background: transparent;
+    border: 1px solid $border;
+    color: $accent-dark;
+
+    &:hover:not(.is-disabled) {
+      background: rgba($raspberry, 0.06);
+      border-color: rgba($raspberry, 0.35);
+    }
+  }
+
+  &--sm {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+  }
+}
