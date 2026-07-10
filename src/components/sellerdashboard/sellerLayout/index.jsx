@@ -8,7 +8,15 @@ const SellerLayout = () => {
   const location = useLocation();
   const segments = location.pathname.split("/").filter(Boolean);
   const hubIdx = segments.indexOf("seller-hub");
-  const activeId = hubIdx >= 0 && segments[hubIdx + 1] ? segments[hubIdx + 1] : "overview";
+
+  // Get the full route segment(s) after seller-hub to properly match sidebar items
+  // e.g., /seller-hub/orders-cancelled → "orders-cancelled"
+  let activeId = "overview";
+  if (hubIdx >= 0 && segments[hubIdx + 1]) {
+    // For routes like orders-cancelled, orders-returns, etc., use the full segment
+    const segment = segments[hubIdx + 1];
+    activeId = segment;
+  }
 
   return (
     <div className="slr-layout">

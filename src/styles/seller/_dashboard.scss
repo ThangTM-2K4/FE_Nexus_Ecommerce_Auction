@@ -1830,6 +1830,11 @@
     color: $color-primary;
   }
 
+  &--awaiting {
+    background: rgba($color-text-secondary, 0.16);
+    color: $color-text-secondary;
+  }
+
   &--shipping {
     background: rgba($color-accent-mid, 0.25);
     color: $color-primary-dark;
@@ -2092,5 +2097,347 @@
     right: 16px;
     bottom: 16px;
     max-width: none;
+  }
+}
+
+//=====================================================
+// Shared: buttons, toolbar, filter tabs, order tables
+// (Đơn hàng, Quản lý vận chuyển, Giao hàng loạt)
+//=====================================================
+
+.slr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform $transition-fast, box-shadow $transition-fast, background $transition-fast;
+  text-decoration: none;
+
+  &--primary {
+    background: $color-primary;
+    color: #fff;
+
+    &:hover { box-shadow: $shadow-md; transform: translateY(-1px); }
+  }
+
+  &--ghost {
+    background: $color-bg-card;
+    border-color: $color-border;
+    color: $color-primary-dark;
+
+    &:hover { background: $color-bg; }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.slr-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+}
+
+.slr-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.slr-filter-tab {
+  border: 1px solid $color-border;
+  background: $color-bg-card;
+  color: $color-text-muted;
+  border-radius: $radius-pill;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  em {
+    font-style: normal;
+    color: $color-primary;
+    margin-left: 4px;
+  }
+
+  &:hover { border-color: $color-accent-mid; }
+
+  &.active {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: #fff;
+
+    em { color: rgba(#fff, 0.85); }
+  }
+}
+
+.slr-row-clickable {
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &:hover { background: $color-bg; }
+}
+
+.slr-row-selected {
+  background: rgba($color-accent, 0.08);
+}
+
+.slr-pickup-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.slr-pickup-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  input { margin-top: 3px; accent-color: $color-primary; }
+
+  strong { display: block; font-size: 13px; color: $color-primary-dark; }
+  small { display: block; font-size: 12px; color: $color-text-muted; margin-top: 3px; line-height: 1.5; }
+
+  &.selected {
+    border-color: $color-primary;
+    background: rgba($color-accent, 0.06);
+  }
+}
+
+.slr-batch-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid $color-border-light;
+}
+
+.slr-batch-summary {
+  font-size: 13px;
+  color: $color-text-muted;
+
+  strong { color: $color-primary; font-size: 15px; }
+}
+
+.slr-batch-warn {
+  display: block;
+  margin-top: 2px;
+  color: $color-danger;
+  font-size: 12px;
+  font-style: normal;
+}
+
+//=====================================================
+// Bình luận của người mua (Đánh Giá Shop)
+//=====================================================
+
+.slr-stars {
+  color: #f5a623;
+  font-size: 13px;
+  letter-spacing: 1px;
+
+  &__empty { color: $color-border; }
+}
+
+.slr-comment-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.slr-comment {
+  display: flex;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid $color-border-light;
+
+  &:last-of-type { border-bottom: none; }
+
+  &--empty {
+    justify-content: center;
+    color: $color-text-muted;
+    font-size: 13px;
+    padding: 24px 0;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+  }
+
+  &__body { flex: 1; min-width: 0; }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    strong { font-size: 13px; color: $color-primary-dark; }
+    time { font-size: 11px; color: $color-text-muted; margin-left: auto; }
+  }
+
+  &__product {
+    display: inline-block;
+    margin: 4px 0 6px;
+    font-size: 11px;
+    color: $color-text-muted;
+    background: $color-bg;
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+  }
+
+  &__text {
+    font-size: 13px;
+    color: $color-text;
+    line-height: 1.6;
+  }
+
+  &__images {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  &__thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: $color-bg;
+    border: 1px solid $color-border-light;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  &__meta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: $color-text-muted;
+  }
+
+  &__reply {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: $color-bg;
+    border-left: 3px solid $color-primary;
+    border-radius: 0 $radius-sm $radius-sm 0;
+    font-size: 12px;
+    color: $color-text;
+    line-height: 1.6;
+
+    strong { color: $color-primary; }
+  }
+}
+
+//=====================================================
+// Báo cáo của tôi
+//=====================================================
+
+.slr-report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.slr-report-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  padding: 18px;
+  transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+    border-color: $color-accent-mid;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: $radius-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: $color-primary;
+    background: rgba($color-accent, 0.12);
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+
+    h4 { font-size: 14px; font-weight: 700; color: $color-primary-dark; margin-bottom: 4px; }
+    p { font-size: 12px; color: $color-text-muted; line-height: 1.5; }
+  }
+
+  &__period {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 11px;
+    color: $color-text-secondary;
+    background: $color-bg;
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+  }
+
+  .slr-btn {
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 520px) {
+    flex-wrap: wrap;
+    .slr-btn { width: 100%; }
   }
 }

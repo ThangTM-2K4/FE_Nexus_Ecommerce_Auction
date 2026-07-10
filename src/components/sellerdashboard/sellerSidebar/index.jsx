@@ -14,6 +14,7 @@ import {
   FaChevronDown,
   FaCog,
   FaQuestionCircle,
+  FaTruck,
 } from "react-icons/fa";
 import { sidebarMenuItems } from "../../../data/sellerMockData";
 import "./index.scss";
@@ -31,6 +32,7 @@ const icons = {
   store: FaStore,
   settings: FaCog,
   help: FaQuestionCircle,
+  truck: FaTruck,
 };
 
 const findGroupIdByChild = (activeId) => {

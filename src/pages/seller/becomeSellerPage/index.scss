@@ -4,10 +4,10 @@
   flex-direction: column;
   background: linear-gradient(
     135deg,
-    #001d39 0%,
-    #0a4174 30%,
-    #49769f 60%,
-    #7bbde8 100%
+    #3a2c56 0%,
+    #523F77 30%,
+    #7880AE 60%,
+    #A3BBD7 100%
   );
 }
 
@@ -40,7 +40,7 @@
 
 .seller-card h1 {
   text-align: center;
-  color: #001d39;
+  color: #3a2c56;
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 8px;
@@ -58,7 +58,7 @@
 .seller-back {
   display: inline-block;
   font-size: 13px;
-  color: #0a4174;
+  color: #523F77;
   text-decoration: none;
   font-weight: 600;
   margin-bottom: 16px;
@@ -72,7 +72,7 @@
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #001d39;
+  color: #3a2c56;
   margin-bottom: 6px;
 
   .required {
@@ -105,13 +105,13 @@
     border-radius: 10px;
     font-size: 15px;
     font-family: inherit;
-    color: #001d39;
+    color: #3a2c56;
     box-sizing: border-box;
     transition: all 0.25s ease;
 
     &:focus {
       outline: none;
-      border-color: #0a4174;
+      border-color: #523F77;
       box-shadow: 0 0 0 4px rgba(10, 65, 116, 0.1);
     }
   }
@@ -142,17 +142,17 @@
     border-radius: 10px;
     font-size: 15px;
     font-weight: 500;
-    color: #001d39;
+    color: #3a2c56;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: #0a4174;
+      border-color: #523F77;
       background: rgba(10, 65, 116, 0.04);
     }
 
     &.selected {
-      border-color: #0a4174;
+      border-color: #523F77;
       background: rgba(10, 65, 116, 0.08);
       font-weight: 700;
     }
@@ -193,14 +193,14 @@
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
-  color: #0a4174;
+  color: #523F77;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.2s ease;
 
   &:hover {
     background: rgba(10, 65, 116, 0.06);
-    border-color: #0a4174;
+    border-color: #523F77;
   }
 }
 
@@ -213,10 +213,10 @@
 
 .seller-bank-note {
   padding: 14px 16px;
-  background: #f0f7ff;
+  background: #faf5f8;
   border-radius: 10px;
   font-size: 13px;
-  color: #0a4174;
+  color: #523F77;
   line-height: 1.5;
 }
 
@@ -239,9 +239,9 @@
   color: #64748b;
 
   &.active {
-    border-color: #0a4174;
+    border-color: #523F77;
     background: rgba(10, 65, 116, 0.08);
-    color: #001d39;
+    color: #3a2c56;
     font-weight: 600;
   }
 
@@ -264,7 +264,7 @@
 }
 
 .seller-step.active .seller-step-num {
-  background: #0a4174;
+  background: #523F77;
   color: #fff;
 }
 
@@ -288,7 +288,7 @@
   padding: 0 28px;
   border: none;
   border-radius: 12px;
-  background: #001d39;
+  background: #3a2c56;
   color: #fff;
   font-size: 15px;
   font-weight: 700;
@@ -301,7 +301,7 @@
   transition: all 0.25s ease;
 
   &:hover {
-    background: #0a4174;
+    background: #523F77;
     transform: translateY(-1px);
   }
 
@@ -324,7 +324,7 @@
   &.outline {
     background: transparent;
     border: 1px solid #d6dee6;
-    color: #0a4174;
+    color: #523F77;
 
     &:hover {
       background: #f8fafc;
@@ -341,7 +341,7 @@
   h3 {
     font-size: 14px;
     font-weight: 700;
-    color: #001d39;
+    color: #3a2c56;
     margin-bottom: 12px;
   }
 
@@ -362,7 +362,7 @@
     }
 
     strong {
-      color: #001d39;
+      color: #3a2c56;
       text-align: right;
       font-weight: 600;
     }
@@ -373,7 +373,7 @@
   text-align: center;
 
   &.approved { border-top: 4px solid #22c55e; }
-  &.pending { border-top: 4px solid #0a4174; }
+  &.pending { border-top: 4px solid #523F77; }
   &.rejected { border-top: 4px solid #dc2626; }
   &.blocked { border-top: 4px solid #eab308; }
 
@@ -416,9 +416,9 @@
 
     strong {
       font-size: 14px;
-      color: #001d39;
+      color: #3a2c56;
 
-      &.status-pending { color: #0a4174; }
+      &.status-pending { color: #523F77; }
     }
   }
 }
@@ -429,7 +429,7 @@
 
   h3 {
     font-size: 15px;
-    color: #001d39;
+    color: #3a2c56;
     margin-bottom: 12px;
   }
 }
@@ -441,7 +441,7 @@
   align-items: flex-start;
   &.completed .seller-timeline-dot { background: #22c55e; }
   &.current .seller-timeline-dot {
-    background: #0a4174;
+    background: #523F77;
     box-shadow: 0 0 0 4px rgba(10, 65, 116, 0.2);
   }
   &.pending .seller-timeline-dot { background: #d6dee6; }
@@ -449,7 +449,7 @@
   strong {
     display: block;
     font-size: 14px;
-    color: #001d39;
+    color: #3a2c56;
   }
 
   small {
@@ -492,7 +492,7 @@
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
-    color: #0a4174;
+    color: #523F77;
 
     &:hover { background: rgba(10, 65, 116, 0.08); }
 

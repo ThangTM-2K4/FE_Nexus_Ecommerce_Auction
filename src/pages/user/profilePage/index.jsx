@@ -5,6 +5,7 @@ import Header from '../../../components/homepage/header';
 import Footer from '../../../components/homepage/footer';
 import AccountLayout from '../../../components/profile/accountLayout';
 import ProfileInfo from '../../../components/profile/profileInfo';
+import VerificationSection from '../../../components/profile/verificationSection';
 import BuyerTrustScore from '../../../components/profile/buyerTrustScore';
 import '../ordersPage/index.scss';
 import './index.scss';
@@ -22,6 +23,14 @@ export default function ProfilePage() {
       setLoading(false);
     });
   }, [user?.id]);
+
+  // Cuộn tới mục "Xác minh tài khoản" khi vào /profile#verification
+  useEffect(() => {
+    if (loading) return;
+    if (window.location.hash === '#verification') {
+      document.getElementById('verification')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [loading]);
 
   const handleProfileUpdate = (updated) => {
     setProfile(updated);
@@ -46,6 +55,7 @@ export default function ProfilePage() {
       <main className="account-page__main">
         <AccountLayout title="Hồ Sơ" description="Quản lý thông tin tài khoản của bạn">
           <ProfileInfo userId={user.id} profile={profile} onUpdate={handleProfileUpdate} />
+          <VerificationSection userId={user.id} profile={profile} onUpdate={handleProfileUpdate} />
           <BuyerTrustScore />
         </AccountLayout>
       </main>

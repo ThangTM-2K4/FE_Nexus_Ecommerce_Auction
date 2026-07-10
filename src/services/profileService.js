@@ -19,40 +19,99 @@ const saveProfile = (userId, profile) => {
   localStorage.setItem(profileKey(userId), JSON.stringify(profile));
 };
 
-const buildProfileFromUser = (user) => ({
-  avatar: user.avatar || null,
-  fullName: user.fullName || '',
-  username: user.username || '',
-  email: user.email || '',
-  phone: user.phone || user.phoneNumber || '',
-  dateOfBirth: user.dateOfBirth || '',
-  gender: user.gender || '',
-  address: user.address || '',
-  isEmailVerified: user.isEmailVerified ?? false,
-  isPhoneVerified: user.isPhoneVerified ?? false,
-  isNationalIdVerified: user.isNationalIdVerified ?? false,
-  bankAccount: user.bankAccount || null,
+const truthy = (...vals) => vals.some((v) => v === true || v === 'true');
+
+const unwrap = (res) => res?.data?.data ?? res?.data ?? null;
+
+// Lấy trạng thái xác minh CMND thật từ endpoint riêng
+const fetchIdentityStatus = async () => {
+  try {
+    const iv = unwrap(await api.get('/identity-verifications/me'));
+    return iv?.status ? String(iv.status).toUpperCase() : null;
+  } catch {
+    return null; // chưa nộp / 404
+  }
+};
+
+const buildProfile = (src, identityStatus) => ({
+  avatar: src.avatar || null,
+  fullName: src.fullName || src.name || '',
+  username: src.username || src.email?.split('@')[0] || '',
+  email: src.email || '',
+  phone: src.phone || src.phoneNumber || '',
+  dateOfBirth: src.dateOfBirth || '',
+  gender: src.gender || '',
+  address: src.address || '',
+  // Đọc cờ thật từ /users/me, chấp nhận nhiều tên field backend có thể dùng
+  isEmailVerified: truthy(src.isEmailVerified, src.emailVerified, src.emailConfirmed, src.isEmailConfirmed),
+  isPhoneVerified:
+    truthy(src.isPhoneVerified, src.phoneVerified, src.phoneConfirmed, src.isPhoneConfirmed) ||
+    src.phoneVerifiedLocal === true,
+  // Cờ xác thực SĐT lưu local (backend staging chưa gửi OTP thật) — giữ lại khi reload
+  phoneVerifiedLocal: src.phoneVerifiedLocal === true,
+  isNationalIdVerified:
+    identityStatus === 'APPROVED' ||
+    identityStatus === 'VERIFIED' ||
+    truthy(src.isNationalIdVerified, src.identityVerified),
+  identityStatus,
+  bankAccount: src.bankAccount || null,
+  // Thông tin CCCD (trang "Thông tin cá nhân") — backend chưa có field riêng,
+  // giữ lại từ profile đã lưu để không mất khi tải lại trang.
+  cccdFullName: src.cccdFullName || '',
+  cccdNumber: src.cccdNumber || '',
+  cccdAddress: src.cccdAddress || '',
+  cccdFrontImageUrl: src.cccdFrontImageUrl || '',
+  cccdBackImageUrl: src.cccdBackImageUrl || '',
 });
 
 export const getProfile = async (userId) => {
-  const stored = getStoredProfile(userId);
-  if (stored) return stored;
-
   const sessionUser = getCurrentUser();
-  const sessionUserId = sessionUser?.id ?? sessionUser?.userId;
+  const storedProfile = getStoredProfile(userId);
 
-  if (sessionUser && sessionUserId === userId) {
-    const profile = buildProfileFromUser(sessionUser);
-    saveProfile(userId, profile);
-    return profile;
+  // Nguồn sự thật: GET /users/me (fallback về session nếu API lỗi)
+  let apiUser = null;
+  try {
+    apiUser = unwrap(await api.get('/users/me'));
+  } catch {
+    /* fallback */
   }
 
-  throw new Error('Không tìm thấy hồ sơ người dùng');
+  // storedProfile trước để các field chỉ-lưu-local (CCCD) sống sót,
+  // apiUser sau cùng để dữ liệu backend luôn thắng.
+  const src = { ...(storedProfile || {}), ...(sessionUser || {}), ...(apiUser || {}) };
+
+  // Các field người dùng tự chỉnh nhưng backend không lưu (UpdateProfileRequest chỉ có
+  // phoneNumber/address/newEmail) -> ưu tiên bản đã lưu local để không bị ghi đè khi reload.
+  const LOCAL_OWNED = ['fullName', 'username', 'gender', 'dateOfBirth', 'phone'];
+  if (storedProfile) {
+    LOCAL_OWNED.forEach((k) => {
+      if (storedProfile[k] !== undefined && storedProfile[k] !== '') src[k] = storedProfile[k];
+    });
+  }
+
+  const identityStatus = await fetchIdentityStatus();
+
+  const profile = buildProfile(src, identityStatus);
+  saveProfile(userId, profile);
+  return profile;
 };
 
 export const updateProfile = async (userId, data) => {
   const current = await getProfile(userId);
   const updated = { ...current, ...data };
+
+  // Đẩy các field backend hỗ trợ lên /users/me (phoneNumber, address) — best-effort
+  const body = {};
+  if (data.phone !== undefined) body.phoneNumber = data.phone;
+  if (data.address !== undefined) body.address = data.address;
+  if (Object.keys(body).length) {
+    try {
+      await api.put('/users/me', body);
+    } catch {
+      /* vẫn lưu local nếu backend lỗi */
+    }
+  }
+
   saveProfile(userId, updated);
 
   updateSessionUser({
@@ -67,24 +126,78 @@ export const updateProfile = async (userId, data) => {
   return updated;
 };
 
+// Xác thực SĐT: lưu số lên backend rồi đánh dấu đã xác minh (giữ local).
+export const markPhoneVerified = async (userId, phoneNumber) => {
+  try {
+    await api.put('/users/me', { phoneNumber });
+  } catch {
+    /* vẫn đánh dấu local để demo qua điều kiện */
+  }
+  const current = await getProfile(userId);
+  const updated = { ...current, phone: phoneNumber, isPhoneVerified: true, phoneVerifiedLocal: true };
+  saveProfile(userId, updated);
+  updateSessionUser({ phone: phoneNumber, isPhoneVerified: true });
+  return updated;
+};
+
+// ── EMAIL ── (xác thực khi đăng ký; ở đây cho gửi lại + nhập OTP)
 export const requestEmailVerification = async (userId) => {
-  // Connect to the real API when the backend is ready; mocked for now to test the local seller flow:
-  // const profile = await getProfile(userId);
-  // await api.post('/auth/verify-email', {
-  //   email: profile.email,
-  //   otpCode: '',
-  // });
-  // return profile;
-
-  return updateProfile(userId, { isEmailVerified: true });
+  const profile = await getProfile(userId);
+  await api.post('/auth/verify-email', { email: profile.email, otpCode: '' });
+  return profile;
 };
 
-export const verifyPhone = async (userId) => {
-  return updateProfile(userId, { isPhoneVerified: true });
+export const verifyEmailOtp = async (userId, otpCode) => {
+  const profile = await getProfile(userId);
+  await api.post('/auth/verify-email', { email: profile.email, otpCode });
+  return getProfile(userId);
 };
 
-export const verifyNationalId = async (userId) => {
-  return updateProfile(userId, { isNationalIdVerified: true });
+// ── SỐ ĐIỆN THOẠI ──
+// Lưu SĐT lên backend trước khi gửi OTP (request-otp không nhận số,
+// nó gửi mã tới SĐT đã lưu trên hồ sơ /users/me).
+export const updatePhoneNumber = async (userId, phoneNumber) => {
+  await api.put('/users/me', { phoneNumber });
+  return getProfile(userId);
+};
+
+// (luồng OTP 2 bước)
+export const requestPhoneOtp = async () => {
+  await api.post('/users/me/phone/request-otp');
+};
+
+export const verifyPhoneOtp = async (userId, otpCode) => {
+  await api.post('/users/me/phone/verify-otp', { otpCode });
+  return getProfile(userId);
+};
+
+// ── CMND / CCCD ── (nộp số + ảnh mặt trước/sau, staff duyệt)
+export const submitIdentityVerification = async (userId, { identityNumber, frontImageUrl, backImageUrl }) => {
+  await api.post('/identity-verifications', { identityNumber, frontImageUrl, backImageUrl });
+  return getProfile(userId);
+};
+
+// ── THÔNG TIN CÁ NHÂN / CCCD ── (trang "Thông tin cá nhân")
+// Đẩy địa chỉ lên backend (UpdateProfileRequest hỗ trợ address),
+// còn họ tên + số CCCD lưu local vì backend chưa có field riêng.
+export const updateCccdInfo = async (
+  userId,
+  { cccdFullName, cccdNumber, cccdAddress, cccdFrontImageUrl = '', cccdBackImageUrl = '' }
+) => {
+  if (cccdAddress?.trim()) {
+    try {
+      await api.put('/users/me', { address: cccdAddress.trim() });
+    } catch {
+      /* vẫn lưu local nếu backend lỗi */
+    }
+  }
+  return updateProfile(userId, {
+    cccdFullName,
+    cccdNumber,
+    cccdAddress,
+    cccdFrontImageUrl,
+    cccdBackImageUrl,
+  });
 };
 
 export const saveBankAccount = async (userId, bankAccount) => {

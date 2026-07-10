@@ -4,7 +4,7 @@ import SellerWaitingPage from "../pages/seller/sellerWaitingPage";
 import SellerRejectedPage from "../pages/seller/sellerRejectedPage";
 
 export default function SellerRoute({ children }) {
-  const { isAuthenticated, user, isSellerMode } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -24,10 +24,8 @@ export default function SellerRoute({ children }) {
     return <SellerRejectedPage />;
   }
 
-  if (sellerStatus === "APPROVED" && !isSellerMode) {
-    return <Navigate to="/" replace />;
-  }
-
+  // Đã duyệt: quyền seller do backend cấp qua role → vào thẳng dashboard,
+  // không cần đang ở chế độ Người bán.
   if (sellerStatus === "APPROVED") {
     return children;
   }

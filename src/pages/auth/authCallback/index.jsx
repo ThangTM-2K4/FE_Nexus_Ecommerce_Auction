@@ -29,7 +29,7 @@ function AuthCallback() {
             navigate("/admin", { replace: true });
             break;
 
-          case "STAFF":
+          case "SUPPORT_STAFF":
             navigate("/staff/overview", { replace: true });
             break;
 

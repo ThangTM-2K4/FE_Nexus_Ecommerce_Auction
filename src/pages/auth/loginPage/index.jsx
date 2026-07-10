@@ -125,7 +125,7 @@ function LoginPage() {
             navigate("/admin");
             break;
 
-          case "STAFF":
+          case "SUPPORT_STAFF":
             navigate("/staff/overview");
             break;
 

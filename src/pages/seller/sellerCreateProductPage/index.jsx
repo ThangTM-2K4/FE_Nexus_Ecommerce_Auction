@@ -461,23 +461,38 @@ export default function CreateProductPage() {
                   <div className="slr-cp__row">
                     <label className="slr-cp__row-label">Áp dụng cho sản phẩm này</label>
                     <div className="slr-cp__row-body">
-                      <div className="slr-create-condition-group">
-                        {shippingOptions.map((o) => (
-                          <label
-                            key={o.id}
-                            className={selectedShipping.includes(o.id) ? "selected" : ""}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedShipping.includes(o.id)}
-                              onChange={() => toggleShippingMethod(o.id)}
-                            />
-                            {o.label} — {o.desc} · {o.fee}
-                          </label>
-                        ))}
+                      <div className="slr-table-wrap">
+                        <table className="slr-table">
+                          <thead>
+                            <tr>
+                              <th style={{ width: "40%" }}>Đơn vị</th>
+                              <th>Thời gian</th>
+                              <th>Giá cơ sở</th>
+                              <th>Giá/km</th>
+                              <th style={{ width: "60px" }}>Chọn</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {shippingOptions.map((o) => (
+                              <tr key={o.id}>
+                                <td>{o.label}</td>
+                                <td>{o.desc}</td>
+                                <td>{o.basePrice}đ</td>
+                                <td>{o.pricePerKm}đ</td>
+                                <td style={{ textAlign: "center" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedShipping.includes(o.id)}
+                                    onChange={() => toggleShippingMethod(o.id)}
+                                  />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                       <small className="slr-create-image-hint">
-                        Danh sách này lấy từ các phương thức đang bật tại{" "}
+                        Chọn các phương thức vận chuyển muốn áp dụng cho sản phẩm này. Giá được tính: Giá cơ sở + (Khoảng cách × Giá/km). Cấu hình chi tiết tại{" "}
                         <Link to="/seller-hub/shipping-settings">Cài Đặt Vận Chuyển</Link>.
                       </small>
                     </div>
