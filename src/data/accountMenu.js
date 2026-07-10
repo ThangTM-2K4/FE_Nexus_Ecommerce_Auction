@@ -23,14 +23,4 @@ export const ACCOUNT_MENU = [
     label: 'Đơn Mua',
     path: '/profile/orders',
   },
-  {
-    key: 'vouchers',
-    label: 'Kho Voucher',
-    path: '/profile/vouchers',
-  },
-  {
-    key: 'coins',
-    label: 'Shopee Xu',
-    path: '/profile/coins',
-  },
 ];
