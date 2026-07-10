@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import StaffPageHeader from "../../../components/staff/staffPageHeader";
+import RejectReasonModal from "../../../components/staff/rejectReasonModal";
+import { productRejectReasons } from "../../../data/staffMockData";
 import {
   getPendingProducts,
   approveProduct,
@@ -12,6 +14,7 @@ const StaffProductReview = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+  const [rejectTarget, setRejectTarget] = useState(null);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -40,11 +43,14 @@ const StaffProductReview = () => {
     }
   };
 
-  const handleReject = async (product) => {
-    setProcessingId(product.id);
+  const handleConfirmReject = async (reason, note) => {
+    if (!rejectTarget) return;
+    const fullReason = note ? `${reason} — ${note}` : reason;
+    setProcessingId(rejectTarget.id);
     try {
-      await rejectProduct(product.userId, product.id, "Sản phẩm chưa đạt yêu cầu hiển thị");
+      await rejectProduct(rejectTarget.userId, rejectTarget.id, fullReason);
       toast.info("Đã từ chối sản phẩm");
+      setRejectTarget(null);
       await loadProducts();
     } catch (err) {
       toast.error(err.message || "Không thể từ chối sản phẩm");
@@ -108,7 +114,7 @@ const StaffProductReview = () => {
                   type="button"
                   className="reject"
                   disabled={processingId === p.id}
-                  onClick={() => handleReject(p)}
+                  onClick={() => setRejectTarget(p)}
                 >
                   Từ chối
                 </button>
@@ -125,6 +131,17 @@ const StaffProductReview = () => {
           ))}
         </div>
       )}
+
+      <RejectReasonModal
+        open={Boolean(rejectTarget)}
+        title="Từ chối sản phẩm"
+        subtitle="Chọn lý do từ chối. Người bán sẽ thấy lý do này để chỉnh sửa và đăng lại."
+        targetLabel={rejectTarget ? rejectTarget.name || "Sản phẩm chưa đặt tên" : ""}
+        reasons={productRejectReasons}
+        processing={processingId === rejectTarget?.id}
+        onClose={() => setRejectTarget(null)}
+        onConfirm={handleConfirmReject}
+      />
     </div>
   );
 };

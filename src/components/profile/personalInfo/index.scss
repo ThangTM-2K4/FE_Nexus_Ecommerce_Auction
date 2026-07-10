@@ -18,6 +18,30 @@
   max-width: 720px;
 }
 
+.personal-info-cccd__status {
+  margin: 1rem 0 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  &--pending {
+    background: #fff7e6;
+    color: #b26a00;
+    border: 1px solid #ffe0a3;
+  }
+  &--approved {
+    background: #e9f9ef;
+    color: #1f7a44;
+    border: 1px solid #b8e6c9;
+  }
+  &--rejected {
+    background: #fdecec;
+    color: #c0392b;
+    border: 1px solid #f5c2c0;
+  }
+}
+
 .personal-info-cccd__divider {
   border: 0;
   border-top: 1px solid $border-soft;
@@ -41,6 +65,73 @@
   font-size: 0.78rem;
   color: $ink-faint;
   margin-top: 4px;
+}
+
+.personal-info-cccd__upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.personal-info-cccd__upload-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $ink;
+}
+
+.personal-info-cccd__upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px 16px;
+  border: 1.5px dashed $border-soft;
+  border-radius: 12px;
+  color: $ink-muted;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fafafd;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: $accent;
+    background: #fff;
+  }
+
+  &.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.personal-info-cccd__preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+
+  img {
+    max-width: 260px;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid $border-soft;
+    object-fit: cover;
+  }
+}
+
+.personal-info-cccd__preview-remove {
+  border: 0;
+  background: transparent;
+  color: #c0392b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .personal-info-cccd__actions {

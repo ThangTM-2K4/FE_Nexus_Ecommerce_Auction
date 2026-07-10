@@ -1,9 +1,18 @@
 import './index.scss';
 
 /** Bộ chọn số lượng */
-export default function QuantitySelector({ value, max = 999, onChange, inStock = true }) {
+export default function QuantitySelector({
+  value,
+  min = 1,
+  max = 999,
+  onChange,
+  inStock = true,
+  showLabel = true,
+  showStock = true,
+  className = '',
+}) {
   const handleDecrease = () => {
-    if (value > 1) onChange?.(value - 1);
+    if (value > min) onChange?.(value - 1);
   };
 
   const handleIncrease = () => {
@@ -12,24 +21,24 @@ export default function QuantitySelector({ value, max = 999, onChange, inStock =
 
   const handleInput = (event) => {
     const next = Number.parseInt(event.target.value, 10);
-    if (Number.isNaN(next) || next < 1) {
-      onChange?.(1);
+    if (Number.isNaN(next) || next < min) {
+      onChange?.(min);
       return;
     }
     onChange?.(Math.min(next, max));
   };
 
   return (
-    <div className="quantity-selector">
-      <p className="quantity-selector__label">Số lượng</p>
+    <div className={`quantity-selector ${className}`.trim()}>
+      {showLabel && <p className="quantity-selector__label">Số lượng</p>}
       <div className="quantity-selector__row">
         <div className="quantity-selector__control">
-          <button type="button" onClick={handleDecrease} disabled={!inStock || value <= 1} aria-label="Giảm">
+          <button type="button" onClick={handleDecrease} disabled={!inStock || value <= min} aria-label="Giảm">
             −
           </button>
           <input
             type="number"
-            min={1}
+            min={min}
             max={max}
             value={value}
             onChange={handleInput}
@@ -45,9 +54,11 @@ export default function QuantitySelector({ value, max = 999, onChange, inStock =
             +
           </button>
         </div>
-        <span className={`quantity-selector__stock ${inStock ? '' : 'quantity-selector__stock--out'}`}>
-          {inStock ? 'CÒN HÀNG' : 'HẾT HÀNG'}
-        </span>
+        {showStock && (
+          <span className={`quantity-selector__stock ${inStock ? '' : 'quantity-selector__stock--out'}`}>
+            {inStock ? 'CÒN HÀNG' : 'HẾT HÀNG'}
+          </span>
+        )}
       </div>
     </div>
   );

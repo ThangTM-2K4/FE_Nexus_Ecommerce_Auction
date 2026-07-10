@@ -283,7 +283,7 @@ function RegisterPage() {
             onClick={handleGoogleRegister}
           >
             <FcGoogle size={22} />
-            Đăng ký bằng Google
+            Đăng nhập bằng Google
           </button>
 
           <div className="register-link">

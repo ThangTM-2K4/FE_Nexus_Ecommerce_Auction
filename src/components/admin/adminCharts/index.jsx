@@ -1,7 +1,6 @@
 import { useState } from "react";
+import { CHART_COLORS } from "../../../utils/chartTheme";
 import "./index.scss";
-
-const CHART_COLORS = ["#3b82f6", "#06b6d4", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444", "#ec4899"];
 
 export const BarChart = ({ title, subtitle, labels, values, unit, color = CHART_COLORS[0] }) => {
   const max = Math.max(...values, 1);

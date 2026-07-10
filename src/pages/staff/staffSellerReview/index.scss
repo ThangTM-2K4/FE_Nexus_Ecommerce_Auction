@@ -14,6 +14,32 @@
     border: 1px solid $color-border-light;
   }
 
+  &__imgs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+
+    a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: $color-primary;
+      text-decoration: none;
+    }
+
+    img {
+      width: 160px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid $color-border-light;
+    }
+  }
+
   &__list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -79,9 +105,23 @@
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 999px;
-    background: rgba($color-warning, 0.15);
-    color: $color-warning;
     height: fit-content;
+    white-space: nowrap;
+
+    &.status-pending {
+      background: rgba($color-warning, 0.15);
+      color: $color-warning;
+    }
+
+    &.status-approved {
+      background: rgba($color-success, 0.15);
+      color: $color-success;
+    }
+
+    &.status-rejected {
+      background: rgba($color-danger, 0.12);
+      color: $color-danger;
+    }
   }
 
   &__docs {

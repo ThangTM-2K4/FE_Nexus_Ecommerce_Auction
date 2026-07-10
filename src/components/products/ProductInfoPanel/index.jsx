@@ -1,11 +1,19 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { formatPrice } from '@/utils/formatPrice';
+import { useCart } from '@/context/CartContext';
+import { useProductNavigate } from '@/hooks/useProductNavigate';
+import Button from '@/components/common/button';
 import VariantSelector, { getVariantPriceLabel } from '../VariantSelector';
 import QuantitySelector from '../QuantitySelector';
 import './index.scss';
 
 /** Cột phải: tên, giá, vận chuyển, variant, số lượng, nút mua */
 export default function ProductInfoPanel({ product }) {
+  const navigate = useNavigate();
+  const { addToCart, buyNow } = useCart();
+  const { isAuthenticated, handleRequireLogin } = useProductNavigate();
   const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0]);
   const [quantity, setQuantity] = useState(1);
   const [policiesOpen, setPoliciesOpen] = useState(true);
@@ -16,6 +24,34 @@ export default function ProductInfoPanel({ product }) {
     product.priceMin,
     product.priceMax,
   );
+
+  const buildCartProduct = () => ({
+    productId: product.id,
+    shopId: product.shop?.id || 'shop-unknown',
+    shopName: product.shop?.name || 'Shop',
+    name: product.title,
+    image: selectedVariant?.image || product.gallery?.[0]?.src || '',
+    variant: selectedVariant?.name || '',
+    price: selectedVariant?.price ?? product.priceMin,
+  });
+
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      handleRequireLogin();
+      return;
+    }
+    addToCart(buildCartProduct(), quantity);
+    toast.success('Đã thêm vào giỏ hàng');
+  };
+
+  const handleBuyNow = () => {
+    if (!isAuthenticated) {
+      handleRequireLogin();
+      return;
+    }
+    buyNow(buildCartProduct(), quantity);
+    navigate('/cart');
+  };
 
   return (
     <div className="product-info-panel">
@@ -96,20 +132,22 @@ export default function ProductInfoPanel({ product }) {
       />
 
       <div className="product-info-panel__actions">
-        <button
-          type="button"
-          className="product-info-panel__btn product-info-panel__btn--cart"
+        <Button
+          variant="outline"
           disabled={!product.inStock}
+          onClick={handleAddToCart}
+          className="product-info-panel__action-btn"
         >
           Thêm Vào Giỏ Hàng
-        </button>
-        <button
-          type="button"
-          className="product-info-panel__btn product-info-panel__btn--buy"
+        </Button>
+        <Button
+          variant="accent"
           disabled={!product.inStock}
+          onClick={handleBuyNow}
+          className="product-info-panel__action-btn"
         >
           Mua Ngay
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -15,11 +15,30 @@ export const sidebarMenuItems = [
     ],
   },
   {
-    id: "sales",
-    label: "Bán Hàng",
+    id: "shipping",
+    label: "Vận Chuyển",
+    icon: "truck",
+    children: [
+      { id: "shipping", label: "Quản Lý Vận Chuyển", path: "/seller-hub/shipping" },
+      { id: "shipping-batch", label: "Giao Hàng Loạt", path: "/seller-hub/shipping-batch" },
+      { id: "shipping-settings", label: "Cài Đặt Vận Chuyển", path: "/seller-hub/shipping-settings" },
+    ],
+  },
+  {
+    id: "order-management",
+    label: "Quản Lý Đơn Hàng",
     icon: "cart",
     children: [
-      { id: "orders", label: "Đơn hàng", path: "/seller-hub/orders" },
+      { id: "orders", label: "Tất cả", path: "/seller-hub/orders" },
+      { id: "orders-cancelled", label: "Đơn huỷ", path: "/seller-hub/orders-cancelled" },
+      { id: "orders-returns", label: "Trả Hàng/Hoàn Tiền", path: "/seller-hub/orders-returns" },
+    ],
+  },
+  {
+    id: "sales",
+    label: "Bán Hàng",
+    icon: "users",
+    children: [
       { id: "customers", label: "Khách hàng", path: "/seller-hub/customers" },
       { id: "performance", label: "Hiệu quả bán hàng", path: "/seller-hub/performance" },
     ],
@@ -48,7 +67,6 @@ export const sidebarMenuItems = [
     icon: "settings",
     children: [
       { id: "general-settings", label: "Cài Đặt Chung", path: "/seller-hub/general-settings" },
-      { id: "shipping-settings", label: "Cài Đặt Vận Chuyển", path: "/seller-hub/shipping-settings" },
     ],
   },
   { id: "help", label: "Trợ Giúp", icon: "help", path: "/seller-hub/help" },
@@ -82,15 +100,15 @@ export const myReports = [
 ];
 
 export const shippingSettingsOptions = [
-  { id: "ghn", label: "Giao Hàng Nhanh (GHN)", type: "standard", desc: "2-4 ngày", fee: "20.000đ", enabled: true },
-  { id: "ghtk", label: "Giao Hàng Tiết Kiệm (GHTK)", type: "standard", desc: "3-5 ngày", fee: "16.000đ", enabled: true },
-  { id: "jt", label: "J&T Express", type: "standard", desc: "1-3 ngày", fee: "22.000đ", enabled: false },
-  { id: "viettelpost", label: "Viettel Post", type: "standard", desc: "2-4 ngày", fee: "18.000đ", enabled: false },
-  { id: "grab", label: "Grab Express", type: "instant", desc: "Hoả tốc nội thành, 1-2 giờ", fee: "45.000đ", enabled: false },
-  { id: "be", label: "Be Delivery", type: "instant", desc: "Hoả tốc nội thành, 1-2 giờ", fee: "40.000đ", enabled: false },
-  { id: "xanhsm", label: "Xanh SM Ship", type: "instant", desc: "Hoả tốc nội thành, 1-2 giờ", fee: "42.000đ", enabled: false },
-  { id: "loship", label: "Loship", type: "instant", desc: "Giao trong ngày, nội thành", fee: "35.000đ", enabled: false },
-  { id: "freeship", label: "Miễn phí vận chuyển từ 500.000đ", type: "promo", desc: "Áp dụng đơn từ 500.000đ", fee: "0đ", enabled: false },
+  { id: "ghn", label: "Giao Hàng Nhanh (GHN)", type: "standard", desc: "2-4 ngày", basePrice: 15000, pricePerKm: 2500, fee: "20.000đ", enabled: true },
+  { id: "ghtk", label: "Giao Hàng Tiết Kiệm (GHTK)", type: "standard", desc: "3-5 ngày", basePrice: 12000, pricePerKm: 2000, fee: "16.000đ", enabled: true },
+  { id: "jt", label: "J&T Express", type: "standard", desc: "1-3 ngày", basePrice: 18000, pricePerKm: 2800, fee: "22.000đ", enabled: false },
+  { id: "viettelpost", label: "Viettel Post", type: "standard", desc: "2-4 ngày", basePrice: 14000, pricePerKm: 2200, fee: "18.000đ", enabled: false },
+  { id: "grab", label: "Grab Express", type: "instant", desc: "Hoả tốc nội thành, 1-2 giờ", basePrice: 30000, pricePerKm: 5000, fee: "45.000đ", enabled: false },
+  { id: "be", label: "Be Delivery", type: "instant", desc: "Hoả tốc nội thành, 1-2 giờ", basePrice: 25000, pricePerKm: 4500, fee: "40.000đ", enabled: false },
+  { id: "xanhsm", label: "Xanh SM Ship", type: "instant", desc: "Hoả tốc nội thành, 1-2 giờ", basePrice: 28000, pricePerKm: 4800, fee: "42.000đ", enabled: false },
+  { id: "loship", label: "Loship", type: "instant", desc: "Giao trong ngày, nội thành", basePrice: 20000, pricePerKm: 3500, fee: "35.000đ", enabled: false },
+  { id: "freeship", label: "Miễn phí vận chuyển từ 500.000đ", type: "promo", desc: "Áp dụng đơn từ 500.000đ", basePrice: 0, pricePerKm: 0, fee: "0đ", enabled: false },
 ];
 
 export const generalSettingsOptions = [
@@ -319,6 +337,210 @@ export const walletConfig = {
   maxWithdraw: 500_000_000,
   feePercent: 0,
   processingDays: "1–3 ngày làm việc",
+};
+
+//=====================================================
+// Vận chuyển & Đơn hàng (dùng chung cho Quản lý đơn hàng,
+// Quản lý vận chuyển và Giao hàng loạt)
+//=====================================================
+
+export const shippingCarriers = [
+  { code: "ghn", name: "Giao Hàng Nhanh (GHN)" },
+  { code: "ghtk", name: "Giao Hàng Tiết Kiệm (GHTK)" },
+  { code: "jt", name: "J&T Express" },
+  { code: "viettelpost", name: "Viettel Post" },
+  { code: "grab", name: "Grab Express" },
+];
+
+// Canonical, chi tiết danh sách đơn hàng của Shop.
+export const sellerOrders = [
+  {
+    id: "ORD-2847", customer: "Nguyễn Văn An", phone: "0901 234 567",
+    address: "12 Nguyễn Huệ, Q.1, TP.HCM", product: "iPhone 16 Pro 256GB",
+    image: "/images/auction/iphone.jpg", qty: 1, amount: 28990000, shippingFee: 20000,
+    carrier: "ghn", tracking: "GHN284700VN", status: "Pending", date: "11/06/2026 14:32",
+  },
+  {
+    id: "ORD-2846", customer: "Trần Thị Bình", phone: "0912 345 678",
+    address: "45 Lê Lợi, Q. Hải Châu, Đà Nẵng", product: "Rolex Submariner Date",
+    image: "/images/auction/rolex.jpg", qty: 1, amount: 285000000, shippingFee: 0,
+    carrier: "viettelpost", tracking: "VTP284600VN", status: "Shipping", date: "11/06/2026 11:08",
+  },
+  {
+    id: "ORD-2845", customer: "Lê Minh Cường", phone: "0923 456 789",
+    address: "78 Trần Hưng Đạo, Q. Hoàn Kiếm, Hà Nội", product: 'MacBook Pro M3 14"',
+    image: "/images/auction/macbook.jpg", qty: 1, amount: 42990000, shippingFee: 22000,
+    carrier: "jt", tracking: "JT284500VN", status: "Confirmed", date: "10/06/2026 20:15",
+  },
+  {
+    id: "ORD-2844", customer: "Phạm Thu Hà", phone: "0934 567 890",
+    address: "23 Hai Bà Trưng, Q.3, TP.HCM", product: "Omega Speedmaster",
+    image: "/images/auction/omega.jpg", qty: 1, amount: 142000000, shippingFee: 0,
+    carrier: "ghn", tracking: "GHN284400VN", status: "Delivered", date: "10/06/2026 09:42",
+  },
+  {
+    id: "ORD-2843", customer: "Hoàng Nam", phone: "0945 678 901",
+    address: "56 Nguyễn Trãi, Q.5, TP.HCM", product: "Pokémon Charizard 1st Ed",
+    image: "/images/auction/pokemon.jpg", qty: 2, amount: 18500000, shippingFee: 16000,
+    carrier: "ghtk", tracking: "GHTK284300VN", status: "Completed", date: "09/06/2026 16:20",
+  },
+  {
+    id: "ORD-2842", customer: "Lan Anh", phone: "0956 789 012",
+    address: "89 Điện Biên Phủ, Q. Bình Thạnh, TP.HCM", product: "Leica M11",
+    image: "/images/auction/leica.jpg", qty: 1, amount: 198000000, shippingFee: 0,
+    carrier: "viettelpost", tracking: "VTP284200VN", status: "Completed", date: "09/06/2026 10:05",
+  },
+  {
+    id: "ORD-2841", customer: "Đỗ Quang Huy", phone: "0967 890 123",
+    address: "101 Cách Mạng Tháng 8, Q.10, TP.HCM", product: "Sony A7 IV Body",
+    image: "/images/auction/leica.jpg", qty: 1, amount: 52990000, shippingFee: 22000,
+    carrier: "jt", tracking: "JT284100VN", status: "AwaitingPickup", date: "11/06/2026 08:50",
+  },
+  {
+    id: "ORD-2840", customer: "Vũ Thị Mai", phone: "0978 901 234",
+    address: "202 Lạc Long Quân, Q. Tây Hồ, Hà Nội", product: "iPad Pro M4 11\"",
+    image: "/images/auction/iphone.jpg", qty: 1, amount: 24990000, shippingFee: 20000,
+    carrier: "ghn", tracking: "GHN284000VN", status: "AwaitingPickup", date: "11/06/2026 07:12",
+  },
+  {
+    id: "ORD-2839", customer: "Bùi Đức Phong", phone: "0989 012 345",
+    address: "303 Nguyễn Văn Cừ, Q. Long Biên, Hà Nội", product: "Balo laptop Targus",
+    image: "/images/auction/macbook.jpg", qty: 3, amount: 2400000, shippingFee: 16000,
+    carrier: "ghtk", tracking: "GHTK283900VN", status: "Cancelled", date: "08/06/2026 19:30",
+  },
+  {
+    id: "ORD-2838", customer: "Ngô Thanh Thủy", phone: "0900 123 456",
+    address: "404 Phan Đình Phùng, TP. Huế", product: "Áo khoác denim",
+    image: "/images/auction/pokemon.jpg", qty: 1, amount: 890000, shippingFee: 16000,
+    carrier: "ghtk", tracking: "GHTK283800VN", status: "Refunded", date: "07/06/2026 15:00",
+  },
+  {
+    id: "ORD-2837", customer: "Trịnh Văn Sơn", phone: "0911 223 344",
+    address: "505 Trường Chinh, Q. Thanh Xuân, Hà Nội", product: "Đồng hồ Casio G-Shock",
+    image: "/images/auction/omega.jpg", qty: 1, amount: 3200000, shippingFee: 18000,
+    carrier: "viettelpost", tracking: "VTP283700VN", status: "Shipping", date: "10/06/2026 13:20",
+  },
+  {
+    id: "ORD-2836", customer: "Đặng Thu Trang", phone: "0922 334 455",
+    address: "606 Võ Văn Kiệt, Q.6, TP.HCM", product: "Tai nghe Sony WH-1000XM5",
+    image: "/images/auction/leica.jpg", qty: 1, amount: 7990000, shippingFee: 20000,
+    carrier: "ghn", tracking: "GHN283600VN", status: "Confirmed", date: "10/06/2026 09:00",
+  },
+];
+
+// Timeline mẫu theo trạng thái — hiển thị trong chi tiết đơn.
+export const orderTimeline = (status) => {
+  const base = [
+    { key: "Pending", label: "Đơn hàng được đặt" },
+    { key: "Confirmed", label: "Người bán xác nhận" },
+    { key: "AwaitingPickup", label: "Chờ đơn vị vận chuyển lấy hàng" },
+    { key: "Shipping", label: "Đang giao đến người mua" },
+    { key: "Delivered", label: "Đã giao hàng thành công" },
+    { key: "Completed", label: "Đơn hàng hoàn tất" },
+  ];
+  if (status === "Cancelled") return [...base.slice(0, 1), { key: "Cancelled", label: "Đơn hàng đã hủy" }];
+  if (status === "Refunded")
+    return [...base.slice(0, 4), { key: "Refunded", label: "Đã hoàn trả / hoàn tiền" }];
+  const idx = base.findIndex((s) => s.key === status);
+  return base.map((s, i) => ({ ...s, done: i <= idx }));
+};
+
+//=====================================================
+// Đánh giá Shop — kèm bình luận của người mua (Task 4)
+//=====================================================
+
+export const shopReviews = [
+  {
+    id: "RV-1042", user: "Minh Tuấn", avatar: "MT", rating: 5, product: "Rolex Submariner Date",
+    comment: "Sản phẩm chính hãng, đóng gói chắc chắn, giao nhanh hơn dự kiến. Sẽ ủng hộ shop dài dài!",
+    images: 2, time: "2 giờ trước", reply: null, likes: 12,
+  },
+  {
+    id: "RV-1041", user: "Lan Anh", avatar: "LA", rating: 4, product: "iPhone 16 Pro 256GB",
+    comment: "Máy đẹp, pin trâu. Trừ 1 sao vì hộp hơi móp nhẹ khi nhận, còn lại rất hài lòng.",
+    images: 1, time: "5 giờ trước", reply: null, likes: 5,
+  },
+  {
+    id: "RV-1040", user: "Hoàng Nam", avatar: "HN", rating: 5, product: "Omega Speedmaster",
+    comment: "Đóng gói cẩn thận, đúng mô tả, tư vấn nhiệt tình. Cảm ơn shop!",
+    images: 0, time: "1 ngày trước",
+    reply: "Cảm ơn anh Nam đã tin tưởng shop ạ!", likes: 8,
+  },
+  {
+    id: "RV-1039", user: "Thu Hương", avatar: "TH", rating: 2, product: "Áo khoác denim",
+    comment: "Màu ngoài thực tế hơi khác so với ảnh, chất vải ổn nhưng form hơi rộng.",
+    images: 3, time: "2 ngày trước", reply: null, likes: 1,
+  },
+  {
+    id: "RV-1038", user: "Đức Phong", avatar: "ĐP", rating: 3, product: "Balo laptop Targus",
+    comment: "Hàng ok nhưng giao chậm 2 ngày so với hẹn. Mong shop cải thiện khâu vận chuyển.",
+    images: 0, time: "3 ngày trước", reply: null, likes: 3,
+  },
+  {
+    id: "RV-1037", user: "Quỳnh Chi", avatar: "QC", rating: 5, product: 'MacBook Pro M3 14"',
+    comment: "Máy nguyên seal, hoạt động mượt. Shop hỗ trợ trả góp nhanh gọn.",
+    images: 1, time: "4 ngày trước", reply: null, likes: 9,
+  },
+];
+
+export const reviewRatingBreakdown = [
+  { star: 5, count: 1420 },
+  { star: 4, count: 286 },
+  { star: 3, count: 68 },
+  { star: 2, count: 30 },
+  { star: 1, count: 38 },
+];
+
+//=====================================================
+// Báo cáo của tôi (Task 5)
+//=====================================================
+
+export const reportCatalog = [
+  {
+    id: "balance", name: "Báo cáo số dư", icon: "wallet",
+    desc: "Số dư khả dụng, số dư đang chờ và dòng tiền vào/ra của Shop.",
+    period: "Cập nhật theo thời gian thực",
+  },
+  {
+    id: "income", name: "Báo cáo thu nhập", icon: "chart",
+    desc: "Doanh thu, phí sàn, phí vận chuyển và lợi nhuận ròng theo kỳ.",
+    period: "Theo ngày / tuần / tháng",
+  },
+  {
+    id: "marketing", name: "Báo cáo marketing", icon: "target",
+    desc: "Hiệu quả voucher, quảng cáo, lượt tiếp cận và tỉ lệ chuyển đổi.",
+    period: "Theo chiến dịch",
+  },
+  {
+    id: "sales", name: "Báo cáo phân tích bán hàng", icon: "box",
+    desc: "Sản phẩm bán chạy, tồn kho, xu hướng theo danh mục.",
+    period: "Theo ngày / tháng",
+  },
+  {
+    id: "orders-export", name: "Xuất đơn hàng", icon: "cart",
+    desc: "Xuất toàn bộ đơn hàng ra file CSV theo khoảng thời gian đã chọn.",
+    period: "Tùy chọn khoảng ngày",
+  },
+  {
+    id: "shipping-labels", name: "Phiếu gửi hàng đã in", icon: "truck",
+    desc: "Lịch sử các phiếu gửi hàng đã in, in lại hoặc tải xuống.",
+    period: "30 ngày gần nhất",
+  },
+];
+
+export const printedShippingLabels = [
+  { id: "SPX-77120", order: "ORD-2846", carrier: "Viettel Post", printedAt: "11/06/2026 11:20", pages: 1 },
+  { id: "SPX-77118", order: "ORD-2844", carrier: "Giao Hàng Nhanh", printedAt: "10/06/2026 10:02", pages: 1 },
+  { id: "SPX-77115", order: "ORD-2843", carrier: "Giao Hàng Tiết Kiệm", printedAt: "09/06/2026 16:45", pages: 2 },
+  { id: "SPX-77110", order: "ORD-2837", carrier: "Viettel Post", printedAt: "10/06/2026 13:40", pages: 1 },
+];
+
+export const marketingReport = {
+  campaigns: [
+    { name: "Flash Sale 6.6", reach: 128000, clicks: 9400, orders: 312, spend: 4200000, revenue: 186000000 },
+    { name: "Voucher Freeship", reach: 86000, clicks: 6100, orders: 204, spend: 1800000, revenue: 98000000 },
+    { name: "Quảng cáo tìm kiếm", reach: 54000, clicks: 3800, orders: 96, spend: 2600000, revenue: 62000000 },
+  ],
 };
 
 export const recentOrders = [

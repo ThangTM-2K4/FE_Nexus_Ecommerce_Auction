@@ -4,7 +4,8 @@ import { useAuth } from '../../../context/AuthContext';
 import SwitchAccountModal from './SwitchAccountModal';
 import './ProfileDropdown.scss';
 
-export default function ProfileDropdown({ onClose }) {
+export default function ProfileDropdown({ onClose, variant }) {
+  const isStaff = variant === 'staff';
   const { user, logout, isApprovedSeller, isBuyerMode, switchAccountMode } = useAuth();
   const navigate = useNavigate();
   const panelRef = useRef(null);
@@ -57,9 +58,14 @@ export default function ProfileDropdown({ onClose }) {
     : '?';
 
   const sellerStatus = user?.sellerStatus;
-  const currentModeLabel = user?.currentMode === 'SELLER' ? 'Người bán' : 'Người mua';
+  const currentModeLabel = isStaff
+    ? 'Quản lý'
+    : user?.currentMode === 'SELLER'
+    ? 'Người bán'
+    : 'Người mua';
 
   const becomeSellerItem = () => {
+    if (isStaff) return null; // Trang quản lý không có mục "Trở thành Người bán"
     if (isApprovedSeller) return null;
     if (!sellerStatus) {
       return { to: '/profile/become-seller', label: 'Trở thành Người bán' };
@@ -76,7 +82,9 @@ export default function ProfileDropdown({ onClose }) {
   const menuItems = [
     { to: '/profile', label: 'Hồ sơ của tôi' },
     becomeSellerItem(),
-    { action: 'switch', label: 'Chuyển tài khoản' },
+    // Chỉ seller đã duyệt mới được chuyển qua lại Người mua/Người bán
+    // (không áp dụng cho tài khoản quản lý).
+    !isStaff && isApprovedSeller ? { action: 'switch', label: 'Chuyển tài khoản' } : null,
   ].filter(Boolean);
 
   return (
@@ -90,7 +98,7 @@ export default function ProfileDropdown({ onClose }) {
             <span className="header-mode-indicator">
               Chế độ: {currentModeLabel}
             </span>
-            {isApprovedSeller && (
+            {!isStaff && isApprovedSeller && (
               <span className="header-seller-badge">✓ Người bán đã xác minh</span>
             )}
           </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../../components/admin/adminPageHeader";
 import AdminTabs from "../../../components/admin/adminTabs";
@@ -11,8 +11,14 @@ import { NotificationItem, BannerPreview, ContentDoc, AuditTimelineItem } from "
 import { useAdminList } from "../../../hooks/useAdminList";
 import {
   mockNotifications, mockBanners, mockContents, mockAnalytics,
-  mockSystemSettings, mockRolePermissions, mockAuditLogs,
+  mockSystemSettings, mockRolePermissions,
 } from "../../../data/adminEntities";
+import {
+  formatAuditLogDetail,
+  getAdminAuditLogById,
+  getAdminAuditLogs,
+  getApiErrorMessage,
+} from "../../../services/adminAuditService";
 import "../../../components/admin/adminViews/index.scss";
 import "../../../components/admin/adminDataTable/index.scss";
 import "../../../components/admin/adminTabOverview/index.scss";
@@ -269,14 +275,161 @@ export const AdminRoles = () => (
 );
 
 export const AdminAuditLogs = () => {
-  const list = useAdminList(mockAuditLogs, ["actor", "action", "target"]);
+  const PAGE_SIZE = 20;
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [actionFilter, setActionFilter] = useState("");
+  const [entityTypeFilter, setEntityTypeFilter] = useState("");
+  const [actorUserId, setActorUserId] = useState("");
+  const [targetUserId, setTargetUserId] = useState("");
+  const [fromUtc, setFromUtc] = useState("");
+  const [toUtc, setToUtc] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const loadLogs = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const result = await getAdminAuditLogs({
+        page,
+        pageSize: PAGE_SIZE,
+        action: actionFilter || undefined,
+        entityType: entityTypeFilter || undefined,
+        actorUserId: actorUserId || undefined,
+        targetUserId: targetUserId || undefined,
+        fromUtc: fromUtc ? new Date(fromUtc).toISOString() : undefined,
+        toUtc: toUtc ? new Date(toUtc).toISOString() : undefined,
+      });
+      setItems(result.items);
+      setTotal(result.total);
+    } catch (error) {
+      const message = error?.response?.status === 404
+        ? "API nhật ký (/admin/audit-logs) chưa được triển khai trên server."
+        : getApiErrorMessage(error, "Không tải được nhật ký hệ thống");
+      setLoadError(message);
+      setItems([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [actionFilter, actorUserId, entityTypeFilter, fromUtc, page, targetUserId, toUtc]);
+
+  useEffect(() => {
+    loadLogs();
+  }, [loadLogs]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return items;
+    const q = search.toLowerCase();
+    return items.filter((log) =>
+      [log.actor, log.action, log.target, log.ip, log.entityType, log.entityId]
+        .some((v) => String(v ?? "").toLowerCase().includes(q))
+    );
+  }, [items, search]);
+
+  const openDetail = async (log) => {
+    setDetail(formatAuditLogDetail(log._raw ?? log));
+    setDetailLoading(true);
+    try {
+      const full = await getAdminAuditLogById(log.id);
+      if (full) setDetail(formatAuditLogDetail(full));
+    } catch (error) {
+      if (error?.response?.status !== 404) {
+        toast.warning(getApiErrorMessage(error, "Không tải được chi tiết nhật ký"));
+      }
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const resetFilters = () => {
+    setActionFilter("");
+    setEntityTypeFilter("");
+    setActorUserId("");
+    setTargetUserId("");
+    setFromUtc("");
+    setToUtc("");
+    setPage(1);
+  };
+
   return (
     <div className="adm-page">
-      <AdminPageHeader kicker="Giám sát" title="Nhật ký hệ thống" subtitle="Timeline hành động admin." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm admin, hành động..." />
-      <div className="adm-audit-timeline">
-        {list.filtered.map((log) => <AuditTimelineItem key={log.id} log={log} />)}
+      <AdminPageHeader kicker="Giám sát" title="Nhật ký hệ thống" subtitle="Timeline hành động admin từ /admin/audit-logs." />
+      <AdminToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Tìm admin, hành động, đối tượng..."
+        actions={[
+          { label: "Xóa bộ lọc", variant: "secondary", onClick: resetFilters },
+          { label: "Tải lại", variant: "secondary", onClick: loadLogs },
+        ]}
+      />
+      <div className="adm-form adm-form--inline adm-audit-filters">
+        <label>
+          Hành động (action)
+          <input value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setPage(1); }} placeholder="VD: USER.UPDATE" />
+        </label>
+        <label>
+          Loại entity
+          <input value={entityTypeFilter} onChange={(e) => { setEntityTypeFilter(e.target.value); setPage(1); }} placeholder="VD: User" />
+        </label>
+        <label>
+          Actor User ID
+          <input value={actorUserId} onChange={(e) => { setActorUserId(e.target.value); setPage(1); }} placeholder="UUID" />
+        </label>
+        <label>
+          Target User ID
+          <input value={targetUserId} onChange={(e) => { setTargetUserId(e.target.value); setPage(1); }} placeholder="UUID" />
+        </label>
+        <label>
+          Từ (UTC)
+          <input type="datetime-local" value={fromUtc} onChange={(e) => { setFromUtc(e.target.value); setPage(1); }} />
+        </label>
+        <label>
+          Đến (UTC)
+          <input type="datetime-local" value={toUtc} onChange={(e) => { setToUtc(e.target.value); setPage(1); }} />
+        </label>
       </div>
+      {loading ? (
+        <p className="adm-page__empty">Đang tải nhật ký...</p>
+      ) : loadError ? (
+        <p className="adm-page__empty">{loadError}</p>
+      ) : filtered.length === 0 ? (
+        <p className="adm-page__empty">Không có nhật ký phù hợp.</p>
+      ) : (
+        <>
+          <div className="adm-audit-timeline">
+            {filtered.map((log) => (
+              <button key={log.id} type="button" className="adm-audit-timeline__item" onClick={() => openDetail(log)}>
+                <AuditTimelineItem log={log} />
+              </button>
+            ))}
+          </div>
+          {Math.ceil(total / PAGE_SIZE) > 1 && (
+            <div className="adm-page__pagination">
+              <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</button>
+              <span>Trang {page}/{Math.ceil(total / PAGE_SIZE)}</span>
+              <button type="button" disabled={page >= Math.ceil(total / PAGE_SIZE)} onClick={() => setPage((p) => p + 1)}>Sau</button>
+            </div>
+          )}
+        </>
+      )}
+      <AdminModal open={!!detail} title="Chi tiết nhật ký" onClose={() => setDetail(null)} wide>
+        {detail && (
+          detailLoading ? <p>Đang tải chi tiết...</p> : (
+            <dl className="adm-detail-grid">
+              {Object.entries(detail).filter(([k]) => k !== "_raw").map(([k, v]) => (
+                <div key={k}><dt>{k}</dt><dd>{String(v)}</dd></div>
+              ))}
+            </dl>
+          )
+        )}
+      </AdminModal>
     </div>
   );
 };

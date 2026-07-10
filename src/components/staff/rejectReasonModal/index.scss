@@ -1,0 +1,100 @@
+@use "../../../styles/auction-variables" as *;
+
+.reject-reason-modal {
+  &__subtitle {
+    margin: 0 0 8px;
+    color: $color-text-muted;
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  &__target {
+    margin: 0 0 14px;
+    font-size: 0.9rem;
+    color: $color-text;
+  }
+
+  &__label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: $color-text;
+    margin-bottom: 8px;
+  }
+
+  &__reasons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  &__option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 1px solid $color-border-light;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: $color-text;
+    transition: border-color 0.15s, background 0.15s;
+
+    &:hover {
+      border-color: $color-primary;
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    input {
+      margin-top: 2px;
+      accent-color: #c0392b;
+    }
+  }
+
+  &__custom {
+    margin-top: 4px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid $color-border-light;
+    border-radius: 10px;
+    font-size: 0.88rem;
+  }
+
+  &__note {
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid $color-border-light;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+  }
+
+  &__btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &--ghost {
+      background: transparent;
+      border-color: $color-border-light;
+      color: $color-text;
+    }
+
+    &--danger {
+      background: #c0392b;
+      color: #fff;
+    }
+  }
+}

@@ -9,6 +9,34 @@ export const sidebarMenuItems = [
   { id: "notifications", label: "Thông báo", icon: "bell", path: "/staff/notifications" },
 ];
 
+// Lý do từ chối đơn đăng ký Người bán (staff chọn khi từ chối)
+export const sellerRejectReasons = [
+  "Ảnh CCCD/CMND không rõ nét hoặc bị che khuất",
+  "Thông tin trên CCCD không khớp với hồ sơ đăng ký",
+  "Số CCCD không hợp lệ hoặc đã được sử dụng",
+  "Giấy tờ định danh / giấy phép kinh doanh không hợp lệ",
+  "Thông tin cửa hàng không đầy đủ hoặc sai lệch",
+  "Mã số thuế không hợp lệ",
+  "Thông tin tài khoản ngân hàng không chính xác",
+  "Nghi ngờ gian lận hoặc mạo danh",
+  "Địa chỉ lấy hàng không hợp lệ",
+  "Vi phạm chính sách nền tảng",
+];
+
+// Lý do từ chối sản phẩm (staff chọn khi từ chối)
+export const productRejectReasons = [
+  "Hình ảnh sản phẩm không rõ ràng hoặc kém chất lượng",
+  "Thông tin / mô tả sản phẩm không đầy đủ hoặc sai lệch",
+  "Sản phẩm thuộc danh mục cấm hoặc hạn chế kinh doanh",
+  "Nghi ngờ hàng giả, hàng nhái, hàng kém chất lượng",
+  "Giá bán không hợp lý hoặc có dấu hiệu thao túng",
+  "Vi phạm bản quyền hoặc quyền sở hữu thương hiệu",
+  "Nội dung phản cảm, không phù hợp",
+  "Phân loại danh mục sản phẩm không đúng",
+  "Thiếu thông tin bắt buộc (nguồn gốc, tồn kho...)",
+  "Vi phạm chính sách nền tảng",
+];
+
 export const overviewStats = [
   { id: "pending-sellers", label: "Đơn đăng ký seller chờ duyệt", value: "12", hint: "Cần xử lý hôm nay", warn: true },
   { id: "flagged-auctions", label: "Phiên đấu giá bị báo cáo", value: "5", hint: "2 mức độ cao", warn: true },

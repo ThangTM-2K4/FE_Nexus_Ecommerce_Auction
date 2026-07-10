@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { useOrder } from '../../../context/OrderContext';
 import * as orderService from '../../../services/orderService';
 import Header from '../../../components/homepage/header';
 import Footer from '../../../components/homepage/footer';
@@ -12,19 +14,43 @@ import './index.scss';
 
 export default function OrdersPage() {
   const { user } = useAuth();
+  const location = useLocation();
+  const { orders, loading, refreshOrders } = useOrder();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.id) return;
-    setLoading(true);
-    orderService.getOrders(user.id, { status: activeTab, query: searchQuery }).then((data) => {
-      setOrders(data);
-      setLoading(false);
-    });
-  }, [user?.id, activeTab, searchQuery]);
+    if (location.state?.status) {
+      setActiveTab(location.state.status);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (user?.id) {
+      refreshOrders();
+    }
+  }, [user?.id, refreshOrders]);
+
+  const filteredOrders = useMemo(() => {
+    let list = [...orders];
+
+    if (activeTab !== 'all') {
+      list = list.filter((order) => order.status === activeTab);
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(
+        (order) =>
+          order.id.toLowerCase().includes(q) ||
+          order.shopName.toLowerCase().includes(q) ||
+          order.products.some((p) => p.name.toLowerCase().includes(q)),
+      );
+    }
+
+    return list;
+  }, [orders, activeTab, searchQuery]);
 
   return (
     <div className="account-page">
@@ -48,11 +74,11 @@ export default function OrdersPage() {
 
           {loading && <p className="account-page__loading">Đang tải đơn hàng...</p>}
 
-          {!loading && orders.length === 0 && (
+          {!loading && filteredOrders.length === 0 && (
             <EmptyState icon="🛍️" title="Chưa có đơn hàng" />
           )}
 
-          {!loading && orders.length > 0 && <OrderList orders={orders} />}
+          {!loading && filteredOrders.length > 0 && <OrderList orders={filteredOrders} />}
         </AccountLayout>
       </main>
       <Footer />
