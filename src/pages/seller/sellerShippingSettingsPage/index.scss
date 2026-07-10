@@ -1,0 +1,60 @@
+@use "../../../styles/palette" as *;
+
+.slr-shipping-input {
+  width: 100%;
+  max-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+}
+
+.slr-shipping-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .slr-btn-plain {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: none;
+    border-radius: $radius-sm;
+    color: $color-text-muted;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba($color-primary, 0.08);
+      color: $color-primary;
+    }
+  }
+}
+
+.slr-shipping-guide {
+  list-style: disc;
+  margin: 16px 0 16px 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: $color-text-secondary;
+
+  li {
+    margin-bottom: 8px;
+  }
+
+  strong {
+    color: $color-text-primary;
+  }
+}
