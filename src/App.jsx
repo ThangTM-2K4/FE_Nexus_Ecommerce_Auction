@@ -12,6 +12,8 @@ import RegisterVerifyOtpPage from "./pages/auth/registerVerifyOtp";
 
 import HomePage from "./pages/homepage/homePage";
 import ProductDetailPage from "./pages/productDetailPage";
+import CartPage from "./pages/cartPage";
+import CheckoutPage from "./pages/checkoutPage";
 
 import ProfilePage from "./pages/user/profilePage";
 import NotificationsPage from "./pages/user/notificationsPage";
@@ -79,6 +81,24 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/product/:id" element={<ProductDetailPage />} />
+
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <CartPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* User */}
         <Route
@@ -158,24 +178,6 @@ function App() {
           element={
             <ProtectedRoute>
               <PrivacySettingsRoutePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/vouchers"
-          element={
-            <ProtectedRoute>
-              <VouchersPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/coins"
-          element={
-            <ProtectedRoute>
-              <CoinsPage />
             </ProtectedRoute>
           }
         />

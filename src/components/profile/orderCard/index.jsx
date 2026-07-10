@@ -1,6 +1,8 @@
+import { formatPrice } from '@/utils/formatPrice';
 import './index.scss';
 
 const STATUS_LABELS = {
+  cho_xac_nhan: 'Chờ xác nhận',
   pending_payment: 'Chờ thanh toán',
   shipping: 'Vận chuyển',
   delivering: 'Chờ giao hàng',
@@ -8,9 +10,6 @@ const STATUS_LABELS = {
   cancelled: 'Đã hủy',
   return: 'Trả hàng/Hoàn tiền',
 };
-
-const formatPrice = (n) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
 
 export default function OrderCard({ order }) {
   const firstProduct = order.products?.[0];

@@ -19,7 +19,7 @@ const GROUP_CONFIG = {
   },
   zalo: {
     title: 'Thông báo Zalo',
-    itemLabels: { promotions: 'Khuyến mãi (Shopee Việt Nam)' },
+    itemLabels: { promotions: 'Khuyến mãi' },
   },
 };
 

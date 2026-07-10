@@ -1,0 +1,33 @@
+@use '../../styles/palette' as *;
+
+.checkout-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 20% 50%, rgba($blush-pink, 0.2), transparent 50%),
+    linear-gradient(135deg, $surface-soft 0%, $surface 100%);
+}
+
+.checkout-page__main {
+  flex: 1;
+  padding: 2rem 1.5rem 120px;
+}
+
+.checkout-page__shell {
+  max-width: $content-width;
+  margin: 0 auto;
+}
+
+.checkout-page__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $ink;
+  margin-bottom: 1.5rem;
+}
+
+.checkout-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
