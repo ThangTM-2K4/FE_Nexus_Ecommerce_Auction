@@ -55,6 +55,9 @@ const extractUserSource = (authPayload) => {
   return null;
 };
 
+const normalizeSellerStatus = (status) =>
+  status ? String(status).toUpperCase() : null;
+
 const normalizeSessionUser = (userSource, previousUser = null) => {
   if (!userSource) return previousUser;
 
@@ -79,7 +82,9 @@ const normalizeSessionUser = (userSource, previousUser = null) => {
       '',
     role,
     roles: userSource.roles ?? previousUser?.roles,
-    sellerStatus: userSource.sellerStatus ?? previousUser?.sellerStatus ?? null,
+    sellerStatus: normalizeSellerStatus(
+      userSource.sellerStatus ?? previousUser?.sellerStatus
+    ),
     currentMode: userSource.currentMode ?? previousUser?.currentMode ?? 'BUYER',
     isEmailVerified:
       userSource.isEmailVerified ??
@@ -171,7 +176,27 @@ export const login = async (loginValue, password) => {
     throw new Error("Không nhận được thông tin người dùng");
   }
 
-  return user;
+  // 5. Lấy trạng thái seller (User Service /users/me thường không kèm sellerStatus)
+  return (await enrichSellerStatus()) ?? user;
+};
+
+// Gọi /sellers/me để đồng bộ sellerStatus vào session (dùng cho SellerRoute).
+const enrichSellerStatus = async () => {
+  try {
+    const { data } = await api.get("/sellers/me");
+    const seller = data?.data ?? data;
+    const status = seller?.status ?? seller?.sellerStatus;
+    if (status) {
+      const upper = String(status).toUpperCase();
+      const updates = { sellerStatus: upper };
+      // Seller đã duyệt → mặc định vào chế độ Người bán (vẫn đổi lại được)
+      if (upper === "APPROVED") updates.currentMode = "SELLER";
+      return updateSessionUser(updates);
+    }
+  } catch {
+    /* 404 = chưa đăng ký seller → giữ nguyên */
+  }
+  return null;
 };
 //registerOtp
 export const register = async ({ fullName, email, phone, password }) => {

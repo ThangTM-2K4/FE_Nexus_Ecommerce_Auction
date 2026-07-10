@@ -35,7 +35,7 @@ const StaffHeader = () => {
           >
             Shop Auction
           </h1>
-          <span className="stf-header__badge">Kênh Nhân Viên</span>
+          <span className="stf-header__badge">Kênh Quản Lý</span>
         </div>
 
         <div className="stf-header__search">
@@ -44,9 +44,6 @@ const StaffHeader = () => {
         </div>
 
         <div className="stf-header__actions">
-          <button type="button" className="stf-header__link" onClick={() => navigate("/")}>
-            Trang chủ
-          </button>
           <button
             type="button"
             className="stf-header__bell"
@@ -67,7 +64,7 @@ const StaffHeader = () => {
             </button>
 
             {showProfile && (
-              <ProfileDropdown onClose={() => setShowProfile(false)} />
+              <ProfileDropdown variant="staff" onClose={() => setShowProfile(false)} />
             )}
           </div>
         </div>

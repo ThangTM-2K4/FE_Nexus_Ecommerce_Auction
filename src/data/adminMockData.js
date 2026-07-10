@@ -143,7 +143,7 @@ export const dashboardCharts = {
     orders: [892, 1045, 978, 1210, 1156, 1380, 1089],
     changePct: 12.4,
     unit: "triệu VNĐ",
-    color: "#3b82f6",
+    color: "#B35A8A",
     wide: true,
   },
   revenueMonthly: {
@@ -153,17 +153,17 @@ export const dashboardCharts = {
     labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
     values: [38, 42, 45, 41, 46, 48],
     unit: "tỷ VNĐ",
-    color: "#8b5cf6",
+    color: "#523F77",
   },
   productMix: {
     type: "donut",
     title: "Cơ cấu sản phẩm",
     subtitle: "Phân bổ trên nền tảng",
     segments: [
-      { label: "Đang bán", value: 77, color: "#10b981" },
-      { label: "Đấu giá", value: 12, color: "#3b82f6" },
-      { label: "Chờ duyệt", value: 8, color: "#f59e0b" },
-      { label: "Ẩn / Khác", value: 3, color: "#94a3b8" },
+      { label: "Đang bán", value: 77, color: "#1fa968" },
+      { label: "Đấu giá", value: 12, color: "#B35A8A" },
+      { label: "Chờ duyệt", value: 8, color: "#d4920a" },
+      { label: "Ẩn / Khác", value: 3, color: "#B6A5CE" },
     ],
   },
   orders: {
@@ -173,8 +173,8 @@ export const dashboardCharts = {
     labels: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
     unit: "đơn",
     series: [
-      { name: "Mua thường", color: "#06b6d4", values: [320, 380, 350, 450, 420, 510, 400] },
-      { name: "Đấu giá", color: "#8b5cf6", values: [100, 130, 130, 170, 170, 200, 140] },
+      { name: "Mua thường", color: "#7880AE", values: [320, 380, 350, 450, 420, 510, 400] },
+      { name: "Đấu giá", color: "#B35A8A", values: [100, 130, 130, 170, 170, 200, 140] },
     ],
   },
   topCategories: {
@@ -197,17 +197,17 @@ export const dashboardCharts = {
     labels: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
     values: [85, 102, 94, 128, 115, 142, 98],
     unit: "user",
-    color: "#10b981",
+    color: "#7880AE",
   },
   auctionStatus: {
     type: "donut",
     title: "Trạng thái đấu giá",
     subtitle: "Phiên đấu giá hiện tại",
     segments: [
-      { label: "Đang diễn ra", value: 45, color: "#3b82f6" },
-      { label: "Sắp kết thúc", value: 15, color: "#f59e0b" },
-      { label: "Hoàn thành", value: 35, color: "#10b981" },
-      { label: "Đã hủy", value: 5, color: "#ef4444" },
+      { label: "Đang diễn ra", value: 45, color: "#523F77" },
+      { label: "Sắp kết thúc", value: 15, color: "#d4920a" },
+      { label: "Hoàn thành", value: 35, color: "#1fa968" },
+      { label: "Đã hủy", value: 5, color: "#FF2247" },
     ],
   },
   newProducts: {
@@ -217,7 +217,7 @@ export const dashboardCharts = {
     labels: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
     values: [120, 145, 132, 168, 155, 190, 142],
     unit: "sản phẩm",
-    color: "#06b6d4",
+    color: "#B6A5CE",
   },
 };
 
