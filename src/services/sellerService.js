@@ -1,11 +1,87 @@
+import api from '../config/api';
+import { getApiErrorMessage, unwrapData } from '../utils/apiResponse';
 import { mockDelay } from './mockDelay';
 import { updateSessionUser } from './authService';
 import { syncBankFromSellerApplication } from './bankAccountService';
 
+export { getApiErrorMessage };
+
 const applicationKey = (userId) => `mockSellerApplication_${userId}`;
 
+const SELLER_TYPE_MAP = {
+  individual: 'Individual',
+  business: 'Business',
+};
+
+const normalizeStatus = (status) => String(status ?? 'PENDING').toUpperCase();
+
+const mapFormToRegisterPayload = (form) => ({
+  sellerType: SELLER_TYPE_MAP[form.businessType] ?? form.sellerType ?? 'Individual',
+  businessName: form.shopName ?? form.businessName ?? '',
+  taxCode: form.taxCode ?? '',
+  businessLicenseUrl: form.businessLicense ?? form.businessLicenseUrl ?? '',
+  address: form.pickupAddress ?? form.address ?? '',
+  bankAccountNumber: form.accountNumber ?? form.bankAccountNumber ?? '',
+  bankName: form.bankName ?? '',
+  bankAccountHolder: form.accountHolder ?? form.bankAccountHolder ?? '',
+});
+
+const buildTimeline = (status, submittedAt) => {
+  const submitted = submittedAt ?? new Date().toISOString();
+  const normalized = normalizeStatus(status);
+
+  if (normalized === 'REJECTED') {
+    return [
+      { step: 'Submitted', status: 'completed', date: submitted },
+      { step: 'Under Review', status: 'completed', date: null },
+      { step: 'Rejected', status: 'completed', date: null },
+    ];
+  }
+
+  if (normalized === 'APPROVED') {
+    return [
+      { step: 'Submitted', status: 'completed', date: submitted },
+      { step: 'Under Review', status: 'completed', date: null },
+      { step: 'Approved', status: 'completed', date: null },
+    ];
+  }
+
+  return [
+    { step: 'Submitted', status: 'completed', date: submitted },
+    { step: 'Under Review', status: 'current', date: null },
+    { step: 'Decision', status: 'pending', date: null },
+  ];
+};
+
+const mapSellerResponseToApplication = (seller, userId, formData = {}) => {
+  const raw = unwrapData(seller) ?? seller;
+  const status = normalizeStatus(raw?.status);
+
+  return {
+    applicationId: raw?.id ?? `SA-${Date.now()}`,
+    sellerId: raw?.id,
+    userId,
+    status,
+    submittedAt: raw?.submittedAt ?? new Date().toISOString(),
+    rejectReason: raw?.rejectReason,
+    rejectionReason: raw?.rejectReason,
+    ...formData,
+    businessName: raw?.businessName ?? formData.shopName,
+    shopName: raw?.businessName ?? formData.shopName,
+    taxCode: raw?.taxCode ?? formData.taxCode,
+    businessLicense: raw?.businessLicenseUrl ?? formData.businessLicense,
+    pickupAddress: raw?.address ?? formData.pickupAddress,
+    timeline: buildTimeline(status, raw?.submittedAt),
+    _raw: raw,
+  };
+};
+
+export const registerSeller = async (payload) => {
+  const { data } = await api.post('/sellers/register', payload);
+  return unwrapData(data);
+};
+
 export const getSellerApplication = async (userId) => {
-  await mockDelay();
   const raw = localStorage.getItem(applicationKey(userId));
   if (!raw) return null;
   try {
@@ -16,31 +92,18 @@ export const getSellerApplication = async (userId) => {
 };
 
 export const submitSellerApplication = async (userId, applicationData) => {
-  await mockDelay(1000);
-
-  const application = {
-    applicationId: `SA-${Date.now()}`,
-    userId,
-    status: 'PENDING',
-    submittedAt: new Date().toISOString(),
-    ...applicationData,
-    timeline: [
-      { step: 'Submitted', status: 'completed', date: new Date().toISOString() },
-      { step: 'Under Review', status: 'current', date: null },
-      { step: 'Decision', status: 'pending', date: null },
-    ],
-  };
+  const payload = mapFormToRegisterPayload(applicationData);
+  const seller = await registerSeller(payload);
+  const application = mapSellerResponseToApplication(seller, userId, applicationData);
 
   localStorage.setItem(applicationKey(userId), JSON.stringify(application));
-  updateSessionUser({ sellerStatus: 'PENDING' });
-
+  updateSessionUser({ sellerStatus: normalizeStatus(seller?.status ?? application.status) });
   await syncBankFromSellerApplication(userId, application);
 
   return application;
 };
 
 export const resubmitSellerApplication = async (userId, applicationData) => {
-  await mockDelay(1000);
   return submitSellerApplication(userId, applicationData);
 };
 

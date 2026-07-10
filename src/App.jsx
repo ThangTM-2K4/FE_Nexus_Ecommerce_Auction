@@ -232,6 +232,15 @@ function App() {
       element={<SellerHubRoutes />}
     />
 
+    <Route
+      path="/admin/*"
+      element={
+        <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
+          <AdminRoutes />
+        </ProtectedRoute>
+      }
+    />
+
       {/* Staff Hub — connect to the real API
       <Route
         path="/staff"

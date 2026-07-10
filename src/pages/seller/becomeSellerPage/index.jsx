@@ -121,8 +121,8 @@ export default function BecomeSellerPage() {
       setForm(initialForm);
       toast.success("Đã gửi đơn đăng ký người bán");
       navigate("/profile/become-seller");
-    } catch {
-      toast.error("Gửi đơn thất bại");
+    } catch (error) {
+      toast.error(sellerService.getApiErrorMessage(error, "Gửi đơn thất bại"));
     } finally {
       setSubmitting(false);
     }
@@ -139,31 +139,11 @@ export default function BecomeSellerPage() {
       setForm(initialForm);
       setStep(0);
       toast.success("Đã nộp lại đơn đăng ký");
-    } catch {
-      toast.error("Nộp lại thất bại");
+    } catch (error) {
+      toast.error(sellerService.getApiErrorMessage(error, "Nộp lại thất bại"));
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleSimulateApprove = async () => {
-    await sellerService.simulateAdminApproval(user.id);
-    refreshUser();
-    const app = await sellerService.getSellerApplication(user.id);
-    setApplication(app);
-    toast.success("Admin đã phê duyệt (giả lập)");
-  };
-
-  const handleSimulateReject = async () => {
-    await sellerService.simulateAdminRejection(
-      user.id,
-      "Tài liệu CMND không rõ nét",
-      "Vui lòng chụp lại ảnh CMND/CCCD đủ ánh sáng và không bị che khuất."
-    );
-    refreshUser();
-    const app = await sellerService.getSellerApplication(user.id);
-    setApplication(app);
-    toast.info("Admin đã từ chối (giả lập)");
   };
 
   if (loading) {
@@ -230,11 +210,6 @@ export default function BecomeSellerPage() {
                   </div>
                 </div>
               ))}
-            </div>
-            <div className="seller-admin-sim">
-              <p><em>Mock Admin Review:</em></p>
-              <button type="button" onClick={handleSimulateApprove}>Phê duyệt (giả lập)</button>
-              <button type="button" className="reject" onClick={handleSimulateReject}>Từ chối (giả lập)</button>
             </div>
           </div>
         </main>

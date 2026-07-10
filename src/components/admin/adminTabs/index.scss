@@ -20,9 +20,11 @@
     font-size: 13px;
     color: $color-text-muted;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
     transition: color 0.25s ease, background 0.25s ease, transform 0.2s ease;
 
     &:hover {
@@ -54,11 +56,18 @@
 
   &__count {
     font-size: 11px;
-    padding: 1px 7px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
     border-radius: 10px;
     background: rgba($color-primary, 0.1);
     color: $color-primary;
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
     transition: background 0.25s ease;
   }
 

@@ -1,4 +1,5 @@
 import AdminStatusBadge from "../adminStatusBadge";
+import { formatDateTime } from "../../../utils/apiDisplay";
 import "./index.scss";
 
 const initials = (name) =>
@@ -14,33 +15,41 @@ export const UserCard = ({ user, type = "customer", onDetail, onAction, actions 
     <div className="adm-user-card__avatar">{initials(user.name || user.owner)}</div>
     <div className="adm-user-card__body">
       <div className="adm-user-card__head">
-        <div>
-          <h3>{user.name}</h3>
-          {type === "seller" && <p className="adm-user-card__sub">{user.owner}</p>}
-          {type === "customer" && <p className="adm-user-card__sub">{user.email}</p>}
+        <div className="adm-user-card__title">
+          <h3 title={user.name}>{user.name}</h3>
+          {type === "seller" && user.subtitle && (
+            <p className="adm-user-card__sub" title={user.subtitle}>{user.subtitle}</p>
+          )}
+          {type === "customer" && (
+            <p className="adm-user-card__sub" title={user.email}>{user.email}</p>
+          )}
+          {type === "admin" && (
+            <p className="adm-user-card__sub">{user.roleLabel ?? "Quản trị viên"}</p>
+          )}
         </div>
         <AdminStatusBadge status={user.status} />
       </div>
       <dl className="adm-user-card__meta">
         {type === "customer" ? (
           <>
-            <div><dt>SĐT</dt><dd>{user.phone}</dd></div>
-            <div><dt>Đơn hàng</dt><dd>{user.orders}</dd></div>
-            <div><dt>Đấu giá</dt><dd>{user.auctions}</dd></div>
+            <div><dt>SĐT</dt><dd title={user.phone}>{user.phone}</dd></div>
+            <div><dt>CCCD</dt><dd title={user.identityNumber}>{user.identityNumber}</dd></div>
+            <div><dt>Giới tính</dt><dd>{user.gender}</dd></div>
+          </>
+        ) : type === "admin" ? (
+          <>
+            <div><dt>SĐT</dt><dd title={user.phone}>{user.phone}</dd></div>
+            <div className="adm-user-card__meta-wide"><dt>Email</dt><dd title={user.email}>{user.email}</dd></div>
+            <div><dt>Trạng thái</dt><dd>{user.status}</dd></div>
           </>
         ) : (
           <>
-            <div><dt>Sản phẩm</dt><dd>{user.products}</dd></div>
-            <div><dt>Doanh thu</dt><dd>{user.revenue}</dd></div>
-            <div><dt>Đánh giá</dt><dd>★ {user.rating || "—"}</dd></div>
+            <div><dt>Loại</dt><dd>{user.sellerTypeLabel ?? user.sellerType ?? "—"}</dd></div>
+            <div><dt>Nộp hồ sơ</dt><dd>{formatDateTime(user.submittedAt)}</dd></div>
+            <div className="adm-user-card__meta-wide"><dt>Địa chỉ</dt><dd title={user.address}>{user.address ?? "—"}</dd></div>
           </>
         )}
       </dl>
-      {type === "seller" && user.auctionEnabled != null && (
-        <span className={`adm-user-card__tag ${user.auctionEnabled ? "on" : ""}`}>
-          {user.auctionEnabled ? "Có quyền đấu giá" : "Chưa cấp đấu giá"}
-        </span>
-      )}
     </div>
     <footer className="adm-user-card__footer">
       {actions.map((a) => (

@@ -182,7 +182,75 @@
         border: 1px solid $color-border-light;
         color: $color-text-muted;
       }
+
+      &.save.danger {
+        background: $color-danger;
+        color: #fff;
+
+        &:hover {
+          background: darken($color-danger, 6%);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
     }
+  }
+
+  &__warning {
+    margin: 0;
+    font-size: 13px;
+    color: $color-danger;
+  }
+
+  &--inline {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+}
+
+.adm-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.adm-sensitive-panel {
+  padding: 14px;
+  border: 1px dashed $color-border-light;
+  border-radius: $radius-md;
+  background: rgba($color-primary, 0.03);
+
+  &__toggle {
+    padding: 8px 14px;
+    border: 1px solid rgba($color-primary, 0.25);
+    border-radius: $radius-sm;
+    background: $color-bg-card;
+    color: $color-primary-dark;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba($color-primary, 0.08);
+    }
+  }
+
+  &__content {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__masked {
+    margin: 10px 0 0;
+    font-size: 12px;
+    color: $color-text-muted;
   }
 }
 
@@ -232,6 +300,40 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+
+  &__empty {
+    padding: 28px 16px;
+    text-align: center;
+    color: $color-text-muted;
+    font-size: 14px;
+  }
+
+  &__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 14px;
+
+    button {
+      padding: 7px 14px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: $color-bg-card;
+      color: $color-text-secondary;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    span {
+      font-size: 13px;
+      color: $color-text-muted;
+    }
+  }
 }
 
 .adm-top-list {
