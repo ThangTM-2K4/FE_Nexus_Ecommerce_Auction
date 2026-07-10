@@ -268,6 +268,8 @@ function App() {
       <Route path="notifications" element={<StaffNotifications />} />
     </Route>
 
+    <Route path="/admin/*" element={<AdminRoutes />} />
+
     </Routes>
   );
 }
