@@ -39,26 +39,14 @@ import StaffSellerReview from "./pages/staff/staffSellerReview";
 import StaffProductReview from "./pages/staff/staffProductReview";
 import StaffAuctionModeration from "./pages/staff/staffAuctionModeration";
 import StaffDisputes from "./pages/staff/staffDisputes";
-import StaffProfile from "./pages/staff/staffProfile";
-import StaffSellers from "./pages/staff/staffSellers";
-import StaffUsers from "./pages/staff/staffUsers";
-import StaffRoles from "./pages/staff/staffRoles";
-import StaffProducts from "./pages/staff/staffProducts";
-import StaffCategories from "./pages/staff/staffCategories";
-import StaffAuctionsLookup from "./pages/staff/staffAuctionsLookup";
-import StaffShipping from "./pages/staff/staffShipping";
-import StaffEventLog from "./pages/staff/staffEventLog";
-import StaffActivity from "./pages/staff/staffActivity";
-import StaffOrders from "./pages/staff/staffOrders";
-import StaffReports from "./pages/staff/staffReports";
-import StaffNotifications from "./pages/staff/staffNotifications";
+import {
+  StaffOrders,
+  StaffReports,
+  StaffNotifications,
+} from "./pages/staff/staffPlaceholder";
 
+import AuctionLayout from "./components/auction/auctionLayout";
 import AuctionBrowsePage from "./pages/auction/auctionBrowsePage";
-import AuctionDetailPage from "./pages/auction/auctionDetailPage";
-import AuctionProfilePage from "./pages/auction/auctionProfilePage";
-import AuctionSellerPage from "./pages/auction/auctionSellerPage";
-import AuctionMyBidsPage from "./pages/auction/auctionMyBidsPage";
-import AuctionCreatePage from "./pages/auction/auctionCreatePage";
 
 import ProtectedRoute from "./config/ProtectedRoute";
 import SellerRoute from "./config/SellerRoute";
@@ -216,15 +204,13 @@ function App() {
       }
     />
 
-    {/* Auction */}
-    <Route path="/auction/browse" element={<AuctionBrowsePage />} />
-    <Route path="/auction/detail/:id" element={<AuctionDetailPage />} />
-    <Route path="/auction/profile" element={<AuctionProfilePage />} />
-    <Route path="/auction/my-bids" element={<AuctionMyBidsPage />} />
-    <Route path="/auction/seller" element={<AuctionSellerPage />} />
-    <Route path="/auction/create" element={<AuctionCreatePage />} />
+      </Route>
 
-  </Route>
+      {/* Auction zone — separate header/footer layout */}
+      <Route path="/auction" element={<AuctionLayout />}>
+        <Route index element={<AuctionBrowsePage />} />
+        <Route path="browse" element={<AuctionBrowsePage />} />
+      </Route>
 
   {/* Seller */}
   <Route

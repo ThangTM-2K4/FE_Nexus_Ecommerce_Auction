@@ -1,271 +1,223 @@
-@use "../../../styles/_auction-variables" as *;
+@use "../../../styles/auction/variables" as *;
 
-.auc-header {
-  background: linear-gradient(90deg, $color-primary-dark 0%, $color-primary 100%);
-  border-bottom: 1px solid rgba($color-accent, 0.15);
+.auction-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  color: #fff;
+  background: $obsidian;
+  border-bottom: 1px solid $auction-border-subtle;
+  box-shadow: none;
+}
 
-  &__inner {
-    max-width: min(1440px, calc(100% - 48px));
-    margin: 0 auto;
-    padding: 0;
-    height: 72px;
-    display: flex;
-    align-items: center;
-    gap: 32px;
+.auction-header__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: $header-height;
+
+  @media (min-width: $breakpoint-tablet) {
+    padding: 0.75rem 1.5rem;
+    gap: 1.5rem;
+  }
+}
+
+.auction-header__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: $bone;
+  flex-shrink: 0;
+
+  img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba($royal-purple, 0.55);
   }
 
-  &__left {
-    display: flex;
-    align-items: center;
-    gap: 40px;
-    flex-shrink: 0;
+  strong {
+    display: none;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+
+    span {
+      color: $gold-bright;
+    }
+
+    @media (min-width: $breakpoint-tablet) {
+      display: block;
+    }
+  }
+}
+
+.auction-header__search {
+  flex: 1;
+  max-width: 420px;
+  display: none;
+  position: relative;
+
+  @media (min-width: $breakpoint-tablet) {
+    display: block;
   }
 
-  &__brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
+  input {
+    width: 100%;
+    height: 42px;
+    padding: 0 1rem 0 2.5rem;
+    border: 1px solid $auction-border;
+    border-radius: $radius-pill;
+    background: rgba($midnight-violet, 0.85);
+    color: $bone;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+
+    &::placeholder {
+      color: rgba($mist-lavender, 0.75);
+    }
+
+    &:focus {
+      border-color: rgba($royal-purple, 0.55);
+      background: $midnight-violet;
+    }
+  }
+
+  svg {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $mist-lavender;
+    pointer-events: none;
+  }
+}
+
+.auction-header__nav {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+
+  @media (min-width: $breakpoint-desktop) {
+    display: flex;
+  }
+
+  a {
+    padding: 0.45rem 0.75rem;
+    border-radius: $radius-pill;
+    color: $mist-lavender;
     text-decoration: none;
-    color: #fff;
-    flex-shrink: 0;
-    transition: opacity 0.2s $ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: color 0.2s, background 0.2s;
 
+    &:hover,
+    &.is-active {
+      color: $gold-bright;
+      background: rgba($royal-purple, 0.28);
+    }
+  }
+}
+
+.auction-header__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auction-header__home-link {
+  padding: 0.45rem 0.85rem;
+  border-radius: $radius-pill;
+  border: 1px solid rgba($antique-gold, 0.45);
+  background: transparent;
+  color: $antique-gold;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+
+  &:hover {
+    background: rgba($royal-purple, 0.25);
+    border-color: $gold-bright;
+    color: $gold-bright;
+  }
+}
+
+.auction-header__menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid $auction-border;
+  border-radius: $radius-md;
+  background: rgba($midnight-violet, 0.85);
+  color: $bone;
+  cursor: pointer;
+
+  @media (min-width: $breakpoint-desktop) {
+    display: none;
+  }
+}
+
+.auction-header__mobile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid $auction-border-subtle;
+  background: $midnight-violet;
+
+  @media (min-width: $breakpoint-desktop) {
+    display: none;
+  }
+
+  a {
+    padding: 0.65rem 0.75rem;
+    border-radius: $radius-md;
+    color: $mist-lavender;
+    text-decoration: none;
+    font-size: 0.9rem;
+
+    &.is-active,
     &:hover {
-      opacity: 0.85;
-    }
-
-    &-mark {
-      width: 44px;
-      height: 44px;
-      border-radius: $radius-md;
-      overflow: hidden;
-      flex-shrink: 0;
-      box-shadow: 0 4px 14px rgba($color-accent-mid, 0.3);
-      border: 2px solid rgba($color-accent-mid, 0.4);
-      background: #fff;
-
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        display: block;
-      }
-    }
-
-    &-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.2;
-
-      strong {
-        font-size: 1.1rem;
-        font-weight: 800;
-        letter-spacing: -0.4px;
-        color: #fff;
-      }
-
-      small {
-        font-size: 0.65rem;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.7);
-        margin-top: 1px;
-      }
-    }
-
-    &-accent {
-      background: linear-gradient(135deg, $color-accent-mid, $color-accent);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: $gold-bright;
+      background: rgba($royal-purple, 0.28);
     }
   }
 
-  &__tabs {
-    display: flex;
-    gap: 4px;
-
-    button {
-      background: none;
-      border: none;
-      padding: 8px 16px;
-      font-size: 14px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.7);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s $ease;
-
-      &.active {
-        color: #fff;
-        border-bottom-color: $color-accent;
-        font-weight: 600;
-      }
-
-      &:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.08);
-      }
-    }
-  }
-
-  &__search {
-    flex: 1;
-    max-width: 480px;
+  .auction-header__mobile-search {
+    margin-bottom: 0.5rem;
     position: relative;
-
-    svg {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255, 255, 255, 0.4);
-      font-size: 14px;
-    }
 
     input {
       width: 100%;
       height: 40px;
-      padding: 0 16px 0 40px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: $radius-md;
-      font-size: 14px;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      transition: all 0.2s $ease;
+      padding: 0 1rem 0 2.35rem;
+      border: 1px solid $auction-border;
+      border-radius: $radius-pill;
+      background: rgba($obsidian, 0.65);
+      color: $bone;
+      font-size: 0.875rem;
+      outline: none;
 
       &::placeholder {
-        color: rgba(255, 255, 255, 0.4);
-      }
-
-      &:focus {
-        outline: none;
-        border-color: $color-accent;
-        background: rgba(255, 255, 255, 0.12);
-        box-shadow: 0 0 0 3px rgba($color-accent, 0.2);
+        color: rgba($mist-lavender, 0.75);
       }
     }
-  }
 
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-    &__home {
-    font-size: 13px;
-    font-weight: 600;
-    color: #fff;
-    text-decoration: none;
-    padding: 8px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: $radius-md;
-    background: rgba(255, 255, 255, 0.08);
-    transition: all 0.2s $ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.4);
+    svg {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $mist-lavender;
     }
-  }
-
-  &__bell {
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.8);
-    transition: all 0.2s $ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.15);
-      color: #fff;
-    }
-  }
-
-  &__auth {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  &__login {
-    font-size: 13px;
-    font-weight: 600;
-    color: $color-primary;
-    text-decoration: none;
-    padding: 8px 12px;
-
-    &:hover {
-      color: $color-primary-dark;
-    }
-  }
-
-  &__register {
-    font-size: 13px;
-    font-weight: 600;
-    color: #fff;
-    text-decoration: none;
-    padding: 8px 14px;
-    border-radius: $radius-md;
-    background: linear-gradient(135deg, $color-primary, $color-gradient-dark);
-
-    &:hover {
-      opacity: 0.92;
-    }
-  }
-
-  &__profile-wrap {
-    position: relative;
-  }
-
-  &__avatar {
-    width: 40px;
-    height: 40px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    padding: 0;
-    overflow: visible;
-    cursor: pointer;
-    background: linear-gradient(135deg, $color-accent, $color-accent-mid);
-    position: relative;
-    transition: all 0.2s $ease;
-
-    &:hover {
-      border-color: #fff;
-      transform: scale(1.05);
-    }
-
-    &-initials {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      color: $color-primary-dark;
-      border-radius: 50%;
-    }
-  }
-
-  &__seller-dot {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: $color-success;
-    border: 2px solid $color-primary;
   }
 }
