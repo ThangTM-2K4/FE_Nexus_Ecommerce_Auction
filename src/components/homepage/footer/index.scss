@@ -82,9 +82,9 @@
 }
 
 .footer-logo-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: $radius-md;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
   border: 2px solid rgba($sky, 0.45);
@@ -95,7 +95,7 @@
 .footer-logo-image {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
 

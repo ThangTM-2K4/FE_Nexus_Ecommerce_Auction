@@ -15,19 +15,17 @@ export default function Footer() {
 
       <div className="footer-shell footer-container">
         <section className="footer-brand" aria-labelledby="footer-brand-heading">
-          <Link to="/" className="footer-logo" aria-label="Shop Auction — Trang chủ">
+          <Link to="/" className="footer-logo" aria-label="BidDoubleTk — Trang chủ">
             <span className="footer-logo-mark">
               <img
                 className="footer-logo-image"
                 src="/images/logo/logo.png"
-                alt="Shop Auction"
+                alt="BidDoubleTk"
               />
             </span>
             <span className="footer-logo-text">
-              <strong>
-                Shop <span className="footer-logo-accent">Auction</span>
-              </strong>
-              <small>Đấu giá thông minh</small>
+              <strong>BidDoubleTk</strong>
+              <small>Thương Mại - Đấu Giá</small>
             </span>
           </Link>
 
@@ -82,7 +80,7 @@ export default function Footer() {
 
       <div className="footer-bottom">
         <div className="footer-shell footer-bottom-shell">
-          <span>© 2026 Shop Auction. Tất cả quyền được bảo lưu.</span>
+          <span>© 2026 BidDoubleTk. Tất cả quyền được bảo lưu.</span>
           <span className="footer-regions">
             <a href="#vietnam">Việt Nam</a>
             <a href="#singapore">Singapore</a>

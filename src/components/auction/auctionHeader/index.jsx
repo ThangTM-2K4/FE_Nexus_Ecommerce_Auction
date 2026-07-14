@@ -1,127 +1,107 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaBell, FaSearch } from "react-icons/fa";
-import { useAuth } from "../../../context/AuthContext";
-import ProfileDropdown from "../../homepage/header/ProfileDropdown";
-import "./index.scss";
+import { useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { FiMenu, FiSearch, FiX } from 'react-icons/fi';
+import './index.scss';
 
-const AuctionHeader = ({ activeTab = "buying" }) => {
+const NAV_ITEMS = [
+  { to: '/auction', label: 'Đấu giá', end: true },
+  { to: '/auction#categories', label: 'Danh mục' },
+  { to: '/auction#locations', label: 'Địa điểm' },
+  { to: '/auction#how-it-works', label: 'Cách thức hoạt động' },
+];
+
+export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
   const navigate = useNavigate();
-  const {
-    isAuthenticated,
-    user,
-    isApprovedSeller,
-    isSellerMode,
-    isBuyerMode,
-    switchAccountMode,
-  } = useAuth();
-  const [showProfile, setShowProfile] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [localQuery, setLocalQuery] = useState(searchQuery);
 
-  const initials = user?.fullName
-    ? user.fullName
-        .split(" ")
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "?";
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    onSearchChange?.(localQuery.trim());
+    navigate('/auction');
+    setMobileOpen(false);
+  };
 
-  const handleTabClick = async (tab) => {
-    if (tab === "buying") {
-      if (isAuthenticated && isSellerMode) {
-        try {
-          await switchAccountMode("BUYER");
-        } catch {
-          /* ignore */
-        }
-      }
-      navigate("/auction/browse");
-      return;
-    }
+  const handleInputChange = (event) => {
+    setLocalQuery(event.target.value);
+    onSearchChange?.(event.target.value);
   };
 
   return (
-    <header className="auc-header">
-      <div className="auc-header__inner">
-        <div className="auc-header__left">
-          <Link to="/auction/browse" className="auc-header__brand">
-            <span className="auc-header__brand-mark">
-              <img
-                src="/images/logo/logo.png"
-                alt="Shop Auction"
-              />
-            </span>
-            <span className="auc-header__brand-text">
-              <strong>
-                Shop <span className="auc-header__brand-accent">Auction</span>
-              </strong>
-              <small>Đấu giá thông minh</small>
-            </span>
-          </Link>
-          <nav className="auc-header__tabs">
-            {(!isAuthenticated || isBuyerMode || !isApprovedSeller) && (
-              <button
-                type="button"
-                className={activeTab === "buying" ? "active" : ""}
-                onClick={() => handleTabClick("buying")}
-              >
-                Buying
-              </button>
-            )}
-          </nav>
-        </div>
+    <header className="auction-header">
+      <div className="auction-header__inner">
+        <Link to="/auction" className="auction-header__logo" aria-label="BidDoubleTK — Khu đấu giá">
+          <img src="/images/logo/logo.png" alt="BidDoubleTK" />
+          <strong>
+            Bid<span>DoubleTK</span>
+          </strong>
+        </Link>
 
-        <div className="auc-header__search">
-          <FaSearch />
-          <input type="text" placeholder="Tìm kiếm phiên đấu giá..." />
-        </div>
+        <form className="auction-header__search" onSubmit={handleSearchSubmit} role="search">
+          <FiSearch size={16} aria-hidden />
+          <input
+            type="search"
+            placeholder="Tìm phiên đấu giá, sản phẩm..."
+            value={localQuery}
+            onChange={handleInputChange}
+            aria-label="Tìm kiếm đấu giá"
+          />
+        </form>
 
-        <div className="auc-header__actions">
-          <Link to="/" className="auc-header__home">
-            Trang chính
+        <nav className="auction-header__nav" aria-label="Điều hướng đấu giá">
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.label}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => (isActive ? 'is-active' : undefined)}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="auction-header__actions">
+          <Link to="/" className="auction-header__home-link">
+            Về cửa hàng
           </Link>
-          <button type="button" className="auc-header__bell">
-            <FaBell />
+          <button
+            type="button"
+            className="auction-header__menu-btn"
+            aria-label={mobileOpen ? 'Đóng menu' : 'Mở menu'}
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((open) => !open)}
+          >
+            {mobileOpen ? <FiX size={20} /> : <FiMenu size={20} />}
           </button>
-
-          {!isAuthenticated ? (
-            <div className="auc-header__auth">
-              <Link to="/login" className="auc-header__login">
-                Đăng nhập
-              </Link>
-              <Link to="/register" className="auc-header__register">
-                Đăng ký
-              </Link>
-            </div>
-          ) : (
-            <div className="auc-header__profile-wrap">
-              <button
-                type="button"
-                className="auc-header__avatar"
-                aria-label="Menu tài khoản"
-                onClick={() => setShowProfile((v) => !v)}
-              >
-                <span className="auc-header__avatar-initials">{initials}</span>
-                {isApprovedSeller && (
-                  <span
-                    className="auc-header__seller-dot"
-                    title="Người bán đã xác minh"
-                  />
-                )}
-              </button>
-              {showProfile && (
-                <ProfileDropdown
-                  onClose={() => setShowProfile(false)}
-                />
-              )}
-            </div>
-          )}
         </div>
       </div>
+
+      {mobileOpen && (
+        <nav className="auction-header__mobile-nav" aria-label="Menu đấu giá di động">
+          <form className="auction-header__mobile-search" onSubmit={handleSearchSubmit}>
+            <FiSearch size={15} aria-hidden />
+            <input
+              type="search"
+              placeholder="Tìm kiếm..."
+              value={localQuery}
+              onChange={handleInputChange}
+              aria-label="Tìm kiếm đấu giá"
+            />
+          </form>
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.label}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => (isActive ? 'is-active' : undefined)}
+              onClick={() => setMobileOpen(false)}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
     </header>
   );
-};
-
-
-export default AuctionHeader;
-
+}

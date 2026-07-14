@@ -6,7 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { useProductNavigate } from '@/hooks/useProductNavigate';
 import Button from '@/components/common/button';
 import VariantSelector, { getVariantPriceLabel } from '../VariantSelector';
-import QuantitySelector from '../QuantitySelector';
+import QuantitySelector from '../quantitySelector';
 import './index.scss';
 
 /** Cột phải: tên, giá, vận chuyển, variant, số lượng, nút mua */

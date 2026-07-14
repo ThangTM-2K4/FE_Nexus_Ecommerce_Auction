@@ -1,0 +1,36 @@
+@use "../../../styles/auction/variables" as *;
+
+.auction-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $mist-lavender;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &--urgent {
+    color: $ember-hot;
+    animation: auction-countdown-pulse 2.4s ease-in-out infinite;
+  }
+
+  &--ended {
+    color: $mist-lavender;
+    font-weight: 500;
+    opacity: 0.75;
+  }
+}
+
+@keyframes auction-countdown-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.62;
+  }
+}

@@ -34,13 +34,8 @@ export default function HomePage() {
             autoPlayInterval={3000}
           />
 
-          {/* 2. Danh mục — grid 10x2, chuyển trang bằng nút › */}
-          <CategoryGrid
-            categories={mockCategories}
-            title="DANH MỤC"
-            itemsPerPage={20}
-            columns={10}
-          />
+          {/* 2. Danh mục — 10×2 (desktop), 2 trang cho 40 danh mục */}
+          <CategoryGrid categories={mockCategories} title="DANH MỤC NỔI BẬT" />
 
           {/* 3. Sản phẩm gợi ý — 6 cột, load more / đăng nhập */}
           <ProductGrid

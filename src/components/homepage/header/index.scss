@@ -116,9 +116,9 @@
 }
 
 .header-brand-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: $radius-md;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
   box-shadow: 0 4px 14px $teal-glow;
@@ -129,7 +129,7 @@
 .header-brand-image {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
 
@@ -600,8 +600,8 @@
   }
 
   .header-brand-mark {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
   }
 
   .header-main-tools {
