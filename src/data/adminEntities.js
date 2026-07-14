@@ -55,13 +55,79 @@ export const mockAuctions = [
 ];
 
 export const mockCategories = [
-  { id: "DM-01", name: "Điện thoại", parent: "—", sortOrder: 1, status: "Hoạt động", productCount: 3240 },
-  { id: "DM-02", name: "Laptop", parent: "—", sortOrder: 2, status: "Hoạt động", productCount: 1890 },
-  { id: "DM-03", name: "Đồng hồ", parent: "—", sortOrder: 3, status: "Hoạt động", productCount: 856 },
-  { id: "DM-04", name: "Smartphone", parent: "Điện thoại", sortOrder: 1, status: "Hoạt động", productCount: 2100 },
-  { id: "DM-05", name: "Phụ kiện", parent: "Điện thoại", sortOrder: 2, status: "Tắt", productCount: 1140 },
-  { id: "DM-06", name: "Thời trang", parent: "—", sortOrder: 4, status: "Hoạt động", productCount: 4520 },
+  {
+    id: 'cat-1', name: 'Thiết Bị Công Nghệ', icon: '💻', status: 'Hoạt động', productCount: 320,
+    children: [
+      { id: 'cat-1-1', name: 'Điện Thoại',        status: 'Hoạt động', productCount: 120 },
+      { id: 'cat-1-2', name: 'Laptop',             status: 'Hoạt động', productCount: 85  },
+      { id: 'cat-1-3', name: 'Máy Tính Bảng',      status: 'Hoạt động', productCount: 42  },
+      { id: 'cat-1-4', name: 'Màn Hình',           status: 'Hoạt động', productCount: 28  },
+      { id: 'cat-1-5', name: 'Phụ Kiện Máy Tính',  status: 'Tắt',       productCount: 45  },
+    ],
+  },
+  {
+    id: 'cat-2', name: 'Điện Tử & Gia Dụng', icon: '🏠', status: 'Hoạt động', productCount: 210,
+    children: [
+      { id: 'cat-2-1', name: 'Tivi',               status: 'Hoạt động', productCount: 55  },
+      { id: 'cat-2-2', name: 'Máy Lạnh',           status: 'Hoạt động', productCount: 38  },
+      { id: 'cat-2-3', name: 'Tủ Lạnh',            status: 'Hoạt động', productCount: 30  },
+      { id: 'cat-2-4', name: 'Máy Giặt',           status: 'Hoạt động', productCount: 27  },
+      { id: 'cat-2-5', name: 'Thiết Bị Nhà Bếp',   status: 'Hoạt động', productCount: 60  },
+    ],
+  },
+  {
+    id: 'cat-3', name: 'Âm Thanh & Hình Ảnh', icon: '🎵', status: 'Hoạt động', productCount: 145,
+    children: [
+      { id: 'cat-3-1', name: 'Tai Nghe',           status: 'Hoạt động', productCount: 65  },
+      { id: 'cat-3-2', name: 'Loa',                status: 'Hoạt động', productCount: 40  },
+      { id: 'cat-3-3', name: 'Máy Ảnh',            status: 'Hoạt động', productCount: 25  },
+      { id: 'cat-3-4', name: 'Thiết Bị Quay Phim', status: 'Tắt',       productCount: 15  },
+    ],
+  },
+  {
+    id: 'cat-4', name: 'Thời Trang', icon: '👗', status: 'Hoạt động', productCount: 480,
+    children: [
+      { id: 'cat-4-1', name: 'Thời Trang Nam',     status: 'Hoạt động', productCount: 180 },
+      { id: 'cat-4-2', name: 'Thời Trang Nữ',      status: 'Hoạt động', productCount: 200 },
+      { id: 'cat-4-3', name: 'Thời Trang Trẻ Em',  status: 'Hoạt động', productCount: 60  },
+      { id: 'cat-4-4', name: 'Giày Dép',           status: 'Hoạt động', productCount: 40  },
+    ],
+  },
+  {
+    id: 'cat-5', name: 'Phụ Kiện & Trang Sức', icon: '💍', status: 'Hoạt động', productCount: 190,
+    children: [
+      { id: 'cat-5-1', name: 'Đồng Hồ',           status: 'Hoạt động', productCount: 75  },
+      { id: 'cat-5-2', name: 'Trang Sức',          status: 'Hoạt động', productCount: 55  },
+      { id: 'cat-5-3', name: 'Balo & Túi Xách',   status: 'Hoạt động', productCount: 60  },
+    ],
+  },
+  {
+    id: 'cat-6', name: 'Thể Thao & Ngoài Trời', icon: '⚽', status: 'Hoạt động', productCount: 130,
+    children: [
+      { id: 'cat-6-1', name: 'Dụng Cụ Thể Thao',  status: 'Hoạt động', productCount: 70  },
+      { id: 'cat-6-2', name: 'Quần Áo Thể Thao',  status: 'Hoạt động', productCount: 45  },
+      { id: 'cat-6-3', name: 'Camping & Dã Ngoại', status: 'Tắt',       productCount: 15  },
+    ],
+  },
+  {
+    id: 'cat-7', name: 'Sức Khỏe & Làm Đẹp', icon: '💄', status: 'Hoạt động', productCount: 275,
+    children: [
+      { id: 'cat-7-1', name: 'Mỹ Phẩm',            status: 'Hoạt động', productCount: 120 },
+      { id: 'cat-7-2', name: 'Chăm Sóc Da',         status: 'Hoạt động', productCount: 85  },
+      { id: 'cat-7-3', name: 'Thiết Bị Làm Đẹp',   status: 'Hoạt động', productCount: 40  },
+      { id: 'cat-7-4', name: 'Thực Phẩm Chức Năng', status: 'Tắt',       productCount: 30  },
+    ],
+  },
+  {
+    id: 'cat-8', name: 'Nhà Cửa & Nội Thất', icon: '🛋️', status: 'Hoạt động', productCount: 165,
+    children: [
+      { id: 'cat-8-1', name: 'Nội Thất',           status: 'Hoạt động', productCount: 80  },
+      { id: 'cat-8-2', name: 'Đồ Trang Trí',       status: 'Hoạt động', productCount: 55  },
+      { id: 'cat-8-3', name: 'Đồ Dùng Nhà Bếp',   status: 'Hoạt động', productCount: 30  },
+    ],
+  },
 ];
+
 
 export const mockBrands = [
   { id: "TH-01", name: "Apple", productCount: 1240, status: "Hoạt động", createdAt: "01/01/2024" },
