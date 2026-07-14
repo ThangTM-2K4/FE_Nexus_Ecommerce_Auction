@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../../context/AuthContext';
 import * as profileService from '../../../services/profileService';
+import { syncProfileToSellerApplication } from '../../../services/sellerService';
 import { readImageAsDataUrl } from '../../../utils/imageUpload';
 import Input from '../../common/input';
 import Button from '../../common/button';
@@ -48,6 +50,8 @@ const STATUS_META = {
 
 export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isApprovedSeller = user?.sellerStatus === 'APPROVED';
   const [form, setForm] = useState({
     cccdFullName: '',
     cccdNumber: '',
@@ -103,19 +107,22 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
 
   const clearImage = (key) => () => setForm((prev) => ({ ...prev, [key]: '' }));
 
-  const handleConfirm = async () => {
+  // Lưu hồ sơ CCCD. goToSellerRegister = true thì lưu xong chuyển sang trang
+  // đăng ký Người bán; false thì chỉ lưu (nhiều người chỉ muốn cập nhật hồ sơ).
+  const handleSave = async (goToSellerRegister = false) => {
     if (!isValid || locked) return;
     setSaving(true);
     try {
       // 1) Lưu thông tin cá nhân (họ tên, số CCCD, địa chỉ, ảnh) + đẩy địa chỉ lên backend.
       // Dữ liệu này được form đăng ký Người bán đọc lại để hiển thị cho staff duyệt.
-      const saved = await profileService.updateCccdInfo(userId, {
+      const cccdData = {
         cccdFullName: form.cccdFullName,
         cccdNumber: form.cccdNumber,
         cccdAddress: form.cccdAddress,
         cccdFrontImageUrl: form.frontImageUrl,
         cccdBackImageUrl: form.backImageUrl,
-      });
+      };
+      const saved = await profileService.updateCccdInfo(userId, cccdData);
 
       // 2) Nộp hồ sơ xác thực CCCD thật (staff duyệt để đủ điều kiện làm seller).
       // Best-effort: nếu backend từ chối ảnh base64 dài, vẫn giữ dữ liệu đã lưu local.
@@ -130,12 +137,22 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
         /* giữ dữ liệu local, không chặn UX */
       }
 
+      // 3) Đã có đơn/hồ sơ seller (đang chờ duyệt hoặc đã là người bán) thì
+      // đồng bộ CCCD mới sang bên seller (Hồ Sơ Shop + trang staff duyệt).
+      const syncedToSeller = syncProfileToSellerApplication(userId, cccdData);
+
       onUpdate(updated);
-      toast.success('Đã lưu thông tin CCCD. Chuyển sang đăng ký Người bán...');
-      // Đẩy sang trang đăng ký seller (CCCD + ảnh sẽ gửi kèm cho staff khi hoàn tất đơn)
-      navigate('/profile/become-seller');
+
+      if (goToSellerRegister) {
+        toast.success('Đã lưu thông tin CCCD. Chuyển sang đăng ký Người bán...');
+        navigate('/profile/become-seller');
+      } else if (syncedToSeller) {
+        toast.success('Đã lưu và đồng bộ sang hồ sơ Người bán');
+      } else {
+        toast.success('Đã lưu thông tin CCCD');
+      }
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Xác nhận thất bại');
+      toast.error(err?.response?.data?.message || 'Lưu hồ sơ thất bại');
     } finally {
       setSaving(false);
     }
@@ -152,6 +169,9 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
       {statusMeta && (
         <div className={`personal-info-cccd__status personal-info-cccd__status--${statusMeta.cls}`}>
           {statusMeta.label}
+          {status === 'REJECTED' && profile?.identityRejectReason && (
+            <> — Lý do: {profile.identityRejectReason}</>
+          )}
         </div>
       )}
 
@@ -205,9 +225,14 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
 
       {!locked && (
         <div className="personal-info-cccd__actions">
-          <Button variant="accent" disabled={!isValid || saving} onClick={handleConfirm}>
-            {saving ? 'Đang xử lý...' : 'Xác Nhận'}
+          <Button variant="outline" disabled={!isValid || saving} onClick={() => handleSave(false)}>
+            {saving ? 'Đang xử lý...' : 'Lưu Hồ Sơ'}
           </Button>
+          {!isApprovedSeller && (
+            <Button variant="accent" disabled={!isValid || saving} onClick={() => handleSave(true)}>
+              {saving ? 'Đang xử lý...' : 'Lưu & Đăng Ký Người Bán'}
+            </Button>
+          )}
         </div>
       )}
     </section>

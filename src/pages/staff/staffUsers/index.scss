@@ -1,0 +1,215 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-users {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+
+  &__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    input {
+      flex: 0 1 300px;
+      padding: 9px 14px;
+      border: 1px solid $color-border;
+      border-radius: 999px;
+      font-size: 13px;
+      background: $color-bg-card;
+      color: $color-text;
+
+      &:focus {
+        outline: none;
+        border-color: $color-accent;
+      }
+    }
+  }
+
+  &__filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    button {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid $color-border;
+      background: $color-bg-card;
+      color: $color-text-muted;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+
+      &.active {
+        background: linear-gradient(135deg, $color-primary, $color-accent-mid);
+        color: #fff;
+        border-color: transparent;
+      }
+    }
+  }
+
+  &__empty {
+    padding: 40px;
+    text-align: center;
+    color: $color-text-muted;
+    background: $color-bg-card;
+    border: 1px dashed $color-border;
+    border-radius: $radius-lg;
+  }
+
+  &__table-wrap {
+    overflow-x: auto;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-sm;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th,
+    td {
+      padding: 13px 14px;
+      text-align: left;
+      border-bottom: 1px solid $color-border-light;
+      vertical-align: middle;
+    }
+
+    th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: $color-text-muted;
+      background: $color-bg;
+      white-space: nowrap;
+    }
+
+    tbody tr:hover {
+      background: rgba($color-accent, 0.04);
+    }
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    strong {
+      display: block;
+      color: $color-primary-dark;
+    }
+
+    small {
+      color: $color-text-muted;
+      font-size: 11px;
+    }
+  }
+
+  &__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $color-primary, $color-accent-mid);
+    color: #fff;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__contact {
+    display: flex;
+    flex-direction: column;
+
+    small {
+      color: $color-text-muted;
+      font-size: 11.5px;
+    }
+  }
+
+  &__role {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+
+    &--buyer { background: rgba($color-accent, 0.14); color: $color-primary; }
+    &--seller { background: rgba($color-accent-mid, 0.18); color: $color-primary-dark; }
+    &--staff { background: rgba($color-warning, 0.16); color: $color-warning; }
+    &--admin { background: rgba($color-danger, 0.12); color: $color-danger; }
+  }
+
+  &__verify {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11.5px;
+
+    .on { color: $color-success; }
+    .off { color: $color-text-muted; }
+  }
+
+  &__status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+
+    &--ok { background: $color-success-bg; color: $color-success; }
+    &--suspended { background: $color-warning-bg; color: $color-warning; }
+    &--banned { background: rgba($color-danger, 0.12); color: $color-danger; }
+  }
+
+  &__ban-reason {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: $color-danger;
+    max-width: 160px;
+  }
+
+  &__view {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid $color-border;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    &:hover { border-color: $color-accent; color: $color-accent; }
+  }
+
+  &__overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+  }
+
+  &__panel {
+    width: min(480px, 100%); background: $color-bg-card; border-radius: 16px; padding: 20px;
+    header { display: flex; justify-content: space-between; margin-bottom: 16px;
+      h3 { margin: 0; }
+      button { border: none; background: transparent; font-size: 18px; cursor: pointer; }
+    }
+    dl { display: grid; grid-template-columns: 120px 1fr; gap: 10px 12px; margin: 0; font-size: 13px;
+      dt { color: $color-text-muted; font-weight: 600; }
+      dd { margin: 0; }
+      small { color: $color-text-muted; }
+    }
+  }
+}

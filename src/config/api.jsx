@@ -8,7 +8,8 @@ const clearAuthStorage = () => {
 };
 
 export const BACKEND_BASE_URL =
-  'https://api-gateway-staging.whitepond-c634a77b.southeastasia.azurecontainerapps.io/api/v1';
+  import.meta.env.VITE_API_BASE_URL ||
+  'http://159.65.8.108:5000/api/v1';
 
 const api = axios.create({
   baseURL: BACKEND_BASE_URL,

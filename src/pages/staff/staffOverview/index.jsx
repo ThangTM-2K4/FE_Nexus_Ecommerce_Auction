@@ -12,6 +12,7 @@ const priorityLabel = {
 
 const typeLabel = {
   seller: "Duyệt seller",
+  identity: "Xác minh CCCD",
   auction: "Đấu giá",
   dispute: "Khiếu nại",
   report: "Báo cáo",
@@ -21,7 +22,7 @@ const StaffOverview = () => {
   const navigate = useNavigate();
 
   const taskRoute = (type) => {
-    if (type === "seller") return "/staff/seller-review";
+    if (type === "seller" || type === "identity") return "/staff/seller-review";
     if (type === "auction") return "/staff/auctions";
     if (type === "dispute") return "/staff/disputes";
     return "/staff/reports";

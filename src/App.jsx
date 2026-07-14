@@ -39,11 +39,19 @@ import StaffSellerReview from "./pages/staff/staffSellerReview";
 import StaffProductReview from "./pages/staff/staffProductReview";
 import StaffAuctionModeration from "./pages/staff/staffAuctionModeration";
 import StaffDisputes from "./pages/staff/staffDisputes";
-import {
-  StaffOrders,
-  StaffReports,
-  StaffNotifications,
-} from "./pages/staff/staffPlaceholder";
+import StaffProfile from "./pages/staff/staffProfile";
+import StaffSellers from "./pages/staff/staffSellers";
+import StaffUsers from "./pages/staff/staffUsers";
+import StaffRoles from "./pages/staff/staffRoles";
+import StaffProducts from "./pages/staff/staffProducts";
+import StaffCategories from "./pages/staff/staffCategories";
+import StaffAuctionsLookup from "./pages/staff/staffAuctionsLookup";
+import StaffShipping from "./pages/staff/staffShipping";
+import StaffEventLog from "./pages/staff/staffEventLog";
+import StaffActivity from "./pages/staff/staffActivity";
+import StaffOrders from "./pages/staff/staffOrders";
+import StaffReports from "./pages/staff/staffReports";
+import StaffNotifications from "./pages/staff/staffNotifications";
 
 import AuctionBrowsePage from "./pages/auction/auctionBrowsePage";
 import AuctionDetailPage from "./pages/auction/auctionDetailPage";
@@ -58,217 +66,227 @@ import SellerRoute from "./config/SellerRoute";
 function App() {
   return (
     <Routes>
+  {/* ==========================
+      Auth Pages
+  ========================== */}
 
-      {/* ==========================
-          Auth Pages
-      ========================== */}
+  <Route path="/login" element={<LoginPage />} />
+  <Route path="/register" element={<RegisterPage />} />
+  <Route path="/forgot-password" element={<ForgotPassword />} />
+  <Route path="/verify-otp" element={<VerifyOtp />} />
+  <Route path="/reset-password" element={<ResetPassword />} />
+  <Route path="/auth/callback" element={<AuthCallback />} />
+  <Route path="/register-verify-otp" element={<RegisterVerifyOtpPage />} />
 
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/verify-otp" element={<VerifyOtp />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/register-verify-otp" element={<RegisterVerifyOtpPage />} />
+  {/* ==========================
+      Shared layout
+  ========================== */}
 
-      {/* ==========================
-          Shared layout
-      ========================== */}
+  <Route element={<Layout />}>
 
-      <Route element={<Layout />}>
+    {/* Home */}
+    <Route path="/" element={<HomePage />} />
+    <Route path="/home" element={<HomePage />} />
+    <Route path="/product/:id" element={<ProductDetailPage />} />
 
-        {/* Home */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/product/:id" element={<ProductDetailPage />} />
-
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <CartPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/checkout"
-          element={
-            <ProtectedRoute>
-              <CheckoutPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* User */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/notifications"
-          element={
-            <ProtectedRoute>
-              <NotificationsPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/orders"
-          element={
-            <ProtectedRoute>
-              <OrdersPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/bank"
-          element={
-            <ProtectedRoute>
-              <BankAccountRoutePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/address"
-          element={
-            <ProtectedRoute>
-              <AddressRoutePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/notification-settings"
-          element={
-            <ProtectedRoute>
-              <NotificationSettingsRoutePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/personal-info"
-          element={
-            <ProtectedRoute>
-              <PersonalInfoRoutePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/change-password"
-          element={
-            <ProtectedRoute>
-              <ChangePasswordRoutePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/privacy"
-          element={
-            <ProtectedRoute>
-              <PrivacySettingsRoutePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile/become-seller"
-          element={
-            <ProtectedRoute>
-              <BecomeSellerPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Buyer
-        <Route path="/buyer" element={<BuyerDashboard />} /> */}
-
-        {/* Auction */}
-        <Route path="/auction/browse" element={<AuctionBrowsePage />} />
-        <Route path="/auction/detail/:id" element={<AuctionDetailPage />} />
-        <Route path="/auction/profile" element={<AuctionProfilePage />} />
-        <Route path="/auction/my-bids" element={<AuctionMyBidsPage />} />
-        <Route path="/auction/seller" element={<AuctionSellerPage />} />
-        <Route path="/auction/create" element={<AuctionCreatePage />} />
-
-      </Route>
-
-   {/* Seller — already connected to the real API
-      <Route
-        path="/seller"
-        element={
-          <SellerRoute>
-            <SellerDashboard />
-          </SellerRoute>
-        }
-      />
-      <Route
-        path="/seller-hub/*"
-        element={
-          <SellerRoute>
-            <SellerHubRoutes />
-          </SellerRoute>
-        }
-      />
-    */}
-
-    {/* Testing seller hub */}
     <Route
-      path="/seller"
-      element={<SellerDashboard />}
+      path="/cart"
+      element={
+        <ProtectedRoute>
+          <CartPage />
+        </ProtectedRoute>
+      }
     />
 
     <Route
-      path="/seller-hub/*"
-      element={<SellerHubRoutes />}
+      path="/checkout"
+      element={
+        <ProtectedRoute>
+          <CheckoutPage />
+        </ProtectedRoute>
+      }
     />
 
-      {/* Staff Hub — connect to the real API
-      <Route
-        path="/staff"
-        element={
-          <ProtectedRoute allowedRoles={["STAFF", "ADMIN"]}>
-            <StaffLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<StaffOverview />} />
-        <Route path="overview" element={<StaffOverview />} />
-        <Route path="seller-review" element={<StaffSellerReview />} />
-        <Route path="product-review" element={<StaffProductReview />} />
-        <Route path="auctions" element={<StaffAuctionModeration />} />
-        <Route path="disputes" element={<StaffDisputes />} />
-        <Route path="orders" element={<StaffOrders />} />
-        <Route path="reports" element={<StaffReports />} />
-        <Route path="notifications" element={<StaffNotifications />} />
-      </Route>
-      */}
+    {/* User */}
+    <Route
+      path="/profile"
+      element={
+        <ProtectedRoute>
+          <ProfilePage />
+        </ProtectedRoute>
+      }
+    />
 
-{/* Testing staff hub */}
-    <Route path="/staff" element={<StaffLayout />}>
-      <Route index element={<StaffOverview />} />
-      <Route path="overview" element={<StaffOverview />} />
-      <Route path="seller-review" element={<StaffSellerReview />} />
-      <Route path="product-review" element={<StaffProductReview />} />
-      <Route path="auctions" element={<StaffAuctionModeration />} />
-      <Route path="disputes" element={<StaffDisputes />} />
-      <Route path="orders" element={<StaffOrders />} />
-      <Route path="reports" element={<StaffReports />} />
-      <Route path="notifications" element={<StaffNotifications />} />
-    </Route>
+    <Route
+      path="/profile/notifications"
+      element={
+        <ProtectedRoute>
+          <NotificationsPage />
+        </ProtectedRoute>
+      }
+    />
 
-    </Routes>
+    <Route
+      path="/profile/orders"
+      element={
+        <ProtectedRoute>
+          <OrdersPage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/vouchers"
+      element={
+        <ProtectedRoute>
+          <VouchersPage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/coins"
+      element={
+        <ProtectedRoute>
+          <CoinsPage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/bank"
+      element={
+        <ProtectedRoute>
+          <BankAccountRoutePage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/address"
+      element={
+        <ProtectedRoute>
+          <AddressRoutePage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/notification-settings"
+      element={
+        <ProtectedRoute>
+          <NotificationSettingsRoutePage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/personal-info"
+      element={
+        <ProtectedRoute>
+          <PersonalInfoRoutePage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/change-password"
+      element={
+        <ProtectedRoute>
+          <ChangePasswordRoutePage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/privacy"
+      element={
+        <ProtectedRoute>
+          <PrivacySettingsRoutePage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/become-seller"
+      element={
+        <ProtectedRoute>
+          <BecomeSellerPage />
+        </ProtectedRoute>
+      }
+    />
+
+    {/* Auction */}
+    <Route path="/auction/browse" element={<AuctionBrowsePage />} />
+    <Route path="/auction/detail/:id" element={<AuctionDetailPage />} />
+    <Route path="/auction/profile" element={<AuctionProfilePage />} />
+    <Route path="/auction/my-bids" element={<AuctionMyBidsPage />} />
+    <Route path="/auction/seller" element={<AuctionSellerPage />} />
+    <Route path="/auction/create" element={<AuctionCreatePage />} />
+
+  </Route>
+
+  {/* Seller */}
+  <Route
+    path="/seller"
+    element={
+      <SellerRoute>
+        <SellerDashboard />
+      </SellerRoute>
+    }
+  />
+
+  <Route
+    path="/seller-hub/*"
+    element={
+      <SellerRoute>
+        <SellerHubRoutes />
+      </SellerRoute>
+    }
+  />
+
+  {/* Admin */}
+  <Route
+    path="/admin/*"
+    element={
+      <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
+        <AdminRoutes />
+      </ProtectedRoute>
+    }
+  />
+
+  {/* Staff */}
+  <Route
+    path="/staff"
+    element={
+      <ProtectedRoute allowedRoles={["STAFF", "SUPPORT_STAFF", "ADMIN"]}>
+        <StaffLayout />
+      </ProtectedRoute>
+    }
+  >
+    <Route index element={<StaffOverview />} />
+    <Route path="overview" element={<StaffOverview />} />
+    <Route path="profile" element={<StaffProfile />} />
+
+    <Route path="seller-review" element={<StaffSellerReview />} />
+    <Route path="product-review" element={<StaffProductReview />} />
+    <Route path="auctions" element={<StaffAuctionModeration />} />
+    <Route path="disputes" element={<StaffDisputes />} />
+    <Route path="reports" element={<StaffReports />} />
+
+    <Route path="sellers" element={<StaffSellers />} />
+    <Route path="users" element={<StaffUsers />} />
+    <Route path="roles" element={<StaffRoles />} />
+    <Route path="products" element={<StaffProducts />} />
+    <Route path="categories" element={<StaffCategories />} />
+    <Route path="orders" element={<StaffOrders />} />
+    <Route path="auction-lookup" element={<StaffAuctionsLookup />} />
+    <Route path="shipping" element={<StaffShipping />} />
+    <Route path="event-log" element={<StaffEventLog />} />
+    <Route path="activity" element={<StaffActivity />} />
+    <Route path="notifications" element={<StaffNotifications />} />
+  </Route>
+</Routes>
   );
 }
 

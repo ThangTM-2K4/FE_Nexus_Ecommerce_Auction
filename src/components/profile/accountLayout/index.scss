@@ -17,10 +17,15 @@
   border-radius: $radius-md;
   box-shadow: $shadow-sm;
   padding: 1.5rem;
+
+  // Giãn cách đều giữa các khối con (thông tin, xác minh, uy tín...)
+  // để nút "Lưu" không dính sát khung "Xác minh tài khoản" bên dưới.
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .account-layout__header {
-  margin-bottom: 1.25rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid $border-soft;
 

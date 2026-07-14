@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaSearch, FaTruck } from "react-icons/fa";
@@ -24,6 +24,13 @@ const parseOrderDate = (str) => {
  */
 export default function SellerOrderBoard({ orders, exportName = "don-hang", initialTab = "all" }) {
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Đồng bộ tab khi điều hướng giữa các mục "Quản Lý Đơn Hàng" ở sidebar
+  // (cùng một component OrdersPage được tái sử dụng nên chỉ prop initialTab đổi).
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");

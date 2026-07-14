@@ -3,14 +3,18 @@ import './index.scss';
 const TYPE_LABELS = { home: 'Nhà Riêng', office: 'Văn Phòng' };
 
 export default function AddressCard({ address, onEdit, onDelete, onSetDefault }) {
-  const fullAddress = [address.addressLine, address.district, address.province].filter(Boolean).join(', ');
+  const street = address.street ?? address.addressLine;
+  const ward = address.ward ?? address.district;
+  const name = address.recipientName ?? address.fullName;
+  const phone = address.recipientPhone ?? address.phone;
+  const fullAddress = [street, ward, address.province].filter(Boolean).join(', ');
 
   return (
     <article className="address-card">
       <div className="address-card__head">
         <div>
-          <span className="address-card__name">{address.fullName}</span>
-          <span className="address-card__phone">{address.phone}</span>
+          <span className="address-card__name">{name}</span>
+          <span className="address-card__phone">{phone}</span>
         </div>
         <div className="address-card__tags">
           <span className="address-card__type">{TYPE_LABELS[address.type] || address.type}</span>

@@ -1,0 +1,52 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-health {
+  display: flex; flex-direction: column; gap: 20px;
+
+  &__refresh button {
+    align-self: flex-start; padding: 8px 16px; border-radius: 999px;
+    border: 1px solid $color-border; background: $color-bg-card; font-size: 13px; font-weight: 600; cursor: pointer;
+    &:hover:not(:disabled) { border-color: $color-accent; color: $color-accent; }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
+
+  &__empty { color: $color-text-muted; font-size: 14px; }
+
+  &__banner {
+    padding: 16px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    &--healthy { background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.25); }
+    &--degraded, &--unhealthy { background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.3); }
+    span { font-size: 13px; color: $color-text-muted; }
+  }
+
+  &__kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+
+  &__services {
+    h3 { margin: 0 0 12px; font-size: 15px; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  }
+
+  &__svc {
+    padding: 14px 16px; border: 1px solid $color-border; border-radius: 12px; background: $color-bg-card;
+    &--up .stf-health__dot { background: #16a34a; }
+    &--degraded .stf-health__dot { background: #eab308; }
+    &--down .stf-health__dot { background: #dc2626; }
+  }
+
+  &__svc-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+    strong { flex: 1; }
+  }
+
+  &__dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  &__svc-status { font-size: 12px; font-weight: 700; color: $color-text-muted; }
+
+  &__svc-meta {
+    display: flex; gap: 16px; font-size: 12px; color: $color-text-muted; margin-left: 20px;
+  }
+
+  &__svc-note {
+    margin: 8px 0 0 20px; font-size: 12px; color: #b45309;
+  }
+}

@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react';
 import Input from '../../../common/input';
 import Select from '../../../common/select';
 import Checkbox from '../../../common/checkbox';
-import { PROVINCE_OPTIONS, DISTRICT_OPTIONS } from '../../../../data/mockAddresses';
+import { useProvinces, useWards } from '../../../../services/locationService';
 import './index.scss';
 
 const emptyForm = {
   fullName: '',
   phone: '',
   provinceCode: '',
-  districtCode: '',
+  provinceName: '',
+  wardCode: '',
+  wardName: '',
   addressLine: '',
   type: 'home',
   isDefault: false,
@@ -17,17 +19,20 @@ const emptyForm = {
 
 export default function AddressForm({ mode = 'create', initial, onSubmit }) {
   const [form, setForm] = useState(emptyForm);
+  const { provinces, loading: loadingProvinces } = useProvinces();
+  const { wards, loading: loadingWards } = useWards(form.provinceCode);
 
+  // Nạp dữ liệu ban đầu (giữ tên tỉnh/phường để khớp lại khi list tải xong).
   useEffect(() => {
     if (initial) {
-      const provinceCode = PROVINCE_OPTIONS.find((p) => p.label === initial.province)?.value || '';
-      const districtCode = DISTRICT_OPTIONS[provinceCode]?.find((d) => d.label === initial.district)?.value || '';
       setForm({
-        fullName: initial.fullName || '',
-        phone: initial.phone || '',
-        provinceCode,
-        districtCode,
-        addressLine: initial.addressLine || '',
+        ...emptyForm,
+        // Ưu tiên field API mới, fallback field cũ để tương thích ngược.
+        fullName: initial.recipientName || initial.fullName || '',
+        phone: initial.recipientPhone || initial.phone || '',
+        provinceName: initial.province || '',
+        wardName: initial.ward || initial.district || '',
+        addressLine: initial.street || initial.addressLine || '',
         type: initial.type || 'home',
         isDefault: initial.isDefault || false,
       });
@@ -36,23 +41,53 @@ export default function AddressForm({ mode = 'create', initial, onSubmit }) {
     }
   }, [initial, mode]);
 
+  // Khớp tên tỉnh (từ initial) → provinceCode khi danh sách tỉnh đã tải.
+  useEffect(() => {
+    if (form.provinceName && !form.provinceCode && provinces.length) {
+      const match = provinces.find((p) => p.label === form.provinceName);
+      if (match) setForm((prev) => ({ ...prev, provinceCode: match.value }));
+    }
+  }, [provinces, form.provinceName, form.provinceCode]);
+
+  // Khớp tên phường (từ initial) → wardCode khi danh sách phường đã tải.
+  useEffect(() => {
+    if (form.wardName && !form.wardCode && wards.length) {
+      const match = wards.find((w) => w.label === form.wardName);
+      if (match) setForm((prev) => ({ ...prev, wardCode: match.value }));
+    }
+  }, [wards, form.wardName, form.wardCode]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => {
-      const next = { ...prev, [name]: value };
-      if (name === 'provinceCode') next.districtCode = '';
-      return next;
-    });
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleProvinceChange = (e) => {
+    const provinceCode = e.target.value;
+    const provinceName = provinces.find((p) => p.value === provinceCode)?.label || '';
+    // Đổi tỉnh → reset phường/xã đã chọn.
+    setForm((prev) => ({ ...prev, provinceCode, provinceName, wardCode: '', wardName: '' }));
+  };
+
+  const handleWardChange = (e) => {
+    const wardCode = e.target.value;
+    const wardName = wards.find((w) => w.value === wardCode)?.label || '';
+    setForm((prev) => ({ ...prev, wardCode, wardName }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const province = PROVINCE_OPTIONS.find((p) => p.value === form.provinceCode)?.label || '';
-    const district = DISTRICT_OPTIONS[form.provinceCode]?.find((d) => d.value === form.districtCode)?.label || '';
-    onSubmit?.({ ...form, province, district });
+    // Emit theo contract API mới: recipientName / recipientPhone / province / ward / street.
+    onSubmit?.({
+      recipientName: form.fullName,
+      recipientPhone: form.phone,
+      province: form.provinceName,
+      ward: form.wardName,
+      street: form.addressLine,
+      type: form.type,
+      isDefault: form.isDefault,
+    });
   };
-
-  const districtOptions = form.provinceCode ? DISTRICT_OPTIONS[form.provinceCode] || [] : [];
 
   return (
     <form className="address-form" onSubmit={handleSubmit}>
@@ -61,27 +96,40 @@ export default function AddressForm({ mode = 'create', initial, onSubmit }) {
         <Input label="Số điện thoại" name="phone" value={form.phone} onChange={handleChange} />
       </div>
 
-      <Select
-        label="Tỉnh/Thành Phố, Quận/Huyện"
-        name="provinceCode"
-        value={form.provinceCode}
-        onChange={handleChange}
-        options={PROVINCE_OPTIONS}
-        placeholder="Chọn Tỉnh/Thành phố"
-      />
-      <Select
-        name="districtCode"
-        value={form.districtCode}
-        onChange={handleChange}
-        options={districtOptions}
-        placeholder="Chọn Quận/Huyện"
-      />
-
-      <Input label="Địa chỉ cụ thể" name="addressLine" value={form.addressLine} onChange={handleChange} />
-
-      <div className="address-form__map">
-        <button type="button" className="address-form__map-btn">+ Thêm vị trí</button>
+      <div className="address-form__row">
+        <Select
+          label="Tỉnh / Thành phố"
+          name="provinceCode"
+          value={form.provinceCode}
+          onChange={handleProvinceChange}
+          options={provinces}
+          placeholder={loadingProvinces ? 'Đang tải tỉnh/thành...' : 'Chọn Tỉnh/Thành phố'}
+          disabled={loadingProvinces}
+        />
+        <Select
+          label="Phường / Xã"
+          name="wardCode"
+          value={form.wardCode}
+          onChange={handleWardChange}
+          options={wards}
+          placeholder={
+            !form.provinceCode
+              ? 'Chọn Tỉnh/Thành phố trước'
+              : loadingWards
+                ? 'Đang tải phường/xã...'
+                : 'Chọn Phường/Xã'
+          }
+          disabled={!form.provinceCode || loadingWards}
+        />
       </div>
+
+      <Input
+        label="Địa chỉ cụ thể"
+        name="addressLine"
+        value={form.addressLine}
+        onChange={handleChange}
+        placeholder="Số nhà, tên đường..."
+      />
 
       <div className="address-form__type">
         <span>Loại địa chỉ:</span>

@@ -1,17 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { FaBell, FaSearch } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext";
 import ProfileDropdown from "../../homepage/header/ProfileDropdown";
-import { staffNotifications } from "../../../data/staffMockData";
+import StaffNotificationBell from "../staffNotificationBell";
 import "./index.scss";
 
 const StaffHeader = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
-
-  const unreadCount = staffNotifications.filter((n) => n.unread).length;
 
   const initials = user?.fullName
     ? user.fullName
@@ -44,15 +42,7 @@ const StaffHeader = () => {
         </div>
 
         <div className="stf-header__actions">
-          <button
-            type="button"
-            className="stf-header__bell"
-            aria-label="Thông báo"
-            onClick={() => navigate("/staff/notifications")}
-          >
-            <FaBell />
-            {unreadCount > 0 && <span className="stf-header__bell-dot" />}
-          </button>
+          <StaffNotificationBell />
           <div className="stf-header__profile-wrap">
             <button
               type="button"

@@ -1,12 +1,22 @@
 export const sidebarMenuItems = [
-  { id: "overview", label: "Tổng quan", icon: "grid", path: "/staff/overview" },
-  { id: "seller-review", label: "Duyệt người bán", icon: "userCheck", path: "/staff/seller-review" },
-  { id: "product-review", label: "Duyệt sản phẩm", icon: "box", path: "/staff/product-review" },
-  { id: "auctions", label: "Kiểm duyệt đấu giá", icon: "gavel", path: "/staff/auctions" },
-  { id: "disputes", label: "Khiếu nại & tranh chấp", icon: "flag", path: "/staff/disputes" },
-  { id: "orders", label: "Giám sát đơn hàng", icon: "cart", path: "/staff/orders" },
-  { id: "reports", label: "Báo cáo vi phạm", icon: "shield", path: "/staff/reports" },
-  { id: "notifications", label: "Thông báo", icon: "bell", path: "/staff/notifications" },
+  { id: "overview", label: "Tổng quan", icon: "grid", path: "/staff/overview", group: "Vận hành", access: "all" },
+  { id: "seller-review", label: "Duyệt người bán", icon: "userCheck", path: "/staff/seller-review", group: "Kiểm duyệt", access: "support" },
+  { id: "product-review", label: "Duyệt sản phẩm", icon: "box", path: "/staff/product-review", group: "Kiểm duyệt", access: "support" },
+  { id: "auctions", label: "Kiểm duyệt đấu giá", icon: "gavel", path: "/staff/auctions", group: "Kiểm duyệt", access: "support" },
+  { id: "users", label: "Người dùng", icon: "users", path: "/staff/users", group: "Tra cứu", access: "all" },
+  { id: "roles", label: "Vai trò", icon: "userShield", path: "/staff/roles", group: "Tra cứu", access: "all" },
+  { id: "products", label: "Sản phẩm", icon: "boxOpen", path: "/staff/products", group: "Tra cứu", access: "all" },
+  { id: "categories", label: "Danh mục", icon: "folder", path: "/staff/categories", group: "Tra cứu", access: "all" },
+  { id: "orders", label: "Đơn hàng", icon: "cart", path: "/staff/orders", group: "Tra cứu", access: "all" },
+  { id: "auction-lookup", label: "Đấu giá", icon: "hammer", path: "/staff/auction-lookup", group: "Tra cứu", access: "all" },
+  { id: "shipping", label: "Vận chuyển", icon: "truck", path: "/staff/shipping", group: "Tra cứu", access: "all" },
+  { id: "sellers", label: "Thông tin người bán", icon: "store", path: "/staff/sellers", group: "Quản lý", access: "all" },
+  { id: "disputes", label: "Khiếu nại & tranh chấp", icon: "flag", path: "/staff/disputes", group: "Hỗ trợ & An toàn", access: "support" },
+  { id: "reports", label: "Báo cáo vi phạm", icon: "shield", path: "/staff/reports", group: "Hỗ trợ & An toàn", access: "support" },
+  { id: "event-log", label: "Nhật ký sự kiện", icon: "server", path: "/staff/event-log", group: "Giám sát", access: "all" },
+  { id: "activity", label: "Nhật ký nhân viên", icon: "history", path: "/staff/activity", group: "Giám sát", access: "all" },
+  { id: "notifications", label: "Thông báo", icon: "bell", path: "/staff/notifications", group: "Cá nhân", access: "all" },
+  { id: "profile", label: "Hồ sơ của tôi", icon: "user", path: "/staff/profile", group: "Cá nhân", access: "all" },
 ];
 
 // Lý do từ chối đơn đăng ký Người bán (staff chọn khi từ chối)
@@ -38,19 +48,21 @@ export const productRejectReasons = [
 ];
 
 export const overviewStats = [
-  { id: "pending-sellers", label: "Đơn đăng ký seller chờ duyệt", value: "12", hint: "Cần xử lý hôm nay", warn: true },
+  { id: "pending-sellers", label: "Đơn đăng ký seller chờ duyệt", value: "12", hint: "Kèm xác minh CCCD", warn: true },
+  { id: "pending-products", label: "Sản phẩm chờ duyệt", value: "9", hint: "Cần kiểm duyệt", warn: true },
   { id: "flagged-auctions", label: "Phiên đấu giá bị báo cáo", value: "5", hint: "2 mức độ cao", warn: true },
   { id: "open-disputes", label: "Khiếu nại đang mở", value: "8", hint: "3 quá hạn SLA", warn: true },
   { id: "resolved-today", label: "Đã xử lý hôm nay", value: "24", hint: "+6 so với hôm qua", highlight: true },
   { id: "avg-response", label: "Thời gian phản hồi TB", value: "2.4h", hint: "Mục tiêu: < 4h" },
+  { id: "active-sellers", label: "Người bán đang hoạt động", value: "342", hint: "Toàn nền tảng" },
   { id: "active-auctions", label: "Phiên đấu giá đang diễn ra", value: "186", hint: "Toàn nền tảng" },
 ];
 
 export const pendingTasks = [
-  { id: "T-001", type: "seller", title: "Duyệt hồ sơ Nguyễn Văn An", priority: "high", due: "30 phút" },
+  { id: "T-001", type: "seller", title: "Duyệt hồ sơ & CCCD Nguyễn Văn An", priority: "high", due: "30 phút" },
   { id: "T-002", type: "auction", title: "Kiểm tra phiên Rolex Submariner #AUC-8821", priority: "high", due: "1 giờ" },
   { id: "T-003", type: "dispute", title: "Khiếu nại giao hàng chậm — ORD-2847", priority: "medium", due: "3 giờ" },
-  { id: "T-004", type: "seller", title: "Duyệt hồ sơ Trần Thị Bình", priority: "medium", due: "Hôm nay" },
+  { id: "T-004", type: "seller", title: "Duyệt hồ sơ & CCCD Trần Thị Bình", priority: "medium", due: "Hôm nay" },
   { id: "T-005", type: "report", title: "Báo cáo hàng giả — SKU-4421", priority: "high", due: "2 giờ" },
 ];
 
@@ -171,3 +183,266 @@ export const staffNotifications = [
 
 export const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";
+
+// Ảnh CCCD giữ chỗ cho hồ sơ mock (SVG xám, không cần file thật)
+const cccdPlaceholder = (label) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="280" height="180"><rect width="100%" height="100%" fill="#e7e2f0"/><text x="50%" y="50%" font-family="Arial" font-size="16" fill="#7a6f8f" text-anchor="middle" dominant-baseline="middle">${label}</text></svg>`
+  )}`;
+
+// ── Xác minh CCCD ── Hồ sơ CCCD chờ staff duyệt (mock; hồ sơ thật được gộp
+// thêm từ localStorage profile_* trong staffService)
+export const identityVerificationQueue = [
+  {
+    id: "IDV-301",
+    userId: null,
+    source: "mock",
+    fullName: "Phạm Thu Hà",
+    cccdNumber: "079198002451",
+    cccdAddress: "12 Lý Thường Kiệt, Phường Trần Hưng Đạo, Hà Nội",
+    email: "ha.pham@gmail.com",
+    phone: "0934567890",
+    frontImageUrl: cccdPlaceholder("CCCD mặt trước"),
+    backImageUrl: cccdPlaceholder("CCCD mặt sau"),
+    submittedAt: "10/07/2026 14:20",
+  },
+  {
+    id: "IDV-302",
+    userId: null,
+    source: "mock",
+    fullName: "Võ Quốc Đạt",
+    cccdNumber: "082201003762",
+    cccdAddress: "245 Hùng Vương, Phường Hải Châu, Đà Nẵng",
+    email: "dat.vo@gmail.com",
+    phone: "0945678901",
+    frontImageUrl: cccdPlaceholder("CCCD mặt trước"),
+    backImageUrl: cccdPlaceholder("CCCD mặt sau"),
+    submittedAt: "10/07/2026 09:05",
+  },
+  {
+    id: "IDV-303",
+    userId: null,
+    source: "mock",
+    fullName: "Đỗ Ngọc Mai",
+    cccdNumber: "075199004813",
+    cccdAddress: "78 Nguyễn Trãi, Phường Bến Thành, TP. Hồ Chí Minh",
+    email: "mai.do@gmail.com",
+    phone: "0956789012",
+    frontImageUrl: cccdPlaceholder("CCCD mặt trước"),
+    backImageUrl: cccdPlaceholder("CCCD mặt sau"),
+    submittedAt: "09/07/2026 16:45",
+  },
+];
+
+// Lý do từ chối hồ sơ CCCD (staff chọn khi từ chối)
+export const identityRejectReasons = [
+  "Ảnh CCCD mờ, không đọc được thông tin",
+  "Ảnh bị che khuất, thiếu góc hoặc bị cắt xén",
+  "Thông tin nhập không khớp với ảnh CCCD",
+  "Số CCCD không hợp lệ hoặc đã được dùng cho tài khoản khác",
+  "CCCD hết hạn hoặc không còn hiệu lực",
+  "Nghi ngờ giấy tờ giả mạo hoặc chỉnh sửa",
+];
+
+// ── Giám sát đơn hàng ── Đơn bị hệ thống gắn cờ cần staff kiểm tra
+export const monitoredOrders = [
+  {
+    id: "ORD-2850",
+    product: "Rolex Daytona Panda 2024",
+    buyer: "Hoàng Nam",
+    seller: "LuxuryTime VN",
+    amount: 685000000,
+    status: "Chờ thanh toán",
+    statusTone: "pending",
+    flag: { type: "high", label: "Giá trị cao" },
+    placedAt: "11/07/2026 08:12",
+  },
+  {
+    id: "ORD-2849",
+    product: "MacBook Pro M4 Max 48GB",
+    buyer: "Lan Anh",
+    seller: "TechZone",
+    amount: 98500000,
+    status: "Đang giao",
+    statusTone: "shipping",
+    flag: { type: "late", label: "Giao chậm 2 ngày" },
+    placedAt: "07/07/2026 10:30",
+  },
+  {
+    id: "ORD-2848",
+    product: "Tranh sơn dầu 'Phố cổ' 1962",
+    buyer: "Minh Tuấn",
+    seller: "ArtGallery HCM",
+    amount: 145000000,
+    status: "Đang giao",
+    statusTone: "shipping",
+    flag: { type: "unusual", label: "Người mua mới, giá trị lớn" },
+    placedAt: "09/07/2026 21:47",
+  },
+  {
+    id: "ORD-2847",
+    product: "iPhone 16 Pro Max 256GB",
+    buyer: "Phạm Thu Hà",
+    seller: "TechZone",
+    amount: 28990000,
+    status: "Đang giao",
+    statusTone: "shipping",
+    flag: { type: "late", label: "Giao chậm 3 ngày — có khiếu nại" },
+    placedAt: "04/07/2026 11:00",
+  },
+  {
+    id: "ORD-2846",
+    product: "Đồng hồ Omega Seamaster",
+    buyer: "Quốc Bảo",
+    seller: "LuxuryTime VN",
+    amount: 152000000,
+    status: "Đã giao",
+    statusTone: "done",
+    flag: { type: "high", label: "Giá trị cao" },
+    placedAt: "05/07/2026 15:20",
+  },
+  {
+    id: "ORD-2845",
+    product: "Sony WH-1000XM5",
+    buyer: "Thu Trang",
+    seller: "AudioHub",
+    amount: 5200000,
+    status: "Hoàn tất",
+    statusTone: "done",
+    flag: null,
+    placedAt: "06/07/2026 09:15",
+  },
+  {
+    id: "ORD-2844",
+    product: "Túi Hermès Birkin 30 (đấu giá)",
+    buyer: "Kim Ngân",
+    seller: "LuxViet Consign",
+    amount: 890000000,
+    status: "Chờ thanh toán",
+    statusTone: "pending",
+    flag: { type: "unusual", label: "Trúng đấu giá nhưng chưa thanh toán 24h" },
+    placedAt: "10/07/2026 07:00",
+  },
+  {
+    id: "ORD-2843",
+    product: "Bàn phím cơ Keychron Q1 Pro",
+    buyer: "Đức Anh",
+    seller: "TechZone",
+    amount: 4590000,
+    status: "Đã huỷ",
+    statusTone: "cancelled",
+    flag: { type: "unusual", label: "Huỷ 3 đơn liên tiếp trong tuần" },
+    placedAt: "08/07/2026 13:40",
+  },
+  {
+    id: "ORD-2842",
+    product: "Đèn bàn cổ Art Deco 1930s",
+    buyer: "Hải Yến",
+    seller: "ArtGallery HCM",
+    amount: 32000000,
+    status: "Hoàn tất",
+    statusTone: "done",
+    flag: null,
+    placedAt: "05/07/2026 18:25",
+  },
+];
+
+// ── Báo cáo vi phạm ── Báo cáo từ người dùng về nội dung/hành vi vi phạm
+export const violationReports = [
+  {
+    id: "RPT-771",
+    type: "counterfeit",
+    typeLabel: "Hàng giả / nhái",
+    severity: "high",
+    target: { kind: "Sản phẩm", name: "Túi LV Neverfull MM", ref: "SKU-4421" },
+    reporter: "Người mua ẩn danh",
+    reportCount: 6,
+    description: "Logo in lệch, đường may khác hàng chính hãng. Người bán không cung cấp được hoá đơn.",
+    evidences: 4,
+    reportedAt: "11/07/2026 07:50",
+  },
+  {
+    id: "RPT-770",
+    type: "fraud",
+    typeLabel: "Lừa đảo",
+    severity: "high",
+    target: { kind: "Shop", name: "QuickDeal 24h", ref: "SHOP-889" },
+    reporter: "Trần Văn Hùng",
+    reportCount: 3,
+    description: "Nhận tiền chuyển khoản ngoài nền tảng rồi không giao hàng, chặn liên lạc.",
+    evidences: 5,
+    reportedAt: "10/07/2026 22:10",
+  },
+  {
+    id: "RPT-769",
+    type: "prohibited",
+    typeLabel: "Hàng cấm / hạn chế",
+    severity: "high",
+    target: { kind: "Sản phẩm", name: "Dao bấm tự động", ref: "SKU-4380" },
+    reporter: "Hệ thống quét tự động",
+    reportCount: 1,
+    description: "Sản phẩm thuộc danh mục vũ khí bị cấm kinh doanh trên nền tảng.",
+    evidences: 1,
+    reportedAt: "10/07/2026 18:30",
+  },
+  {
+    id: "RPT-768",
+    type: "auction-abuse",
+    typeLabel: "Thao túng đấu giá",
+    severity: "medium",
+    target: { kind: "Phiên đấu giá", name: "Đồng hồ Patek Philippe", ref: "AUC-8817" },
+    reporter: "Người tham gia đấu giá",
+    reportCount: 2,
+    description: "Nghi ngờ seller dùng tài khoản phụ tự đặt giá để đẩy giá lên (shill bidding).",
+    evidences: 2,
+    reportedAt: "10/07/2026 15:05",
+  },
+  {
+    id: "RPT-767",
+    type: "copyright",
+    typeLabel: "Vi phạm bản quyền",
+    severity: "medium",
+    target: { kind: "Sản phẩm", name: "Áo thun in hình anime", ref: "SKU-4312" },
+    reporter: "Đại diện thương hiệu",
+    reportCount: 1,
+    description: "Sử dụng hình ảnh nhân vật có bản quyền mà không được cấp phép.",
+    evidences: 3,
+    reportedAt: "09/07/2026 11:40",
+  },
+  {
+    id: "RPT-766",
+    type: "spam",
+    typeLabel: "Spam / đánh giá ảo",
+    severity: "low",
+    target: { kind: "Shop", name: "Phụ Kiện Giá Rẻ", ref: "SHOP-742" },
+    reporter: "Hệ thống quét tự động",
+    reportCount: 1,
+    description: "Phát hiện 40+ đánh giá 5 sao từ cụm tài khoản tạo cùng ngày.",
+    evidences: 2,
+    reportedAt: "08/07/2026 20:15",
+  },
+];
+
+export const reportTypeOptions = [
+  { id: "all", label: "Tất cả loại" },
+  { id: "counterfeit", label: "Hàng giả / nhái" },
+  { id: "fraud", label: "Lừa đảo" },
+  { id: "prohibited", label: "Hàng cấm" },
+  { id: "auction-abuse", label: "Thao túng đấu giá" },
+  { id: "copyright", label: "Bản quyền" },
+  { id: "spam", label: "Spam" },
+];
+
+// ── Thông báo nội bộ ── Nguồn cấp đầy đủ cho trang Thông báo (có id + link)
+export const staffNotificationFeed = [
+  { id: "NTF-101", type: "seller", title: "Đơn đăng ký seller mới", message: "Nguyễn Văn An vừa gửi hồ sơ 'An's Luxury Store'", time: "5 phút trước", link: "/staff/seller-review" },
+  { id: "NTF-102", type: "identity", title: "Hồ sơ CCCD mới chờ xác minh", message: "Phạm Thu Hà vừa nộp CCCD kèm đơn seller, cần duyệt trong hôm nay", time: "12 phút trước", link: "/staff/seller-review" },
+  { id: "NTF-103", type: "auction", title: "Phiên đấu giá bị báo cáo", message: "AUC-8821 (Rolex Submariner) — 3 báo cáo nghi ngờ hàng giả", time: "20 phút trước", link: "/staff/auctions" },
+  { id: "NTF-104", type: "dispute", title: "Khiếu nại quá hạn SLA", message: "DSP-441 đã quá hạn phản hồi, cần xử lý gấp", time: "1 giờ trước", link: "/staff/disputes" },
+  { id: "NTF-105", type: "order", title: "Đơn hàng giá trị cao", message: "ORD-2850 — 685.000.000đ đang chờ thanh toán", time: "2 giờ trước", link: "/staff/orders" },
+  { id: "NTF-106", type: "report", title: "Báo cáo lừa đảo mới", message: "Shop 'QuickDeal 24h' bị báo cáo nhận tiền không giao hàng", time: "3 giờ trước", link: "/staff/reports" },
+  { id: "NTF-107", type: "auction", title: "Phiên đấu giá sắp kết thúc có tranh chấp", message: "AUC-8817 nghi ngờ shill bidding, kết thúc trong 4 giờ", time: "4 giờ trước", link: "/staff/auctions" },
+  { id: "NTF-108", type: "order", title: "Người trúng đấu giá chưa thanh toán", message: "ORD-2844 (Hermès Birkin) quá 24h chưa thanh toán", time: "5 giờ trước", link: "/staff/orders" },
+  { id: "NTF-109", type: "seller", title: "Seller bổ sung hồ sơ", message: "Lê Minh Cường đã cập nhật giấy phép kinh doanh", time: "Hôm qua", link: "/staff/seller-review" },
+  { id: "NTF-110", type: "system", title: "Bảo trì hệ thống", message: "Hệ thống thanh toán bảo trì 02:00–04:00 ngày 13/07", time: "Hôm qua", link: null },
+];

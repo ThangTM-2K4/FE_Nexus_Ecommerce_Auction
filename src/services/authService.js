@@ -58,15 +58,34 @@ const extractUserSource = (authPayload) => {
 const normalizeSellerStatus = (status) =>
   status ? String(status).toUpperCase() : null;
 
+// Backend trả role dưới nhiều dạng: role (string | object), roles, roleCodes, roleName…
+// Gom hết về mảng mã vai trò chữ HOA, bỏ tiền tố ROLE_.
+const collectRoleCodes = (source) => {
+  if (!source) return [];
+
+  const raw = [];
+  if (source.role) raw.push(source.role);
+  if (source.roleName) raw.push(source.roleName);
+  if (source.roleCode) raw.push(source.roleCode);
+  if (Array.isArray(source.roles)) raw.push(...source.roles);
+  if (Array.isArray(source.roleCodes)) raw.push(...source.roleCodes);
+
+  return raw
+    .map((r) =>
+      typeof r === 'string'
+        ? r
+        : r?.code ?? r?.name ?? r?.role ?? r?.roleName ?? r?.authority ?? ''
+    )
+    .filter(Boolean)
+    .map((s) => String(s).toUpperCase().replace(/^ROLE_/, ''));
+};
+
 const normalizeSessionUser = (userSource, previousUser = null) => {
   if (!userSource) return previousUser;
 
   const id = userSource.id ?? userSource.userId ?? previousUser?.id ?? previousUser?.userId;
-  const role =
-    userSource.role ??
-    userSource.roles?.[0] ??
-    previousUser?.role ??
-    'BUYER';
+  const roleCodes = collectRoleCodes(userSource);
+  const role = roleCodes[0] ?? previousUser?.role ?? 'BUYER';
 
   return {
     ...previousUser,
@@ -81,7 +100,7 @@ const normalizeSessionUser = (userSource, previousUser = null) => {
       previousUser?.username ??
       '',
     role,
-    roles: userSource.roles ?? previousUser?.roles,
+    roles: roleCodes.length ? roleCodes : previousUser?.roles,
     sellerStatus: normalizeSellerStatus(
       userSource.sellerStatus ?? previousUser?.sellerStatus
     ),

@@ -29,4 +29,10 @@
     border-color: $raspberry;
     box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
   }
+
+  &:disabled {
+    background: $surface-soft;
+    color: $ink-muted;
+    cursor: not-allowed;
+  }
 }
