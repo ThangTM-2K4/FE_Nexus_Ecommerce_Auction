@@ -1,65 +1,49 @@
-import { useNavigate } from "react-router-dom";
-import { FaHeart, FaEye } from "react-icons/fa";
-import AuctionImage from "../auctionImage";
-import "./index.scss";
+import { motion } from 'framer-motion';
+import { formatPrice } from '../../../utils/formatPrice';
+import AuctionImage from '../auctionImage';
+import AuctionCountdown from '../auctionCountdown';
+import './index.scss';
 
-const AuctionCard = ({ auction }) => {
-  const navigate = useNavigate();
+export default function AuctionCard({ auction, onClick }) {
+  const handleClick = () => onClick?.(auction);
 
   return (
-    <div className="auc-card">
-      <div
-        className="auc-card__image"
-        onClick={() => navigate(`/auction/detail/${auction.id}`)}
-      >
-        <AuctionImage src={auction.image} alt={auction.title} />
-        {auction.badge && (
-          <span className={`auc-card__badge auc-card__badge--${auction.badge.type}`}>
-            {auction.badge.label}
-          </span>
-        )}
+    <motion.article
+      className="auction-card"
+      onClick={handleClick}
+      whileHover={{ y: -5 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleClick();
+        }
+      }}
+      aria-label={`${auction.title}, giá hiện tại ${formatPrice(auction.currentBid)}`}
+    >
+      <div className="auction-card__image-wrap">
+        <AuctionImage
+          src={auction.image}
+          alt={auction.title}
+          categoryLabel={auction.categoryLabel}
+          isLive={auction.isLive && auction.endTime > Date.now()}
+        />
       </div>
 
-      <div className="auc-card__body">
-        <div className="auc-card__title-row">
-          <h3 onClick={() => navigate(`/auction/detail/${auction.id}`)}>
-            {auction.title}
-          </h3>
-          <button type="button" className="auc-card__fav"><FaHeart /></button>
-        </div>
-        <p>{auction.description}</p>
+      <div className="auction-card__body">
+        <h3 className="auction-card__title">{auction.title}</h3>
+        <p className="auction-card__desc">{auction.description}</p>
 
-        <div className="auc-card__price-box">
-          <div>
-            <span>Giá hiện tại</span>
-            <strong>{auction.currentPrice}</strong>
+        <div className="auction-card__footer">
+          <div className="auction-card__price">
+            <span>Giá thầu hiện tại</span>
+            <strong>{formatPrice(auction.currentBid)}</strong>
           </div>
-          <div>
-            <span>Thời gian còn lại</span>
-            <em>{auction.timeLeft}</em>
-          </div>
-        </div>
-
-        <div className="auc-card__actions">
-          <button
-            type="button"
-            className="auc-card__bid"
-            onClick={() => navigate(`/auction/detail/${auction.id}`)}
-          >
-            ĐẶT GIÁ NGAY
-          </button>
-          <button
-            type="button"
-            className="auc-card__view"
-            onClick={() => navigate(`/auction/detail/${auction.id}`)}
-          >
-            <FaEye />
-          </button>
+          <AuctionCountdown endTime={auction.endTime} />
         </div>
       </div>
-    </div>
+    </motion.article>
   );
-};
-
-export default AuctionCard;
-
+}

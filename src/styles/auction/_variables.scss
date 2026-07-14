@@ -1,0 +1,32 @@
+// Auction zone — luxurious midnight palette (isolated from HomePage)
+$obsidian: #12101A;
+$midnight-violet: #241B3E;
+$royal-purple: #4B2E83;
+$mist-lavender: #8F7FBF;
+$antique-gold: #C9A227;
+$gold-bright: #E8C468;
+$ember: #8B1E3F;
+$ember-hot: #C4315B;
+$bone: #EDE7F6;
+
+// Semantic aliases (derived only from tokens above)
+$auction-bg-page: linear-gradient(160deg, $obsidian 0%, $midnight-violet 55%, $obsidian 100%);
+$auction-bg-surface: $midnight-violet;
+$auction-bg-muted: rgba($midnight-violet, 0.65);
+$auction-text: $bone;
+$auction-text-muted: $mist-lavender;
+$auction-border: rgba($royal-purple, 0.28);
+$auction-border-subtle: rgba($royal-purple, 0.2);
+$auction-glow: rgba($royal-purple, 0.22);
+$auction-gold-glow: rgba($antique-gold, 0.18);
+
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-pill: 999px;
+
+$header-height: 72px;
+$footer-min-height: 280px;
+
+$breakpoint-tablet: 768px;
+$breakpoint-desktop: 1024px;

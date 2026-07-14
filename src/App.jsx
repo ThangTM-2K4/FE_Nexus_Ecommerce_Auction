@@ -45,12 +45,8 @@ import {
   StaffNotifications,
 } from "./pages/staff/staffPlaceholder";
 
+import AuctionLayout from "./components/auction/auctionLayout";
 import AuctionBrowsePage from "./pages/auction/auctionBrowsePage";
-import AuctionDetailPage from "./pages/auction/auctionDetailPage";
-import AuctionProfilePage from "./pages/auction/auctionProfilePage";
-import AuctionSellerPage from "./pages/auction/auctionSellerPage";
-import AuctionMyBidsPage from "./pages/auction/auctionMyBidsPage";
-import AuctionCreatePage from "./pages/auction/auctionCreatePage";
 
 import ProtectedRoute from "./config/ProtectedRoute";
 import SellerRoute from "./config/SellerRoute";
@@ -194,14 +190,12 @@ function App() {
         {/* Buyer
         <Route path="/buyer" element={<BuyerDashboard />} /> */}
 
-        {/* Auction */}
-        <Route path="/auction/browse" element={<AuctionBrowsePage />} />
-        <Route path="/auction/detail/:id" element={<AuctionDetailPage />} />
-        <Route path="/auction/profile" element={<AuctionProfilePage />} />
-        <Route path="/auction/my-bids" element={<AuctionMyBidsPage />} />
-        <Route path="/auction/seller" element={<AuctionSellerPage />} />
-        <Route path="/auction/create" element={<AuctionCreatePage />} />
+      </Route>
 
+      {/* Auction zone — separate header/footer layout */}
+      <Route path="/auction" element={<AuctionLayout />}>
+        <Route index element={<AuctionBrowsePage />} />
+        <Route path="browse" element={<AuctionBrowsePage />} />
       </Route>
 
    {/* Seller — already connected to the real API

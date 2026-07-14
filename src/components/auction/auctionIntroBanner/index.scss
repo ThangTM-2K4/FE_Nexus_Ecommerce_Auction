@@ -1,0 +1,57 @@
+@use "../../../styles/auction/variables" as *;
+
+.auction-intro-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem 1.15rem;
+  border-radius: $radius-lg;
+  background: linear-gradient(125deg, $obsidian 0%, $midnight-violet 60%, rgba($royal-purple, 0.35) 100%);
+  border: 1px solid $auction-border;
+  margin-bottom: 1.75rem;
+
+  @media (min-width: $breakpoint-tablet) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.35rem 1.5rem;
+  }
+}
+
+.auction-intro-banner__text {
+  h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1.05rem;
+    color: $bone;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: $mist-lavender;
+    line-height: 1.5;
+  }
+}
+
+.auction-intro-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.1rem;
+  border-radius: $radius-pill;
+  border: 1px solid rgba($antique-gold, 0.55);
+  background: rgba($royal-purple, 0.35);
+  color: $gold-bright;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s;
+
+  &:hover {
+    background: rgba($royal-purple, 0.55);
+    border-color: $gold-bright;
+    color: $gold-bright;
+    transform: translateY(-1px);
+  }
+}

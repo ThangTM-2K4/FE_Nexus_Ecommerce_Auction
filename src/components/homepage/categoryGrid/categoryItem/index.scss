@@ -1,0 +1,107 @@
+@use '../../../../styles/palette' as *;
+
+.category-item {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+}
+
+.category-item__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  border: none;
+  background: transparent;
+  transition: transform $transition-fast;
+}
+
+.category-item:hover .category-item__card {
+  transform: translateY(-1px);
+}
+
+.category-item__visual {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, $surface 0%, $surface-muted 100%);
+  border: 1px solid $border-soft;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+}
+
+.category-item:hover .category-item__visual {
+  border-color: rgba($raspberry, 0.35);
+  box-shadow: $shadow-sm;
+}
+
+.category-item__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform $transition;
+}
+
+.category-item:hover .category-item__image {
+  transform: scale(1.05);
+}
+
+.category-item__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba($indigo, 0.3) 100%);
+  opacity: 0;
+  transition: opacity $transition-fast;
+  pointer-events: none;
+}
+
+.category-item:hover .category-item__overlay {
+  opacity: 1;
+}
+
+.category-item__name {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: $ink;
+  line-height: 1.25;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color $transition-fast;
+}
+
+.category-item:hover .category-item__name {
+  color: $accent-dark;
+}
+
+@media (max-width: 1024px) {
+  .category-item__visual {
+    width: 42px;
+    height: 42px;
+  }
+
+  .category-item__name {
+    font-size: 0.66rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .category-item__visual {
+    width: 40px;
+    height: 40px;
+  }
+
+  .category-item__name {
+    font-size: 0.64rem;
+  }
+}

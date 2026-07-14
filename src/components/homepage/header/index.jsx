@@ -154,19 +154,17 @@ export default function Header() {
 
       <div className="header-main">
         <div className="header-shell header-main-shell">
-          <Link to="/" className="header-brand" aria-label="Shop Auction — Trang chủ">
+          <Link to="/" className="header-brand" aria-label="BidDoubleTk — Trang chủ">
             <span className="header-brand-mark">
                <img
                   className="header-brand-image"
                   src="/images/logo/logo.png"
-                  alt="Shop Auction"
+                  alt="BidDoubleTk"
                 />
             </span>
             <span className="header-brand-text">
-              <strong>
-                Shop <span className="header-brand-accent">Auction</span>
-              </strong>
-              <small>Đấu giá thông minh</small>
+              <strong>BidDoubleTk</strong>
+              <small>Thương Mại - Đấu Giá</small>
             </span>
           </Link>
 

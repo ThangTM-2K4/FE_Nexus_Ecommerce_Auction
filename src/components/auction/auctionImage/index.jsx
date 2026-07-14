@@ -1,33 +1,26 @@
-import { useState, useEffect } from "react";
-import { auctionImages } from "../../../data/auctionImages";
-import "./index.scss";
+import { useState } from 'react';
+import './index.scss';
 
-const AuctionImage = ({
+export default function AuctionImage({
   src,
-  alt = "",
-  className = "",
-  ...props
-}) => {
-  const [imgSrc, setImgSrc] = useState(src);
-
-  useEffect(() => {
-    setImgSrc(src);
-  }, [src]);
+  alt,
+  categoryLabel,
+  isLive = false,
+  className = '',
+}) {
+  const [hasError, setHasError] = useState(false);
 
   return (
-    <img
-      {...props}
-      src={imgSrc}
-      alt={alt}
-      className={`auc-image ${className}`.trim()}
-      loading="lazy"
-      onError={() => {
-        if (imgSrc !== auctionImages.fallback) {
-          setImgSrc(auctionImages.fallback);
-        }
-      }}
-    />
+    <div className={`auction-image ${className}`.trim()}>
+      {!hasError && src ? (
+        <img src={src} alt={alt} loading="lazy" onError={() => setHasError(true)} />
+      ) : (
+        <div className="auction-image__fallback" aria-hidden>
+          Không có ảnh
+        </div>
+      )}
+      {isLive && <span className="auction-image__live">TRỰC TIẾP</span>}
+      {categoryLabel && <span className="auction-image__category">{categoryLabel}</span>}
+    </div>
   );
-};
-
-export default AuctionImage;
+}
