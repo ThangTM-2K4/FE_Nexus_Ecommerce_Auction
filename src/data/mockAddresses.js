@@ -1,34 +1,35 @@
 /** Đổi USE_MOCK_ADDRESSES = false để test state rỗng */
 export const USE_MOCK_ADDRESSES = true;
 
+// Shape khớp API mới (User Service): recipientName / recipientPhone / province / ward / street.
 export const MOCK_ADDRESSES = [
   {
     id: 'addr-1',
-    fullName: 'Nguyễn Văn An',
-    phone: '0901234567',
+    recipientName: 'Nguyễn Văn An',
+    recipientPhone: '0901234567',
     province: 'TP. Hồ Chí Minh',
-    district: 'Quận 1',
-    addressLine: '123 Nguyễn Huệ, Phường Bến Nghé',
+    ward: 'Phường Bến Nghé',
+    street: '123 Nguyễn Huệ',
     type: 'home',
     isDefault: true,
   },
   {
     id: 'addr-2',
-    fullName: 'Nguyễn Văn An',
-    phone: '0909876543',
+    recipientName: 'Nguyễn Văn An',
+    recipientPhone: '0909876543',
     province: 'Hà Nội',
-    district: 'Cầu Giấy',
-    addressLine: '45 Xuân Thủy, Dịch Vọng',
+    ward: 'Phường Dịch Vọng',
+    street: '45 Xuân Thủy',
     type: 'office',
     isDefault: false,
   },
   {
     id: 'addr-3',
-    fullName: 'Trần Thị Bình',
-    phone: '0912345678',
+    recipientName: 'Trần Thị Bình',
+    recipientPhone: '0912345678',
     province: 'Đà Nẵng',
-    district: 'Hải Châu',
-    addressLine: '88 Lê Duẩn',
+    ward: 'Phường Hải Châu 1',
+    street: '88 Lê Duẩn',
     type: 'home',
     isDefault: false,
   },

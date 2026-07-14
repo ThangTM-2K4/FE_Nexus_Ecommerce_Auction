@@ -6,11 +6,12 @@ import * as profileService from "../../../services/profileService";
 import * as sellerService from "../../../services/sellerService";
 import Header from "../../../components/homepage/header";
 import Footer from "../../../components/homepage/footer";
+import SellerTermsGate from "./SellerTermsGate";
 import "./index.scss";
 
 const STEPS = ["Thông tin cửa hàng", "Tài khoản ngân hàng"];
 
-import { BANK_OPTIONS } from "../../../data/bankOptions";
+import { useBanks, resolveBankLabel } from "../../../services/bankService";
 
 // Dịch các thông báo lỗi tiếng Anh thường gặp từ backend sang tiếng Việt.
 const translateApiError = (msg) => {
@@ -49,7 +50,7 @@ const initialForm = {
   taxCode: "",
   businessLicense: "",
   pickupAddress: "",
-  bankName: "OCB",
+  bankName: "",
   bankNameCustom: "",
   accountNumber: "",
   accountHolder: "",
@@ -88,7 +89,9 @@ export default function BecomeSellerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [resubmitMode, setResubmitMode] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);
   const [errors, setErrors] = useState({});
+  const { banks, loading: banksLoading } = useBanks();
 
   useEffect(() => {
     const load = async () => {
@@ -131,6 +134,7 @@ export default function BecomeSellerPage() {
       if (!form.pickupAddress.trim()) next.pickupAddress = "Vui lòng nhập địa chỉ lấy hàng";
     }
     if (s === 1) {
+      if (!form.bankName) next.bankName = "Vui lòng chọn ngân hàng";
       if (form.bankName === "other" && !form.bankNameCustom.trim()) {
         next.bankNameCustom = "Vui lòng nhập tên ngân hàng";
       }
@@ -328,9 +332,16 @@ export default function BecomeSellerPage() {
     );
   }
 
+  // Cổng điều khoản: người dùng phải đọc và tích đồng ý điều khoản trước khi
+  // vào form đăng ký / nộp lại đơn.
+  if (!agreedTerms) {
+    return <SellerTermsGate onAgree={() => setAgreedTerms(true)} />;
+  }
+
   const isIndividual = form.businessType === "individual";
   const isResubmit = user?.sellerStatus === "REJECTED" && resubmitMode;
-  const resolvedBank = form.bankName === "other" ? form.bankNameCustom : form.bankName;
+  const resolvedBank =
+    form.bankName === "other" ? form.bankNameCustom : resolveBankLabel(form.bankName);
 
   return (
     <div className="become-seller-page">
@@ -356,6 +367,45 @@ export default function BecomeSellerPage() {
 
           {step === 0 && (
             <div className="seller-form-grid">
+              {(profile?.cccdNumber || profile?.cccdFrontImageUrl) && (
+                <div className="seller-field seller-field--full">
+                  <div className="seller-cccd-carry">
+                    <h3>Giấy tờ định danh (lấy từ hồ sơ của bạn)</h3>
+                    <div className="seller-cccd-carry__info">
+                      {profile.cccdFullName && (
+                        <div><span>Họ tên trên CCCD</span><strong>{profile.cccdFullName}</strong></div>
+                      )}
+                      {profile.cccdNumber && (
+                        <div><span>Số CCCD</span><strong>{profile.cccdNumber}</strong></div>
+                      )}
+                      {profile.cccdAddress && (
+                        <div><span>Địa chỉ thường trú</span><strong>{profile.cccdAddress}</strong></div>
+                      )}
+                    </div>
+                    {(profile.cccdFrontImageUrl || profile.cccdBackImageUrl) && (
+                      <div className="seller-cccd-carry__images">
+                        {profile.cccdFrontImageUrl && (
+                          <figure>
+                            <img src={profile.cccdFrontImageUrl} alt="CCCD mặt trước" />
+                            <figcaption>Mặt trước</figcaption>
+                          </figure>
+                        )}
+                        {profile.cccdBackImageUrl && (
+                          <figure>
+                            <img src={profile.cccdBackImageUrl} alt="CCCD mặt sau" />
+                            <figcaption>Mặt sau</figcaption>
+                          </figure>
+                        )}
+                      </div>
+                    )}
+                    <small>
+                      Giấy tờ này sẽ được gửi kèm đơn đăng ký cho nhân viên duyệt. Cần chỉnh sửa?{' '}
+                      <Link to="/profile/personal-info">Cập nhật tại Thông tin cá nhân</Link>
+                    </small>
+                  </div>
+                </div>
+              )}
+
               <div className="seller-field seller-field--full">
                 <label className="field-label">Loại hình kinh doanh</label>
                 <div className="seller-type-group">
@@ -445,10 +495,13 @@ export default function BecomeSellerPage() {
               <div className="seller-field">
                 <label className="field-label" htmlFor="bankName">Ngân hàng</label>
                 <select id="bankName" name="bankName" value={form.bankName} onChange={handleChange}>
-                  {BANK_OPTIONS.map((b) => (
-                    <option key={b.value} value={b.value}>{b.label}</option>
+                  <option value="">{banksLoading ? "Đang tải danh sách ngân hàng..." : "Chọn ngân hàng"}</option>
+                  {banks.map((b) => (
+                    <option key={b.value} value={b.value}>{b.label} — {b.name}</option>
                   ))}
+                  <option value="other">Ngân hàng khác</option>
                 </select>
+                {errors.bankName && <span className="field-error">{errors.bankName}</span>}
               </div>
 
               {form.bankName === "other" && (

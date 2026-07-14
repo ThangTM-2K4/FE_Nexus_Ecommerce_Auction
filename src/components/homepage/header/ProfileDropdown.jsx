@@ -80,7 +80,7 @@ export default function ProfileDropdown({ onClose, variant }) {
   };
 
   const menuItems = [
-    { to: '/profile', label: 'Hồ sơ của tôi' },
+    { to: isStaff ? '/staff/profile' : '/profile', label: 'Hồ sơ của tôi' },
     becomeSellerItem(),
     // Chỉ seller đã duyệt mới được chuyển qua lại Người mua/Người bán
     // (không áp dụng cho tài khoản quản lý).

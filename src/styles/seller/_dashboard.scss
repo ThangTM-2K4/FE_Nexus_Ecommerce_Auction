@@ -1592,15 +1592,29 @@
   animation: slr-page-in 0.4s ease;
 }
 
+// Chỉ fade, KHÔNG dùng transform: transform trên .slr-page sẽ biến
+// containing block của các phần tử position:fixed con (vd .slr-stock-alert)
+// thành chính .slr-page → toast bị đẩy vào giữa trang, đè lên nội dung.
 @keyframes slr-page-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
+}
+
+// Nhịp dọc nhất quán giữa các khối trong trang seller (fix khung bị dính nhau).
+.slr-section + .slr-section {
+  margin-top: 20px;
+}
+
+.slr-section > .slr-page-split:not(:last-child) {
+  margin-bottom: 20px;
+}
+
+.slr-section > .slr-panel-card:not(:last-child) {
+  margin-bottom: 16px;
 }
 
 .slr-bar-animate {

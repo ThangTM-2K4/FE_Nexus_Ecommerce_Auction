@@ -8,8 +8,7 @@
   z-index: 100;
 
   &__inner {
-    max-width: 1440px;
-    margin: 0 auto;
+    width: 100%;
     padding: 0 24px;
     height: 64px;
     display: flex;
@@ -101,35 +100,6 @@
       background: rgba($color-accent, 0.12);
       color: $color-primary;
     }
-  }
-
-  &__bell {
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: $color-bg;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: $color-text-secondary;
-    position: relative;
-
-    &:hover {
-      color: $color-primary;
-    }
-  }
-
-  &__bell-dot {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: $color-danger;
-    border: 2px solid $color-bg-card;
   }
 
   &__avatar {

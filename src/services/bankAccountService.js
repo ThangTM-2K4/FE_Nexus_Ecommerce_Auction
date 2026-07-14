@@ -2,7 +2,7 @@ import { mockDelay } from "./mockDelay";
 import { getCurrentUser } from "./authService";
 import * as profileService from "./profileService";
 import { getSellerApplication } from "./sellerService";
-import { resolveBankLabel } from "../data/bankOptions";
+import { resolveBankLabel } from "./bankService";
 
 const accountsKey = (userId) => `sellerBankAccounts_${userId}`;
 
@@ -199,20 +199,5 @@ export const addBankAccount = async (userId, formData) => {
     accountHolder: formData.accountHolder,
   });
   const accounts = await getSellerBankAccounts(userId);
-  // #region agent log
-  fetch("http://127.0.0.1:7573/ingest/6a36bee6-8fdb-46c9-a0c0-b55c9704312f", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "239b2f" },
-    body: JSON.stringify({
-      sessionId: "239b2f",
-      runId: "post-fix",
-      hypothesisId: "F",
-      location: "bankAccountService.js:addBankAccount",
-      message: "addBankAccount completed",
-      data: { accountCount: accounts.length },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
   return accounts;
 };

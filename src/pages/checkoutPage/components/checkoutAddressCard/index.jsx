@@ -4,6 +4,16 @@ import './index.scss';
 export default function CheckoutAddressCard({ address }) {
   if (!address) return null;
 
+  const name = address.recipientName ?? address.fullName;
+  const phone = address.recipientPhone ?? address.phone;
+  const line = [
+    address.street ?? address.addressLine,
+    address.ward ?? address.district,
+    address.province,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return (
     <section className="checkout-address-card">
       <header className="checkout-address-card__head">
@@ -14,11 +24,9 @@ export default function CheckoutAddressCard({ address }) {
       </header>
       <div className="checkout-address-card__body">
         <p className="checkout-address-card__name">
-          {address.fullName} <span>{address.phone}</span>
+          {name} <span>{phone}</span>
         </p>
-        <p className="checkout-address-card__line">
-          {address.addressLine}, {address.district}, {address.province}
-        </p>
+        <p className="checkout-address-card__line">{line}</p>
       </div>
     </section>
   );

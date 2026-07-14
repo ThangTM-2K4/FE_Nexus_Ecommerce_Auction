@@ -54,6 +54,7 @@ const buildProfile = (src, identityStatus) => ({
     identityStatus === 'VERIFIED' ||
     truthy(src.isNationalIdVerified, src.identityVerified),
   identityStatus,
+  identityRejectReason: src.identityRejectReason || null,
   bankAccount: src.bankAccount || null,
   // Thông tin CCCD (trang "Thông tin cá nhân") — backend chưa có field riêng,
   // giữ lại từ profile đã lưu để không mất khi tải lại trang.
@@ -89,7 +90,17 @@ export const getProfile = async (userId) => {
     });
   }
 
-  const identityStatus = await fetchIdentityStatus();
+  let identityStatus = await fetchIdentityStatus();
+
+  // Backend chưa có API cho staff duyệt CCCD — quyết định duyệt/từ chối của
+  // staff lưu local phải thắng trạng thái PENDING (hoặc chưa nộp) từ API.
+  const localDecision = storedProfile?.identityStatus;
+  if (
+    (identityStatus == null || identityStatus === 'PENDING') &&
+    (localDecision === 'APPROVED' || localDecision === 'REJECTED')
+  ) {
+    identityStatus = localDecision;
+  }
 
   const profile = buildProfile(src, identityStatus);
   saveProfile(userId, profile);

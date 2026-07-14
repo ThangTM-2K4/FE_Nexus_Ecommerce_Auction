@@ -332,6 +332,79 @@
   }
 }
 
+// Khối "Giấy tờ định danh lấy từ hồ sơ" — cho người dùng thấy CCCD đã được
+// mang qua từ trang Thông tin cá nhân, kèm link quay lại chỉnh sửa.
+.seller-cccd-carry {
+  padding: 16px;
+  background: #f6f3fb;
+  border-radius: 12px;
+  border: 1px solid #e3dcf2;
+
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #3a2c56;
+    margin-bottom: 12px;
+  }
+
+  &__info {
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      font-size: 14px;
+
+      span {
+        color: #64748b;
+      }
+
+      strong {
+        color: #3a2c56;
+        text-align: right;
+        font-weight: 600;
+      }
+    }
+  }
+
+  &__images {
+    display: flex;
+    gap: 12px;
+    margin: 12px 0;
+
+    figure {
+      margin: 0;
+
+      img {
+        width: 140px;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e3dcf2;
+        display: block;
+      }
+
+      figcaption {
+        font-size: 12px;
+        color: #64748b;
+        text-align: center;
+        margin-top: 4px;
+      }
+    }
+  }
+
+  small {
+    display: block;
+    color: #64748b;
+    font-size: 12.5px;
+
+    a {
+      color: #b03052;
+      font-weight: 600;
+    }
+  }
+}
+
 .seller-summary {
   padding: 16px;
   background: #f8fafc;
@@ -524,6 +597,121 @@
       margin-top: 4px;
     }
   }
+}
+
+// Cổng điều khoản trước khi vào form đăng ký Người bán
+.seller-terms-card {
+  max-width: 760px;
+
+  h1 {
+    font-size: 24px;
+    line-height: 1.35;
+  }
+}
+
+.seller-terms-body {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.65;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+  }
+}
+
+.seller-terms-section {
+  & + & {
+    margin-top: 22px;
+  }
+
+  h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #3a2c56;
+    margin-bottom: 8px;
+  }
+
+  p {
+    margin-bottom: 8px;
+  }
+
+  ul {
+    margin: 0 0 4px;
+    padding-left: 20px;
+
+    li {
+      margin-bottom: 6px;
+    }
+  }
+
+  .seller-terms-outro {
+    margin-top: 8px;
+    font-style: italic;
+    color: #475569;
+  }
+}
+
+.seller-terms-note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  background: #fdf2f4;
+  border: 1px solid #f3d3da;
+  border-radius: 10px;
+  color: #7a2333;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.seller-terms-agree {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid #d6dee6;
+  border-radius: 12px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #3a2c56;
+  transition: all 0.2s ease;
+
+  &:hover:not(.disabled) {
+    border-color: #523F77;
+    background: rgba(82, 63, 119, 0.04);
+  }
+
+  &.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin: 1px 0 0;
+    flex-shrink: 0;
+    accent-color: #523F77;
+    cursor: inherit;
+  }
+}
+
+.seller-terms-hint {
+  display: block;
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: #a16207;
 }
 
 @keyframes sellerFadeIn {

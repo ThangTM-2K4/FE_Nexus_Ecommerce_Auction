@@ -8,7 +8,6 @@ const clearAuthStorage = () => {
 };
 
 export const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 const api = axios.create({
   baseURL: BACKEND_BASE_URL,
   headers: {

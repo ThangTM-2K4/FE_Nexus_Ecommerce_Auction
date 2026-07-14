@@ -130,28 +130,75 @@ const writeLocalSellerApplication = (userId, form, application) => {
   return record;
 };
 
+// Đồng bộ CCCD cập nhật ở "Thông tin cá nhân" sang bản ghi đơn/hồ sơ seller
+// (mockSellerApplication_*) — nguồn dữ liệu của Hồ Sơ Shop và trang staff duyệt.
+export const syncProfileToSellerApplication = (userId, cccd) => {
+  if (!userId) return false;
+  try {
+    const key = `mockSellerApplication_${userId}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return false;
+    const record = JSON.parse(raw);
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        ...record,
+        fullName: cccd.cccdFullName || record.fullName,
+        cccdNumber: cccd.cccdNumber || record.cccdNumber,
+        cccdAddress: cccd.cccdAddress || record.cccdAddress,
+        frontImageUrl: cccd.cccdFrontImageUrl || record.frontImageUrl,
+        backImageUrl: cccd.cccdBackImageUrl || record.backImageUrl,
+      })
+    );
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // GET /api/v1/sellers/me
+// Nguồn chính là API. Bản ghi local (mockSellerApplication_${userId}) — nơi
+// staff ghi kết quả duyệt trên cùng máy — được dùng làm dự phòng để luồng
+// seller ↔ staff demo được khép kín KHÔNG cần backend:
+//   • API rỗng / 404 / lỗi mạng  → trả trạng thái từ bản ghi local (nếu có).
+//   • API trả PENDING nhưng staff đã duyệt/từ chối local → ưu tiên local.
 export const getSellerApplication = async (userId) => {
+  const local = readLocalRecord(userId);
+  const localApp = local ? normalizeApplication(local) : null;
+  const localDecided =
+    localApp?.status === 'APPROVED' || localApp?.status === 'REJECTED';
+
   try {
     const res = await api.get('sellers/me');
     const app = normalizeApplication(unwrap(res));
-    if (!app) return null;
+    // API chưa có đơn nào → dùng bản ghi local (staff có thể đã duyệt trên máy này).
+    if (!app) return localApp;
 
-    // Bù mã đơn + thời gian nộp từ bản ghi local nếu API không trả về,
-    // tránh hiển thị mã trống và ngày 1/1/1970.
-    const local = readLocalRecord(userId);
     const submittedAt = app.submittedAt ?? local?.submittedAt ?? null;
     const reviewedAt = app.reviewedAt ?? local?.reviewedAt ?? null;
+
+    // Backend chưa cập nhật quyết định của staff (vẫn PENDING) nhưng local đã
+    // có APPROVED/REJECTED → cho local thắng để seller thấy đúng kết quả.
+    const useLocalDecision = localDecided && app.status === 'PENDING';
+    const status = useLocalDecision ? localApp.status : app.status;
+
     return {
       ...app,
+      status,
       applicationId: app.applicationId ?? local?.applicationId ?? null,
       submittedAt,
-      reviewedAt,
-      timeline: app.timeline ?? buildTimeline(app.status, submittedAt, reviewedAt),
+      reviewedAt: useLocalDecision ? (local?.reviewedAt ?? reviewedAt) : reviewedAt,
+      rejectionReason: app.rejectionReason ?? localApp?.rejectionReason ?? null,
+      adminNote: app.adminNote ?? localApp?.adminNote ?? null,
+      timeline: useLocalDecision
+        ? buildTimeline(status, submittedAt, local?.reviewedAt ?? reviewedAt)
+        : (app.timeline ?? buildTimeline(status, submittedAt, reviewedAt)),
     };
-  } catch (err) {
-    if (err.response?.status === 404) return null;
-    throw err;
+  } catch {
+    // 404 = chưa đăng ký; lỗi khác = mạng/không có backend. Cả hai đều rơi về
+    // bản ghi local (null nếu chưa có đơn → trang hiện form đăng ký), thay vì
+    // ném lỗi làm trang kẹt ở trạng thái "Đang tải...".
+    return localApp;
   }
 };
 

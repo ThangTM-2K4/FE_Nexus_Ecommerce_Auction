@@ -6,11 +6,16 @@ import { useAuth } from '../context/AuthContext';
 export function getRoleTokens(user) {
   const raw = [];
   if (user?.role) raw.push(user.role);
+  if (user?.roleName) raw.push(user.roleName);
+  if (user?.roleCode) raw.push(user.roleCode);
   if (Array.isArray(user?.roles)) raw.push(...user.roles);
+  if (Array.isArray(user?.roleCodes)) raw.push(...user.roleCodes);
 
   return raw
     .map((r) =>
-      typeof r === 'string' ? r : r?.code ?? r?.name ?? r?.role ?? r?.authority ?? ''
+      typeof r === 'string'
+        ? r
+        : r?.code ?? r?.name ?? r?.role ?? r?.roleName ?? r?.authority ?? ''
     )
     .filter(Boolean)
     .map((s) => String(s).toUpperCase().replace(/^ROLE_/, ''));

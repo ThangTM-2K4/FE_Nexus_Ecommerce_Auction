@@ -2,13 +2,11 @@ import { useEffect, useState } from 'react';
 import Select from '../../../common/select';
 import Input from '../../../common/input';
 import Checkbox from '../../../common/checkbox';
-import { BANK_OPTIONS } from '../../../../data/bankOptions';
-import { BRANCH_OPTIONS } from '../../../../data/mockBankAccounts';
+import { useBanks } from '../../../../services/bankService';
 import './index.scss';
 
 const emptyForm = {
   bankCode: '',
-  branchCode: '',
   accountNumber: '',
   accountHolder: '',
   nationalId: '',
@@ -17,6 +15,7 @@ const emptyForm = {
 
 export default function BankAccountForm({ initial, onSubmit }) {
   const [form, setForm] = useState(emptyForm);
+  const { banks, loading: banksLoading } = useBanks();
 
   useEffect(() => {
     if (initial) {
@@ -26,34 +25,9 @@ export default function BankAccountForm({ initial, onSubmit }) {
     }
   }, [initial]);
 
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7573/ingest/6a36bee6-8fdb-46c9-a0c0-b55c9704312f', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '239b2f' },
-      body: JSON.stringify({
-        sessionId: '239b2f',
-        runId: 'post-fix',
-        hypothesisId: 'A',
-        location: 'bankAccountForm/index.jsx:mount',
-        message: 'BankAccountForm mounted with options',
-        data: {
-          bankOptionsCount: BANK_OPTIONS?.length ?? 0,
-          branchKeys: Object.keys(BRANCH_OPTIONS || {}),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }, []);
-  // #endregion
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => {
-      const next = { ...prev, [name]: value };
-      if (name === 'bankCode') next.branchCode = '';
-      return next;
-    });
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCheckbox = (checked) => {
@@ -62,11 +36,9 @@ export default function BankAccountForm({ initial, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const branchLabel = BRANCH_OPTIONS[form.bankCode]?.find((b) => b.value === form.branchCode)?.label || '';
-    onSubmit?.({ ...form, branchName: branchLabel });
+    const bankLabel = banks.find((b) => b.value === form.bankCode)?.label || '';
+    onSubmit?.({ ...form, bankName: bankLabel });
   };
-
-  const branchOptions = form.bankCode ? BRANCH_OPTIONS[form.bankCode] || [] : [];
 
   return (
     <form className="bank-account-form" onSubmit={handleSubmit}>
@@ -75,16 +47,9 @@ export default function BankAccountForm({ initial, onSubmit }) {
         name="bankCode"
         value={form.bankCode}
         onChange={handleChange}
-        options={BANK_OPTIONS}
-        placeholder="Chọn ngân hàng"
-      />
-      <Select
-        label="Tên Chi Nhánh"
-        name="branchCode"
-        value={form.branchCode}
-        onChange={handleChange}
-        options={branchOptions}
-        placeholder="Chọn chi nhánh"
+        options={banks}
+        placeholder={banksLoading ? 'Đang tải danh sách ngân hàng...' : 'Chọn ngân hàng'}
+        disabled={banksLoading}
       />
       <Input
         label="Số Tài Khoản"
