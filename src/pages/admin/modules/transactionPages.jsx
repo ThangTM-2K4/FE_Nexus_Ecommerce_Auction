@@ -131,21 +131,40 @@ export const AdminWallets = () => {
 
 export const AdminWithdrawals = () => {
   const list = useAdminList(mockWithdrawals, ["seller", "id"]);
-  const handle = (row, status) => { list.updateItem(row.id, { status }); toast.success(`Đã ${status === "Đã duyệt" ? "duyệt" : status === "Từ chối" ? "từ chối" : "tạm giữ"}`); };
 
   return (
     <div className="adm-page">
-      <AdminPageHeader kicker="Tài chính" title="Quản lý rút tiền" subtitle="Duyệt yêu cầu rút tiền của seller." />
+      <AdminPageHeader kicker="Tài chính" title="Quản lý rút tiền" subtitle="Theo dõi các yêu cầu rút tiền tự động của seller." />
       <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm seller..." />
+      
+      <div style={{
+        background: 'rgba(31, 169, 104, 0.1)',
+        border: '1px solid #1fa968',
+        padding: '16px 20px',
+        borderRadius: '12px',
+        marginBottom: '24px',
+        color: '#1fa968',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        <span style={{ fontSize: '24px' }}>🗓️</span>
+        <div>
+          <h4 style={{ margin: '0 0 4px 0', fontSize: '15px' }}>Lịch rút tiền tự động</h4>
+          <p style={{ margin: 0, fontSize: '13px', opacity: 0.9 }}>
+            Hệ thống sẽ tự động chốt và thực hiện lệnh rút tiền vào <strong>Thứ 3 hàng tuần</strong>. 
+            Tiền sẽ về tài khoản seller vào <strong>Thứ 4</strong>. Không cần duyệt thủ công.
+          </p>
+        </div>
+      </div>
+
       <AdminStaggerGrid className="adm-withdrawal-grid">
         {list.filtered.map((item) => (
           <WithdrawalCard
             key={item.id}
             item={item}
             actions={item.status === "Chờ duyệt" ? [
-              { label: "Duyệt", variant: "success", onClick: () => handle(item, "Đã duyệt") },
-              { label: "Từ chối", variant: "danger", onClick: () => handle(item, "Từ chối") },
-              { label: "Tạm giữ", onClick: () => handle(item, "Tạm giữ") },
+              { label: "Chi tiết", onClick: () => toast.info(`Xem chi tiết yêu cầu của ${item.seller}`) },
             ] : []}
           />
         ))}

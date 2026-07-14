@@ -228,17 +228,14 @@ const getLocalSellerApplications = () => {
   return sortPendingFirst(merged);
 };
 
-// GET /api/v1/admin/sellers — lấy TẤT CẢ đơn để staff xem cả lịch sử.
-// Rơi về localStorage nếu API lỗi để không chặn luồng làm việc.
+// GET /api/v1/management/sellers-applications
 export const getPendingSellerApplications = async () => {
   try {
-    const res = await api.get('admin/sellers', { params: { page: 1, pageSize: 100 } });
+    const res = await api.get('management/sellers-applications', { params: { page: 1, pageSize: 100 } });
     const items = extractList(unwrap(res));
 
-    // Với mỗi đơn, gọi thêm chi tiết seller + thông tin user để hiển thị đủ.
     const list = await Promise.all(items.map(enrichApplication));
 
-    // Bổ sung đơn cục bộ chưa xuất hiện trên API (ví dụ nộp khi offline).
     const local = getLocalSellerApplications();
     const seenUsers = new Set(list.map((a) => a.userId));
     local.forEach((a) => {
@@ -247,11 +244,8 @@ export const getPendingSellerApplications = async () => {
 
     return sortPendingFirst(list);
   } catch (err) {
-    // API lỗi (thường 401/403 do thiếu quyền staff, hoặc mạng) → dùng dữ liệu
-    // localStorage cùng máy làm dự phòng. Log để tiện chẩn đoán tại sao đơn
-    // từ seller không hiện lên phía staff.
     console.warn(
-      '[staff] GET admin/sellers thất bại, dùng dữ liệu localStorage dự phòng:',
+      '[staff] GET management/sellers-applications thất bại, dùng dữ liệu localStorage dự phòng:',
       err?.response?.status,
       err?.response?.data ?? err?.message
     );
@@ -259,42 +253,36 @@ export const getPendingSellerApplications = async () => {
   }
 };
 
-// PUT /api/v1/admin/sellers/{id}/approve
+// PUT /api/v1/management/sellers-applications/{id}/approve
 export const approveSellerApplication = async (app) => {
   const sellerId = app?.sellerId ?? app?.applicationId ?? app;
   const userId = app?.userId ?? app;
 
   if (app?.source === 'api' && sellerId) {
-    const res = await api.put(`admin/sellers/${sellerId}/approve`);
+    const res = await api.put(`management/sellers-applications/${sellerId}/approve`);
     setLocalApplicationStatus(userId, 'APPROVED');
     return unwrap(res) ?? { sellerId, status: 'APPROVED' };
   }
 
-  // Đơn cục bộ/mock: cập nhật localStorage.
   await mockDelay(600);
   setLocalApplicationStatus(userId, 'APPROVED');
   return { userId, status: 'APPROVED' };
 };
 
-// PUT /api/v1/admin/sellers/{id}/reject  body: { reason }
-export const rejectSellerApplication = async (app, reason, adminNote) => {
+// PUT /api/v1/management/sellers-applications/{id}/reject  body: { reason }
+// RejectSellerRequest chỉ nhận { reason } — field note không có trong swagger BE
+export const rejectSellerApplication = async (app, reason) => {
   const sellerId = app?.sellerId ?? app?.applicationId ?? app;
   const userId = app?.userId ?? app;
 
   if (app?.source === 'api' && sellerId) {
-    const res = await api.put(`admin/sellers/${sellerId}/reject`, { reason });
-    setLocalApplicationStatus(userId, 'REJECTED', {
-      rejectionReason: reason,
-      adminNote: adminNote || '',
-    });
+    const res = await api.put(`management/sellers-applications/${sellerId}/reject`, { reason });
+    setLocalApplicationStatus(userId, 'REJECTED', { rejectionReason: reason });
     return unwrap(res) ?? { sellerId, status: 'REJECTED' };
   }
 
   await mockDelay(600);
-  setLocalApplicationStatus(userId, 'REJECTED', {
-    rejectionReason: reason,
-    adminNote: adminNote || '',
-  });
+  setLocalApplicationStatus(userId, 'REJECTED', { rejectionReason: reason });
   return { userId, status: 'REJECTED' };
 };
 

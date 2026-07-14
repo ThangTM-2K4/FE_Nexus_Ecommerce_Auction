@@ -264,20 +264,18 @@ export const resubmitSellerApplication = async (userId, form) => {
   return application;
 };
 
-// PUT /api/v1/admin/sellers/{id}/approve
+// PUT /api/v1/management/sellers-applications/{id}/approve
 export const simulateAdminApproval = async (sellerId) => {
-  const res = await api.put(`admin/sellers/${sellerId}/approve`);
+  const res = await api.put(`management/sellers-applications/${sellerId}/approve`);
   const application = normalizeApplication(unwrap(res));
   updateSessionUser({ sellerStatus: 'APPROVED' });
   return application;
 };
 
-// PUT /api/v1/admin/sellers/{id}/reject
-export const simulateAdminRejection = async (sellerId, reason, adminNote) => {
-  const res = await api.put(`admin/sellers/${sellerId}/reject`, {
-    reason,
-    note: adminNote,
-  });
+// PUT /api/v1/management/sellers-applications/{id}/reject  body: { reason }
+// RejectSellerRequest chỉ nhận { reason } — field note không có trong swagger BE
+export const simulateAdminRejection = async (sellerId, reason) => {
+  const res = await api.put(`management/sellers-applications/${sellerId}/reject`, { reason });
   const application = normalizeApplication(unwrap(res));
   updateSessionUser({ sellerStatus: 'REJECTED' });
   return application;

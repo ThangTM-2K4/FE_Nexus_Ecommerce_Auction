@@ -169,7 +169,7 @@ export const getAdminSellers = async ({ status, page = 1, pageSize = 20 } = {}) 
   const params = { page, pageSize };
   if (status) params.status = status;
 
-  const { data } = await api.get("/admin/sellers", { params });
+  const { data } = await api.get("/management/sellers-applications", { params });
   const paged = unwrapPagedList(data);
 
   return {
@@ -179,21 +179,22 @@ export const getAdminSellers = async ({ status, page = 1, pageSize = 20 } = {}) 
 };
 
 export const getAdminSellerById = async (id) => {
-  const { data } = await api.get(`/admin/sellers/${id}`);
+  const { data } = await api.get(`/management/sellers-applications/${id}`);
   return mapSellerToCard(unwrapData(data));
 };
 
 export const getAdminSellerDetail = async (id) => {
-  const { data } = await api.get(`/admin/sellers/${id}`);
+  const { data } = await api.get(`/management/sellers-applications/${id}`);
   return unwrapData(data);
 };
 
 export const approveAdminSeller = async (id) => {
-  const { data } = await api.put(`/admin/sellers/${id}/approve`);
+  const { data } = await api.put(`/management/sellers-applications/${id}/approve`);
   return unwrapData(data);
 };
 
+// RejectSellerRequest chỉ nhận { reason } — field note không có trong swagger
 export const rejectAdminSeller = async (id, reason) => {
-  const { data } = await api.put(`/admin/sellers/${id}/reject`, { reason });
+  const { data } = await api.put(`/management/sellers-applications/${id}/reject`, { reason });
   return unwrapData(data);
 };
