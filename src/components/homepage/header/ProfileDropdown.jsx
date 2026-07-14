@@ -31,9 +31,9 @@ export default function ProfileDropdown({ onClose, variant }) {
 
     try {
       await logout();
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     } catch {
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     }
   };
 

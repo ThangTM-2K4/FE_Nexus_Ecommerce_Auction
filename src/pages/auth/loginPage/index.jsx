@@ -177,6 +177,14 @@ function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
+        <button
+          type="button"
+          className="back-home-btn"
+          onClick={() => navigate('/')}
+        >
+          ← Quay về trang chủ
+        </button>
+
         <h1>Sàn Đấu Giá Điện Tử</h1>
 
         <p className="subtitle">

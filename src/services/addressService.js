@@ -1,66 +1,71 @@
-import { mockDelay } from './mockDelay';
-import { USE_MOCK_ADDRESSES, MOCK_ADDRESSES } from '../data/mockAddresses';
+import api from '../config/api';
 
-const key = (userId) => `mockAddresses_${userId}`;
+// ─── Mapping helpers ──────────────────────────────────────────────────────────
 
-const getStored = (userId) => {
-  const raw = localStorage.getItem(key(userId));
-  if (raw) {
-    try {
-      return JSON.parse(raw);
-    } catch {
-      /* fall through */
-    }
-  }
-  const initial = USE_MOCK_ADDRESSES ? [...MOCK_ADDRESSES] : [];
-  localStorage.setItem(key(userId), JSON.stringify(initial));
-  return initial;
+/**
+ * Chuyển response từ BE sang format FE đang dùng.
+ * BE trả về: { id, recipientName, recipientPhone, province, ward, street, type, isDefault }
+ * FE dùng:   { id, fullName, phone, province, district, addressLine, type, isDefault }
+ */
+const toFE = (addr) => {
+  if (!addr) return null;
+  return {
+    id: addr.id,
+    fullName: addr.recipientName ?? addr.fullName ?? '',
+    phone: addr.recipientPhone ?? addr.phone ?? '',
+    province: addr.province ?? '',
+    district: addr.district ?? addr.ward ?? '',
+    addressLine: addr.addressLine ?? addr.street ?? '',
+    type: addr.type ?? 'home',
+    isDefault: addr.isDefault ?? false,
+  };
 };
 
-const save = (userId, list) => {
-  localStorage.setItem(key(userId), JSON.stringify(list));
+/**
+ * Chuyển form FE → body gửi lên BE (CreateAddressRequest / UpdateAddressRequest).
+ */
+const toBE = (address) => ({
+  recipientName: address.fullName,
+  recipientPhone: address.phone,
+  province: address.province,
+  ward: address.district,
+  street: address.addressLine,
+  type: address.type,
+  isDefault: address.isDefault ?? false,
+});
+
+const unwrap = (res) => {
+  const body = res?.data;
+  if (body && typeof body === 'object' && 'data' in body) return body.data;
+  return body ?? null;
 };
 
-export const getAddresses = async (userId) => {
-  await mockDelay(300);
-  return getStored(userId);
+// ─── Service functions ────────────────────────────────────────────────────────
+
+export const getAddresses = async () => {
+  const res = await api.get('/users/addresses');
+  const data = unwrap(res);
+  const list = Array.isArray(data) ? data : (data?.items ?? data?.addresses ?? []);
+  return list.map(toFE).filter(Boolean);
 };
 
-export const addAddress = async (userId, address) => {
-  await mockDelay(300);
-  const list = getStored(userId);
-  const newItem = { ...address, id: `addr-${Date.now()}` };
-  let updated = [...list, newItem];
-  if (newItem.isDefault) {
-    updated = updated.map((a) => ({ ...a, isDefault: a.id === newItem.id }));
-  }
-  save(userId, updated);
-  return updated;
+export const addAddress = async (_userId, address) => {
+  await api.post('/users/addresses', toBE(address));
+  // Trả về danh sách mới nhất từ BE
+  return getAddresses();
 };
 
-export const updateAddress = async (userId, id, data) => {
-  await mockDelay(300);
-  let list = getStored(userId).map((a) => (a.id === id ? { ...a, ...data, id } : a));
-  if (data.isDefault) {
-    list = list.map((a) => ({ ...a, isDefault: a.id === id }));
-  }
-  save(userId, list);
-  return list;
+export const updateAddress = async (_userId, id, data) => {
+  await api.put(`/users/addresses/${id}`, toBE(data));
+  return getAddresses();
 };
 
-export const deleteAddress = async (userId, id) => {
-  await mockDelay(300);
-  let list = getStored(userId).filter((a) => a.id !== id);
-  if (list.length && !list.some((a) => a.isDefault)) {
-    list[0] = { ...list[0], isDefault: true };
-  }
-  save(userId, list);
-  return list;
+export const deleteAddress = async (_userId, id) => {
+  await api.delete(`/users/addresses/${id}`);
+  return getAddresses();
 };
 
-export const setDefaultAddress = async (userId, id) => {
-  await mockDelay(200);
-  const list = getStored(userId).map((a) => ({ ...a, isDefault: a.id === id }));
-  save(userId, list);
-  return list;
+export const setDefaultAddress = async (_userId, id) => {
+  await api.patch(`/users/addresses/${id}/default`);
+  return getAddresses();
 };

@@ -12,6 +12,27 @@
   padding: 36px 42px;
 }
 
+.back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $ink-muted;
+  cursor: pointer;
+  transition: $transition;
+  letter-spacing: 0.01em;
+
+  &:hover {
+    color: $raspberry;
+    gap: 8px;
+  }
+}
+
 .login-card h1 {
   @include auth.auth-title;
   text-align: center;
