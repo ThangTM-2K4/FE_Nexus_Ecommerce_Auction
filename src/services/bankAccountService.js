@@ -198,6 +198,5 @@ export const addBankAccount = async (userId, formData) => {
     accountNumber: formData.accountNumber,
     accountHolder: formData.accountHolder,
   });
-  const accounts = await getSellerBankAccounts(userId);
-  return accounts;
+  return getSellerBankAccounts(userId);
 };
