@@ -4,7 +4,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../../context/AuthContext';
-import { getGoogleLoginUrl } from '../../../services/authService';
+import { getGoogleLoginUrl, ACCOUNT_BLOCKED_DETAIL } from '../../../services/authService';
 import { getRoleTokens } from '../../../config/ProtectedRoute';
 import './index.scss';
 
@@ -136,27 +136,29 @@ function LoginPage() {
     } catch (err) {
 
       const newErrors = {};
+      const detail =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        "";
 
-      if (
-        err.message?.includes("Email")
-      ) {
-        newErrors.login =
-          "Email không tồn tại";
+      if (err.response?.status === 401) {
+        // BE gộp LOCKED/BANNED/BLOCKED/INACTIVE vào chung câu detail này.
+        if (detail === ACCOUNT_BLOCKED_DETAIL || /not allowed/i.test(detail)) {
+          toast.error(
+            "Tài khoản của bạn đã bị khóa vì sai thông tin đăng nhập nhiều lần. Vui lòng thử lại sau 15 phút."
+          );
+          return;
+        }
+
+        // Còn lại là sai email/số điện thoại hoặc mật khẩu.
+        newErrors.login = "Thông tin đăng nhập không chính xác";
+        setErrors(newErrors);
+        toast.error("Thông tin đăng nhập không chính xác");
+        return;
       }
 
-      if (
-        err.message?.includes("Password")
-      ) {
-        newErrors.password =
-          "Mật khẩu không chính xác";
-      }
+      toast.error(err.message || "Đăng nhập thất bại");
 
-      setErrors(newErrors);
-
-      toast.error(
-        err.message || "Đăng nhập thất bại"
-      );
-    
     } finally {
       setLoading(false);
     }

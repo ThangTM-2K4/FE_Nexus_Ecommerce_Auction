@@ -167,17 +167,23 @@ export const hadStoredSession = () => {
   );
 };
 
+// Chuỗi `detail` mà BE trả về ở response 401 khi tài khoản không được phép
+// đăng nhập (LOCKED/BANNED/BLOCKED/INACTIVE đều gộp chung câu này).
+export const ACCOUNT_BLOCKED_DETAIL = "User is not allowed to login.";
+
 export const login = async (loginValue, password) => {
-  // 1. Log in
+  // 1. Log in — BE trả 401 nếu tài khoản bị chặn hoặc sai thông tin đăng nhập
   const { data } = await api.post("/auth/login", {
     emailOrPhone: loginValue,
     password,
   });
+  const authData = data.data;
 
-  if (!data?.data?.accessToken) {
+  // Response 200 luôn ứng với status ACTIVE; chỉ cần chắc chắn có accessToken.
+  if (!authData?.accessToken) {
     throw new Error("Đăng nhập thất bại");
   }
-
+  
   // 2. Save accessToken, refreshToken, expiresAt
   saveSession(data);
 
