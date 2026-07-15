@@ -1,18 +1,25 @@
-import './index.scss';
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import * as notificationService from '../../../services/notificationService';
-import NotificationDropdown from './NotificationDropdown';
-import ProfileDropdown from './ProfileDropdown';
+import "./index.scss";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import * as notificationService from "../../../services/notificationService";
+import NotificationDropdown from "./NotificationDropdown";
+import ProfileDropdown from "./ProfileDropdown";
 
 export default function Header() {
   const navigate = useNavigate();
-  const [language, setLanguage] = useState('vi');
+  const [language, setLanguage] = useState("vi");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { isAuthenticated, user, isApprovedSeller, isSellerMode, isBuyerMode, switchAccountMode } = useAuth();
+  const {
+    isAuthenticated,
+    user,
+    isApprovedSeller,
+    isSellerMode,
+    isBuyerMode,
+    switchAccountMode,
+  } = useAuth();
 
   useEffect(() => {
     if (!user?.id) {
@@ -23,23 +30,23 @@ export default function Header() {
   }, [user?.id, showNotifications]);
 
   const handleLanguageChange = () => {
-    setLanguage(language === 'vi' ? 'en' : 'vi');
+    setLanguage(language === "vi" ? "en" : "vi");
   };
 
   const initials = user?.fullName
     ? user.fullName
-        .split(' ')
+        .split(" ")
         .map((w) => w[0])
         .slice(0, 2)
-        .join('')
+        .join("")
         .toUpperCase()
-    : '?';
+    : "?";
 
   const handleGoToSellerHub = async () => {
     if (!isSellerMode) {
-      await switchAccountMode('SELLER');
+      await switchAccountMode("SELLER");
     }
-    navigate('/seller-hub/overview');
+    navigate("/seller-hub/overview");
   };
 
   const closeDropdowns = () => {
@@ -64,33 +71,42 @@ export default function Header() {
               <a href="#seller-center">Kênh Người Bán</a>
             )}
             {!isApprovedSeller && (
-              <Link to={isAuthenticated ? '/profile/become-seller' : '/register'}>
-                {user?.sellerStatus === 'PENDING'
-                  ? 'Đang chờ phê duyệt'
-                  : user?.sellerStatus === 'REJECTED'
-                    ? 'Đơn bị từ chối'
-                    : 'Trở thành Người bán'}
+              <Link
+                to={isAuthenticated ? "/profile/become-seller" : "/register"}
+              >
+                {user?.sellerStatus === "PENDING"
+                  ? "Đang chờ phê duyệt"
+                  : user?.sellerStatus === "REJECTED"
+                    ? "Đơn bị từ chối"
+                    : "Trở thành Người bán"}
               </Link>
             )}
             <a href="#app">Tải ứng dụng</a>
             <a href="#connect">Kết nối</a>
           </nav>
 
-          <nav className="header-topbar-group header-topbar-group-right" aria-label="User account">
+          <nav
+            className="header-topbar-group header-topbar-group-right"
+            aria-label="User account"
+          >
             <a href="#support">Hỗ Trợ</a>
             <button
               type="button"
               className="header-language"
               onClick={handleLanguageChange}
-              aria-label={`Đổi ngôn ngữ — hiện tại ${language === 'vi' ? 'Tiếng Việt' : 'English'}`}
+              aria-label={`Đổi ngôn ngữ — hiện tại ${language === "vi" ? "Tiếng Việt" : "English"}`}
             >
-              {language === 'vi' ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}
+              {language === "vi" ? "VIE" : "ENG"}
             </button>
 
             {!isAuthenticated ? (
               <>
-                <Link to="/register" className="header-topbar-cta">Đăng Ký</Link>
-                <Link to="/login" className="header-topbar-login">Đăng Nhập</Link>
+                <Link to="/register" className="header-topbar-cta">
+                  Đăng Ký
+                </Link>
+                <Link to="/login" className="header-topbar-login">
+                  Đăng Nhập
+                </Link>
               </>
             ) : (
               <div className="header-topbar-auth">
@@ -111,10 +127,16 @@ export default function Header() {
                         strokeWidth="1.8"
                         strokeLinejoin="round"
                       />
-                      <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.8" />
+                      <path
+                        d="M13.73 21a2 2 0 0 1-3.46 0"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      />
                     </svg>
                     {unreadCount > 0 && (
-                      <span className="header-notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                      <span className="header-notif-badge">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
                     )}
                   </button>
                   {showNotifications && (
@@ -122,7 +144,9 @@ export default function Header() {
                       onClose={() => {
                         setShowNotifications(false);
                         if (user?.id) {
-                          notificationService.getUnreadCount(user.id).then(setUnreadCount);
+                          notificationService
+                            .getUnreadCount(user.id)
+                            .then(setUnreadCount);
                         }
                       }}
                     />
@@ -141,7 +165,10 @@ export default function Header() {
                   >
                     <span className="header-profile-avatar">{initials}</span>
                     {isApprovedSeller && (
-                      <span className="header-profile-seller-dot" title="Người bán đã xác minh" />
+                      <span
+                        className="header-profile-seller-dot"
+                        title="Người bán đã xác minh"
+                      />
                     )}
                   </button>
                   {showProfile && <ProfileDropdown onClose={closeDropdowns} />}
@@ -154,13 +181,17 @@ export default function Header() {
 
       <div className="header-main">
         <div className="header-shell header-main-shell">
-          <Link to="/" className="header-brand" aria-label="BidDoubleTk — Trang chủ">
+          <Link
+            to="/"
+            className="header-brand"
+            aria-label="BidDoubleTk — Trang chủ"
+          >
             <span className="header-brand-mark">
-               <img
-                  className="header-brand-image"
-                  src="/images/logo/logo.png"
-                  alt="BidDoubleTk"
-                />
+              <img
+                className="header-brand-image"
+                src="/images/logo/logo.png"
+                alt="BidDoubleTk"
+              />
             </span>
             <span className="header-brand-text">
               <strong>BidDoubleTk</strong>
@@ -169,9 +200,17 @@ export default function Header() {
           </Link>
 
           <div className="header-main-tools">
-            <form className="header-search" role="search" aria-label="Tìm kiếm sản phẩm">
-              <label htmlFor="search-input" className="sr-only">Tìm kiếm sản phẩm</label>
-              <span className="header-search-icon" aria-hidden="true">⌕</span>
+            <form
+              className="header-search"
+              role="search"
+              aria-label="Tìm kiếm sản phẩm"
+            >
+              <label htmlFor="search-input" className="sr-only">
+                Tìm kiếm sản phẩm
+              </label>
+              <span className="header-search-icon" aria-hidden="true">
+                ⌕
+              </span>
               <input
                 id="search-input"
                 type="search"
@@ -181,17 +220,40 @@ export default function Header() {
             </form>
 
             <nav className="header-actions" aria-label="Hành động chính">
-              <a href="/cart" className="header-cart" aria-label="Giỏ hàng — 3 sản phẩm">
-                <svg className="header-cart-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M6 6h15l-1.5 9H7.5L6 6Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-                  <path d="M6 6 5 3H2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <a
+                href="/cart"
+                className="header-cart"
+                aria-label="Giỏ hàng — 3 sản phẩm"
+              >
+                <svg
+                  className="header-cart-svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M6 6h15l-1.5 9H7.5L6 6Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 6 5 3H2"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
                   <circle cx="9" cy="20" r="1.5" fill="currentColor" />
                   <circle cx="18" cy="20" r="1.5" fill="currentColor" />
                 </svg>
                 <span className="header-cart-badge">3</span>
               </a>
 
-              <Link to="/auction/browse" className="header-auction-cta btn-cta-effect" aria-label="Đấu giá trực tiếp">
+              <Link
+                to="/auction/browse"
+                className="header-auction-cta btn-cta-effect"
+                aria-label="Đấu giá trực tiếp"
+              >
                 <span className="header-auction-live">
                   <span className="header-auction-dot" aria-hidden="true" />
                   LIVE
@@ -200,7 +262,10 @@ export default function Header() {
                   <small>Đấu giá ngay</small>
                   <strong>
                     Xem phiên
-                    <span className="btn-cta-effect__arrow" aria-hidden="true"> →</span>
+                    <span className="btn-cta-effect__arrow" aria-hidden="true">
+                      {" "}
+                      →
+                    </span>
                   </strong>
                 </span>
               </Link>
@@ -212,7 +277,9 @@ export default function Header() {
       <nav className="header-subnav" aria-label="Đấu giá nổi bật">
         <div className="header-shell header-subnav-shell">
           <Link to="/auction/browse" className="header-pill header-pill-hot">
-            <span className="header-pill-icon" aria-hidden="true">🔥</span>
+            <span className="header-pill-icon" aria-hidden="true">
+              🔥
+            </span>
             <strong>ĐẤU GIÁ HOT</strong>
           </Link>
 
