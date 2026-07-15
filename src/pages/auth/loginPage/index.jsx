@@ -5,6 +5,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../../context/AuthContext';
 import { getGoogleLoginUrl } from '../../../services/authService';
+import { getRoleTokens } from '../../../config/ProtectedRoute';
 import './index.scss';
 
 function LoginPage() {
@@ -120,29 +121,16 @@ function LoginPage() {
           return;
         }
 
-        switch (user.role) {
-          case "ADMIN":
-            navigate("/admin");
-            break;
+        const roleTokens = getRoleTokens(user);
 
-          case "SUPPORT_STAFF":
-            navigate("/staff/overview");
-            break;
-
-          case "SELLER":
-            navigate("/seller");
-            break;
-
-          case "BUYER":
-            navigate("/");
-            break;
-
-          case "USER":
-            navigate("/");
-            break;
-
-          default:
-            navigate("/");
+        if (roleTokens.includes("ADMIN") || roleTokens.includes("SUPER_ADMIN")) {
+          navigate("/admin");
+        } else if (roleTokens.includes("STAFF") || roleTokens.includes("SUPPORT_STAFF")) {
+          navigate("/staff/overview");
+        } else if (roleTokens.includes("SELLER") || user.sellerStatus === "APPROVED") {
+          navigate("/seller");
+        } else {
+          navigate("/");
         }
       }, 1000);
     } catch (err) {
@@ -177,6 +165,14 @@ function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
+        <button
+          type="button"
+          className="back-home-btn"
+          onClick={() => navigate('/')}
+        >
+          ← Quay về trang chủ
+        </button>
+
         <h1>Sàn Đấu Giá Điện Tử</h1>
 
         <p className="subtitle">

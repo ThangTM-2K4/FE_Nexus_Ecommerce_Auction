@@ -54,3 +54,9 @@ export const mockCategories = NAMES.map((name, index) => ({
   name,
   icon: ICONS[index % ICONS.length],
 }));
+
+export const PROVINCE_OPTIONS = [
+  { value: 'hcm', label: 'TP. Hồ Chí Minh' },
+  { value: 'hn', label: 'Hà Nội' },
+  { value: 'dn', label: 'Đà Nẵng' },
+];

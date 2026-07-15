@@ -191,42 +191,218 @@ export const AdminAuctionProducts = () => {
 
 export const AdminCategories = () => {
   const list = useAdminList(mockCategories, ["name", "id"]);
-  const [modal, setModal] = useState(null);
+  const [expanded, setExpanded] = useState({});
+  const [modal, setModal] = useState(null); // null | "add-parent" | "add-child" | "edit-parent" | "edit-child"
   const [form, setForm] = useState({});
+  const [activeParentId, setActiveParentId] = useState(null);
 
+  const toggleExpand = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const totalChildren = list.filtered.reduce((s, cat) => s + (cat.children?.length ?? 0), 0);
+  const totalProducts = list.filtered.reduce((s, cat) => s + (cat.productCount ?? 0), 0);
+
+  // ── Parent actions ─────────────────────────────────────────────
+  const handleEditParent = (cat) => {
+    setForm({ id: cat.id, name: cat.name, icon: cat.icon, status: cat.status });
+    setModal("edit-parent");
+  };
+  const handleToggleParent = (cat) => {
+    const next = cat.status === "Hoạt động" ? "Tắt" : "Hoạt động";
+    list.updateItem(cat.id, { status: next });
+    toast.success(`Danh mục "${cat.name}" đã ${next === "Tắt" ? "tắt" : "bật"}`);
+  };
+  const handleDeleteParent = (cat) => {
+    list.removeItem(cat.id);
+    toast.info(`Đã xóa "${cat.name}"`);
+  };
+  const handleAddChild = (parentId) => {
+    setActiveParentId(parentId);
+    setForm({ name: "", status: "Hoạt động" });
+    setModal("add-child");
+  };
+
+  // ── Child actions ──────────────────────────────────────────────
+  const handleEditChild = (parentId, child) => {
+    setActiveParentId(parentId);
+    setForm({ ...child });
+    setModal("edit-child");
+  };
+  const handleToggleChild = (parentId, child) => {
+    const next = child.status === "Hoạt động" ? "Tắt" : "Hoạt động";
+    const parent = list.filtered.find((c) => c.id === parentId);
+    if (!parent) return;
+    const newChildren = parent.children.map((c) => c.id === child.id ? { ...c, status: next } : c);
+    list.updateItem(parentId, { children: newChildren });
+    toast.success(`"${child.name}" đã ${next === "Tắt" ? "tắt" : "bật"}`);
+  };
+  const handleDeleteChild = (parentId, child) => {
+    const parent = list.filtered.find((c) => c.id === parentId);
+    if (!parent) return;
+    list.updateItem(parentId, { children: parent.children.filter((c) => c.id !== child.id) });
+    toast.info(`Đã xóa "${child.name}"`);
+  };
+
+  // ── Save ───────────────────────────────────────────────────────
   const save = () => {
-    if (modal === "add") list.addItem({ ...form, id: `DM-${Date.now()}`, status: form.status || "Hoạt động", productCount: 0 });
-    else list.updateItem(form.id, form);
+    if (modal === "add-parent") {
+      list.addItem({ ...form, id: `cat-${Date.now()}`, status: "Hoạt động", productCount: 0, children: [] });
+    } else if (modal === "edit-parent") {
+      list.updateItem(form.id, { name: form.name, icon: form.icon, status: form.status });
+    } else if (modal === "add-child") {
+      const parent = list.filtered.find((c) => c.id === activeParentId);
+      if (!parent) return;
+      const newChild = { id: `cat-${Date.now()}`, name: form.name, status: "Hoạt động", productCount: 0 };
+      list.updateItem(activeParentId, { children: [...(parent.children ?? []), newChild] });
+    } else if (modal === "edit-child") {
+      const parent = list.filtered.find((c) => c.id === activeParentId);
+      if (!parent) return;
+      const newChildren = parent.children.map((c) => c.id === form.id ? { ...c, name: form.name, status: form.status } : c);
+      list.updateItem(activeParentId, { children: newChildren });
+    }
     toast.success("Đã lưu");
     setModal(null);
   };
 
+  const modalTitle = {
+    "add-parent": "Thêm danh mục cha",
+    "edit-parent": "Sửa danh mục cha",
+    "add-child": "Thêm danh mục con",
+    "edit-child": "Sửa danh mục con",
+  }[modal];
+
   return (
     <div className="adm-page">
-      <AdminPageHeader kicker="Danh mục" title="Quản lý danh mục" subtitle="Cây danh mục và danh mục con." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} actions={[{ label: "+ Thêm danh mục", onClick: () => { setForm({}); setModal("add"); } }]} />
-      <div className="adm-category-list">
+      <AdminPageHeader
+        kicker="Danh mục"
+        title="Quản lý danh mục"
+        subtitle="Cây danh mục 2 tầng — danh mục cha chứa các danh mục con."
+      />
+
+      {/* Overview stats */}
+      <div className="adm-cat-stats">
+        <div className="adm-cat-stat"><span>{list.filtered.length}</span><small>Danh mục cha</small></div>
+        <div className="adm-cat-stat"><span>{totalChildren}</span><small>Danh mục con</small></div>
+        <div className="adm-cat-stat"><span>{totalProducts.toLocaleString("vi-VN")}</span><small>Tổng sản phẩm</small></div>
+        <div className="adm-cat-stat warn">
+          <span>{list.filtered.filter((c) => c.status !== "Hoạt động").length}</span>
+          <small>Đang tắt</small>
+        </div>
+      </div>
+
+      <AdminToolbar
+        search={list.search}
+        onSearchChange={list.setSearch}
+        searchPlaceholder="Tìm danh mục..."
+        actions={[{ label: "+ Thêm danh mục cha", onClick: () => { setForm({ name: "", icon: "📦", status: "Hoạt động" }); setModal("add-parent"); } }]}
+      />
+
+      <div className="adm-category-tree">
         {list.filtered.map((cat) => (
-          <CategoryTreeItem
-            key={cat.id}
-            cat={cat}
-            onEdit={() => { setForm({ ...cat }); setModal("edit"); }}
-            onToggle={() => { const n = cat.status === "Hoạt động" ? "Tắt" : "Hoạt động"; list.updateItem(cat.id, { status: n }); toast.success(`Đã ${n === "Tắt" ? "tắt" : "bật"}`); }}
-            onDelete={() => { list.removeItem(cat.id); toast.info("Đã xóa"); }}
-          />
+          <div key={cat.id} className={`adm-cat-group ${cat.status !== "Hoạt động" ? "disabled" : ""}`}>
+            {/* ── Parent row ── */}
+            <div className="adm-cat-parent">
+              <button
+                type="button"
+                className={`adm-cat-parent__toggle ${expanded[cat.id] ? "open" : ""}`}
+                onClick={() => toggleExpand(cat.id)}
+                aria-label="Mở rộng"
+              >
+                <span className="adm-cat-parent__chevron">{expanded[cat.id] ? "▾" : "▸"}</span>
+              </button>
+              <span className="adm-cat-parent__icon">{cat.icon}</span>
+              <div className="adm-cat-parent__info">
+                <strong>{cat.name}</strong>
+                <small>{cat.children?.length ?? 0} danh mục con · {cat.productCount} sản phẩm</small>
+              </div>
+              <span className={`adm-cat-badge ${cat.status === "Hoạt động" ? "active" : "off"}`}>
+                {cat.status}
+              </span>
+              <div className="adm-cat-parent__actions">
+                <button type="button" className="act-edit" onClick={() => handleEditParent(cat)}>Sửa</button>
+                <button type="button" className="act-add" onClick={() => { handleAddChild(cat.id); if (!expanded[cat.id]) toggleExpand(cat.id); }}>+ Con</button>
+                <button type="button" className="act-toggle" onClick={() => handleToggleParent(cat)}>
+                  {cat.status === "Hoạt động" ? "Tắt" : "Bật"}
+                </button>
+                <button type="button" className="act-delete" onClick={() => handleDeleteParent(cat)}>Xóa</button>
+              </div>
+            </div>
+
+            {/* ── Children rows ── */}
+            {expanded[cat.id] && (
+              <div className="adm-cat-children">
+                {(cat.children ?? []).length === 0 && (
+                  <p className="adm-cat-children__empty">Chưa có danh mục con.</p>
+                )}
+                {(cat.children ?? []).map((child) => (
+                  <div key={child.id} className={`adm-cat-child ${child.status !== "Hoạt động" ? "disabled" : ""}`}>
+                    <span className="adm-cat-child__dot">└</span>
+                    <div className="adm-cat-child__info">
+                      <span>{child.name}</span>
+                      <small>{child.productCount} sản phẩm</small>
+                    </div>
+                    <span className={`adm-cat-badge sm ${child.status === "Hoạt động" ? "active" : "off"}`}>
+                      {child.status}
+                    </span>
+                    <div className="adm-cat-child__actions">
+                      <button type="button" className="act-edit" onClick={() => handleEditChild(cat.id, child)}>Sửa</button>
+                      <button type="button" className="act-toggle" onClick={() => handleToggleChild(cat.id, child)}>
+                        {child.status === "Hoạt động" ? "Tắt" : "Bật"}
+                      </button>
+                      <button type="button" className="act-delete" onClick={() => handleDeleteChild(cat.id, child)}>Xóa</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ))}
       </div>
-      <AdminModal open={!!modal} title={modal === "add" ? "Thêm danh mục" : "Sửa danh mục"} onClose={() => setModal(null)}>
+
+      {/* Modal thêm/sửa */}
+      <AdminModal open={!!modal} title={modalTitle} onClose={() => setModal(null)}>
         <div className="adm-form">
-          <label>Tên<input value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-          <label>Danh mục cha
-            <select value={form.parent || ""} onChange={(e) => setForm({ ...form, parent: e.target.value })}>
-              {["—", "Điện thoại", "Laptop", "Đồng hồ", "Thời trang"].map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
+          {(modal === "add-parent" || modal === "edit-parent") && (
+            <label>
+              Icon (emoji)
+              <input
+                value={form.icon || ""}
+                onChange={(e) => setForm({ ...form, icon: e.target.value })}
+                placeholder="VD: 💻"
+                maxLength={4}
+              />
+            </label>
+          )}
+          <label>
+            Tên danh mục
+            <input
+              value={form.name || ""}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Nhập tên danh mục..."
+              autoFocus
+            />
           </label>
+          {(modal === "add-parent" || modal === "edit-parent") && (
+            <label>
+              Trạng thái
+              <select value={form.status || "Hoạt động"} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                <option value="Hoạt động">Hoạt động</option>
+                <option value="Tắt">Tắt</option>
+              </select>
+            </label>
+          )}
+          {(modal === "add-child" || modal === "edit-child") && (
+            <label>
+              Danh mục cha
+              <input
+                value={list.filtered.find((c) => c.id === activeParentId)?.name ?? ""}
+                disabled
+                style={{ opacity: 0.6 }}
+              />
+            </label>
+          )}
           <div className="adm-form__actions">
             <button type="button" className="cancel" onClick={() => setModal(null)}>Hủy</button>
-            <button type="button" className="save" onClick={save}>Lưu</button>
+            <button type="button" className="save" onClick={save} disabled={!form.name?.trim()}>Lưu</button>
           </div>
         </div>
       </AdminModal>

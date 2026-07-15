@@ -2,7 +2,7 @@ import { mockDelay } from "./mockDelay";
 import { getCurrentUser } from "./authService";
 import * as profileService from "./profileService";
 import { getSellerApplication } from "./sellerService";
-import { resolveBankLabel } from "../data/bankOptions";
+import { resolveBankLabel } from "./bankService";
 
 const accountsKey = (userId) => `sellerBankAccounts_${userId}`;
 

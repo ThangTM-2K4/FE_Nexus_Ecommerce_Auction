@@ -73,8 +73,8 @@ export const sidebarMenuItems = [
 ];
 
 export const categoryStaffInfo = {
-  email: "nganhang.dienthoai@shopee.vn",
-  updatedAt: "15:40 30/05/2023",
+  email: "baotlgse184044@fpt.edu.vn",
+  updatedAt: "9:30 10/07/2026",
 };
 
 export const shopRatingSummary = {

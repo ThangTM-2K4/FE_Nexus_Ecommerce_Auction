@@ -5,6 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { register } from "../../../services/authService";
+import {
+  PASSWORD_RULES,
+  getPasswordStrength,
+  getPassedRules,
+  isPasswordValid,
+} from "../../../utils/passwordStrength";
 import "./index.scss";
 
 function RegisterPage() {
@@ -63,14 +69,9 @@ function RegisterPage() {
   if (!formData.password.trim()) {
     newErrors.password =
       "Vui lòng nhập mật khẩu";
-  }
-
-  if (
-    formData.password &&
-    formData.password.length < 6
-  ) {
+  } else if (!isPasswordValid(formData.password)) {
     newErrors.password =
-      "Mật khẩu tối thiểu 6 ký tự";
+      "Mật khẩu chưa đủ mạnh. Vui lòng đáp ứng tất cả các yêu cầu bên dưới.";
   }
 
   if (!formData.confirmPassword.trim()) {
@@ -229,6 +230,47 @@ function RegisterPage() {
 
             {errors.password && (
               <p className="field-error">{errors.password}</p>
+            )}
+
+            {formData.password && (
+              <div className="password-strength">
+                <div className="password-strength__head">
+                  <span>Độ mạnh mật khẩu</span>
+                  <span
+                    className="password-strength__label"
+                    style={{ color: getPasswordStrength(formData.password).color }}
+                  >
+                    {getPasswordStrength(formData.password).label}
+                  </span>
+                </div>
+
+                <div className="password-strength__bar">
+                  <div
+                    className="password-strength__bar-fill"
+                    style={{
+                      width: `${getPasswordStrength(formData.password).percent}%`,
+                      background: getPasswordStrength(formData.password).color,
+                    }}
+                  />
+                </div>
+
+                <ul className="password-strength__rules">
+                  {PASSWORD_RULES.map((rule) => {
+                    const passed = getPassedRules(formData.password).includes(rule.key);
+                    return (
+                      <li
+                        key={rule.key}
+                        className={passed ? "passed" : ""}
+                      >
+                        <span className="password-strength__check">
+                          {passed ? "✓" : "○"}
+                        </span>
+                        {rule.label}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
           </div>
 

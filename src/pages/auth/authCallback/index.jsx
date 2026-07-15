@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from '../../../context/AuthContext';
 import { exchangeCode } from '../../../services/authService';
+import { getRoleTokens } from '../../../config/ProtectedRoute';
 
 function AuthCallback() {
   const [searchParams] = useSearchParams();
@@ -22,27 +23,16 @@ function AuthCallback() {
         const user = await exchangeCode(code);
         refreshUser();
 
-        const role = user?.roles?.[0] || user?.role;
+        const roleTokens = getRoleTokens(user);
 
-        switch (role) {
-          case "ADMIN":
-            navigate("/admin", { replace: true });
-            break;
-
-          case "SUPPORT_STAFF":
-            navigate("/staff/overview", { replace: true });
-            break;
-
-          case "SELLER":
-            navigate("/seller-hub", { replace: true });
-            break;
-
-          case "BUYER":
-            navigate("/", { replace: true });
-            break;
-
-          default:
-            navigate("/", { replace: true });
+        if (roleTokens.includes("ADMIN") || roleTokens.includes("SUPER_ADMIN")) {
+          navigate("/admin", { replace: true });
+        } else if (roleTokens.includes("STAFF") || roleTokens.includes("SUPPORT_STAFF")) {
+          navigate("/staff/overview", { replace: true });
+        } else if (roleTokens.includes("SELLER") || user?.sellerStatus === "APPROVED") {
+          navigate("/seller-hub", { replace: true });
+        } else {
+          navigate("/", { replace: true });
         }
       } catch {
         toast.error("Đăng nhập Google thất bại");

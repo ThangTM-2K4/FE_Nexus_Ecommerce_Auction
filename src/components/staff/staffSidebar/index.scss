@@ -5,7 +5,7 @@
   flex-shrink: 0;
   background: $color-bg-sidebar;
   border-right: 1px solid $color-border-light;
-  padding: 24px 16px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 64px);
@@ -14,20 +14,6 @@
   align-self: flex-start;
   max-height: calc(100vh - 64px);
   overflow-y: auto;
-
-  &__section {
-    margin-bottom: 16px;
-
-    h3 {
-      font-size: 11px;
-      font-weight: 700;
-      color: $color-text-muted;
-      margin-bottom: 10px;
-      padding: 0 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-  }
 
   &__menu {
     list-style: none;
@@ -41,20 +27,101 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 11px 12px;
     border: none;
     background: none;
     border-radius: $radius-sm;
     font-size: 13px;
+    font-weight: 500;
+    color: $color-text-secondary;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s, color 0.2s;
+
+    svg {
+      font-size: 15px;
+      flex-shrink: 0;
+      width: 16px;
+    }
+
+    &:hover {
+      background: rgba($color-primary, 0.08);
+      color: $color-primary;
+    }
+
+    &.active {
+      background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+      color: #fff;
+      font-weight: 600;
+    }
+  }
+
+  &__item--group {
+    &.active-group {
+      color: $color-primary;
+      font-weight: 600;
+    }
+  }
+
+  &__chevron {
+    margin-left: auto;
+    font-size: 10px;
+    flex-shrink: 0;
+    transition: transform 0.25s $ease;
+
+    &.open {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__submenu-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s $ease;
+
+    &.open {
+      grid-template-rows: 1fr;
+    }
+  }
+
+  &__submenu-inner {
+    overflow: hidden;
+  }
+
+  &__submenu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 0 6px 18px;
+    margin-left: 8px;
+    border-left: 1.5px solid $color-border-light;
+  }
+
+  &__subitem {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    border-radius: $radius-sm;
+    font-size: 12.5px;
     color: $color-text-muted;
     cursor: pointer;
     text-align: left;
     transition: background 0.2s, color 0.2s;
 
     svg {
-      font-size: 14px;
+      font-size: 13px;
       flex-shrink: 0;
-      width: 16px;
+      width: 15px;
     }
 
     &:hover {

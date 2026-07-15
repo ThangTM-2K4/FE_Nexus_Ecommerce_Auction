@@ -200,6 +200,76 @@
   @include auth.auth-input-error;
 }
 
+// Chỉ báo độ mạnh mật khẩu + checklist yêu cầu (hiển thị dưới ô mật khẩu)
+.password-strength {
+  margin: 4px 0 16px;
+  text-align: left;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: $ink-muted;
+    margin-bottom: 6px;
+  }
+
+  &__label {
+    font-weight: 700;
+  }
+
+  &__bar {
+    height: 6px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    overflow: hidden;
+  }
+
+  &__bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+
+  &__rules {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      color: $ink-muted;
+      margin-bottom: 7px;
+
+      &.passed {
+        color: #16a34a;
+      }
+    }
+  }
+
+  &__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+
+    .passed & {
+      background: #16a34a;
+      color: #fff;
+    }
+  }
+}
+
 .register-card .field-error {
   display: block;
   color: #ef4444;

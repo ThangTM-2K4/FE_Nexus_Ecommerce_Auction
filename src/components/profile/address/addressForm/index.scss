@@ -16,27 +16,6 @@
   }
 }
 
-.address-form__map {
-  height: 160px;
-  border: 1px dashed $border;
-  border-radius: $radius-sm;
-  background: $surface-soft;
-  display: grid;
-  place-items: center;
-}
-
-.address-form__map-btn {
-  border: 1px solid $border;
-  background: $surface;
-  color: $raspberry;
-  padding: 8px 16px;
-  border-radius: $radius-sm;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-}
-
 .address-form__type {
   display: flex;
   flex-direction: column;

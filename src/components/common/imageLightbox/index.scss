@@ -1,0 +1,102 @@
+.img-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(15, 12, 24, 0.86);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  animation: imgLightboxFade 0.15s ease;
+
+  &__stage {
+    max-width: 90vw;
+    max-height: 88vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+
+    img {
+      max-width: 90vw;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      cursor: zoom-in;
+      background: #fff;
+
+      &.is-zoomed {
+        max-width: none;
+        max-height: none;
+        width: auto;
+        height: 150vh;
+        cursor: zoom-out;
+      }
+    }
+
+    figcaption {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+  }
+
+  &__close {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+  }
+
+  &__nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    &--prev {
+      left: 24px;
+    }
+
+    &--next {
+      right: 24px;
+    }
+  }
+}
+
+@keyframes imgLightboxFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,46 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-shipping {
+  display: flex; flex-direction: column; gap: 24px;
+
+  &__quote {
+    padding: 20px; border: 1px solid $color-border; border-radius: 12px; background: $color-bg-card;
+    h3 { margin: 0 0 14px; font-size: 15px; }
+  }
+
+  &__quote-form {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: $color-text-muted;
+      select, input { padding: 8px 12px; border: 1px solid $color-border; border-radius: 8px; font-size: 13px; min-width: 180px; }
+    }
+    button {
+      padding: 9px 18px; border-radius: 999px; border: none; background: $color-accent; color: #fff;
+      font-weight: 600; font-size: 13px; cursor: pointer;
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+    }
+  }
+
+  &__quote-result {
+    margin-top: 14px; padding: 12px 14px; border-radius: 8px; background: rgba($color-accent, 0.08); font-size: 13px;
+    ul { margin: 8px 0 0; padding-left: 18px; }
+  }
+
+  &__list header {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
+    h3 { margin: 0; font-size: 15px; }
+    span { font-size: 13px; color: $color-text-muted; }
+  }
+
+  &__empty { color: $color-text-muted; font-size: 14px; }
+
+  &__table-wrap { overflow-x: auto; border: 1px solid $color-border; border-radius: 12px; background: $color-bg-card; }
+
+  &__table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid $color-border; }
+    th { font-size: 11px; text-transform: uppercase; color: $color-text-muted; }
+    code { font-size: 12px; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; }
+  }
+
+  &__status { font-size: 12px; font-weight: 600; }
+}

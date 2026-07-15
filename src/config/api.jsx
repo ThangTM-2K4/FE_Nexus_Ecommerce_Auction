@@ -7,9 +7,7 @@ const clearAuthStorage = () => {
   localStorage.removeItem('expiresAt');
 };
 
-export const BACKEND_BASE_URL =
-  'http://159.65.8.108:5000/api/v1';
-
+export const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const api = axios.create({
   baseURL: BACKEND_BASE_URL,
   headers: {

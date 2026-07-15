@@ -1,0 +1,95 @@
+@use "../../../styles/auction-variables" as *;
+
+.stf-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 10, 30, 0.52);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  animation: stf-fade-in 0.2s ease;
+}
+
+.stf-panel {
+  width: min(520px, 100%);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-card;
+  border-radius: 20px;
+  border: 1px solid $color-border-light;
+  box-shadow: 0 24px 60px rgba($color-primary-dark, 0.18);
+  animation: stf-slide-up 0.25s ease;
+
+  &--wide {
+    width: min(760px, 100%);
+  }
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid $color-border-light;
+    background: linear-gradient(180deg, rgba($color-accent, 0.06), transparent);
+
+    h3 {
+      margin: 4px 0 0;
+      font-size: 18px;
+      color: $color-primary-dark;
+    }
+  }
+
+  &__kicker {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $color-text-muted;
+  }
+
+  &__close {
+    width: 36px;
+    height: 36px;
+    border: 1px solid $color-border;
+    border-radius: 50%;
+    background: $color-bg;
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover {
+      border-color: $color-accent;
+      background: rgba($color-accent, 0.08);
+    }
+  }
+
+  &__body {
+    padding: 20px 24px 24px;
+    overflow-y: auto;
+  }
+
+  &__loading {
+    color: $color-text-muted;
+    font-size: 14px;
+    text-align: center;
+    padding: 20px 0;
+  }
+}
+
+@keyframes stf-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes stf-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}

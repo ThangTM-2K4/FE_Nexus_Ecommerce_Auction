@@ -127,6 +127,11 @@
       color: $color-primary;
     }
 
+    &--identity {
+      background: rgba($color-accent-mid, 0.18);
+      color: $color-primary;
+    }
+
     &--auction {
       background: rgba($color-warning, 0.18);
       color: $color-warning;

@@ -4,7 +4,30 @@ import {
   sellerApplications as mockApplications,
   flaggedAuctions as mockFlaggedAuctions,
   openDisputes as mockDisputes,
+  identityVerificationQueue as mockIdentityQueue,
+  monitoredOrders as mockMonitoredOrders,
+  violationReports as mockViolationReports,
+  staffNotificationFeed as mockNotificationFeed,
 } from '../data/staffMockData';
+import {
+  sellerDirectory as mockSellerDirectory,
+  platformUsers as mockPlatformUsers,
+  activityLog as mockActivityLog,
+  platformRoles as mockPlatformRoles,
+  staffShipments as mockStaffShipments,
+  shippingZones as mockShippingZones,
+  systemEventLogs as mockSystemEventLogs,
+  systemHealthStatus as mockSystemHealth,
+} from '../data/staffDirectoryData';
+import {
+  mockProducts,
+  mockCategories,
+  mockOrders,
+  mockAuctions,
+  mockBids,
+  mockRolePermissions,
+} from '../data/adminEntities';
+import { getAdminAuditLogs, getAdminAuditLogById, mapAuditLog } from './adminAuditService';
 
 const applicationKey = (userId) => `mockSellerApplication_${userId}`;
 
@@ -205,17 +228,14 @@ const getLocalSellerApplications = () => {
   return sortPendingFirst(merged);
 };
 
-// GET /api/v1/admin/sellers — lấy TẤT CẢ đơn để staff xem cả lịch sử.
-// Rơi về localStorage nếu API lỗi để không chặn luồng làm việc.
+// GET /api/v1/management/sellers-applications
 export const getPendingSellerApplications = async () => {
   try {
-    const res = await api.get('admin/sellers', { params: { page: 1, pageSize: 100 } });
+    const res = await api.get('management/sellers-applications', { params: { page: 1, pageSize: 100 } });
     const items = extractList(unwrap(res));
 
-    // Với mỗi đơn, gọi thêm chi tiết seller + thông tin user để hiển thị đủ.
     const list = await Promise.all(items.map(enrichApplication));
 
-    // Bổ sung đơn cục bộ chưa xuất hiện trên API (ví dụ nộp khi offline).
     const local = getLocalSellerApplications();
     const seenUsers = new Set(list.map((a) => a.userId));
     local.forEach((a) => {
@@ -224,11 +244,8 @@ export const getPendingSellerApplications = async () => {
 
     return sortPendingFirst(list);
   } catch (err) {
-    // API lỗi (thường 401/403 do thiếu quyền staff, hoặc mạng) → dùng dữ liệu
-    // localStorage cùng máy làm dự phòng. Log để tiện chẩn đoán tại sao đơn
-    // từ seller không hiện lên phía staff.
     console.warn(
-      '[staff] GET admin/sellers thất bại, dùng dữ liệu localStorage dự phòng:',
+      '[staff] GET management/sellers-applications thất bại, dùng dữ liệu localStorage dự phòng:',
       err?.response?.status,
       err?.response?.data ?? err?.message
     );
@@ -236,42 +253,36 @@ export const getPendingSellerApplications = async () => {
   }
 };
 
-// PUT /api/v1/admin/sellers/{id}/approve
+// PUT /api/v1/management/sellers-applications/{id}/approve
 export const approveSellerApplication = async (app) => {
   const sellerId = app?.sellerId ?? app?.applicationId ?? app;
   const userId = app?.userId ?? app;
 
   if (app?.source === 'api' && sellerId) {
-    const res = await api.put(`admin/sellers/${sellerId}/approve`);
+    const res = await api.put(`management/sellers-applications/${sellerId}/approve`);
     setLocalApplicationStatus(userId, 'APPROVED');
     return unwrap(res) ?? { sellerId, status: 'APPROVED' };
   }
 
-  // Đơn cục bộ/mock: cập nhật localStorage.
   await mockDelay(600);
   setLocalApplicationStatus(userId, 'APPROVED');
   return { userId, status: 'APPROVED' };
 };
 
-// PUT /api/v1/admin/sellers/{id}/reject  body: { reason }
-export const rejectSellerApplication = async (app, reason, adminNote) => {
+// PUT /api/v1/management/sellers-applications/{id}/reject  body: { reason }
+// RejectSellerRequest chỉ nhận { reason } — field note không có trong swagger BE
+export const rejectSellerApplication = async (app, reason) => {
   const sellerId = app?.sellerId ?? app?.applicationId ?? app;
   const userId = app?.userId ?? app;
 
   if (app?.source === 'api' && sellerId) {
-    const res = await api.put(`admin/sellers/${sellerId}/reject`, { reason });
-    setLocalApplicationStatus(userId, 'REJECTED', {
-      rejectionReason: reason,
-      adminNote: adminNote || '',
-    });
+    const res = await api.put(`management/sellers-applications/${sellerId}/reject`, { reason });
+    setLocalApplicationStatus(userId, 'REJECTED', { rejectionReason: reason });
     return unwrap(res) ?? { sellerId, status: 'REJECTED' };
   }
 
   await mockDelay(600);
-  setLocalApplicationStatus(userId, 'REJECTED', {
-    rejectionReason: reason,
-    adminNote: adminNote || '',
-  });
+  setLocalApplicationStatus(userId, 'REJECTED', { rejectionReason: reason });
   return { userId, status: 'REJECTED' };
 };
 
@@ -332,4 +343,496 @@ export const resolveAuctionFlag = async (auctionId, action, note) => {
 export const updateDisputeStatus = async (disputeId, status, note) => {
   await mockDelay(600);
   return { disputeId, status, note, updatedAt: new Date().toISOString() };
+};
+
+/* ═══════════ XÁC MINH CCCD ═══════════
+ * Hàng chờ gộp 2 nguồn:
+ *  - Hồ sơ thật: localStorage profile_<userId> có cccdNumber (người dùng nộp ở
+ *    trang "Thông tin cá nhân"). Duyệt/từ chối ghi ngược identityStatus vào
+ *    profile để trang cá nhân của user hiện đúng trạng thái.
+ *  - Hồ sơ mock: identityVerificationQueue. Quyết định lưu vào
+ *    staffIdentityDecisions để không hiện lại sau khi xử lý.
+ */
+
+const IDENTITY_DECISIONS_KEY = 'staffIdentityDecisions';
+
+const readIdentityDecisions = () => {
+  try {
+    return JSON.parse(localStorage.getItem(IDENTITY_DECISIONS_KEY)) || {};
+  } catch {
+    return {};
+  }
+};
+
+const writeIdentityDecision = (id, decision) => {
+  const all = readIdentityDecisions();
+  all[id] = { ...decision, decidedAt: new Date().toISOString() };
+  try {
+    localStorage.setItem(IDENTITY_DECISIONS_KEY, JSON.stringify(all));
+  } catch {
+    /* localStorage đầy → bỏ qua */
+  }
+};
+
+const readUserProfileRecord = (userId) => {
+  try {
+    return JSON.parse(localStorage.getItem(`profile_${userId}`)) || null;
+  } catch {
+    return null;
+  }
+};
+
+export const getIdentityVerifications = async () => {
+  await mockDelay();
+  const decisions = readIdentityDecisions();
+  const entries = [];
+
+  // Hồ sơ thật từ profile_* trên máy
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!key?.startsWith('profile_')) continue;
+    const userId = key.replace('profile_', '');
+    const p = readUserProfileRecord(userId);
+    if (!p?.cccdNumber) continue;
+
+    const status =
+      p.identityStatus === 'APPROVED' || p.identityStatus === 'VERIFIED'
+        ? 'APPROVED'
+        : p.identityStatus === 'REJECTED'
+          ? 'REJECTED'
+          : 'PENDING';
+
+    entries.push({
+      id: `IDV-${userId}`,
+      userId,
+      source: 'profile',
+      fullName: p.cccdFullName || p.fullName || 'Người dùng',
+      cccdNumber: p.cccdNumber,
+      cccdAddress: p.cccdAddress || '—',
+      email: p.email || '—',
+      phone: p.phone || '—',
+      frontImageUrl: p.cccdFrontImageUrl || '',
+      backImageUrl: p.cccdBackImageUrl || '',
+      submittedAt: '—',
+      status,
+      rejectReason: p.identityRejectReason || decisions[`IDV-${userId}`]?.reason || null,
+    });
+  }
+
+  // Hồ sơ mock (đã quyết định thì mang trạng thái từ decisions)
+  mockIdentityQueue.forEach((item) => {
+    const decision = decisions[item.id];
+    entries.push({
+      ...item,
+      status: decision?.status || 'PENDING',
+      rejectReason: decision?.reason || null,
+    });
+  });
+
+  // Chờ duyệt lên đầu
+  return entries.sort((a, b) => {
+    if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+    if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
+    return 0;
+  });
+};
+
+export const approveIdentityVerification = async (entry) => {
+  await mockDelay(500);
+  if (entry.source === 'profile' && entry.userId) {
+    const p = readUserProfileRecord(entry.userId);
+    if (p) {
+      const updated = {
+        ...p,
+        identityStatus: 'APPROVED',
+        isNationalIdVerified: true,
+        identityRejectReason: null,
+      };
+      localStorage.setItem(`profile_${entry.userId}`, JSON.stringify(updated));
+    }
+  }
+  writeIdentityDecision(entry.id, { status: 'APPROVED' });
+  return { id: entry.id, status: 'APPROVED' };
+};
+
+export const rejectIdentityVerification = async (entry, reason, note) => {
+  await mockDelay(500);
+  if (entry.source === 'profile' && entry.userId) {
+    const p = readUserProfileRecord(entry.userId);
+    if (p) {
+      const updated = {
+        ...p,
+        identityStatus: 'REJECTED',
+        isNationalIdVerified: false,
+        identityRejectReason: reason,
+      };
+      localStorage.setItem(`profile_${entry.userId}`, JSON.stringify(updated));
+    }
+  }
+  writeIdentityDecision(entry.id, { status: 'REJECTED', reason, note: note || '' });
+  return { id: entry.id, status: 'REJECTED', reason };
+};
+
+/* ═══════════ GIÁM SÁT ĐƠN HÀNG ═══════════ */
+
+export const getMonitoredOrders = async () => {
+  await mockDelay();
+  return mockMonitoredOrders.map((o) => ({ ...o }));
+};
+
+// action: 'checked' (đã kiểm tra, gỡ cờ) | 'escalate' (chuyển thành khiếu nại)
+export const resolveOrderFlag = async (orderId, action, note) => {
+  await mockDelay(400);
+  return { orderId, action, note: note || '', resolvedAt: new Date().toISOString() };
+};
+
+/* ═══════════ BÁO CÁO VI PHẠM ═══════════ */
+
+const REPORT_DECISIONS_KEY = 'staffReportDecisions';
+
+const readReportDecisions = () => {
+  try {
+    return JSON.parse(localStorage.getItem(REPORT_DECISIONS_KEY)) || {};
+  } catch {
+    return {};
+  }
+};
+
+export const getViolationReports = async () => {
+  await mockDelay();
+  const decisions = readReportDecisions();
+  return mockViolationReports.map((r) => {
+    const decision = decisions[r.id];
+    return {
+      ...r,
+      status: decision ? 'RESOLVED' : 'OPEN',
+      resolution: decision?.action || null,
+      resolvedAt: decision?.decidedAt || null,
+    };
+  });
+};
+
+// action: 'remove-content' | 'warn-seller' | 'dismiss'
+export const resolveViolationReport = async (reportId, action) => {
+  await mockDelay(400);
+  const all = readReportDecisions();
+  all[reportId] = { action, decidedAt: new Date().toISOString() };
+  try {
+    localStorage.setItem(REPORT_DECISIONS_KEY, JSON.stringify(all));
+  } catch {
+    /* bỏ qua */
+  }
+  return { reportId, action };
+};
+
+/* ═══════════ THÔNG BÁO NỘI BỘ ═══════════ */
+
+const NOTIF_READ_KEY = 'staffNotifRead';
+
+const readNotifReadIds = () => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(NOTIF_READ_KEY)) || []);
+  } catch {
+    return new Set();
+  }
+};
+
+const writeNotifReadIds = (ids) => {
+  try {
+    localStorage.setItem(NOTIF_READ_KEY, JSON.stringify([...ids]));
+  } catch {
+    /* bỏ qua */
+  }
+};
+
+export const getStaffNotifications = async () => {
+  await mockDelay(200);
+  const readIds = readNotifReadIds();
+  return mockNotificationFeed.map((n) => ({ ...n, unread: !readIds.has(n.id) }));
+};
+
+export const markNotificationRead = async (id) => {
+  const readIds = readNotifReadIds();
+  readIds.add(id);
+  writeNotifReadIds(readIds);
+  return { id };
+};
+
+export const markAllNotificationsRead = async () => {
+  writeNotifReadIds(new Set(mockNotificationFeed.map((n) => n.id)));
+  return { count: mockNotificationFeed.length };
+};
+
+/* ═══════════ THÔNG TIN NGƯỜI BÁN (danh bạ seller) ═══════════
+ * Gộp seller mock + seller thật trên máy (mockSellerApplication_* đã duyệt),
+ * kèm sản phẩm đang bán (mockSellerProducts_*).
+ */
+
+const readLocalProducts = (userId) => {
+  try {
+    return JSON.parse(localStorage.getItem(`mockSellerProducts_${userId}`)) || [];
+  } catch {
+    return [];
+  }
+};
+
+// Chuyển 1 đơn seller local (đã duyệt) thành bản ghi danh bạ.
+const localApplicationToSeller = (userId, app) => {
+  const products = readLocalProducts(userId);
+  const revenue = products.reduce((sum, p) => sum + (Number(p.price) || 0) * (Number(p.sold) || 0), 0);
+  return {
+    id: `LOCAL-${userId}`,
+    userId,
+    shopName: app.shopName || `${app.fullName || "Shop"} Store`,
+    ownerName: app.fullName || "Người bán",
+    email: app.email || "—",
+    phone: app.phone || "—",
+    category: app.businessType === "business" ? "Doanh nghiệp" : "Cá nhân",
+    businessType: app.businessType === "business" ? "Doanh nghiệp" : "Cá nhân",
+    cccdNumber: app.cccdNumber || "—",
+    cccdVerified: normalizeStatus(app.status) === "APPROVED",
+    taxCode: app.taxCode || "—",
+    address: app.pickupAddress || app.cccdAddress || "—",
+    bankName: app.bankName || "—",
+    accountNumber: app.accountNumber || "—",
+    accountHolder: app.accountHolder || "—",
+    status: normalizeStatus(app.status),
+    joinedAt: fmtDate(app.submittedAt),
+    rating: 0,
+    reviewCount: 0,
+    totalOrders: products.reduce((sum, p) => sum + (Number(p.sold) || 0), 0),
+    revenue,
+    frontImageUrl: app.frontImageUrl || "",
+    backImageUrl: app.backImageUrl || "",
+    products: products.map((p) => ({
+      id: p.id,
+      name: p.name || p.title || "Sản phẩm",
+      price: Number(p.price) || 0,
+      stock: Number(p.stock) || 0,
+      sold: Number(p.sold) || 0,
+      status: normalizeStatus(p.status),
+      category: p.category || "—",
+      image: p.image || (Array.isArray(p.images) ? p.images[0] : "") || "",
+    })),
+    source: "local",
+  };
+};
+
+export const getSellerDirectory = async () => {
+  await mockDelay();
+  const sellers = mockSellerDirectory.map((s) => ({ ...s, source: "mock" }));
+  const seenUsers = new Set(sellers.map((s) => s.userId));
+
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!key?.startsWith('mockSellerApplication_')) continue;
+    const userId = key.replace('mockSellerApplication_', '');
+    if (seenUsers.has(userId)) continue;
+    const app = readLocalApplication(userId);
+    if (!app) continue;
+    if (normalizeStatus(app.status) !== 'APPROVED') continue; // chỉ seller đã duyệt
+    sellers.push(localApplicationToSeller(userId, app));
+    seenUsers.add(userId);
+  }
+
+  return sellers;
+};
+
+export const getSellerDetail = async (sellerId) => {
+  const all = await getSellerDirectory();
+  return all.find((s) => s.id === sellerId || s.userId === sellerId) || null;
+};
+
+// Đổi trạng thái seller (tạm khoá / mở lại) — mock, lưu quyết định local.
+export const setSellerStatus = async (userId, status) => {
+  await mockDelay(400);
+  return { userId, status };
+};
+
+/* ═══════════ QUẢN LÝ NGƯỜI DÙNG ═══════════ */
+
+const USER_STATUS_KEY = 'staffUserStatusOverrides';
+
+const readUserOverrides = () => {
+  try {
+    return JSON.parse(localStorage.getItem(USER_STATUS_KEY)) || {};
+  } catch {
+    return {};
+  }
+};
+
+export const getPlatformUsers = async () => {
+  await mockDelay();
+  const overrides = readUserOverrides();
+  return mockPlatformUsers.map((u) => ({ ...u, status: overrides[u.id] || u.status }));
+};
+
+export const getPlatformUserDetail = async (userId) => {
+  await mockDelay(200);
+  const users = await getPlatformUsers();
+  const user = users.find((u) => u.id === userId);
+  if (!user) return null;
+  return {
+    ...user,
+    address: user.address || "—",
+    reputation: user.reputation ?? 4.2,
+    walletBalance: user.walletBalance ?? 0,
+    auctionWins: user.auctionWins ?? 0,
+    recentOrders: user.recentOrders ?? [],
+  };
+};
+
+/* ═══════════ TRA CỨU CHỈ XEM (Privileges A–J) ═══════════ */
+
+export const getStaffRoles = async () => {
+  await mockDelay(200);
+  return mockPlatformRoles.map((r) => ({ ...r }));
+};
+
+export const getStaffRolePermissions = async () => {
+  await mockDelay(200);
+  return mockRolePermissions.map((r) => ({ ...r }));
+};
+
+export const getStaffProducts = async () => {
+  await mockDelay(200);
+  return mockProducts.map((p) => ({ ...p }));
+};
+
+export const getStaffProductDetail = async (productId) => {
+  await mockDelay(150);
+  return mockProducts.find((p) => p.id === productId) || null;
+};
+
+export const getStaffCategories = async () => {
+  await mockDelay(200);
+  return mockCategories.map((c) => ({ ...c }));
+};
+
+export const getStaffOrders = async () => {
+  await mockDelay(200);
+  return mockOrders.map((o) => ({ ...o }));
+};
+
+export const getStaffOrderDetail = async (orderId) => {
+  await mockDelay(150);
+  const order = mockOrders.find((o) => o.id === orderId);
+  if (!order) return null;
+  return {
+    ...order,
+    items: order.items || [{ name: order.product || "Sản phẩm", qty: 1, price: order.total }],
+    timeline: order.timeline || [
+      { at: order.createdAt, event: "Đơn hàng được tạo" },
+      { at: order.createdAt, event: `Trạng thái: ${order.status}` },
+    ],
+  };
+};
+
+export const getStaffAuctions = async () => {
+  await mockDelay(200);
+  return mockAuctions.map((a) => ({ ...a }));
+};
+
+export const getStaffAuctionDetail = async (auctionId) => {
+  await mockDelay(150);
+  const auction = mockAuctions.find((a) => a.id === auctionId);
+  if (!auction) return null;
+  const bids = mockBids.filter((b) => b.auction === auctionId);
+  return { ...auction, bids };
+};
+
+export const getStaffBidHistory = async (auctionId) => {
+  await mockDelay(150);
+  if (auctionId) return mockBids.filter((b) => b.auction === auctionId);
+  return mockBids.map((b) => ({ ...b }));
+};
+
+export const getStaffShipments = async () => {
+  await mockDelay(200);
+  return mockStaffShipments.map((s) => ({ ...s }));
+};
+
+export const getShippingQuote = async ({ zoneId, weightKg = 1 }) => {
+  await mockDelay(300);
+  const zone = mockShippingZones.find((z) => z.id === zoneId);
+  if (!zone) return null;
+  const weightFee = Math.max(0, (weightKg - 1)) * 5000;
+  return {
+    zone: zone.name,
+    baseFee: zone.baseFee,
+    weightFee,
+    totalFee: zone.baseFee + weightFee,
+    estimatedDays: zone.days,
+  };
+};
+
+export const getStaffShippingZones = async () => {
+  await mockDelay(100);
+  return mockShippingZones.map((z) => ({ ...z }));
+};
+
+// Chuẩn hoá 1 bản ghi audit-log (từ adminAuditService.mapAuditLog) về đúng
+// shape trang Event Log đang dùng (actorName, at, detail...).
+const auditLogToEvent = (log) => {
+  const raw = log._raw ?? {};
+  return {
+    id: log.id,
+    action: log.action ?? '—',
+    actor: log.actor,
+    actorName: log.actor,
+    entityType: log.entityType ?? '—',
+    entityId: log.entityId ?? '—',
+    detail: raw.detail ?? raw.description ?? raw.message ?? log.action ?? '—',
+    at: log.time ?? '—',
+    ip: log.ip ?? '—',
+    oldValue: log.oldValue ?? null,
+    newValue: log.newValue ?? null,
+    source: 'api',
+  };
+};
+
+// Event Log ưu tiên API thật /admin/audit-logs; rơi về mock khi server chưa
+// triển khai endpoint hoặc thiếu quyền (401/403/404).
+export const getSystemEventLogs = async () => {
+  try {
+    const { items } = await getAdminAuditLogs({ page: 1, pageSize: 100 });
+    if (Array.isArray(items) && items.length) return items.map(auditLogToEvent);
+    throw new Error('empty');
+  } catch (err) {
+    console.warn(
+      '[staff] GET admin/audit-logs thất bại/không có dữ liệu, dùng mock Event Log:',
+      err?.response?.status ?? err?.message
+    );
+    await mockDelay(200);
+    return mockSystemEventLogs.map((e) => ({ ...e, source: 'mock' }));
+  }
+};
+
+export const getSystemEventLogDetail = async (eventId) => {
+  // ID audit thật là số → thử lấy chi tiết từ API trước.
+  if (eventId != null && /^\d+$/.test(String(eventId))) {
+    try {
+      const full = await getAdminAuditLogById(eventId);
+      if (full) return auditLogToEvent(mapAuditLog(full));
+    } catch {
+      /* rơi về mock bên dưới */
+    }
+  }
+  await mockDelay(150);
+  return mockSystemEventLogs.find((e) => e.id === eventId) || null;
+};
+
+export const getSystemHealth = async () => {
+  await mockDelay(300);
+  return {
+    ...mockSystemHealth,
+    checkedAt: new Date().toLocaleString('vi-VN'),
+  };
+};
+
+/* ═══════════ NHẬT KÝ HOẠT ĐỘNG ═══════════ */
+
+export const getActivityLog = async () => {
+  await mockDelay(200);
+  return mockActivityLog.map((l) => ({ ...l }));
 };

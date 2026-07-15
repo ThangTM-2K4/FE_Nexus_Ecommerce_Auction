@@ -1,12 +1,13 @@
-@use "../../../styles/auction-variables" as *;
+@use "../../../styles/palette" as p;
 
 .adm-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: $color-bg-card;
-  border-bottom: 1px solid $color-border-light;
+  background: linear-gradient(90deg, p.$indigo 0%, p.$slate 30%, p.$raspberry 60%, p.$lavender 80%, p.$blush-pink 100%);
+  border-bottom: none;
   height: 64px;
+  box-shadow: 0 2px 16px rgba(p.$indigo, 0.28);
 
   &__inner {
     max-width: 1600px;
@@ -28,9 +29,10 @@
   &__logo {
     font-size: 18px;
     font-weight: 800;
-    color: $color-primary-dark;
+    color: #fff;
     cursor: pointer;
     margin: 0;
+    text-shadow: 0 1px 6px rgba(p.$indigo, 0.4);
   }
 
   &__badge {
@@ -39,26 +41,35 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: 4px 8px;
-    border-radius: $radius-sm;
-    background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+    border-radius: p.$radius-sm;
+    background: rgba(#fff, 0.18);
     color: #fff;
+    border: 1px solid rgba(#fff, 0.28);
+    backdrop-filter: blur(4px);
   }
 
   &__search {
     flex: 1 1 auto;
-    max-width: 320px;
+    max-width: 340px;
     min-width: 180px;
     height: 36px;
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 0 12px;
-    background: $color-bg;
-    border: 1px solid $color-border-light;
-    border-radius: $radius-md;
+    background: rgba(#fff, 0.15);
+    border: 1px solid rgba(#fff, 0.28);
+    border-radius: p.$radius-md;
+    backdrop-filter: blur(6px);
+    transition: background 0.2s;
+
+    &:focus-within {
+      background: rgba(#fff, 0.22);
+      border-color: rgba(#fff, 0.5);
+    }
 
     svg {
-      color: $color-text-muted;
+      color: rgba(#fff, 0.75);
       font-size: 13px;
       flex-shrink: 0;
     }
@@ -70,10 +81,10 @@
       background: none;
       font-size: 13px;
       outline: none;
-      color: $color-text;
+      color: #fff;
 
       &::placeholder {
-        color: $color-text-muted;
+        color: rgba(#fff, 0.6);
         font-size: 12px;
       }
     }
@@ -84,16 +95,28 @@
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+    margin-left: auto;
   }
 
   &__role {
     font-size: 12px;
     padding: 6px 10px;
-    border: 1px solid $color-border-light;
-    border-radius: $radius-sm;
-    background: $color-bg;
-    color: $color-text;
+    border: 1px solid rgba(#fff, 0.35);
+    border-radius: p.$radius-sm;
+    background: rgba(#fff, 0.15);
+    color: #fff;
     cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+
+    option {
+      background: p.$indigo;
+      color: #fff;
+    }
+
+    &:hover {
+      background: rgba(#fff, 0.25);
+    }
   }
 
   &__link {
@@ -101,13 +124,14 @@
     padding: 6px 12px;
     border: none;
     background: none;
-    color: $color-text-muted;
+    color: rgba(#fff, 0.9);
     cursor: pointer;
-    border-radius: $radius-sm;
+    border-radius: p.$radius-sm;
+    transition: background 0.2s;
 
     &:hover {
-      background: rgba($color-primary, 0.08);
-      color: $color-primary;
+      background: rgba(#fff, 0.18);
+      color: #fff;
     }
   }
 
@@ -116,27 +140,32 @@
     width: 36px;
     height: 36px;
     border: none;
-    background: $color-bg;
-    border-radius: $radius-sm;
-    color: $color-text-muted;
+    background: rgba(#fff, 0.15);
+    border: 1px solid rgba(#fff, 0.25);
+    border-radius: p.$radius-sm;
+    color: rgba(#fff, 0.9);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background 0.2s;
 
     &:hover {
-      color: $color-primary;
+      background: rgba(#fff, 0.25);
+      color: #fff;
     }
   }
 
   &__bell-dot {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 7px;
+    right: 7px;
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: $color-danger;
+    background: #ff4d6d;
+    box-shadow: 0 0 6px rgba(#ff4d6d, 0.7);
+    border: 1.5px solid rgba(#fff, 0.8);
   }
 
   &__profile-wrap {
@@ -146,12 +175,18 @@
   &__avatar {
     width: 36px;
     height: 36px;
-    border: none;
+    border: 2px solid rgba(#fff, 0.55);
     border-radius: 50%;
-    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    background: linear-gradient(135deg, p.$raspberry, p.$lavender);
     color: #fff;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+
+    &:hover {
+      border-color: #fff;
+      transform: scale(1.06);
+    }
   }
 }

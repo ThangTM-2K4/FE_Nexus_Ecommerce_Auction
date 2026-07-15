@@ -65,18 +65,23 @@ export const adminMenuSections = [
     title: "Sản phẩm",
     items: [
       { id: "products", label: "Quản lý sản phẩm", icon: "box", path: "/admin/products" },
-      { id: "auction-products", label: "Phiên đấu giá", icon: "gavel", path: "/admin/auction-products" },
       { id: "categories", label: "Danh mục", icon: "folder", path: "/admin/categories" },
       { id: "brands", label: "Thương hiệu", icon: "tag", path: "/admin/brands" },
       { id: "inventory", label: "Tồn kho", icon: "warehouse", path: "/admin/inventory" },
     ],
   },
   {
+    title: "Đấu giá",
+    items: [
+      { id: "auction-products", label: "Phiên đấu giá", icon: "gavel", path: "/admin/auction-products" },
+      { id: "auction-orders", label: "Đơn đấu giá", icon: "hammer", path: "/admin/auction-orders" },
+      { id: "bids", label: "Quản lý Bid", icon: "handPointer", path: "/admin/bids" },
+    ],
+  },
+  {
     title: "Giao dịch",
     items: [
       { id: "orders", label: "Đơn hàng", icon: "cart", path: "/admin/orders" },
-      { id: "auction-orders", label: "Đơn đấu giá", icon: "hammer", path: "/admin/auction-orders" },
-      { id: "bids", label: "Quản lý Bid", icon: "handPointer", path: "/admin/bids" },
       { id: "payments", label: "Thanh toán", icon: "creditCard", path: "/admin/payments" },
       { id: "wallets", label: "Ví điện tử", icon: "wallet", path: "/admin/wallets" },
       { id: "withdrawals", label: "Rút tiền", icon: "moneyBill", path: "/admin/withdrawals" },
