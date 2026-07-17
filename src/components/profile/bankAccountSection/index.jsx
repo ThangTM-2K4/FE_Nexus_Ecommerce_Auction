@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import * as profileService from '../../../services/profileService';
 import { getSellerBankAccounts } from '../../../services/bankAccountService';
+import { getApiErrorMessage } from '../../../utils/apiResponse';
 
 const emptyForm = { bankName: '', accountNumber: '', accountHolder: '' };
 
@@ -28,8 +29,12 @@ export default function BankAccountSection({ userId, profile, onUpdate }) {
   };
 
   const handleSave = async () => {
-    if (!form.bankName || !form.accountNumber || !form.accountHolder) {
-      toast.error('Vui lòng điền đầy đủ thông tin ngân hàng');
+    const missing = [];
+    if (!form.bankName?.trim()) missing.push('Tên ngân hàng');
+    if (!form.accountNumber?.trim()) missing.push('Số tài khoản');
+    if (!form.accountHolder?.trim()) missing.push('Chủ tài khoản');
+    if (missing.length) {
+      toast.error(`Vui lòng nhập: ${missing.join(', ')}`);
       return;
     }
     setSaving(true);
@@ -39,8 +44,8 @@ export default function BankAccountSection({ userId, profile, onUpdate }) {
       onUpdate(updated);
       setEditing(false);
       toast.success('Lưu tài khoản ngân hàng thành công');
-    } catch {
-      toast.error('Lưu thất bại');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Lưu tài khoản ngân hàng thất bại'));
     } finally {
       setSaving(false);
     }
@@ -54,8 +59,8 @@ export default function BankAccountSection({ userId, profile, onUpdate }) {
       onUpdate(updated);
       setEditing(false);
       toast.success('Đã xóa tài khoản ngân hàng');
-    } catch {
-      toast.error('Xóa thất bại');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Xóa tài khoản ngân hàng thất bại'));
     } finally {
       setSaving(false);
     }

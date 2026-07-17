@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
+import { VIETQR_BANKS_URL } from "../config/endpoints";
 
 // Danh sách ngân hàng lấy từ API thật VietQR (thay cho mock BANK_OPTIONS cũ).
-// https://api.vietqr.io/v2/banks
-const VIETQR_BANKS_URL = "https://api.vietqr.io/v2/banks";
 const CACHE_KEY = "vietqrBanks";
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
 
@@ -65,14 +64,25 @@ export const getBanks = async () => {
   return inflight;
 };
 
+// Đồng bộ: tra nguyên bản ghi ngân hàng (kèm logo) từ cache. Chưa tải → null.
+export const resolveBank = (bankValue) => {
+  if (!bankValue) return null;
+  const list = memoryCache || readCache() || [];
+  return (
+    list.find(
+      (b) =>
+        b.value === bankValue ||
+        b.code === bankValue ||
+        b.shortName === bankValue ||
+        b.name === bankValue
+    ) || null
+  );
+};
+
 // Đồng bộ: đọc nhãn ngân hàng từ cache (nếu đã tải). Không có → trả nguyên value.
 export const resolveBankLabel = (bankValue) => {
   if (!bankValue) return "";
-  const list = memoryCache || readCache() || [];
-  const found = list.find(
-    (b) => b.value === bankValue || b.code === bankValue || b.shortName === bankValue || b.name === bankValue
-  );
-  return found ? found.label : bankValue;
+  return resolveBank(bankValue)?.label || bankValue;
 };
 
 // Hook tiện dùng trong component: trả { banks, loading, error }.

@@ -64,12 +64,34 @@
 }
 
 .bank-page__item {
-  padding: 1rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 1rem 1rem 1rem 1.25rem;
   border: 1px solid $border-soft;
-  border-radius: $radius-sm;
-  background: $surface-soft;
+  border-radius: $radius-md;
+  background: $surface;
   font-size: 0.88rem;
   color: $ink;
+  overflow: hidden;
+  transition: box-shadow $transition, transform $transition-fast;
+
+  // Dải màu thương hiệu của ngân hàng bên trái thẻ
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: var(--bank-brand, #{$gradient-accent});
+  }
+
+  &:hover {
+    box-shadow: $shadow-sm;
+    transform: translateY(-1px);
+  }
 
   p {
     margin: 4px 0 0;
@@ -77,12 +99,108 @@
   }
 }
 
+.bank-page__logo {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 36px;
+  padding: 4px;
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: 8px;
+  overflow: hidden;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  span {
+    font-weight: 700;
+    color: $ink-muted;
+  }
+}
+
+.bank-page__item-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.bank-page__item-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .bank-page__default {
-  margin-left: 8px;
   font-size: 0.72rem;
   padding: 2px 8px;
   border-radius: $radius-pill;
   background: rgba($raspberry, 0.12);
   color: $raspberry;
   font-weight: 700;
+}
+
+.bank-page__hint {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: $ink-muted;
+
+  a {
+    color: $raspberry;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.bank-page__source {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: $ink-muted;
+}
+
+.bank-page__item-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+
+  button {
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: 0.8rem;
+    color: $ink-muted;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: $raspberry;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
+
+.bank-page__set-default {
+  padding: 5px 10px !important;
+  border: 1px solid $border !important;
+  border-radius: $radius-sm;
+
+  &:hover:not(:disabled) {
+    border-color: $raspberry !important;
+  }
 }

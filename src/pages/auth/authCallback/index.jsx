@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from '../../../context/AuthContext';
 import { exchangeCode } from '../../../services/authService';
+import { getApiErrorMessage } from '../../../utils/apiResponse';
 import { getRoleTokens } from '../../../config/ProtectedRoute';
 
 function AuthCallback() {
@@ -34,8 +35,8 @@ function AuthCallback() {
         } else {
           navigate("/", { replace: true });
         }
-      } catch {
-        toast.error("Đăng nhập Google thất bại");
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Đăng nhập Google thất bại"));
         navigate("/login?error=google_login_failed", { replace: true });
       }
     };

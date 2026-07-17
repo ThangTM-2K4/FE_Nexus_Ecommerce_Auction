@@ -60,6 +60,11 @@ const buildProfile = (src, identityStatus) => ({
   // giữ lại từ profile đã lưu để không mất khi tải lại trang.
   cccdFullName: src.cccdFullName || '',
   cccdNumber: src.cccdNumber || '',
+  cccdGender: src.cccdGender || '',
+  cccdDateOfBirth: src.cccdDateOfBirth || '',
+  cccdIssueDate: src.cccdIssueDate || '',
+  cccdExpiryDate: src.cccdExpiryDate || '',
+  cccdIssuePlace: src.cccdIssuePlace || '',
   cccdAddress: src.cccdAddress || '',
   cccdFrontImageUrl: src.cccdFrontImageUrl || '',
   cccdBackImageUrl: src.cccdBackImageUrl || '',
@@ -151,6 +156,40 @@ export const markPhoneVerified = async (userId, phoneNumber) => {
   return updated;
 };
 
+// ── UPLOADS ── (ảnh đại diện + ảnh CCCD)
+// Swagger user-service: POST /uploads/avatar và /uploads/identity, multipart field `file`.
+// Base URL nằm trong .env (VITE_API_BASE_URL) — chỉ dùng path tương đối, KHÔNG hardcode host.
+// Content-Type để undefined -> trình duyệt tự set multipart + boundary.
+const MULTIPART = { headers: { 'Content-Type': undefined } };
+
+// Response chưa được swagger mô tả -> dò nhiều tên field khả dĩ để lấy URL/key ảnh.
+const extractUploadUrl = (res) => {
+  const d = res?.data?.data ?? res?.data ?? {};
+  if (typeof d === 'string') return d;
+  return d.url || d.fileUrl || d.imageUrl || d.avatarUrl || d.key || d.fileKey || '';
+};
+
+export const uploadAvatar = async (userId, file) => {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await api.post('/uploads/avatar', fd, MULTIPART);
+  const url = extractUploadUrl(res);
+
+  const current = await getProfile(userId);
+  const updated = { ...current, avatar: url || current.avatar };
+  saveProfile(userId, updated);
+  updateSessionUser({ avatar: updated.avatar });
+  return updated;
+};
+
+// Trả về URL/key ảnh CCCD đã upload để nộp kèm hồ sơ xác minh.
+export const uploadIdentityImage = async (file) => {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await api.post('/uploads/identity', fd, MULTIPART);
+  return extractUploadUrl(res);
+};
+
 // ── EMAIL ── (xác thực khi đăng ký; ở đây cho gửi lại + nhập OTP)
 export const requestEmailVerification = async (userId) => {
   const profile = await getProfile(userId);
@@ -182,9 +221,36 @@ export const verifyPhoneOtp = async (userId, otpCode) => {
   return getProfile(userId);
 };
 
-// ── CMND / CCCD ── (nộp số + ảnh mặt trước/sau, staff duyệt)
-export const submitIdentityVerification = async (userId, { identityNumber, frontImageUrl, backImageUrl }) => {
-  await api.post('/identity-verifications', { identityNumber, frontImageUrl, backImageUrl });
+// ── CMND / CCCD ── (nộp đầy đủ thông tin CCCD + ảnh mặt trước/sau, staff duyệt)
+// Nhận cả các field mới (gender, dateOfBirth, issueDate, expiryDate, issuePlace,
+// permanentAddress) theo đúng contract backend; các field cũ vẫn tương thích.
+export const submitIdentityVerification = async (
+  userId,
+  {
+    fullName,
+    gender,
+    dateOfBirth,
+    identityNumber,
+    issueDate,
+    expiryDate,
+    issuePlace,
+    permanentAddress,
+    frontImageUrl,
+    backImageUrl,
+  }
+) => {
+  await api.post('/identity-verifications', {
+    fullName,
+    gender,
+    dateOfBirth,
+    identityNumber,
+    issueDate,
+    expiryDate,
+    issuePlace,
+    permanentAddress,
+    frontImageUrl,
+    backImageUrl,
+  });
   return getProfile(userId);
 };
 
@@ -193,7 +259,18 @@ export const submitIdentityVerification = async (userId, { identityNumber, front
 // còn họ tên + số CCCD lưu local vì backend chưa có field riêng.
 export const updateCccdInfo = async (
   userId,
-  { cccdFullName, cccdNumber, cccdAddress, cccdFrontImageUrl = '', cccdBackImageUrl = '' }
+  {
+    cccdFullName,
+    cccdNumber,
+    cccdGender = '',
+    cccdDateOfBirth = '',
+    cccdIssueDate = '',
+    cccdExpiryDate = '',
+    cccdIssuePlace = '',
+    cccdAddress,
+    cccdFrontImageUrl = '',
+    cccdBackImageUrl = '',
+  }
 ) => {
   if (cccdAddress?.trim()) {
     try {
@@ -205,6 +282,11 @@ export const updateCccdInfo = async (
   return updateProfile(userId, {
     cccdFullName,
     cccdNumber,
+    cccdGender,
+    cccdDateOfBirth,
+    cccdIssueDate,
+    cccdExpiryDate,
+    cccdIssuePlace,
     cccdAddress,
     cccdFrontImageUrl,
     cccdBackImageUrl,

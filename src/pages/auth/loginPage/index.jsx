@@ -92,8 +92,7 @@ function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href =
-      "http://localhost:5101/api/v1/auth/google/login";
+    window.location.href = getGoogleLoginUrl();
   };
 
   const handleLogin = async (e) => {

@@ -5,6 +5,7 @@ import StaffKpiCard from "../../../components/staff/staffKpiCard";
 import RejectReasonModal from "../../../components/staff/rejectReasonModal";
 import ImageLightbox from "../../../components/common/imageLightbox";
 import { sellerRejectReasons } from "../../../data/staffMockData";
+import { getApiErrorMessage } from "../../../utils/apiResponse";
 import {
   getPendingSellerApplications,
   approveSellerApplication,
@@ -75,7 +76,7 @@ const StaffSellerReview = () => {
       toast.success("Đã duyệt đơn — người bán & CCCD được xác minh");
       await loadApplications();
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || "Không thể duyệt đơn");
+      toast.error(getApiErrorMessage(err, "Không thể duyệt đơn"));
     } finally {
       setProcessingId(null);
     }
@@ -90,7 +91,7 @@ const StaffSellerReview = () => {
       setRejectTarget(null);
       await loadApplications();
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || "Không thể từ chối đơn");
+      toast.error(getApiErrorMessage(err, "Không thể từ chối đơn"));
     } finally {
       setProcessingId(null);
     }

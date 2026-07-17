@@ -9,6 +9,7 @@ import {
   auctionSortOptions,
   auctionTimeRangeOptions,
 } from '../../../data/auctionData';
+import Select from '../../common/select';
 import './index.scss';
 
 const FILTER_GROUPS = [
@@ -80,18 +81,14 @@ export default function AuctionFilterBar({
         </div>
 
         <div className="auction-filter-bar__sort">
-          <label htmlFor="auction-sort">Sắp xếp theo</label>
-          <select
-            id="auction-sort"
+          <span className="auction-filter-bar__sort-label">Sắp xếp theo</span>
+          <Select
             value={sortBy}
             onChange={(event) => onSortChange(event.target.value)}
-          >
-            {auctionSortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            options={auctionSortOptions}
+            theme="dark"
+            className="common-select--auto"
+          />
         </div>
 
         <button type="button" className="auction-filter-bar__mobile-toggle" onClick={openDrawer}>
@@ -103,17 +100,14 @@ export default function AuctionFilterBar({
       <div className="auction-filter-bar__pills" id="categories">
         {FILTER_GROUPS.map((group) => (
           <div key={group.key} className="auction-filter-bar__pill">
-            <select
+            <Select
               value={filters[group.key]}
               onChange={(event) => handlePillChange(group.key, event.target.value)}
-              aria-label={group.label}
-            >
-              {group.options.map((option) => (
-                <option key={option.value || 'all'} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              options={group.options}
+              placeholder={group.label}
+              theme="dark"
+              className="common-select--sm common-select--auto common-select--pill"
+            />
           </div>
         ))}
       </div>
@@ -135,20 +129,15 @@ export default function AuctionFilterBar({
 
             {FILTER_GROUPS.map((group) => (
               <div key={group.key} className="auction-filter-bar__drawer-group">
-                <label htmlFor={`drawer-${group.key}`}>{group.label}</label>
-                <select
-                  id={`drawer-${group.key}`}
+                <Select
+                  label={group.label}
                   value={draftFilters[group.key]}
                   onChange={(event) =>
                     setDraftFilters((prev) => ({ ...prev, [group.key]: event.target.value }))
                   }
-                >
-                  {group.options.map((option) => (
-                    <option key={option.value || 'all'} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  options={group.options}
+                  theme="dark"
+                />
               </div>
             ))}
 

@@ -10,6 +10,7 @@ import {
   FeeCard, CouponTicket, ReviewCard, FraudAlert,
   KanbanColumn, KanbanCard, ShippingPartnerCard, ShippingZoneItem,
 } from "../../../components/admin/adminViews";
+import Select from "../../../components/common/select";
 import { useAdminList } from "../../../hooks/useAdminList";
 import {
   mockCommissions, mockCoupons, mockShippingPartners, mockShippingZones,
@@ -18,6 +19,11 @@ import {
 import "../../../components/admin/adminViews/index.scss";
 import "../../../components/admin/adminDataTable/index.scss";
 import "../../../components/admin/adminTabOverview/index.scss";
+
+const FEE_TYPE_OPTIONS = [
+  { value: "Phần trăm", label: "Phần trăm" },
+  { value: "Cố định", label: "Cố định" },
+];
 
 export const AdminCommissions = () => {
   const [fees, setFees] = useState(mockCommissions);
@@ -36,12 +42,12 @@ export const AdminCommissions = () => {
         {edit && (
           <div className="adm-form">
             <label>Giá trị<input value={edit.value} onChange={(e) => setEdit({ ...edit, value: e.target.value })} /></label>
-            <label>Loại
-              <select value={edit.type} onChange={(e) => setEdit({ ...edit, type: e.target.value })}>
-                <option value="Phần trăm">Phần trăm</option>
-                <option value="Cố định">Cố định</option>
-              </select>
-            </label>
+            <Select
+              label="Loại"
+              value={edit.type}
+              onChange={(e) => setEdit({ ...edit, type: e.target.value })}
+              options={FEE_TYPE_OPTIONS}
+            />
             <div className="adm-form__actions">
               <button type="button" className="cancel" onClick={() => setEdit(null)}>Hủy</button>
               <button type="button" className="save" onClick={save}>Lưu</button>

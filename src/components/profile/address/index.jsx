@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../../context/AuthContext';
 import * as addressService from '../../../services/addressService';
+import { getApiErrorMessage } from '../../../utils/apiResponse';
 import Button from '../../common/button';
 import Modal from '../../common/modal';
 import AddressList from './addressList';
@@ -49,22 +50,32 @@ export default function AddressPage() {
         toast.success('Thêm địa chỉ thành công');
       }
       setModalOpen(false);
-    } catch {
-      toast.error('Thao tác thất bại');
+    } catch (err) {
+      toast.error(
+        getApiErrorMessage(err, editTarget ? 'Cập nhật địa chỉ thất bại' : 'Thêm địa chỉ thất bại')
+      );
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Xóa địa chỉ này?')) return;
-    const updated = await addressService.deleteAddress(user.id, id);
-    setAddresses(updated);
-    toast.success('Đã xóa địa chỉ');
+    try {
+      const updated = await addressService.deleteAddress(user.id, id);
+      setAddresses(updated);
+      toast.success('Đã xóa địa chỉ');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Xóa địa chỉ thất bại'));
+    }
   };
 
   const handleSetDefault = async (id) => {
-    const updated = await addressService.setDefaultAddress(user.id, id);
-    setAddresses(updated);
-    toast.success('Đã đặt làm mặc định');
+    try {
+      const updated = await addressService.setDefaultAddress(user.id, id);
+      setAddresses(updated);
+      toast.success('Đã đặt làm mặc định');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Đặt địa chỉ mặc định thất bại'));
+    }
   };
 
   const modalFooter = (

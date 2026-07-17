@@ -11,7 +11,8 @@ import "./index.scss";
 
 const STEPS = ["Thông tin cửa hàng", "Tài khoản ngân hàng"];
 
-import { useBanks, resolveBankLabel } from "../../../services/bankService";
+import { resolveBankLabel } from "../../../services/bankService";
+import BankSelect from "../../../components/common/bankSelect";
 
 // Dịch các thông báo lỗi tiếng Anh thường gặp từ backend sang tiếng Việt.
 const translateApiError = (msg) => {
@@ -91,7 +92,6 @@ export default function BecomeSellerPage() {
   const [resubmitMode, setResubmitMode] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [errors, setErrors] = useState({});
-  const { banks, loading: banksLoading } = useBanks();
 
   useEffect(() => {
     const load = async () => {
@@ -493,14 +493,7 @@ export default function BecomeSellerPage() {
           {step === 1 && (
             <div className="seller-form-grid">
               <div className="seller-field">
-                <label className="field-label" htmlFor="bankName">Ngân hàng</label>
-                <select id="bankName" name="bankName" value={form.bankName} onChange={handleChange}>
-                  <option value="">{banksLoading ? "Đang tải danh sách ngân hàng..." : "Chọn ngân hàng"}</option>
-                  {banks.map((b) => (
-                    <option key={b.value} value={b.value}>{b.label} — {b.name}</option>
-                  ))}
-                  <option value="other">Ngân hàng khác</option>
-                </select>
+                <BankSelect name="bankName" value={form.bankName} onChange={handleChange} includeOther />
                 {errors.bankName && <span className="field-error">{errors.bankName}</span>}
               </div>
 

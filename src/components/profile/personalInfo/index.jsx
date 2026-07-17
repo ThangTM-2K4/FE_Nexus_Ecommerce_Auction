@@ -5,9 +5,17 @@ import { useAuth } from '../../../context/AuthContext';
 import * as profileService from '../../../services/profileService';
 import { syncProfileToSellerApplication } from '../../../services/sellerService';
 import { readImageAsDataUrl } from '../../../utils/imageUpload';
+import { getApiErrorMessage } from '../../../utils/apiResponse';
 import Input from '../../common/input';
+import Select from '../../common/select';
 import Button from '../../common/button';
 import './index.scss';
+
+const GENDERS = [
+  { value: 'Nam', label: 'Nam' },
+  { value: 'Nữ', label: 'Nữ' },
+  { value: 'Khác', label: 'Khác' },
+];
 
 // Ô tải ảnh CCCD trực tiếp từ máy (không dán URL nữa)
 function CccdImageUpload({ label, value, onPick, onClear, disabled }) {
@@ -55,9 +63,16 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
   const [form, setForm] = useState({
     cccdFullName: '',
     cccdNumber: '',
+    cccdGender: '',
+    cccdDateOfBirth: '',
+    cccdIssueDate: '',
+    cccdExpiryDate: '',
+    cccdIssuePlace: '',
     cccdAddress: '',
-    frontImageUrl: '',
+    frontImageUrl: '', // data URL để xem trước
     backImageUrl: '',
+    frontImageKey: '', // URL/key ảnh sau khi upload lên server (dùng khi nộp)
+    backImageKey: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -67,6 +82,11 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
         ...prev,
         cccdFullName: profile.cccdFullName || '',
         cccdNumber: profile.cccdNumber || '',
+        cccdGender: profile.cccdGender || '',
+        cccdDateOfBirth: profile.cccdDateOfBirth || '',
+        cccdIssueDate: profile.cccdIssueDate || '',
+        cccdExpiryDate: profile.cccdExpiryDate || '',
+        cccdIssuePlace: profile.cccdIssuePlace || '',
         cccdAddress: profile.cccdAddress || '',
         frontImageUrl: profile.cccdFrontImageUrl || '',
         backImageUrl: profile.cccdBackImageUrl || '',
@@ -88,24 +108,38 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
   const isValid =
     form.cccdFullName.trim() &&
     form.cccdNumber.trim() &&
+    form.cccdGender.trim() &&
+    form.cccdDateOfBirth.trim() &&
+    form.cccdIssueDate.trim() &&
+    form.cccdExpiryDate.trim() &&
+    form.cccdIssuePlace.trim() &&
     form.cccdAddress.trim() &&
     form.frontImageUrl &&
     form.backImageUrl;
 
-  // Chọn ảnh từ máy -> nén thành data URL lưu vào form
-  const handlePickImage = (key) => async (e) => {
+  // Chọn ảnh từ máy: xem trước ngay bằng data URL, đồng thời upload lên server
+  // (POST /uploads/identity) để lấy URL/key thật dùng khi nộp hồ sơ. Upload lỗi
+  // thì vẫn giữ base64 làm phương án dự phòng (nộp best-effort).
+  const handlePickImage = (previewKey, uploadKey) => async (e) => {
     const file = e.target.files?.[0];
     e.target.value = ''; // cho phép chọn lại cùng 1 file
     if (!file) return;
     try {
       const dataUrl = await readImageAsDataUrl(file);
-      setForm((prev) => ({ ...prev, [key]: dataUrl }));
+      setForm((prev) => ({ ...prev, [previewKey]: dataUrl, [uploadKey]: '' }));
+      try {
+        const url = await profileService.uploadIdentityImage(file);
+        if (url) setForm((prev) => ({ ...prev, [uploadKey]: url }));
+      } catch {
+        /* giữ base64, không chặn UX */
+      }
     } catch (err) {
       toast.error(err.message || 'Không tải được ảnh');
     }
   };
 
-  const clearImage = (key) => () => setForm((prev) => ({ ...prev, [key]: '' }));
+  const clearImage = (previewKey, uploadKey) => () =>
+    setForm((prev) => ({ ...prev, [previewKey]: '', [uploadKey]: '' }));
 
   // Lưu hồ sơ CCCD. goToSellerRegister = true thì lưu xong chuyển sang trang
   // đăng ký Người bán; false thì chỉ lưu (nhiều người chỉ muốn cập nhật hồ sơ).
@@ -113,14 +147,23 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
     if (!isValid || locked) return;
     setSaving(true);
     try {
+      // Ưu tiên URL/key ảnh đã upload lên server; chưa upload được thì dùng base64.
+      const frontImage = form.frontImageKey || form.frontImageUrl;
+      const backImage = form.backImageKey || form.backImageUrl;
+
       // 1) Lưu thông tin cá nhân (họ tên, số CCCD, địa chỉ, ảnh) + đẩy địa chỉ lên backend.
       // Dữ liệu này được form đăng ký Người bán đọc lại để hiển thị cho staff duyệt.
       const cccdData = {
         cccdFullName: form.cccdFullName,
         cccdNumber: form.cccdNumber,
+        cccdGender: form.cccdGender,
+        cccdDateOfBirth: form.cccdDateOfBirth,
+        cccdIssueDate: form.cccdIssueDate,
+        cccdExpiryDate: form.cccdExpiryDate,
+        cccdIssuePlace: form.cccdIssuePlace,
         cccdAddress: form.cccdAddress,
-        cccdFrontImageUrl: form.frontImageUrl,
-        cccdBackImageUrl: form.backImageUrl,
+        cccdFrontImageUrl: frontImage,
+        cccdBackImageUrl: backImage,
       };
       const saved = await profileService.updateCccdInfo(userId, cccdData);
 
@@ -129,9 +172,16 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
       let updated = saved;
       try {
         updated = await profileService.submitIdentityVerification(userId, {
+          fullName: form.cccdFullName.trim(),
+          gender: form.cccdGender.trim(),
+          dateOfBirth: form.cccdDateOfBirth,
           identityNumber: form.cccdNumber.trim(),
-          frontImageUrl: form.frontImageUrl,
-          backImageUrl: form.backImageUrl,
+          issueDate: form.cccdIssueDate,
+          expiryDate: form.cccdExpiryDate,
+          issuePlace: form.cccdIssuePlace.trim(),
+          permanentAddress: form.cccdAddress.trim(),
+          frontImageUrl: frontImage,
+          backImageUrl: backImage,
         });
       } catch {
         /* giữ dữ liệu local, không chặn UX */
@@ -152,7 +202,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
         toast.success('Đã lưu thông tin CCCD');
       }
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Lưu hồ sơ thất bại');
+      toast.error(getApiErrorMessage(err, 'Lưu hồ sơ thất bại'));
     } finally {
       setSaving(false);
     }
@@ -194,9 +244,54 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
           placeholder="Số định danh cá nhân trên CCCD"
           disabled={locked}
         />
+        <div className="personal-info-cccd__row">
+          <Select
+            label="Giới tính"
+            name="cccdGender"
+            value={form.cccdGender}
+            onChange={handleChange}
+            options={GENDERS}
+            placeholder="Chọn giới tính"
+            disabled={locked}
+          />
+          <Input
+            label="Ngày sinh"
+            name="cccdDateOfBirth"
+            type="date"
+            value={form.cccdDateOfBirth}
+            onChange={handleChange}
+            disabled={locked}
+          />
+        </div>
+        <div className="personal-info-cccd__row">
+          <Input
+            label="Ngày cấp"
+            name="cccdIssueDate"
+            type="date"
+            value={form.cccdIssueDate}
+            onChange={handleChange}
+            disabled={locked}
+          />
+          <Input
+            label="Ngày hết hạn"
+            name="cccdExpiryDate"
+            type="date"
+            value={form.cccdExpiryDate}
+            onChange={handleChange}
+            disabled={locked}
+          />
+        </div>
+        <Input
+          label="Nơi cấp"
+          name="cccdIssuePlace"
+          value={form.cccdIssuePlace}
+          onChange={handleChange}
+          placeholder="VD: Cục Cảnh sát QLHC về TTXH"
+          disabled={locked}
+        />
         <div className="personal-info-cccd__address-wrap">
           <Input
-            label="Địa chỉ"
+            label="Địa chỉ thường trú"
             name="cccdAddress"
             value={form.cccdAddress}
             onChange={handleChange}
@@ -210,15 +305,15 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
         <CccdImageUpload
           label="Ảnh CCCD mặt trước"
           value={form.frontImageUrl}
-          onPick={handlePickImage('frontImageUrl')}
-          onClear={clearImage('frontImageUrl')}
+          onPick={handlePickImage('frontImageUrl', 'frontImageKey')}
+          onClear={clearImage('frontImageUrl', 'frontImageKey')}
           disabled={locked}
         />
         <CccdImageUpload
           label="Ảnh CCCD mặt sau"
           value={form.backImageUrl}
-          onPick={handlePickImage('backImageUrl')}
-          onClear={clearImage('backImageUrl')}
+          onPick={handlePickImage('backImageUrl', 'backImageKey')}
+          onClear={clearImage('backImageUrl', 'backImageKey')}
           disabled={locked}
         />
       </div>

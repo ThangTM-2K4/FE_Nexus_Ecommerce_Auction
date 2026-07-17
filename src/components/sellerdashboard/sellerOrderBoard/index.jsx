@@ -6,7 +6,13 @@ import SellerOrderDetailModal from "../sellerOrderDetailModal";
 import { shippingCarriers, formatCurrency } from "../../../data/sellerMockData";
 import { ORDER_TABS, tabMatches, statusLabel, statusClass } from "../../../utils/sellerOrderStatus";
 import { exportCsv, todayStamp } from "../../../utils/exportCsv";
+import Select from "../../common/select";
 import "./index.scss";
+
+const ORDER_SORT_OPTIONS = [
+  { value: "newest", label: "Ngày đặt đơn mới nhất" },
+  { value: "oldest", label: "Ngày đặt đơn cũ nhất" },
+];
 
 const carrierName = (code) =>
   shippingCarriers.find((c) => c.code === code)?.name ?? code ?? "—";
@@ -130,13 +136,15 @@ export default function SellerOrderBoard({ orders, exportName = "don-hang", init
       <div className="slr-ob__subbar">
         <strong>{visible.length} Đơn hàng</strong>
         <div className="slr-ob__subbar-actions">
-          <label className="slr-ob__sort">
-            Sắp xếp theo
-            <select value={sort} onChange={(e) => setSort(e.target.value)}>
-              <option value="newest">Ngày đặt đơn mới nhất</option>
-              <option value="oldest">Ngày đặt đơn cũ nhất</option>
-            </select>
-          </label>
+          <div className="slr-ob__sort">
+            <span>Sắp xếp theo</span>
+            <Select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              options={ORDER_SORT_OPTIONS}
+              className="common-select--sm common-select--auto"
+            />
+          </div>
           <Link to="/seller-hub/shipping-batch" className="slr-btn slr-btn--danger">
             <FaTruck /> Giao Hàng Loạt
           </Link>

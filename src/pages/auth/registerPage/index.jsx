@@ -4,7 +4,7 @@ import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { register } from "../../../services/authService";
+import { register, getGoogleLoginUrl } from "../../../services/authService";
 import {
   PASSWORD_RULES,
   getPasswordStrength,
@@ -133,8 +133,7 @@ function RegisterPage() {
   };
 
   const handleGoogleRegister = () => {
-    window.location.href =
-      "http://localhost:5101/api/v1/auth/google/login";
+    window.location.href = getGoogleLoginUrl();
   };
 
   return (

@@ -5,6 +5,9 @@ import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import { useAuth } from "../../../context/AuthContext";
 import * as productService from "../../../services/productService";
 import { productCategories } from "../../../data/auctionMockData";
+import Select from "../../../components/common/select";
+
+const CATEGORY_OPTIONS = productCategories.map((c) => ({ value: c.id, label: c.label }));
 
 const CATEGORY_KEYWORDS = {
   tech: ["điện thoại", "iphone", "macbook", "laptop", "tai nghe", "đồng hồ thông minh", "máy ảnh", "camera", "tivi", "sạc", "loa"],
@@ -117,13 +120,13 @@ export default function ShopCategoriesPage() {
                       <td>{p.name || p.id}</td>
                       <td>{productCategories.find((c) => c.id === p.category)?.label || "Chưa phân loại"}</td>
                       <td>
-                        <select value={p.category || ""} onChange={(e) => handleCategoryChange(p, e.target.value)}>
-                          {productCategories.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.label}
-                            </option>
-                          ))}
-                        </select>
+                        <Select
+                          value={p.category || ""}
+                          onChange={(e) => handleCategoryChange(p, e.target.value)}
+                          options={CATEGORY_OPTIONS}
+                          placeholder="Chưa phân loại"
+                          className="common-select--sm"
+                        />
                       </td>
                     </tr>
                   ))}

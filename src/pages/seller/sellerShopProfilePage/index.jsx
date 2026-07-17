@@ -6,6 +6,7 @@ import * as productService from "../../../services/productService";
 import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import { categoryStaffInfo, customerStats } from "../../../data/sellerMockData";
 import { fileToDataUrl } from "../../../utils/fileToDataUrl";
+import Select from "../../../components/common/select";
 import "./index.scss";
 
 const TABS = [
@@ -260,13 +261,12 @@ export default function ShopProfilePage() {
               <label className="slr-cp__row-label">Loại hình kinh doanh</label>
               <div className="slr-cp__row-body">
                 {editing ? (
-                  <select name="businessType" value={shown.businessType} onChange={handleChange}>
-                    {BUSINESS_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    name="businessType"
+                    value={shown.businessType}
+                    onChange={handleChange}
+                    options={BUSINESS_TYPES}
+                  />
                 ) : (
                   <p className="slr-shop-profile__value">
                     {BUSINESS_TYPES.find((t) => t.value === shown.businessType)?.label}

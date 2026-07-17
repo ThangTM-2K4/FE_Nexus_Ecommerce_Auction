@@ -1,0 +1,61 @@
+@use '../../../styles/palette' as *;
+
+// Dòng ngân hàng (dùng cả trong popup lẫn ô đã chọn)
+.bank-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+
+  &--compact {
+    gap: 8px;
+  }
+}
+
+.bank-option__logo {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: 6px;
+  overflow: hidden;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  span {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: $ink-muted;
+  }
+}
+
+.bank-option__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.bank-option__name {
+  font-size: 0.86rem;
+  color: $ink;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bank-option__full {
+  font-size: 0.7rem;
+  color: $ink-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

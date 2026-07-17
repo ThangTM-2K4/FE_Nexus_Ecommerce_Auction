@@ -33,3 +33,19 @@
     box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
   }
 }
+
+// Trạng thái lỗi: viền đỏ + dòng thông báo đỏ dưới ô
+.common-input--error .common-input__field {
+  border-color: $live-red;
+
+  &:focus {
+    border-color: $live-red;
+    box-shadow: 0 0 0 3px rgba($live-red, 0.15);
+  }
+}
+
+.common-input__error {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $live-red;
+}

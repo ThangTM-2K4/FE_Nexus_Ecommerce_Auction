@@ -15,10 +15,12 @@
   }
 }
 
+// Bố cục 2 cột: Email | SĐT — Tên | Giới tính — Ngày sinh | CCCD
 .profile-info__fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem 1.25rem;
+  gap: 1.25rem;
+  align-items: start;
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
@@ -30,12 +32,6 @@
   flex-direction: column;
   gap: 6px;
 
-  label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: $ink;
-  }
-
   input,
   select {
     height: 42px;
@@ -45,6 +41,7 @@
     font-size: 0.88rem;
     font-family: inherit;
     color: $ink;
+    background: $surface;
 
     &:focus {
       outline: none;
@@ -52,6 +49,121 @@
       box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
     }
   }
+
+  // Ô Select (Giới tính) cao bằng các ô 42px để 2 cột thẳng hàng
+  .common-select__field {
+    min-height: 42px;
+  }
+}
+
+// Hàng nhãn: tên field bên trái, badge xác minh bên phải
+.profile-info__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 22px;
+
+  label,
+  .profile-info__field-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $ink;
+  }
+}
+
+// Khung bao ô nhập + nhãn/nút xác minh (flex row) — badge nằm CẠNH chữ, không đè lên.
+.profile-info__control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding-right: 6px;
+  border: 1px solid $border-soft;
+  border-radius: $radius-sm;
+  background: $surface;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &:focus-within {
+    border-color: $raspberry;
+    box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
+  }
+
+  // <input> bên trong bỏ viền riêng, để khung ngoài lo — text tự cắt trước badge
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 4px 0 12px;
+    border: 0 !important;
+    background: transparent;
+    text-overflow: ellipsis;
+
+    &:focus {
+      outline: none;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+  }
+
+  // Biến thể chỉ đọc (CCCD): không có <input>, hiển thị giá trị dạng text
+  &--readonly {
+    padding: 0 6px 0 12px;
+    border-style: dashed;
+    background: $surface-soft;
+  }
+}
+
+// Nhãn/nút xác minh — flex child, KHÔNG absolute nên không bao giờ đè lên chữ
+.profile-slot {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: $radius-pill;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.profile-slot--verified {
+  background: rgba($color-success, 0.12);
+  color: $color-success;
+}
+
+.profile-slot--pending {
+  background: $color-warning-bg;
+  color: $color-warning;
+}
+
+.profile-slot--action {
+  background: $raspberry;
+  color: $surface;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover:not(:disabled) {
+    background: $indigo;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.profile-info__cccd-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: $ink-muted;
 }
 
 .profile-info__avatar-block {
@@ -72,6 +184,13 @@
   font-weight: 700;
   display: grid;
   place-items: center;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .profile-info__upload-btn {
@@ -102,4 +221,101 @@
   margin-top: 1.5rem;
   padding-top: 1.25rem;
   border-top: 1px solid $border-soft;
+}
+
+// ---- Popup nhập OTP ----
+.otp-modal.common-modal {
+  max-width: 400px;
+}
+
+.otp-modal .common-modal__footer {
+  padding: 16px 24px 22px;
+  border-top: 0;
+}
+
+.otp-modal__confirm {
+  width: 100%;
+  height: 46px;
+  font-size: 0.95rem;
+}
+
+.otp-modal__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 4px 0;
+}
+
+.otp-modal__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  background: rgba($raspberry, 0.1);
+}
+
+.otp-modal__hint {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  color: $ink-muted;
+  line-height: 1.6;
+
+  strong {
+    display: block;
+    margin-top: 2px;
+    font-size: 1rem;
+    color: $ink;
+  }
+}
+
+.otp-modal__input {
+  width: 100%;
+  height: 56px;
+  padding: 0 16px;
+  border: 1.5px solid $border-soft;
+  border-radius: $radius-md;
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.35em;
+  text-indent: 0.35em; // bù letter-spacing để chữ căn giữa thật sự
+  text-align: center;
+  color: $ink;
+  background: $surface-soft;
+
+  &::placeholder {
+    color: $ink-faint;
+    font-weight: 400;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $raspberry;
+    background: $surface;
+    box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
+  }
+}
+
+.otp-modal__resend {
+  margin: 16px auto 0;
+  border: 0;
+  background: none;
+  color: $raspberry;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
 }

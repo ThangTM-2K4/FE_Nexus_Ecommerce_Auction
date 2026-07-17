@@ -53,6 +53,23 @@
   flex-direction: column;
   gap: 1.25rem;
   max-width: 560px;
+
+  // Cho ô Giới tính (Select) cao bằng các ô Input 42px để hàng 2 cột thẳng
+  .common-select__field {
+    min-height: 42px;
+  }
+}
+
+// Hàng 2 cột (Giới tính | Ngày sinh — Ngày cấp | Ngày hết hạn)
+.personal-info-cccd__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .personal-info-cccd__address-wrap {

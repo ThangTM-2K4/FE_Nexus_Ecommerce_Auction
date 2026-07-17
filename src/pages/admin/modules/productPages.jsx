@@ -10,6 +10,7 @@ import {
   ProductCard, AuctionCard, CategoryTreeItem, BrandChip, InventoryGauge,
   SellerProductGroup, SellerInventorySection,
 } from "../../../components/admin/adminViews";
+import Select from "../../../components/common/select";
 import { useAdminList } from "../../../hooks/useAdminList";
 import {
   mockProducts, mockAuctions, mockCategories, mockBrands, mockInventory,
@@ -18,6 +19,11 @@ import {
 import "../../../components/admin/adminViews/index.scss";
 import "../../../components/admin/adminDataTable/index.scss";
 import "../../../components/admin/adminTabOverview/index.scss";
+
+const CATEGORY_STATUS_OPTIONS = [
+  { value: "Hoạt động", label: "Hoạt động" },
+  { value: "Tắt", label: "Tắt" },
+];
 
 const getWarehouse = (seller) => mockSellerWarehouses.find((w) => w.seller === seller);
 
@@ -382,13 +388,12 @@ export const AdminCategories = () => {
             />
           </label>
           {(modal === "add-parent" || modal === "edit-parent") && (
-            <label>
-              Trạng thái
-              <select value={form.status || "Hoạt động"} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                <option value="Hoạt động">Hoạt động</option>
-                <option value="Tắt">Tắt</option>
-              </select>
-            </label>
+            <Select
+              label="Trạng thái"
+              value={form.status || "Hoạt động"}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+              options={CATEGORY_STATUS_OPTIONS}
+            />
           )}
           {(modal === "add-child" || modal === "edit-child") && (
             <label>
