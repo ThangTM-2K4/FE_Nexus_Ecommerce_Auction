@@ -45,11 +45,20 @@ export const AdminAuctionOrders = () => {
     <div className="adm-page">
       <AdminPageHeader kicker="Đấu giá" title="Đơn hàng đấu giá" subtitle="Pipeline thanh toán và giao hàng sau đấu giá." />
       <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm mã đơn, người thắng..." />
-      <AdminStaggerGrid className="adm-auction-order-grid">
+      <div className="adm-order-timeline">
         {list.filtered.map((order) => (
-          <AuctionOrderCard
+          <OrderTimelineItem
             key={order.id}
-            order={order}
+            order={{
+              id: order.id,
+              status: order.deliveryStatus !== "—" ? order.deliveryStatus : order.paymentStatus,
+              buyer: order.winner,
+              seller: order.seller,
+              payment: order.paymentStatus,
+              shipping: order.deliveryStatus,
+              total: order.finalPrice,
+              createdAt: order.createdAt
+            }}
             actions={[
               { label: "Hoàn thành", variant: "success", onClick: () => { list.updateItem(order.id, { deliveryStatus: "Đã giao" }); toast.success("Đã hoàn thành"); }},
               { label: "Hoàn tiền", onClick: () => toast.info("Đang hoàn tiền") },
@@ -57,7 +66,7 @@ export const AdminAuctionOrders = () => {
             ]}
           />
         ))}
-      </AdminStaggerGrid>
+      </div>
     </div>
   );
 };

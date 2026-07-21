@@ -84,7 +84,8 @@ function LoginPage() {
     console.log("Google URL:", import.meta.env.VITE_GOOGLE_LOGIN_URL);
   }
   const handleGoogleLogin = () => {
-
+    window.location.href = getGoogleLoginUrl();
+  };
   const handleLogin = async (e) => {
     e.preventDefault();
 

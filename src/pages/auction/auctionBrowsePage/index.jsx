@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AuctionIntroBanner from '../../../components/auction/auctionIntroBanner';
 import AuctionFilterBar, { EMPTY_FILTERS } from '../../../components/auction/auctionFilterBar';
 import AuctionCard from '../../../components/auction/auctionCard';
@@ -59,6 +60,7 @@ function sortListings(list, sortBy) {
 }
 
 export default function AuctionBrowsePage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('ending-soon');
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -111,7 +113,7 @@ export default function AuctionBrowsePage() {
         ) : (
           filteredListings.map((auction) => (
             <div key={auction.id} role="listitem">
-              <AuctionCard auction={auction} />
+              <AuctionCard auction={auction} onClick={() => navigate(`/auction/detail/${auction.id}`)} />
             </div>
           ))
         )}

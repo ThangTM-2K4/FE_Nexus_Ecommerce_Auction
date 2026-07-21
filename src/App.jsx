@@ -56,6 +56,11 @@ import StaffNotifications from "./pages/staff/staffNotifications";
 
 import AuctionLayout from "./components/auction/auctionLayout";
 import AuctionBrowsePage from "./pages/auction/auctionBrowsePage";
+import AuctionDetailPage from "./pages/auction/auctionDetailPage";
+import AuctionCreatePage from "./pages/auction/auctionCreatePage";
+import AuctionMyBidsPage from "./pages/auction/auctionMyBidsPage";
+import AuctionProfilePage from "./pages/auction/auctionProfilePage";
+import AuctionSellerPage from "./pages/auction/auctionSellerPage";
 
 import ProtectedRoute from "./config/ProtectedRoute";
 import SellerRoute from "./config/SellerRoute";
@@ -220,6 +225,11 @@ function App() {
       <Route path="/auction" element={<AuctionLayout />}>
         <Route index element={<AuctionBrowsePage />} />
         <Route path="browse" element={<AuctionBrowsePage />} />
+        <Route path="detail/:id" element={<AuctionDetailPage />} />
+        <Route path="create" element={<AuctionCreatePage />} />
+        <Route path="my-bids" element={<AuctionMyBidsPage />} />
+        <Route path="profile" element={<AuctionProfilePage />} />
+        <Route path="seller" element={<AuctionSellerPage />} />
       </Route>
 
   {/* Seller */}

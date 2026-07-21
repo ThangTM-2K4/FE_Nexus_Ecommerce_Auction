@@ -65,6 +65,18 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
           <Link to="/" className="auction-header__home-link">
             Về cửa hàng
           </Link>
+          <Link to="/auction/my-bids" className="auction-header__home-link" style={{ borderColor: 'transparent' }}>
+            Của tôi
+          </Link>
+          <Link to="/auction/profile" className="auction-header__home-link" style={{ borderColor: 'transparent' }}>
+            Hồ sơ
+          </Link>
+          <Link to="/auction/seller" className="auction-header__home-link" style={{ borderColor: 'transparent' }}>
+            Kênh người bán
+          </Link>
+          <Link to="/auction/create" className="auction-header__home-link" style={{ background: 'rgba(123, 76, 171, 0.45)', color: '#fff', borderColor: 'transparent' }}>
+            Tạo đấu giá
+          </Link>
           <button
             type="button"
             className="auction-header__menu-btn"
