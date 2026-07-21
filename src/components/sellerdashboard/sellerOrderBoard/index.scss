@@ -141,6 +141,7 @@
     flex-wrap: wrap;
   }
 
+  // Mũi tên + khung do <Select> lo (components/common/select)
   &__sort {
     display: flex;
     align-items: center;
@@ -148,17 +149,12 @@
     font-size: 13px;
     color: $ink-muted;
 
-    select {
-      height: 38px;
-      padding: 0 10px;
-      border: 1px solid $border;
-      border-radius: $radius-sm;
-      font-size: 13px;
-      color: $ink;
-      background: $surface;
-      cursor: pointer;
+    > span {
+      white-space: nowrap;
+    }
 
-      &:focus { outline: none; border-color: $raspberry; }
+    .common-select--auto {
+      min-width: 190px;
     }
   }
 

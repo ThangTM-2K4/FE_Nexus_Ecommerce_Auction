@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import * as profileService from '../../../services/profileService';
+import { getApiErrorMessage } from '../../../utils/apiResponse';
+import Select from '../../common/select';
 
 const GENDERS = [
   { value: 'male', label: 'Nam' },
@@ -30,8 +32,8 @@ export default function PersonalInfoSection({ userId, profile, onUpdate }) {
       onUpdate(updated);
       setEditing(false);
       toast.success('Cập nhật thông tin thành công');
-    } catch {
-      toast.error('Cập nhật thất bại');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Cập nhật thông tin thất bại'));
     } finally {
       setSaving(false);
     }
@@ -119,12 +121,13 @@ export default function PersonalInfoSection({ userId, profile, onUpdate }) {
           <div className="profile-field">
             <label>Giới tính</label>
             {editing ? (
-              <select name="gender" value={data.gender || ''} onChange={handleChange}>
-                <option value="">Chọn giới tính</option>
-                {GENDERS.map((g) => (
-                  <option key={g.value} value={g.value}>{g.label}</option>
-                ))}
-              </select>
+              <Select
+                name="gender"
+                value={data.gender || ''}
+                onChange={handleChange}
+                options={GENDERS}
+                placeholder="Chọn giới tính"
+              />
             ) : (
               <span>{GENDERS.find((g) => g.value === data.gender)?.label || '—'}</span>
             )}

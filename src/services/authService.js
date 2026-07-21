@@ -1,4 +1,7 @@
+
 import api from "../config/api";
+import { GOOGLE_LOGIN_URL } from "../config/endpoints";
+
 
 const SESSION_KEY = "user";
 const ACCESS_TOKEN_KEY = "accessToken";
@@ -275,7 +278,9 @@ export const resendEmailOtp = async (email) => {
 };
 // forgotOtp not implemented yet
 
-export const getGoogleLoginUrl = () => import.meta.env.VITE_GOOGLE_LOGIN_URL;
+// URL đăng nhập Google lấy từ .env; nếu chưa cấu hình thì suy ra từ API gateway.
+export const getGoogleLoginUrl = () =>
+  GOOGLE_LOGIN_URL || `${api.defaults.baseURL}/auth/google/login`;
 
 export const exchangeCode = async (code) => {
   const { data } = await api.post("/auth/exchange-code", { code });

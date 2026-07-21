@@ -3,12 +3,15 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 import { exchangeCode } from "../../../services/authService";
+import { getApiErrorMessage } from "../../../utils/apiResponse";
 import { getRoleTokens } from "../../../config/ProtectedRoute";
+
 function AuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
   const hasExchanged = useRef(false);
+
   useEffect(() => {
     const code = searchParams.get("code");
 
@@ -20,16 +23,16 @@ function AuthCallback() {
     const handleExchange = async () => {
       if (hasExchanged.current) return;
       hasExchanged.current = true;
+
       try {
-        // 1. exchangeCode return full object User
+        // Exchange Google code
         const user = await exchangeCode(code);
 
-        refreshUser(); // Cập nhật context
+        // Cập nhật AuthContext
+        refreshUser();
 
-        // 2. Pass the user directly to getRoleTokens
         const roleTokens = getRoleTokens(user);
 
-        // 3. Chuyển hướng
         if (
           roleTokens.includes("ADMIN") ||
           roleTokens.includes("SUPER_ADMIN")
@@ -48,10 +51,11 @@ function AuthCallback() {
         } else {
           navigate("/", { replace: true });
         }
-      } catch (error) {
-        console.error("Lỗi ẩn trong Callback:", error);
-        toast.error("Đăng nhập Google thất bại");
-        navigate("/login?error=google_login_failed", { replace: true });
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Đăng nhập Google thất bại"));
+        navigate("/login?error=google_login_failed", {
+          replace: true,
+        });
       }
     };
 

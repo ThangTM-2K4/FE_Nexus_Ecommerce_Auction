@@ -5,7 +5,6 @@ import Header from '../../../components/homepage/header';
 import Footer from '../../../components/homepage/footer';
 import AccountLayout from '../../../components/profile/accountLayout';
 import ProfileInfo from '../../../components/profile/profileInfo';
-import VerificationSection from '../../../components/profile/verificationSection';
 import BuyerTrustScore from '../../../components/profile/buyerTrustScore';
 import '../ordersPage/index.scss';
 import './index.scss';
@@ -54,9 +53,10 @@ export default function ProfilePage() {
       <Header />
       <main className="account-page__main">
         <AccountLayout title="Hồ Sơ" description="Quản lý thông tin tài khoản của bạn">
-          <ProfileInfo userId={user.id} profile={profile} onUpdate={handleProfileUpdate} />
-          <VerificationSection userId={user.id} profile={profile} onUpdate={handleProfileUpdate} />
-          <BuyerTrustScore />
+          <div className="profile-layout">
+            <ProfileInfo userId={user.id} profile={profile} onUpdate={handleProfileUpdate} />
+            <BuyerTrustScore />
+          </div>
         </AccountLayout>
       </main>
       <Footer />

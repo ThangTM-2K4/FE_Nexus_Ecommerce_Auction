@@ -9,6 +9,7 @@ import ForgotPassword from "./pages/auth/forgotPassword";
 import VerifyOtp from "./pages/auth/forgotVerifyOtp";
 import ResetPassword from "./pages/auth/resetPassword";
 import RegisterVerifyOtpPage from "./pages/auth/registerVerifyOtp";
+import TermsPage from "./pages/auth/termsPage";
 
 import HomePage from "./pages/homepage/homePage";
 import ProductDetailPage from "./pages/productDetailPage";
@@ -73,6 +74,7 @@ function App() {
   <Route path="/reset-password" element={<ResetPassword />} />
   <Route path="/auth/callback" element={<AuthCallback />} />
   <Route path="/register-verify-otp" element={<RegisterVerifyOtpPage />} />
+  <Route path="/terms" element={<TermsPage />} />
 
   {/* ==========================
       Shared layout

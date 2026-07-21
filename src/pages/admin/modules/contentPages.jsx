@@ -8,6 +8,7 @@ import AdminModal from "../../../components/admin/adminModal";
 import AdminKpiCard from "../../../components/admin/adminKpiCard";
 import { AdminAnimatedView, AdminStaggerGrid } from "../../../components/admin/adminPageTransition";
 import { NotificationItem, BannerPreview, ContentDoc, AuditTimelineItem } from "../../../components/admin/adminViews";
+import Select from "../../../components/common/select";
 import { useAdminList } from "../../../hooks/useAdminList";
 import {
   mockNotifications, mockBanners, mockContents, mockAnalytics,
@@ -22,6 +23,15 @@ import {
 import "../../../components/admin/adminViews/index.scss";
 import "../../../components/admin/adminDataTable/index.scss";
 import "../../../components/admin/adminTabOverview/index.scss";
+
+const toOptions = (values) => values.map((v) => ({ value: v, label: v }));
+
+const NOTIFICATION_TYPE_OPTIONS = toOptions(["Hệ thống", "Khuyến mãi", "Nhắc đấu giá", "Nhắc đơn hàng"]);
+const BANNER_TYPE_OPTIONS = toOptions(["Trang chủ", "Khuyến mãi", "Sự kiện"]);
+const TOGGLE_OPTIONS = [
+  { value: "true", label: "Bật" },
+  { value: "false", label: "Tắt" },
+];
 
 export const AdminNotifications = () => {
   const list = useAdminList(mockNotifications, ["title"]);
@@ -38,11 +48,12 @@ export const AdminNotifications = () => {
         {form && (
           <div className="adm-form">
             <label>Tiêu đề<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
-            <label>Loại
-              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                {["Hệ thống", "Khuyến mãi", "Nhắc đấu giá", "Nhắc đơn hàng"].map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </label>
+            <Select
+              label="Loại"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              options={NOTIFICATION_TYPE_OPTIONS}
+            />
             <label>Nội dung<textarea placeholder="Nhập nội dung..." /></label>
             <div className="adm-form__actions">
               <button type="button" className="cancel" onClick={() => setForm(null)}>Hủy</button>
@@ -80,11 +91,12 @@ export const AdminBanners = () => {
         {form && (
           <div className="adm-form">
             <label>Tiêu đề<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
-            <label>Loại
-              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                {["Trang chủ", "Khuyến mãi", "Sự kiện"].map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </label>
+            <Select
+              label="Loại"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              options={BANNER_TYPE_OPTIONS}
+            />
             <div className="adm-form__actions">
               <button type="button" className="cancel" onClick={() => setForm(null)}>Hủy</button>
               <button type="button" className="save" onClick={() => {
@@ -218,19 +230,25 @@ export const AdminSettings = () => {
           <div key={section} className="adm-card">
             <header><h3>{labels[section] || section}</h3></header>
             <div className="adm-form">
-              {Object.entries(fields).map(([key, val]) => (
-                <label key={key}>
-                  {key}
-                  {typeof val === "boolean" ? (
-                    <select value={val ? "true" : "false"} onChange={(e) => setSettings({ ...settings, [section]: { ...fields, [key]: e.target.value === "true" } })}>
-                      <option value="true">Bật</option>
-                      <option value="false">Tắt</option>
-                    </select>
-                  ) : (
+              {Object.entries(fields).map(([key, val]) =>
+                typeof val === "boolean" ? (
+                  // <Select> render ra <button>, không lồng trong <label> được
+                  <Select
+                    key={key}
+                    label={key}
+                    value={val ? "true" : "false"}
+                    onChange={(e) =>
+                      setSettings({ ...settings, [section]: { ...fields, [key]: e.target.value === "true" } })
+                    }
+                    options={TOGGLE_OPTIONS}
+                  />
+                ) : (
+                  <label key={key}>
+                    {key}
                     <input value={val} onChange={(e) => setSettings({ ...settings, [section]: { ...fields, [key]: e.target.value } })} />
-                  )}
-                </label>
-              ))}
+                  </label>
+                )
+              )}
             </div>
           </div>
         ))}

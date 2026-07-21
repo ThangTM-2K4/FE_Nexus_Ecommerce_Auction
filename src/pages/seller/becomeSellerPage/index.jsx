@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 import * as profileService from "../../../services/profileService";
 import * as sellerService from "../../../services/sellerService";
+import { fileToDataUrl } from "../../../utils/fileToDataUrl";
 import Header from "../../../components/homepage/header";
 import Footer from "../../../components/homepage/footer";
 import SellerTermsGate from "./SellerTermsGate";
@@ -11,7 +12,8 @@ import "./index.scss";
 
 const STEPS = ["Thông tin cửa hàng", "Tài khoản ngân hàng"];
 
-import { useBanks, resolveBankLabel } from "../../../services/bankService";
+import { resolveBankLabel } from "../../../services/bankService";
+import BankSelect from "../../../components/common/bankSelect";
 
 // Dịch các thông báo lỗi tiếng Anh thường gặp từ backend sang tiếng Việt.
 const translateApiError = (msg) => {
@@ -49,6 +51,7 @@ const initialForm = {
   shopName: "",
   taxCode: "",
   businessLicense: "",
+  businessLicenseFileName: "",
   pickupAddress: "",
   bankName: "",
   bankNameCustom: "",
@@ -56,14 +59,35 @@ const initialForm = {
   accountHolder: "",
 };
 
-function FileInput({ label, name, form, setForm, required }) {
-  const handleUpload = () => {
-    setForm((prev) => ({
-      ...prev,
-      [name]: `${label} — da-tai-len.pdf`,
-    }));
-    toast.info(`Đã tải lên: ${label}`);
+// Upload thật một chứng từ (giấy phép kinh doanh...) -> lưu data URL trong form để
+// đính kèm đơn và hiển thị lại cho staff/admin duyệt. Nhận ảnh (JPG/PNG) hoặc PDF.
+function FileInput({ label, name, form, setForm, required, error, hint }) {
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handlePick = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Tệp tối đa 5MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setForm((prev) => ({ ...prev, [name]: dataUrl, [`${name}FileName`]: file.name }));
+      toast.success(`Đã tải lên: ${label}`);
+    } catch (err) {
+      toast.error(err.message || "Tải tệp thất bại");
+    } finally {
+      setUploading(false);
+    }
   };
+
+  const value = form[name];
+  const fileName = form[`${name}FileName`];
+  const isImage = typeof value === "string" && value.startsWith("data:image");
 
   return (
     <div className="seller-field seller-field--full">
@@ -71,10 +95,19 @@ function FileInput({ label, name, form, setForm, required }) {
         {label}
         {required && <span className="required"> *</span>}
       </label>
-      <button type="button" className="seller-upload-btn" onClick={handleUpload}>
-        {form[name] ? "✓ Đã tải lên" : "Chọn tệp"}
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,application/pdf" hidden onChange={handlePick} />
+      <button
+        type="button"
+        className={`seller-upload-btn ${error ? "input-error" : ""}`}
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+      >
+        {uploading ? "Đang tải..." : value ? "✓ Đã tải lên — Đổi tệp" : "Chọn tệp"}
       </button>
-      {form[name] && <small className="seller-file-name">{form[name]}</small>}
+      {isImage && <img className="seller-file-preview" src={value} alt={label} />}
+      {fileName && <small className="seller-file-name">{fileName}</small>}
+      {hint && <small className="seller-file-hint">{hint}</small>}
+      {error && <span className="field-error">{error}</span>}
     </div>
   );
 }
@@ -91,7 +124,6 @@ export default function BecomeSellerPage() {
   const [resubmitMode, setResubmitMode] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [errors, setErrors] = useState({});
-  const { banks, loading: banksLoading } = useBanks();
 
   useEffect(() => {
     const load = async () => {
@@ -109,8 +141,6 @@ export default function BecomeSellerPage() {
       setForm((prev) => ({
         ...prev,
         pickupAddress: prev.pickupAddress || p.cccdAddress || '',
-        businessLicense:
-          prev.businessLicense || (p.cccdFrontImageUrl ? 'Ảnh CCCD đã tải lên' : ''),
       }));
       setLoading(false);
     };
@@ -129,8 +159,12 @@ export default function BecomeSellerPage() {
   const validateStep = (s) => {
     const next = {};
     if (s === 0) {
+      const isBusiness = form.businessType === "business";
       if (!form.shopName.trim()) next.shopName = "Vui lòng nhập tên shop / doanh nghiệp";
-      if (!form.taxCode.trim()) next.taxCode = "Vui lòng nhập mã số thuế";
+      // Mã số thuế doanh nghiệp: bắt buộc với doanh nghiệp; cá nhân không bắt buộc.
+      if (isBusiness && !form.taxCode.trim()) next.taxCode = "Vui lòng nhập mã số thuế doanh nghiệp";
+      // Giấy phép kinh doanh: BẮT BUỘC với mọi loại hình.
+      if (!form.businessLicense) next.businessLicense = "Vui lòng tải lên giấy phép kinh doanh";
       if (!form.pickupAddress.trim()) next.pickupAddress = "Vui lòng nhập địa chỉ lấy hàng";
     }
     if (s === 1) {
@@ -450,8 +484,9 @@ export default function BecomeSellerPage() {
 
               <div className="seller-field">
                 <label className="field-label" htmlFor="taxCode">
-                  Mã số thuế
-                  <span className="required"> *</span>
+                  {isIndividual ? "Mã số thuế cá nhân" : "Mã số thuế doanh nghiệp"}
+                  {!isIndividual && <span className="required"> *</span>}
+                  {isIndividual && <span className="seller-field-optional"> (không bắt buộc)</span>}
                 </label>
                 <input
                   id="taxCode"
@@ -465,10 +500,17 @@ export default function BecomeSellerPage() {
               </div>
 
               <FileInput
-                label={isIndividual ? "Giấy tờ định danh (CCCD/CMND)" : "Giấy phép kinh doanh"}
+                label="Giấy phép kinh doanh"
                 name="businessLicense"
                 form={form}
                 setForm={setForm}
+                required
+                error={errors.businessLicense}
+                hint={
+                  isIndividual
+                    ? "Giấy chứng nhận đăng ký hộ kinh doanh / giấy phép kinh doanh (ảnh JPG, PNG hoặc PDF, tối đa 5MB)."
+                    : "Giấy chứng nhận đăng ký doanh nghiệp (ảnh JPG, PNG hoặc PDF, tối đa 5MB)."
+                }
               />
 
               <div className="seller-field seller-field--full">
@@ -493,14 +535,7 @@ export default function BecomeSellerPage() {
           {step === 1 && (
             <div className="seller-form-grid">
               <div className="seller-field">
-                <label className="field-label" htmlFor="bankName">Ngân hàng</label>
-                <select id="bankName" name="bankName" value={form.bankName} onChange={handleChange}>
-                  <option value="">{banksLoading ? "Đang tải danh sách ngân hàng..." : "Chọn ngân hàng"}</option>
-                  {banks.map((b) => (
-                    <option key={b.value} value={b.value}>{b.label} — {b.name}</option>
-                  ))}
-                  <option value="other">Ngân hàng khác</option>
-                </select>
+                <BankSelect name="bankName" value={form.bankName} onChange={handleChange} includeOther />
                 {errors.bankName && <span className="field-error">{errors.bankName}</span>}
               </div>
 
@@ -565,7 +600,14 @@ export default function BecomeSellerPage() {
                   <h3>Xem lại thông tin</h3>
                   <div><span>Loại hình</span><strong>{isIndividual ? "Cá nhân" : "Doanh nghiệp"}</strong></div>
                   <div><span>Tên shop</span><strong>{form.shopName}</strong></div>
-                  <div><span>Mã số thuế</span><strong>{form.taxCode}</strong></div>
+                  <div>
+                    <span>{isIndividual ? "Mã số thuế cá nhân" : "Mã số thuế doanh nghiệp"}</span>
+                    <strong>{form.taxCode || "—"}</strong>
+                  </div>
+                  <div>
+                    <span>Giấy phép kinh doanh</span>
+                    <strong>{form.businessLicense ? "✓ Đã tải lên" : "Chưa tải lên"}</strong>
+                  </div>
                   <div><span>Địa chỉ</span><strong>{form.pickupAddress}</strong></div>
                   <div><span>Ngân hàng</span><strong>{resolvedBank} — {form.accountNumber}</strong></div>
                 </div>

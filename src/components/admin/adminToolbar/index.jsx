@@ -1,5 +1,10 @@
 import { FaSearch } from "react-icons/fa";
+import Select from "../../common/select";
 import "./index.scss";
+
+// Mục value:"" là "bỏ lọc" — phải là option thật, không phải placeholder, nếu
+// không chọn xong sẽ không có cách nào quay lại trạng thái không lọc.
+const withClearOption = (f) => [{ value: "", label: f.label }, ...f.options];
 
 const AdminToolbar = ({
   search = "",
@@ -23,19 +28,14 @@ const AdminToolbar = ({
         </div>
       )}
       {filters.map((f) => (
-        <select
+        <Select
           key={f.key}
-          className="adm-toolbar__filter"
           value={f.value}
           onChange={(e) => f.onChange(e.target.value)}
-        >
-          <option value="">{f.label}</option>
-          {f.options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          options={withClearOption(f)}
+          placeholder={f.label}
+          className="adm-toolbar__filter common-select--sm common-select--auto"
+        />
       ))}
     </div>
     <div className="adm-toolbar__actions">

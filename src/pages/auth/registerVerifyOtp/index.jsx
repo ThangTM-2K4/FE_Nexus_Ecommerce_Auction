@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { verifyEmail, resendEmailOtp } from "../../../services/authService";
+import { getApiErrorMessage } from "../../../utils/apiResponse";
 import OtpInput from "../../../components/auth/OtpInput";
 
 import "./index.scss";
@@ -57,11 +58,7 @@ function RegisterVerifyOtpPage() {
 
     navigate("/login");
   } catch (err) {
-    toast.error(
-      err.response?.data?.message ||
-      err.message ||
-      "OTP không hợp lệ"
-    );
+    toast.error(getApiErrorMessage(err, "OTP không hợp lệ"));
   }
 };
 

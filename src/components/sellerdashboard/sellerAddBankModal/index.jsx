@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { useBanks, resolveBankLabel } from "../../../services/bankService";
+import { resolveBankLabel } from "../../../services/bankService";
 import { addSellerBankAccount } from "../../../services/bankAccountService";
+import BankSelect from "../../common/bankSelect";
 import "../sellerWithdrawModal/index.scss";
 import "./index.scss";
 
@@ -17,7 +18,6 @@ export default function SellerAddBankModal({ userId, onClose, onSuccess }) {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const { banks, loading: banksLoading } = useBanks();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -109,14 +109,7 @@ export default function SellerAddBankModal({ userId, onClose, onSuccess }) {
           </fieldset>
 
           <div className="slr-add-bank-field">
-            <label htmlFor="add-bankName">Ngân hàng</label>
-            <select id="add-bankName" name="bankName" value={form.bankName} onChange={handleChange}>
-              <option value="">{banksLoading ? "Đang tải..." : "Chọn ngân hàng"}</option>
-              {banks.map((b) => (
-                <option key={b.value} value={b.value}>{b.label} — {b.name}</option>
-              ))}
-              <option value="other">Ngân hàng khác</option>
-            </select>
+            <BankSelect name="bankName" value={form.bankName} onChange={handleChange} includeOther />
           </div>
 
           {form.bankName === "other" && (

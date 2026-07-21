@@ -75,6 +75,15 @@ $purple-glow: rgba($lavender, 0.35);
 $live-glow: rgba($live-red, 0.62);
 
 //=====================================================
+// Typography
+//=====================================================
+
+// Nguồn sự thật duy nhất cho font toàn bài. Be Vietnam Pro có subset tiếng Việt
+// đầy đủ nên chữ có dấu không bị fallback sang font khác (lỗi cũ của Poppins).
+// Đổi font cả bài = sửa đúng 1 dòng này (+ link trong index.html).
+$font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+//=====================================================
 // Layout
 //=====================================================
 

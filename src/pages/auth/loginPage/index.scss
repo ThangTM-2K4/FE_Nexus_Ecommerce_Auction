@@ -3,13 +3,19 @@
 
 .login-page {
   @include auth.auth-page-shell;
+  // Shell canh giữa bằng align-items sẽ CẮT phần thừa khi thẻ cao hơn màn hình.
+  // Đổi sang margin:auto trên thẻ để vẫn canh giữa mà tràn thì cuộn được.
+  align-items: flex-start;
+  overflow-y: auto;
+  padding: 24px;
 }
 
 .login-card {
   @include auth.auth-card;
-  width: 560px;
-  max-width: 90vw;
-  padding: 36px 42px;
+  width: 480px;
+  max-width: 100%;
+  margin: auto;
+  padding: 32px 40px;
 }
 
 .back-home-btn {
@@ -19,7 +25,7 @@
   background: none;
   border: none;
   padding: 0;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   font-size: 13px;
   font-weight: 500;
   color: $ink-muted;
@@ -36,43 +42,47 @@
 .login-card h1 {
   @include auth.auth-title;
   text-align: center;
-  font-size: 34px;
-  line-height: 1.3;
-  margin-bottom: 5px;
+  font-size: 28px;
+  line-height: 1.25;
+  margin-bottom: 6px;
 }
 
 .subtitle {
   @include auth.auth-subtitle;
   text-align: center;
-  font-size: 18px;
-  margin-bottom: 5px;
+  font-size: 15px;
+  margin-bottom: 6px;
 }
 
 .description {
   @include auth.auth-muted-text;
   text-align: center;
-  font-size: 14px;
-  margin-bottom: 10px;
+  font-size: 13px;
+  margin-bottom: 18px;
   line-height: 1.5;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-bottom: 1px;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .login-card input {
   @include auth.auth-input;
   width: 100%;
-  height: 56px;
-  padding: 0 18px;
-  font-size: 16px;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 15px;
 }
 
 .password-wrapper {
   position: relative;
+
+  input {
+    padding-right: 46px; // chừa chỗ cho nút hiện/ẩn mật khẩu
+  }
 }
 
 .eye-btn {
@@ -96,8 +106,9 @@
 
 .forgot-password {
   @include auth.auth-link;
-  margin-bottom: 15px;
-  margin-top: 1px;
+  display: block;
+  margin: 0 0 14px auto;
+  font-size: 13px;
   text-align: right;
   background: none;
   border: none;
@@ -113,17 +124,17 @@
 .login-btn {
   @include auth.auth-primary-btn;
   width: 100%;
-  height: 52px;
-  font-size: 16px;
+  height: 48px;
+  font-size: 15px;
 }
 
 .divider {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 22px 0;
+  margin: 16px 0;
   color: $ink-muted;
-  font-size: 14px;
+  font-size: 13px;
 
   &::before,
   &::after {
@@ -136,7 +147,7 @@
 
 .google-btn {
   width: 100%;
-  height: 52px;
+  height: 48px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -157,8 +168,8 @@
 
 .register-link {
   text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
+  margin-top: 14px;
+  font-size: 13px;
   color: $ink-muted;
 
   a,
@@ -176,15 +187,16 @@
 }
 
 .login-footer {
-  margin-top: 25px;
-  padding-top: 20px;
+  margin-top: 16px;
+  padding-top: 14px;
   border-top: 1px solid auth.$auth-divider;
   text-align: center;
 
   p {
-    margin: 4px 0;
+    margin: 3px 0;
     color: $ink-muted;
-    font-size: 13px;
+    font-size: 12px;
+    line-height: 1.5;
 
     &:first-child {
       color: $indigo;
@@ -196,16 +208,13 @@
 
 .login-card .field-error {
   display: block;
-  min-height: 18px;
+  min-height: 16px;
   margin: 0;
   padding-left: 4px;
-
-
-  color: #ef4444;
-  font-size: 13px;
+  color: $live-red;
+  font-size: 12px;
   font-weight: 500;
   text-align: left;
-
 }
 
 .input-error {

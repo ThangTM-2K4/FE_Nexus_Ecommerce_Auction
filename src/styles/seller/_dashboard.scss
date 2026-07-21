@@ -1409,11 +1409,24 @@
 }
 
 .slr-bank-card {
+  position: relative;
   background: $color-bg;
   border: 1px solid $color-border-light;
   border-radius: $radius-md;
   padding: 18px;
   min-width: 0;
+  overflow: hidden;
+
+  // Dải màu thương hiệu ngân hàng, khớp với thẻ ở trang Hồ Sơ
+  &:not(.slr-bank-card--add)::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: var(--bank-brand, #{$color-primary});
+  }
 
   &__badge {
     display: flex;
@@ -1435,12 +1448,28 @@
     }
   }
 
-  &--business {
-    border-left: 3px solid $color-primary;
-  }
+  &__logo {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 24px;
+    padding: 2px;
+    background: #fff;
+    border: 1px solid $color-border-light;
+    border-radius: 5px;
+    overflow: hidden;
 
-  &--personal {
-    border-left: 3px solid $color-accent-mid;
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    span {
+      font-size: 11px;
+      color: $color-text-muted;
+    }
   }
 
   &--add {

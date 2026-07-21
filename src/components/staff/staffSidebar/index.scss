@@ -15,6 +15,23 @@
   max-height: calc(100vh - 64px);
   overflow-y: auto;
 
+  // Laptop nhỏ: thu hẹp sidebar để nhường chỗ cho nội dung, tránh bảng/thẻ bị bóp.
+  @media (max-width: 1024px) {
+    width: 210px;
+    padding: 16px 10px;
+  }
+
+  // Tablet/mobile: sidebar chạy full-width ở trên, không còn sticky bóp nội dung.
+  @media (max-width: 768px) {
+    width: 100%;
+    max-height: none;
+    min-height: 0;
+    position: static;
+    top: auto;
+    border-right: none;
+    border-bottom: 1px solid $color-border-light;
+  }
+
   &__menu {
     list-style: none;
     display: flex;

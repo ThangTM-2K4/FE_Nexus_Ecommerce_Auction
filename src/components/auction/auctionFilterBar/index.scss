@@ -58,27 +58,14 @@
   gap: 0.5rem;
   flex-shrink: 0;
 
-  label {
+  .auction-filter-bar__sort-label {
     font-size: 0.8rem;
     color: $mist-lavender;
     white-space: nowrap;
   }
 
-  select {
+  .common-select--auto {
     min-width: 170px;
-    height: 44px;
-    padding: 0 0.85rem;
-    border: 1px solid $auction-border;
-    border-radius: $radius-md;
-    background: rgba($midnight-violet, 0.85);
-    color: $bone;
-    font-size: 0.875rem;
-    outline: none;
-    cursor: pointer;
-
-    &:focus {
-      border-color: rgba($royal-purple, 0.55);
-    }
   }
 }
 
@@ -112,37 +99,9 @@
   }
 }
 
-.auction-filter-bar__pill {
-  position: relative;
-
-  select {
-    appearance: none;
-    height: 36px;
-    padding: 0 1.75rem 0 0.85rem;
-    border: 1px solid $auction-border;
-    border-radius: $radius-pill;
-    background: rgba($midnight-violet, 0.75);
-    color: $bone;
-    font-size: 0.78rem;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
-
-    &:focus {
-      border-color: rgba($royal-purple, 0.55);
-    }
-  }
-
-  &::after {
-    content: "▾";
-    position: absolute;
-    right: 0.65rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.65rem;
-    color: $mist-lavender;
-    pointer-events: none;
-  }
+// Mũi tên + màu nền do <Select theme="dark"> lo (common/select).
+.auction-filter-bar__pill .common-select__field {
+  font-weight: 600;
 }
 
 .auction-filter-bar__drawer-backdrop {
@@ -192,26 +151,11 @@
 .auction-filter-bar__drawer-group {
   margin-bottom: 0.85rem;
 
-  label {
-    display: block;
-    margin-bottom: 0.35rem;
+  .common-select__label {
     font-size: 0.78rem;
     font-weight: 700;
-    color: $mist-lavender;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-  }
-
-  select {
-    width: 100%;
-    height: 42px;
-    padding: 0 0.85rem;
-    border: 1px solid $auction-border;
-    border-radius: $radius-md;
-    background: rgba($obsidian, 0.65);
-    color: $bone;
-    font-size: 0.875rem;
-    outline: none;
   }
 }
 

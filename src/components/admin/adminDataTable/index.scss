@@ -128,6 +128,23 @@
   flex-direction: column;
   gap: 14px;
 
+  // <Select> tự dựng nhãn riêng — kéo về cùng cỡ với nhãn <label> quanh nó
+  .common-select {
+    gap: 4px;
+
+    .common-select__label {
+      font-size: 12px;
+      font-weight: 600;
+      color: $color-text-muted;
+    }
+
+    .common-select__field {
+      min-height: 0;
+      padding: 9px 12px;
+      font-size: 13px;
+    }
+  }
+
   label {
     display: flex;
     flex-direction: column;

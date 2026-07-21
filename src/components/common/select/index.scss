@@ -1,10 +1,113 @@
 @use '../../../styles/palette' as *;
+// Biến vùng đấu giá (nền tối) — chỉ dùng cho biến thể .common-select--dark
+@use '../../../styles/auction/variables' as auction;
 
 .common-select {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 100%;
+  position: relative; // mốc neo cho popup — popup luôn bám top:100% => chỉ sổ xuống
+}
+
+// Ô gọn cho thanh lọc/toolbar (admin header, adminToolbar, filter bar...)
+.common-select--sm .common-select__field {
+  min-height: 38px;
+  padding: 4px 12px 4px 12px;
+  font-size: 0.82rem;
+}
+
+// Không chiếm hết chiều ngang — dùng khi select nằm trong hàng toolbar
+.common-select--auto {
+  width: auto;
+  min-width: 150px;
+}
+
+// Trạng thái lỗi: viền đỏ + dòng thông báo đỏ dưới ô
+.common-select--error .common-select__field {
+  border-color: $live-red;
+
+  &:focus-visible,
+  &[data-open='true'] {
+    border-color: $live-red;
+    box-shadow: 0 0 0 3px rgba($live-red, 0.15);
+  }
+}
+
+.common-select__error {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $live-red;
+}
+
+// Ô dạng viên thuốc cho hàng pill lọc
+.common-select--pill .common-select__field {
+  border-radius: $radius-pill;
+}
+
+// ---- Biến thể nền tối (thanh lọc đấu giá) ----
+// Popup được portal ra <body> nên KHÔNG kế thừa được class cha — phải gắn màu
+// qua biến CSS trên chính popup. Xem [data-theme='dark'] ở dưới.
+.common-select--dark {
+  .common-select__label {
+    color: auction.$mist-lavender;
+  }
+
+  .common-select__field {
+    background: rgba(auction.$midnight-violet, 0.85);
+    border-color: auction.$auction-border;
+    color: auction.$bone;
+
+    &:hover:not(:disabled) {
+      border-color: rgba(auction.$royal-purple, 0.75);
+    }
+
+    &:focus-visible,
+    &[data-open='true'] {
+      border-color: rgba(auction.$royal-purple, 0.9);
+      box-shadow: 0 0 0 3px rgba(auction.$royal-purple, 0.25);
+    }
+
+    &[data-placeholder='true'] .common-select__value {
+      color: auction.$mist-lavender;
+    }
+  }
+
+  .common-select__arrow {
+    color: auction.$mist-lavender;
+  }
+
+  .common-select__field[data-open='true'] .common-select__arrow {
+    color: auction.$bone;
+  }
+}
+
+// Popup nền tối — popup portal ra <body> nên không kế thừa class cha,
+// theme phải truyền xuống bằng prop `theme` (xem index.jsx).
+.common-select__list[data-theme='dark'] {
+  background: auction.$midnight-violet;
+  border-color: auction.$auction-border;
+
+  .common-select__option {
+    color: auction.$bone;
+
+    &[data-active='true'] {
+      background: rgba(auction.$royal-purple, 0.45);
+      color: #fff;
+    }
+  }
+
+  .common-select__check {
+    color: auction.$mist-lavender;
+  }
+
+  .common-select__empty {
+    color: auction.$mist-lavender;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(auction.$royal-purple, 0.8);
+  }
 }
 
 .common-select__label {
@@ -13,26 +116,153 @@
   color: $ink;
 }
 
+// ---- Ô điều khiển (trạng thái đóng) ----
 .common-select__field {
-  height: 42px;
-  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  // Chừa khoảng thoáng bên phải để mũi tên không dính sát viền khung
+  padding: 6px 16px 6px 14px;
   border: 1px solid $border-soft;
-  border-radius: $radius-sm;
+  border-radius: $radius-md;
+  background: $surface;
   font-size: 0.88rem;
   font-family: inherit;
   color: $ink;
-  width: 100%;
-  background: $surface;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
 
-  &:focus {
+  &:hover:not(:disabled) {
+    border-color: rgba($raspberry, 0.55);
+  }
+
+  &:focus-visible,
+  &[data-open='true'] {
     outline: none;
     border-color: $raspberry;
     box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
+  }
+
+  &[data-placeholder='true'] .common-select__value {
+    color: $ink-muted;
   }
 
   &:disabled {
     background: $surface-soft;
     color: $ink-muted;
     cursor: not-allowed;
+    opacity: 0.75;
   }
+}
+
+.common-select__value {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.common-select__arrow {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: $ink-muted;
+  transition: transform $transition-fast, color $transition-fast;
+
+  .common-select__field[data-open='true'] & {
+    transform: rotate(180deg);
+    color: $raspberry;
+  }
+}
+
+// ---- Popup (luôn sổ xuống) ----
+// Được portal ra <body>, position:fixed + toạ độ tính bằng JS (xem index.jsx)
+// => không bị thân modal (overflow:auto) cắt mất, và luôn nằm dưới ô điều khiển.
+.common-select__list {
+  position: fixed;
+  z-index: 1100; // trên cả overlay modal (1000)
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md; // bo góc — thứ <select> gốc không làm được
+  box-shadow: $shadow-md;
+  animation: common-select-in 0.14s $ease;
+
+  // Thanh cuộn bo tròn cho đồng bộ
+  scrollbar-width: thin;
+  scrollbar-color: rgba($lavender, 0.7) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($lavender, 0.7);
+    border-radius: $radius-pill;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+// Chỉ animate opacity: toạ độ popup do JS đặt (position:fixed), nếu animate cả
+// transform thì vị trí bị lệch so với toạ độ đã tính.
+@keyframes common-select-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.common-select__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: $radius-sm; // từng dòng cũng bo
+  font-size: 0.86rem;
+  color: $ink;
+  cursor: pointer;
+
+  &[data-active='true'] {
+    background: rgba($raspberry, 0.1);
+    color: $accent-dark;
+  }
+
+  &[aria-selected='true'] {
+    font-weight: 600;
+  }
+}
+
+.common-select__check {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: $raspberry;
+  font-weight: 700;
+}
+
+.common-select__empty {
+  padding: 12px;
+  font-size: 0.84rem;
+  color: $ink-muted;
+  text-align: center;
 }

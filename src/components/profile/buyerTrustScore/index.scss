@@ -2,9 +2,6 @@
 
 .buyer-trust {
   width: 100%;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid $border-soft;
 
   &--loading {
     color: $ink-muted;
@@ -13,19 +10,74 @@
   }
 }
 
-.buyer-trust__title {
-  font-size: 1rem;
+// 2 ô thống kê Điểm / Hạng — cùng kiểu lưới với các card xác minh ở trên
+.buyer-trust__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.buyer-trust__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 1rem;
+  border: 1px solid $border-soft;
+  border-radius: $radius-sm;
+  background: $surface-soft;
+}
+
+.buyer-trust__stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $ink-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.buyer-trust__stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 1.75rem;
   font-weight: 700;
-  color: $ink;
-  margin-bottom: 1rem;
+  color: $accent-dark;
+  line-height: 1;
+
+  small {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: $ink-muted;
+  }
+}
+
+.buyer-trust__badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 16px;
+  border-radius: $radius-pill;
+  background: rgba($raspberry, 0.15);
+  color: $raspberry;
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
 .buyer-trust__bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
 .buyer-trust__bar {
-  height: 10px;
+  flex: 1;
+  height: 12px;
   background: rgba($mist, 0.6);
   border-radius: $radius-pill;
   overflow: hidden;
@@ -38,32 +90,12 @@
   transition: width 0.4s $ease;
 }
 
-.buyer-trust__meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-.buyer-trust__badge {
-  display: inline-flex;
-  padding: 4px 12px;
-  border-radius: $radius-pill;
-  background: rgba($raspberry, 0.15);
-  color: $raspberry;
-  font-size: 0.78rem;
+.buyer-trust__bar-pct {
+  font-size: 0.8rem;
   font-weight: 700;
-}
-
-.buyer-trust__score {
-  font-size: 0.88rem;
   color: $ink-muted;
-
-  strong {
-    color: $accent-dark;
-    font-size: 1rem;
-  }
+  min-width: 36px;
+  text-align: right;
 }
 
 .buyer-trust__desc {

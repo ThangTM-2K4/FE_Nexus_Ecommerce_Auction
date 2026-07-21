@@ -11,7 +11,11 @@
   &__quote-form {
     display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
     label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: $color-text-muted;
-      select, input { padding: 8px 12px; border: 1px solid $color-border; border-radius: 8px; font-size: 13px; min-width: 180px; }
+      input { padding: 8px 12px; border: 1px solid $color-border; border-radius: 8px; font-size: 13px; min-width: 180px; }
+    }
+    // Khung + mũi tên do <Select> lo, ở đây chỉ ghim bề ngang cho hàng flex
+    .common-select { width: auto; min-width: 220px;
+      .common-select__label { font-size: 12px; color: $color-text-muted; }
     }
     button {
       padding: 9px 18px; border-radius: 999px; border: none; background: $color-accent; color: #fff;

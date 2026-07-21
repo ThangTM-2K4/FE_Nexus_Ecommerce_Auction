@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import Select from '../../../common/select';
+import { useEffect, useMemo, useState } from 'react';
+import BankSelect from '../../../common/bankSelect';
 import Input from '../../../common/input';
 import Checkbox from '../../../common/checkbox';
 import { useBanks } from '../../../../services/bankService';
+import BankCardPreview from '../bankCardPreview';
 import './index.scss';
 
 const emptyForm = {
@@ -15,7 +16,7 @@ const emptyForm = {
 
 export default function BankAccountForm({ initial, onSubmit }) {
   const [form, setForm] = useState(emptyForm);
-  const { banks, loading: banksLoading } = useBanks();
+  const { banks } = useBanks();
 
   useEffect(() => {
     if (initial) {
@@ -24,6 +25,11 @@ export default function BankAccountForm({ initial, onSubmit }) {
       setForm(emptyForm);
     }
   }, [initial]);
+
+  const selectedBank = useMemo(
+    () => banks.find((b) => b.value === form.bankCode) || null,
+    [banks, form.bankCode]
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,20 +42,28 @@ export default function BankAccountForm({ initial, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const bankLabel = banks.find((b) => b.value === form.bankCode)?.label || '';
-    onSubmit?.({ ...form, bankName: bankLabel });
+    onSubmit?.({
+      ...form,
+      bankName: selectedBank?.label || '',
+      bankLogo: selectedBank?.logo || '',
+    });
   };
 
   return (
     <form className="bank-account-form" onSubmit={handleSubmit}>
-      <Select
+      {/* Thẻ xem trước đổi màu + logo ngay khi chọn ngân hàng */}
+      <BankCardPreview
+        bank={selectedBank}
+        accountNumber={form.accountNumber}
+        accountHolder={form.accountHolder}
+      />
+
+      <BankSelect
         label="Tên Ngân Hàng"
         name="bankCode"
         value={form.bankCode}
         onChange={handleChange}
-        options={banks}
-        placeholder={banksLoading ? 'Đang tải danh sách ngân hàng...' : 'Chọn ngân hàng'}
-        disabled={banksLoading}
+        className="bank-account-form__bank-select"
       />
       <Input
         label="Số Tài Khoản"

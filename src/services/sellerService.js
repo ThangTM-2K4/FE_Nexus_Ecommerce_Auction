@@ -119,7 +119,9 @@ const writeLocalSellerApplication = (userId, form, application) => {
     documents: [
       'CCCD mặt trước',
       'CCCD mặt sau',
-      form.businessType === 'business' ? 'Giấy phép kinh doanh' : 'Giấy tờ định danh',
+      // Giấy phép kinh doanh giờ bắt buộc với mọi loại hình -> luôn có trong hồ sơ duyệt.
+      'Giấy phép kinh doanh',
+      ...(form.businessType === 'business' ? ['Mã số thuế doanh nghiệp'] : []),
     ],
   };
   try {
@@ -145,6 +147,11 @@ export const syncProfileToSellerApplication = (userId, cccd) => {
         ...record,
         fullName: cccd.cccdFullName || record.fullName,
         cccdNumber: cccd.cccdNumber || record.cccdNumber,
+        cccdGender: cccd.cccdGender || record.cccdGender,
+        cccdDateOfBirth: cccd.cccdDateOfBirth || record.cccdDateOfBirth,
+        cccdIssueDate: cccd.cccdIssueDate || record.cccdIssueDate,
+        cccdExpiryDate: cccd.cccdExpiryDate || record.cccdExpiryDate,
+        cccdIssuePlace: cccd.cccdIssuePlace || record.cccdIssuePlace,
         cccdAddress: cccd.cccdAddress || record.cccdAddress,
         frontImageUrl: cccd.cccdFrontImageUrl || record.frontImageUrl,
         backImageUrl: cccd.cccdBackImageUrl || record.backImageUrl,

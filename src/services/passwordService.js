@@ -1,4 +1,5 @@
 import api from '../config/api';
+import { getApiErrorMessage } from '../utils/apiResponse';
 
 const MIN_PASSWORD_LENGTH = 6;
 
@@ -11,16 +12,8 @@ export const changePassword = async ({ currentPassword, newPassword }) => {
   });
 };
 
-export const getChangePasswordErrorMessage = (error) => {
-  const data = error?.response?.data;
-  if (typeof data === 'string' && data.trim()) return data;
-  if (data?.message) return data.message;
-  if (data?.error) return data.error;
-  if (Array.isArray(data?.errors) && data.errors[0]?.message) {
-    return data.errors[0].message;
-  }
-  return 'Đổi mật khẩu thất bại, vui lòng thử lại';
-};
+export const getChangePasswordErrorMessage = (error) =>
+  getApiErrorMessage(error, 'Đổi mật khẩu thất bại, vui lòng thử lại');
 
 export const validateChangePasswordForm = ({ currentPassword, newPassword, confirmPassword }) => {
   const errors = {};

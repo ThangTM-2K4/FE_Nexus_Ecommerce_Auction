@@ -2,9 +2,35 @@ import { mockDelay } from "./mockDelay";
 import { getCurrentUser } from "./authService";
 import * as profileService from "./profileService";
 import { getSellerApplication } from "./sellerService";
-import { resolveBankLabel } from "./bankService";
+import { resolveBank, resolveBankLabel } from "./bankService";
 
 const accountsKey = (userId) => `sellerBankAccounts_${userId}`;
+const removedKey = (userId) => `sellerBankAccountsRemoved_${userId}`;
+
+const normalizeNumber = (accountNumber) => String(accountNumber || "").replace(/\s/g, "");
+
+// Tài khoản suy ra từ đơn đăng ký seller / hồ sơ sẽ được bootstrap dựng lại mỗi
+// lần tải. Không có bia mộ này thì tài khoản vừa xoá sẽ hiện lại ngay sau đó.
+const readRemoved = (userId) => {
+  try {
+    const raw = localStorage.getItem(removedKey(userId));
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const addRemoved = (userId, accountNumber) => {
+  const removed = readRemoved(userId);
+  removed.add(normalizeNumber(accountNumber));
+  localStorage.setItem(removedKey(userId), JSON.stringify([...removed]));
+};
+
+const clearRemoved = (userId, accountNumber) => {
+  const removed = readRemoved(userId);
+  removed.delete(normalizeNumber(accountNumber));
+  localStorage.setItem(removedKey(userId), JSON.stringify([...removed]));
+};
 
 export const maskAccountNumber = (accountNumber) => {
   const digits = String(accountNumber || "").replace(/\s/g, "");
@@ -14,15 +40,20 @@ export const maskAccountNumber = (accountNumber) => {
 
 const normalizeAccount = (raw) => {
   const bankName = raw.bankName || raw.bank || "";
+  // bankName thường lưu MÃ ngân hàng (VD "HDB") — tra ngược ra tên + logo để hiển thị.
+  const bankRecord = resolveBank(bankName);
   return {
     id: raw.id,
     type: raw.type === "business" ? "business" : "personal",
     bankName,
     bank: resolveBankLabel(bankName),
+    bankCode: bankRecord?.code || bankName,
+    bankLogo: raw.bankLogo || bankRecord?.logo || "",
     accountNumber: String(raw.accountNumber || "").trim(),
     accountNumberMasked: maskAccountNumber(raw.accountNumber),
     accountName: raw.accountHolder || raw.accountName || "",
     accountHolder: raw.accountHolder || raw.accountName || "",
+    nationalId: String(raw.nationalId || "").trim(),
     source: raw.source || "manual",
     isDefault: Boolean(raw.isDefault),
     createdAt: raw.createdAt || new Date().toISOString(),
@@ -125,7 +156,12 @@ const bootstrapAccounts = async (userId) => {
     fromApp?.type === "business" ? "personal" : "personal"
   );
 
-  const merged = mergeAccounts(stored, fromApp ? [fromApp] : [], fromProfile ? [fromProfile] : []);
+  const removed = readRemoved(userId);
+  const merged = mergeAccounts(
+    stored,
+    fromApp ? [fromApp] : [],
+    fromProfile ? [fromProfile] : []
+  ).filter((a) => !removed.has(normalizeNumber(a.accountNumber)));
 
   if (merged.length > 0 && !merged.some((a) => a.isDefault)) {
     const reg = merged.find((a) => a.source === "seller_registration");
@@ -149,18 +185,26 @@ export const getSellerBankAccounts = async (userId) => {
   return accounts.map(normalizeAccount);
 };
 
-export const addSellerBankAccount = async (userId, { type, bankName, accountNumber, accountHolder }) => {
+export const addSellerBankAccount = async (
+  userId,
+  { type, bankName, accountNumber, accountHolder, nationalId, isDefault }
+) => {
   await mockDelay(400);
 
   const bank = String(bankName || "").trim();
   const number = String(accountNumber || "").trim();
   const holder = String(accountHolder || "").trim();
 
-  if (!bank || !number || !holder) {
-    throw new Error("Vui lòng điền đầy đủ thông tin ngân hàng");
+  // Nêu đích danh ô nào còn thiếu, thay vì báo chung chung "điền đầy đủ".
+  const missing = [];
+  if (!bank) missing.push("Tên ngân hàng");
+  if (!number) missing.push("Số tài khoản");
+  if (!holder) missing.push("Tên đầy đủ");
+  if (missing.length) {
+    throw new Error(`Vui lòng nhập: ${missing.join(", ")}`);
   }
   if (!/^\d{6,20}$/.test(number.replace(/\s/g, ""))) {
-    throw new Error("Số tài khoản không hợp lệ (6–20 chữ số)");
+    throw new Error("Số tài khoản không hợp lệ (chỉ gồm 6–20 chữ số)");
   }
 
   const existing = await bootstrapAccounts(userId);
@@ -168,19 +212,109 @@ export const addSellerBankAccount = async (userId, { type, bankName, accountNumb
     throw new Error("Tài khoản ngân hàng này đã được liên kết");
   }
 
+  // Tài khoản đầu tiên luôn là mặc định; ngoài ra tôn trọng ô "Đặt làm mặc định"
+  // người dùng tick (trước đây bị bỏ qua). Caller không truyền -> giữ hành vi cũ.
+  const makeDefault = existing.length === 0 || isDefault === true;
+
   const account = normalizeAccount({
     id: `bank-${Date.now()}`,
     type: type === "business" ? "business" : "personal",
     bankName: bank,
     accountNumber: number,
     accountHolder: holder,
+    nationalId,
     source: "manual",
-    isDefault: existing.length === 0,
+    isDefault: makeDefault,
     createdAt: new Date().toISOString(),
   });
 
-  writeStoredAccounts(userId, [...existing, account]);
+  // Chỉ được 1 tài khoản mặc định
+  const others = makeDefault
+    ? existing.map((a) => ({ ...a, isDefault: false }))
+    : existing;
+
+  writeStoredAccounts(userId, [...others, account]);
+  clearRemoved(userId, number); // thêm lại số đã xoá trước đó -> gỡ bia mộ
   return account;
+};
+
+/** Đặt 1 tài khoản làm mặc định; các tài khoản còn lại bị bỏ cờ mặc định. */
+export const setDefaultBankAccount = async (userId, accountId) => {
+  await mockDelay(200);
+
+  const existing = await bootstrapAccounts(userId);
+  if (!existing.some((a) => a.id === accountId)) {
+    throw new Error("Không tìm thấy tài khoản ngân hàng");
+  }
+
+  const updated = existing.map((a) => ({ ...a, isDefault: a.id === accountId }));
+  writeStoredAccounts(userId, updated);
+  return updated.map(normalizeAccount);
+};
+
+export const updateBankAccount = async (userId, accountId, formData) => {
+  await mockDelay(400);
+
+  const existing = await bootstrapAccounts(userId);
+  const current = existing.find((a) => a.id === accountId);
+  if (!current) throw new Error("Không tìm thấy tài khoản ngân hàng");
+
+  const bank = String(formData.bankCode || formData.bankName || "").trim();
+  const number = String(formData.accountNumber || "").trim();
+  const holder = String(formData.accountHolder || "").trim();
+
+  const missing = [];
+  if (!bank) missing.push("Tên ngân hàng");
+  if (!number) missing.push("Số tài khoản");
+  if (!holder) missing.push("Tên đầy đủ");
+  if (missing.length) throw new Error(`Vui lòng nhập: ${missing.join(", ")}`);
+
+  if (!/^\d{6,20}$/.test(number.replace(/\s/g, ""))) {
+    throw new Error("Số tài khoản không hợp lệ (chỉ gồm 6–20 chữ số)");
+  }
+  if (isDuplicate(existing, number, accountId)) {
+    throw new Error("Tài khoản ngân hàng này đã được liên kết");
+  }
+
+  const makeDefault = formData.isDefault === true || current.isDefault;
+
+  const updated = existing.map((a) => {
+    if (a.id !== accountId) {
+      return makeDefault ? { ...a, isDefault: false } : a;
+    }
+    return normalizeAccount({
+      ...a,
+      bankName: bank,
+      accountNumber: number,
+      accountHolder: holder,
+      nationalId: formData.nationalId ?? a.nationalId,
+      isDefault: makeDefault,
+    });
+  });
+
+  writeStoredAccounts(userId, updated);
+  clearRemoved(userId, number);
+  return updated.map(normalizeAccount);
+};
+
+export const deleteBankAccount = async (userId, accountId) => {
+  await mockDelay(300);
+
+  const existing = await bootstrapAccounts(userId);
+  const target = existing.find((a) => a.id === accountId);
+  if (!target) throw new Error("Không tìm thấy tài khoản ngân hàng");
+
+  const remaining = existing.filter((a) => a.id !== accountId);
+
+  // Xoá tài khoản mặc định thì đẩy cờ mặc định sang tài khoản còn lại đầu tiên,
+  // tránh ví seller rơi vào trạng thái không có TK nhận tiền nào được chọn.
+  if (target.isDefault && remaining.length > 0) {
+    remaining[0] = { ...remaining[0], isDefault: true };
+  }
+
+  writeStoredAccounts(userId, remaining);
+  addRemoved(userId, target.accountNumber);
+  return remaining.map(normalizeAccount);
 };
 
 export const getCurrentUserBankAccounts = async () => {
@@ -197,6 +331,8 @@ export const addBankAccount = async (userId, formData) => {
     bankName: formData.bankCode || formData.bankName || "",
     accountNumber: formData.accountNumber,
     accountHolder: formData.accountHolder,
+    nationalId: formData.nationalId,
+    isDefault: formData.isDefault,
   });
   return getSellerBankAccounts(userId);
 };

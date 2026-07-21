@@ -9,7 +9,13 @@ import {
   getAdminRole,
   setAdminRole,
 } from "../../../data/adminMockData";
+import Select from "../../common/select";
 import "./index.scss";
+
+const ROLE_OPTIONS = Object.values(ADMIN_ROLES).map((value) => ({
+  value,
+  label: ADMIN_ROLE_LABELS[value],
+}));
 
 const AdminHeader = () => {
   const navigate = useNavigate();
@@ -55,18 +61,12 @@ const AdminHeader = () => {
         </div>
 
         <div className="adm-header__actions">
-          <select
-            className="adm-header__role"
+          <Select
+            className="adm-header__role common-select--sm common-select--auto"
             value={role}
             onChange={handleRoleChange}
-            aria-label="Vai trò admin"
-          >
-            {Object.entries(ADMIN_ROLES).map(([key, value]) => (
-              <option key={key} value={value}>
-                {ADMIN_ROLE_LABELS[value]}
-              </option>
-            ))}
-          </select>
+            options={ROLE_OPTIONS}
+          />
 
           <button type="button" className="adm-header__link" onClick={() => navigate("/")}>
             Trang chủ

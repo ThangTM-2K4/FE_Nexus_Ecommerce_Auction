@@ -5,6 +5,7 @@ import Header from '@/components/homepage/header';
 import Footer from '@/components/homepage/footer';
 import { useCart } from '@/context/CartContext';
 import { useOrder } from '@/context/OrderContext';
+import { getApiErrorMessage } from '@/utils/apiResponse';
 import { getDefaultCheckoutAddress } from '@/data/mockDefaultAddress';
 import { MOCK_SHIPPING_FEE } from '@/data/mockCheckout';
 import CheckoutAddressCard from './components/checkoutAddressCard';
@@ -52,8 +53,8 @@ export default function CheckoutPage() {
       removeItems(selectedItems.map((i) => i.id));
       toast.success('Đặt hàng thành công');
       navigate('/profile/orders', { state: { status: 'cho_xac_nhan' } });
-    } catch {
-      toast.error('Đặt hàng thất bại');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Đặt hàng thất bại'));
     } finally {
       setPlacing(false);
     }

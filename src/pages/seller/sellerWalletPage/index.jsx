@@ -8,6 +8,8 @@ import SellerAddBankModal from "../../../components/sellerdashboard/sellerAddBan
 import { formatCurrency, formatCompactCurrency, walletConfig } from "../../../data/sellerMockData";
 import { getSellerBankAccounts } from "../../../services/bankAccountService";
 import { getWalletState } from "../../../services/walletService";
+import { getBankGradient } from "../../../data/bankBrand";
+import { useBanks } from "../../../services/bankService";
 
 const statusClass = (status) => {
   if (status === "Hoàn thành") return "slr-badge--success";
@@ -28,6 +30,8 @@ export default function WalletPage() {
   const [loading, setLoading] = useState(true);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showAddBank, setShowAddBank] = useState(false);
+  // Nạp danh sách ngân hàng để tra logo/tên cho các tài khoản đã lưu
+  useBanks();
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -158,8 +162,19 @@ export default function WalletPage() {
           )}
 
           {bankAccounts.map((acc) => (
-            <article key={acc.id} className={`slr-bank-card slr-bank-card--${acc.type}`}>
+            <article
+              key={acc.id}
+              className={`slr-bank-card slr-bank-card--${acc.type}`}
+              style={{ "--bank-brand": getBankGradient(acc.bankCode) }}
+            >
               <div className="slr-bank-card__badge">
+                <span className="slr-bank-card__logo">
+                  {acc.bankLogo ? (
+                    <img src={acc.bankLogo} alt="" loading="lazy" />
+                  ) : (
+                    <span>{(acc.bank || "?").charAt(0)}</span>
+                  )}
+                </span>
                 {acc.type === "business" ? "Doanh nghiệp" : "Cá nhân"}
                 {acc.isDefault && <em>Mặc định</em>}
               </div>

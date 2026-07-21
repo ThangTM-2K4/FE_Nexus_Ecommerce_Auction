@@ -98,24 +98,35 @@
     margin-left: auto;
   }
 
+  // Root .common-select — ô trong suốt cho hợp nền gradient của header.
+  // Popup sổ xuống dưới header (nền sáng) nên giữ theme sáng mặc định.
   &__role {
-    font-size: 12px;
-    padding: 6px 10px;
-    border: 1px solid rgba(#fff, 0.35);
-    border-radius: p.$radius-sm;
-    background: rgba(#fff, 0.15);
-    color: #fff;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-    transition: background 0.2s;
+    min-width: 130px;
 
-    option {
-      background: p.$indigo;
+    .common-select__field {
+      min-height: 32px;
+      padding: 4px 10px;
+      font-size: 12px;
+      border: 1px solid rgba(#fff, 0.35);
+      border-radius: p.$radius-sm;
+      background: rgba(#fff, 0.15);
       color: #fff;
+      backdrop-filter: blur(4px);
+
+      &:hover:not(:disabled) {
+        background: rgba(#fff, 0.25);
+        border-color: rgba(#fff, 0.5);
+      }
+
+      &:focus-visible,
+      &[data-open='true'] {
+        border-color: #fff;
+        box-shadow: 0 0 0 3px rgba(#fff, 0.2);
+      }
     }
 
-    &:hover {
-      background: rgba(#fff, 0.25);
+    .common-select__arrow {
+      color: rgba(#fff, 0.9);
     }
   }
 

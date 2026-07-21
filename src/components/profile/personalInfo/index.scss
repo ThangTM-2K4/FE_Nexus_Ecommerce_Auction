@@ -53,6 +53,23 @@
   flex-direction: column;
   gap: 1.25rem;
   max-width: 560px;
+
+  // Cho ô Giới tính (Select) cao bằng các ô Input 42px để hàng 2 cột thẳng
+  .common-select__field {
+    min-height: 42px;
+  }
+}
+
+// Hàng 2 cột (Giới tính | Ngày sinh — Ngày cấp | Ngày hết hạn)
+.personal-info-cccd__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .personal-info-cccd__address-wrap {
@@ -103,6 +120,17 @@
     cursor: not-allowed;
     opacity: 0.6;
   }
+
+  &.has-error {
+    border-color: $live-red;
+    background: rgba($live-red, 0.04);
+  }
+}
+
+.personal-info-cccd__error {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $live-red;
 }
 
 .personal-info-cccd__preview {

@@ -6,7 +6,10 @@ import * as productService from "../../../services/productService";
 import * as shippingService from "../../../services/shippingService";
 import { productCategories } from "../../../data/auctionMockData";
 import { fileToDataUrl } from "../../../utils/fileToDataUrl";
+import Select from "../../../components/common/select";
 import "./index.scss";
+
+const CATEGORY_OPTIONS = productCategories.map((c) => ({ value: c.id, label: c.label }));
 
 const CONDITIONS = [
   { value: "new", label: "Hàng mới" },
@@ -320,18 +323,16 @@ export default function CreateProductPage() {
                 </div>
 
                 <div className="slr-cp__row">
-                  <label className="slr-cp__row-label" htmlFor="category">
-                    Ngành hàng
-                  </label>
+                  <span className="slr-cp__row-label">Ngành hàng</span>
                   <div className="slr-cp__row-body">
                     <div className="slr-cp__inline-field">
-                      <select id="category" name="category" value={form.category} onChange={handleChange}>
-                        {productCategories.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.label}
-                          </option>
-                        ))}
-                      </select>
+                      <Select
+                        name="category"
+                        value={form.category}
+                        onChange={handleChange}
+                        options={CATEGORY_OPTIONS}
+                        placeholder="Chọn ngành hàng"
+                      />
                       <button
                         type="button"
                         className="slr-cp__link"

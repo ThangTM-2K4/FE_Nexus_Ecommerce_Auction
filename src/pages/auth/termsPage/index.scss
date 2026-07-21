@@ -1,0 +1,123 @@
+@use '../../../styles/palette' as *;
+@use '../../../styles/auth-theme' as auth;
+
+.terms-page {
+  @include auth.auth-page-shell;
+  padding: 40px 16px;
+  align-items: flex-start;
+}
+
+.terms-card {
+  @include auth.auth-card;
+  width: 820px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.terms-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: $raspberry;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.terms-head {
+  border-bottom: 1px solid auth.$auth-divider;
+  padding-bottom: 20px;
+  margin-bottom: 8px;
+
+  h1 {
+    @include auth.auth-title;
+    font-size: 28px;
+    margin: 0 0 10px;
+  }
+}
+
+.terms-subtitle {
+  @include auth.auth-muted-text;
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0 0 12px;
+}
+
+.terms-updated {
+  display: inline-block;
+  font-size: 13px;
+  color: $ink-muted;
+  font-style: italic;
+}
+
+.terms-body {
+  max-height: none;
+}
+
+.terms-section {
+  padding: 18px 0;
+  border-bottom: 1px dashed auth.$auth-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: $indigo;
+    margin: 0 0 10px;
+  }
+
+  p {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: $ink-muted;
+    margin: 0 0 10px;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 22px;
+
+    li {
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: $ink;
+      margin-bottom: 8px;
+    }
+  }
+}
+
+.terms-outro {
+  margin-top: 10px !important;
+  font-weight: 600;
+  color: $indigo !important;
+}
+
+.terms-footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid auth.$auth-divider;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.terms-primary-btn {
+  @include auth.auth-primary-btn;
+  height: 50px;
+  padding: 0 28px;
+  font-size: 15px;
+  border-radius: $radius-md;
+  width: auto;
+}

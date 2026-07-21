@@ -5,6 +5,7 @@ import {
   getStaffShippingZones,
   getShippingQuote,
 } from "../../../services/staffService";
+import Select from "../../../components/common/select";
 import "./index.scss";
 
 const formatVnd = (n) => `${Number(n).toLocaleString("vi-VN")}đ`;
@@ -26,6 +27,11 @@ const StaffShipping = () => {
       setLoading(false);
     });
   }, []);
+
+  const zoneOptions = useMemo(
+    () => zones.map((z) => ({ value: z.id, label: `${z.name} — ${formatVnd(z.baseFee)}` })),
+    [zones]
+  );
 
   const stats = useMemo(
     () => ({
@@ -55,14 +61,13 @@ const StaffShipping = () => {
       <section className="stf-shipping__quote">
         <h3>Báo giá Shipping</h3>
         <div className="stf-shipping__quote-form">
-          <label>
-            Khu vực
-            <select value={zoneId} onChange={(e) => setZoneId(e.target.value)}>
-              {zones.map((z) => (
-                <option key={z.id} value={z.id}>{z.name} — {formatVnd(z.baseFee)}</option>
-              ))}
-            </select>
-          </label>
+          <Select
+            label="Khu vực"
+            value={zoneId}
+            onChange={(e) => setZoneId(e.target.value)}
+            options={zoneOptions}
+            placeholder="Chọn khu vực"
+          />
           <label>
             Khối lượng (kg)
             <input type="number" min="0.1" step="0.1" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />

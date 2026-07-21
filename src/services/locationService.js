@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
+import { VN_LOCATION_API_URL as BASE } from "../config/endpoints";
 
 // Địa giới hành chính VN mới (2 cấp: Tỉnh/Thành phố → Phường/Xã) từ API thật
-// https://34tinhthanh.com/api-docs.html — thay cho mock PROVINCE/DISTRICT cũ.
-const BASE = "https://34tinhthanh.com/api";
+// — thay cho mock PROVINCE/DISTRICT cũ.
 const PROVINCES_CACHE = "vnProvinces34";
 const WARDS_CACHE = (code) => `vnWards34_${code}`;
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 ngày
