@@ -1,10 +1,12 @@
-import api from '../config/api';
-import { GOOGLE_LOGIN_URL } from '../config/endpoints';
 
-const SESSION_KEY = 'user';
-const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
-const EXPIRES_AT_KEY = 'expiresAt';
+import api from "../config/api";
+import { GOOGLE_LOGIN_URL } from "../config/endpoints";
+
+
+const SESSION_KEY = "user";
+const ACCESS_TOKEN_KEY = "accessToken";
+const REFRESH_TOKEN_KEY = "refreshToken";
+const EXPIRES_AT_KEY = "expiresAt";
 
 const SESSION_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 
@@ -20,17 +22,20 @@ const readStoredUser = () => {
 };
 
 const unwrapAuthPayload = (payload) => {
-  if (!payload || typeof payload !== 'object') return null;
+  if (!payload || typeof payload !== "object") return null;
 
   if (
     payload.data &&
-    typeof payload.data === 'object' &&
-    (payload.data.accessToken || payload.data.user || payload.data.userId || payload.data.id)
+    typeof payload.data === "object" &&
+    (payload.data.accessToken ||
+      payload.data.user ||
+      payload.data.userId ||
+      payload.data.id)
   ) {
     return payload.data;
   }
 
-  if (payload.result && typeof payload.result === 'object') {
+  if (payload.result && typeof payload.result === "object") {
     return payload.result;
   }
 
@@ -40,15 +45,20 @@ const unwrapAuthPayload = (payload) => {
 const extractUserSource = (authPayload) => {
   if (!authPayload) return null;
 
-  if (authPayload.user && typeof authPayload.user === 'object') {
+  if (authPayload.user && typeof authPayload.user === "object") {
     return authPayload.user;
   }
 
-  if (authPayload.userInfo && typeof authPayload.userInfo === 'object') {
+  if (authPayload.userInfo && typeof authPayload.userInfo === "object") {
     return authPayload.userInfo;
   }
 
-  if (authPayload.userId || authPayload.id || authPayload.email || authPayload.fullName) {
+  if (
+    authPayload.userId ||
+    authPayload.id ||
+    authPayload.email ||
+    authPayload.fullName
+  ) {
     const { accessToken, refreshToken, token, ...rest } = authPayload;
     return rest;
   }
@@ -73,39 +83,49 @@ const collectRoleCodes = (source) => {
 
   return raw
     .map((r) =>
-      typeof r === 'string'
+      typeof r === "string"
         ? r
-        : r?.code ?? r?.name ?? r?.role ?? r?.roleName ?? r?.authority ?? ''
+        : (r?.code ?? r?.name ?? r?.role ?? r?.roleName ?? r?.authority ?? ""),
     )
     .filter(Boolean)
-    .map((s) => String(s).toUpperCase().replace(/^ROLE_/, ''));
+    .map((s) =>
+      String(s)
+        .toUpperCase()
+        .replace(/^ROLE_/, ""),
+    );
 };
 
 const normalizeSessionUser = (userSource, previousUser = null) => {
   if (!userSource) return previousUser;
 
-  const id = userSource.id ?? userSource.userId ?? previousUser?.id ?? previousUser?.userId;
+  const id =
+    userSource.id ??
+    userSource.userId ??
+    previousUser?.id ??
+    previousUser?.userId;
   const roleCodes = collectRoleCodes(userSource);
-  const role = roleCodes[0] ?? previousUser?.role ?? 'BUYER';
+  const role = roleCodes[0] ?? previousUser?.role ?? "BUYER";
 
   return {
     ...previousUser,
     ...userSource,
     id,
-    fullName: userSource.fullName ?? userSource.name ?? previousUser?.fullName ?? '',
-    email: userSource.email ?? previousUser?.email ?? '',
-    phone: userSource.phone ?? userSource.phoneNumber ?? previousUser?.phone ?? '',
+    fullName:
+      userSource.fullName ?? userSource.name ?? previousUser?.fullName ?? "",
+    email: userSource.email ?? previousUser?.email ?? "",
+    phone:
+      userSource.phone ?? userSource.phoneNumber ?? previousUser?.phone ?? "",
     username:
       userSource.username ??
-      userSource.email?.split('@')[0] ??
+      userSource.email?.split("@")[0] ??
       previousUser?.username ??
-      '',
+      "",
     role,
     roles: roleCodes.length ? roleCodes : previousUser?.roles,
     sellerStatus: normalizeSellerStatus(
-      userSource.sellerStatus ?? previousUser?.sellerStatus
+      userSource.sellerStatus ?? previousUser?.sellerStatus,
     ),
-    currentMode: userSource.currentMode ?? previousUser?.currentMode ?? 'BUYER',
+    currentMode: userSource.currentMode ?? previousUser?.currentMode ?? "BUYER",
     isEmailVerified:
       userSource.isEmailVerified ??
       userSource.emailVerified ??
@@ -142,7 +162,10 @@ const saveSession = (payload) => {
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   }
 
-  localStorage.setItem(EXPIRES_AT_KEY, String(Date.now() + SESSION_DURATION_MS));
+  localStorage.setItem(
+    EXPIRES_AT_KEY,
+    String(Date.now() + SESSION_DURATION_MS),
+  );
 
   return user;
 };
@@ -163,19 +186,25 @@ export const isSessionValid = () => {
 export const hadStoredSession = () => {
   return Boolean(
     localStorage.getItem(EXPIRES_AT_KEY) ||
-      localStorage.getItem(ACCESS_TOKEN_KEY) ||
-      localStorage.getItem(SESSION_KEY)
+    localStorage.getItem(ACCESS_TOKEN_KEY) ||
+    localStorage.getItem(SESSION_KEY),
   );
 };
 
+// Chuỗi `detail` mà BE trả về ở response 401 khi tài khoản không được phép
+// đăng nhập (LOCKED/BANNED/BLOCKED/INACTIVE đều gộp chung câu này).
+export const ACCOUNT_BLOCKED_DETAIL = "User is not allowed to login.";
+
 export const login = async (loginValue, password) => {
-  // 1. Log in
+  // 1. Log in — BE trả 401 nếu tài khoản bị chặn hoặc sai thông tin đăng nhập
   const { data } = await api.post("/auth/login", {
     emailOrPhone: loginValue,
     password,
   });
+  const authData = data.data;
 
-  if (!data?.data?.accessToken) {
+  // Response 200 luôn ứng với status ACTIVE; chỉ cần chắc chắn có accessToken.
+  if (!authData?.accessToken) {
     throw new Error("Đăng nhập thất bại");
   }
 
@@ -220,7 +249,7 @@ const enrichSellerStatus = async () => {
 };
 //registerOtp
 export const register = async ({ fullName, email, phone, password }) => {
-  const { data } = await api.post('/auth/register', {
+  const { data } = await api.post("/auth/register", {
     fullName,
     email,
     phoneNumber: phone,
@@ -231,7 +260,7 @@ export const register = async ({ fullName, email, phone, password }) => {
 };
 
 export const verifyEmail = async ({ email, otp }) => {
-  const { data } = await api.post('/auth/verify-email', {
+  const { data } = await api.post("/auth/verify-email", {
     email,
     otpCode: otp,
   });
@@ -240,43 +269,46 @@ export const verifyEmail = async ({ email, otp }) => {
 };
 
 export const resendEmailOtp = async (email) => {
-  const { data } = await api.post('/auth/verify-email', {
+  const { data } = await api.post("/auth/verify-email", {
     email,
-    otpCode: '',
+    otpCode: "",
   });
 
   return data;
 };
 // forgotOtp not implemented yet
 
-
 // URL đăng nhập Google lấy từ .env; nếu chưa cấu hình thì suy ra từ API gateway.
 export const getGoogleLoginUrl = () =>
   GOOGLE_LOGIN_URL || `${api.defaults.baseURL}/auth/google/login`;
 
 export const exchangeCode = async (code) => {
-  const { data } = await api.post('/auth/exchange-code', { code });
+  const { data } = await api.post("/auth/exchange-code", { code });
 
-  if (!data) {
-    throw new Error('Đăng nhập Google thất bại');
+  if (!data || !data.accessToken) {
+    throw new Error("Đăng nhập Google thất bại: Không nhận được Token");
+  }
+  saveSession(data);
+  const { data: me } = await api.get("/users/me");
+  if (!me) {
+    throw new Error("Không lấy được thông tin người dùng từ server");
   }
 
-  const user = saveSession(data);
+  const user = saveSession(me);
 
   if (!user?.id) {
-    throw new Error('Đăng nhập Google thất bại');
+    throw new Error("Không lưu được phiên đăng nhập của người dùng");
   }
-
   return user;
 };
 
 export const refreshToken = async () => {
   const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
   if (!storedRefreshToken) {
-    throw new Error('Refresh token không tồn tại');
+    throw new Error("Refresh token không tồn tại");
   }
 
-  const { data } = await api.post('/auth/refresh-token', {
+  const { data } = await api.post("/auth/refresh-token", {
     refreshToken: storedRefreshToken,
   });
 
@@ -297,7 +329,7 @@ export const logout = async () => {
   }
 
   try {
-    await api.post('/auth/logout', { refreshToken: storedRefreshToken });
+    await api.post("/auth/logout", { refreshToken: storedRefreshToken });
   } catch {
     /* session already cleared locally */
   }
@@ -322,10 +354,10 @@ export const updateSessionUser = (updates) => {
 
 export const switchAccountMode = async (mode) => {
   const current = getCurrentUser();
-  if (!current) throw new Error('Chưa đăng nhập');
+  if (!current) throw new Error("Chưa đăng nhập");
 
-  if (mode === 'SELLER' && current.sellerStatus !== 'APPROVED') {
-    throw new Error('Chế độ Người bán chưa khả dụng');
+  if (mode === "SELLER" && current.sellerStatus !== "APPROVED") {
+    throw new Error("Chế độ Người bán chưa khả dụng");
   }
 
   return updateSessionUser({ currentMode: mode });

@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { formatPrice } from '@/utils/formatPrice';
-import { useCart } from '@/context/CartContext';
-import { useProductNavigate } from '@/hooks/useProductNavigate';
-import Button from '@/components/common/button';
-import VariantSelector, { getVariantPriceLabel } from '../VariantSelector';
-import QuantitySelector from '../quantitySelector';
-import './index.scss';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { formatPrice } from "@/utils/formatPrice";
+import { useCart } from "@/context/CartContext";
+import { useProductNavigate } from "@/hooks/useProductNavigate";
+import Button from "@/components/common/button";
+import VariantSelector, { getVariantPriceLabel } from "../VariantSelector";
+import QuantitySelector from "../QuantitySelector";
+import "./index.scss";
 
 /** Cột phải: tên, giá, vận chuyển, variant, số lượng, nút mua */
 export default function ProductInfoPanel({ product }) {
@@ -27,11 +27,11 @@ export default function ProductInfoPanel({ product }) {
 
   const buildCartProduct = () => ({
     productId: product.id,
-    shopId: product.shop?.id || 'shop-unknown',
-    shopName: product.shop?.name || 'Shop',
+    shopId: product.shop?.id || "shop-unknown",
+    shopName: product.shop?.name || "Shop",
     name: product.title,
-    image: selectedVariant?.image || product.gallery?.[0]?.src || '',
-    variant: selectedVariant?.name || '',
+    image: selectedVariant?.image || product.gallery?.[0]?.src || "",
+    variant: selectedVariant?.name || "",
     price: selectedVariant?.price ?? product.priceMin,
   });
 
@@ -41,7 +41,7 @@ export default function ProductInfoPanel({ product }) {
       return;
     }
     addToCart(buildCartProduct(), quantity);
-    toast.success('Đã thêm vào giỏ hàng');
+    toast.success("Đã thêm vào giỏ hàng");
   };
 
   const handleBuyNow = () => {
@@ -50,12 +50,14 @@ export default function ProductInfoPanel({ product }) {
       return;
     }
     buyNow(buildCartProduct(), quantity);
-    navigate('/cart');
+    navigate("/cart");
   };
 
   return (
     <div className="product-info-panel">
-      {product.badge && <span className="product-info-panel__badge">{product.badge}</span>}
+      {product.badge && (
+        <span className="product-info-panel__badge">{product.badge}</span>
+      )}
 
       <h1 className="product-info-panel__title">{product.title}</h1>
 
@@ -64,7 +66,7 @@ export default function ProductInfoPanel({ product }) {
           <strong>{product.rating}</strong> ★
         </span>
         <span className="product-info-panel__divider">|</span>
-        <span>{product.reviewCount.toLocaleString('vi-VN')} Đánh Giá</span>
+        <span>{product.reviewCount.toLocaleString("vi-VN")} Đánh Giá</span>
         <span className="product-info-panel__divider">|</span>
         <span>{product.soldCount} Đã Bán</span>
         <button type="button" className="product-info-panel__report">
@@ -80,7 +82,9 @@ export default function ProductInfoPanel({ product }) {
               <span className="product-info-panel__original">
                 {formatPrice(product.originalPrice)}
               </span>
-              <span className="product-info-panel__discount">-{product.discountPercent}%</span>
+              <span className="product-info-panel__discount">
+                -{product.discountPercent}%
+              </span>
             </>
           )}
         </div>
@@ -104,7 +108,7 @@ export default function ProductInfoPanel({ product }) {
             className="product-info-panel__policy-toggle"
             onClick={() => setPoliciesOpen((v) => !v)}
           >
-            An Tâm Mua Sắm Cùng Shopee {policiesOpen ? '∧' : '∨'}
+            An Tâm Mua Sắm Cùng Shopee {policiesOpen ? "∧" : "∨"}
           </button>
           {policiesOpen && (
             <ul className="product-info-panel__policy-list">
