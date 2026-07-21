@@ -97,14 +97,29 @@ const StaffSellerReview = () => {
     }
   };
 
+  // Ảnh xem được (JPG/PNG...) mở trong lightbox; PDF mở tab mới.
+  const isViewableImage = (url) =>
+    typeof url === "string" && /^(data:image|https?:.*\.(png|jpe?g|webp|gif)(\?|#|$))/i.test(url);
+  const isLicenseAttached = (app) =>
+    typeof app.businessLicense === "string" && /^data:|^https?:/.test(app.businessLicense);
+
   const openImages = (app, startIndex) => {
     const images = [];
     if (app.frontImageUrl) images.push({ src: app.frontImageUrl, caption: "CCCD mặt trước" });
     if (app.backImageUrl) images.push({ src: app.backImageUrl, caption: "CCCD mặt sau" });
-    if (app.businessLicense && /^data:|^https?:/.test(app.businessLicense)) {
+    if (isViewableImage(app.businessLicense)) {
       images.push({ src: app.businessLicense, caption: "Giấy phép kinh doanh" });
     }
     if (images.length) setLightbox({ images, index: startIndex });
+  };
+
+  const openLicense = (app) => {
+    if (isViewableImage(app.businessLicense)) {
+      const idx = (app.frontImageUrl ? 1 : 0) + (app.backImageUrl ? 1 : 0);
+      openImages(app, idx);
+    } else {
+      window.open(app.businessLicense, "_blank", "noopener,noreferrer");
+    }
   };
 
   const hasImages = (app) => Boolean(app.frontImageUrl || app.backImageUrl);
@@ -205,6 +220,28 @@ const StaffSellerReview = () => {
                     ) : (
                       <p className="stf-seller-review__no-img">Chưa có ảnh CCCD đính kèm (hồ sơ nộp qua API).</p>
                     )}
+
+                    <div className="stf-seller-review__license">
+                      <strong>Giấy phép kinh doanh:</strong>
+                      {isLicenseAttached(app) ? (
+                        <button
+                          type="button"
+                          className="stf-seller-review__license-btn"
+                          onClick={() => openLicense(app)}
+                        >
+                          {isViewableImage(app.businessLicense) ? (
+                            <img src={app.businessLicense} alt="Giấy phép kinh doanh" />
+                          ) : (
+                            <span className="stf-seller-review__license-file">📄</span>
+                          )}
+                          <span>Xem giấy phép kinh doanh 🔍</span>
+                        </button>
+                      ) : (
+                        <span className="stf-seller-review__no-img">
+                          Chưa có tệp đính kèm (hồ sơ nộp qua API).
+                        </span>
+                      )}
+                    </div>
 
                     <div className="stf-seller-review__docs">
                       <strong>Tài liệu:</strong>

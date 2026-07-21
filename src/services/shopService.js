@@ -19,6 +19,7 @@ const defaultProfile = (user) => ({
   businessAddress: '',
   businessType: 'individual',
   identityNumber: '',
+  businessLicense: '',
   identityUpdatedAt: null,
 });
 
@@ -41,6 +42,7 @@ const fromApplication = (app) => {
   if (app.pickupAddress) filled.businessAddress = app.pickupAddress;
   if (app.businessType) filled.businessType = app.businessType === 'business' ? 'company' : 'individual';
   if (app.cccdNumber) filled.identityNumber = app.cccdNumber;
+  if (app.businessLicense) filled.businessLicense = app.businessLicense;
   return filled;
 };
 
@@ -57,6 +59,7 @@ const fromApiSeller = (seller) => {
       String(seller.sellerType).toLowerCase() === 'business' ? 'company' : 'individual';
   }
   if (seller.identityNumber) filled.identityNumber = seller.identityNumber;
+  if (seller.businessLicenseUrl) filled.businessLicense = seller.businessLicenseUrl;
   return filled;
 };
 

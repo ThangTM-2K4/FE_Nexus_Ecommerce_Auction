@@ -137,8 +137,11 @@ export const getUserReputation = async (userId, profile, sellerStatus) => {
   await mockDelay();
 
   const stored = getStoredReputation(userId);
-  const buyerScore = calculateBuyerScore(profile, stored.totalSpent);
-  const buyerRank = calculateBuyerRank(buyerScore);
+  // getMe đã trả điểm uy tín thật -> ưu tiên dùng, chỉ tự tính khi backend chưa có.
+  const backendRep = profile?.reputation;
+  const buyerScore =
+    backendRep?.score != null ? Number(backendRep.score) : calculateBuyerScore(profile, stored.totalSpent);
+  const buyerRank = backendRep?.rank || calculateBuyerRank(buyerScore);
 
   const buyerProfile = {
     score: buyerScore,

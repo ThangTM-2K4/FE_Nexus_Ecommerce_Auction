@@ -3,15 +3,38 @@
 .stf-layout {
   min-height: 100vh;
   background: $color-bg;
+  // Chặn tràn ngang toàn cục cho khu vực staff (an toàn: các bảng rộng đã tự cuộn
+  // trong wrapper overflow-x:auto của chúng). Dùng `clip` chứ KHÔNG dùng `hidden`
+  // để không tạo scroll container làm hỏng position:sticky của sidebar.
+  overflow-x: clip;
 
   &__body {
     display: flex;
     width: 100%;
+    align-items: flex-start;
+
+    // Màn nhỏ (laptop có scaling / tablet): xếp sidebar lên trên, nội dung xuống dưới
+    // để sidebar cố định không bóp méo nội dung gây "gãy khúc".
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
   }
 
   &__content {
     flex: 1;
     min-width: 0;
+    max-width: 100%;
     padding: 24px;
+    // Lưới an toàn: không cho phần tử con nào tràn ra ngoài mép nội dung.
+    overflow-x: clip;
+
+    @media (max-width: 1024px) {
+      padding: 18px;
+    }
+
+    @media (max-width: 768px) {
+      width: 100%;
+      padding: 14px;
+    }
   }
 }

@@ -274,6 +274,57 @@ export default function ShopProfilePage() {
                 )}
               </div>
             </div>
+
+            <div className="slr-cp__row">
+              <label className="slr-cp__row-label">Giấy phép kinh doanh</label>
+              <div className="slr-cp__row-body">
+                {(() => {
+                  const val = shown.businessLicense;
+                  const isImage = typeof val === "string" && val.startsWith("data:image");
+                  const isUrlImage =
+                    typeof val === "string" && /^https?:.*\.(png|jpe?g|webp|gif)(\?|#|$)/i.test(val);
+                  const hasFile = typeof val === "string" && /^data:|^https?:/.test(val);
+                  return (
+                    <>
+                      <label
+                        className={`slr-cp__upload-slot slr-cp__upload-slot--square ${hasFile ? "filled" : ""}`}
+                      >
+                        {isImage || isUrlImage ? (
+                          <img src={val} alt="Giấy phép kinh doanh" />
+                        ) : hasFile ? (
+                          "📄 Đã tải lên"
+                        ) : editing ? (
+                          "+ Tải giấy phép"
+                        ) : (
+                          "Chưa cập nhật"
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={!editing}
+                          onChange={(e) => handleImageUpload("businessLicense", "giấy phép kinh doanh", e)}
+                          hidden
+                        />
+                      </label>
+                      {hasFile && !isImage && !isUrlImage && (
+                        <a
+                          className="slr-create-image-hint"
+                          href={val}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Xem tệp giấy phép đã tải lên
+                        </a>
+                      )}
+                      <small className="slr-create-image-hint">
+                        Giấy phép kinh doanh đã nộp khi đăng ký người bán. Nhân viên &amp; quản trị viên
+                        dùng tài liệu này để duyệt hồ sơ.
+                      </small>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
           </div>
         )}
 

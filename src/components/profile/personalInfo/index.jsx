@@ -18,7 +18,7 @@ const GENDERS = [
 ];
 
 // Ô tải ảnh CCCD trực tiếp từ máy (không dán URL nữa)
-function CccdImageUpload({ label, value, onPick, onClear, disabled }) {
+function CccdImageUpload({ label, value, onPick, onClear, disabled, error }) {
   return (
     <div className="personal-info-cccd__upload">
       <span className="personal-info-cccd__upload-label">{label}</span>
@@ -32,7 +32,11 @@ function CccdImageUpload({ label, value, onPick, onClear, disabled }) {
           )}
         </div>
       ) : (
-        <label className={`personal-info-cccd__upload-btn ${disabled ? 'is-disabled' : ''}`}>
+        <label
+          className={`personal-info-cccd__upload-btn ${disabled ? 'is-disabled' : ''} ${
+            error ? 'has-error' : ''
+          }`.trim()}
+        >
           <span>📷 Chọn ảnh từ máy</span>
           <input
             type="file"
@@ -43,6 +47,7 @@ function CccdImageUpload({ label, value, onPick, onClear, disabled }) {
           />
         </label>
       )}
+      {error && <span className="personal-info-cccd__error">{error}</span>}
     </div>
   );
 }
@@ -75,6 +80,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
     backImageKey: '',
   });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (profile) {
@@ -99,23 +105,36 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
   // Đã xác minh hoặc đang chờ duyệt thì khoá không cho nộp lại
   const locked = status === 'APPROVED' || status === 'VERIFIED' || status === 'PENDING';
 
+  // Xoá lỗi của field ngay khi người dùng sửa lại
+  const clearError = (name) =>
+    setErrors((prev) => (prev[name] ? { ...prev, [name]: undefined } : prev));
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'cccdAddress' && value.length > MAX_ADDRESS_LEN) return;
     setForm((prev) => ({ ...prev, [name]: value }));
+    clearError(name);
   };
 
-  const isValid =
-    form.cccdFullName.trim() &&
-    form.cccdNumber.trim() &&
-    form.cccdGender.trim() &&
-    form.cccdDateOfBirth.trim() &&
-    form.cccdIssueDate.trim() &&
-    form.cccdExpiryDate.trim() &&
-    form.cccdIssuePlace.trim() &&
-    form.cccdAddress.trim() &&
-    form.frontImageUrl &&
-    form.backImageUrl;
+  // Kiểm tra bắt buộc: thiếu bất kỳ field nào cũng chặn lưu & hiện lỗi đỏ.
+  const validate = () => {
+    const e = {};
+    if (!form.cccdFullName.trim()) e.cccdFullName = 'Vui lòng nhập họ và tên';
+    if (!form.cccdNumber.trim()) e.cccdNumber = 'Vui lòng nhập số CCCD';
+    else if (!/^(\d{9}|\d{12})$/.test(form.cccdNumber.trim()))
+      e.cccdNumber = 'Số CCCD phải gồm 9 hoặc 12 chữ số';
+    if (!form.cccdGender.trim()) e.cccdGender = 'Vui lòng chọn giới tính';
+    if (!form.cccdDateOfBirth.trim()) e.cccdDateOfBirth = 'Vui lòng chọn ngày sinh';
+    if (!form.cccdIssueDate.trim()) e.cccdIssueDate = 'Vui lòng chọn ngày cấp';
+    if (!form.cccdExpiryDate.trim()) e.cccdExpiryDate = 'Vui lòng chọn ngày hết hạn';
+    else if (form.cccdIssueDate && form.cccdExpiryDate <= form.cccdIssueDate)
+      e.cccdExpiryDate = 'Ngày hết hạn phải sau ngày cấp';
+    if (!form.cccdIssuePlace.trim()) e.cccdIssuePlace = 'Vui lòng nhập nơi cấp';
+    if (!form.cccdAddress.trim()) e.cccdAddress = 'Vui lòng nhập địa chỉ thường trú';
+    if (!form.frontImageUrl) e.frontImageUrl = 'Vui lòng tải ảnh CCCD mặt trước';
+    if (!form.backImageUrl) e.backImageUrl = 'Vui lòng tải ảnh CCCD mặt sau';
+    return e;
+  };
 
   // Chọn ảnh từ máy: xem trước ngay bằng data URL, đồng thời upload lên server
   // (POST /uploads/identity) để lấy URL/key thật dùng khi nộp hồ sơ. Upload lỗi
@@ -127,6 +146,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
     try {
       const dataUrl = await readImageAsDataUrl(file);
       setForm((prev) => ({ ...prev, [previewKey]: dataUrl, [uploadKey]: '' }));
+      clearError(previewKey);
       try {
         const url = await profileService.uploadIdentityImage(file);
         if (url) setForm((prev) => ({ ...prev, [uploadKey]: url }));
@@ -144,7 +164,14 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
   // Lưu hồ sơ CCCD. goToSellerRegister = true thì lưu xong chuyển sang trang
   // đăng ký Người bán; false thì chỉ lưu (nhiều người chỉ muốn cập nhật hồ sơ).
   const handleSave = async (goToSellerRegister = false) => {
-    if (!isValid || locked) return;
+    if (locked) return;
+    const foundErrors = validate();
+    if (Object.keys(foundErrors).length) {
+      setErrors(foundErrors);
+      toast.error('Vui lòng điền đầy đủ và đúng thông tin CCCD');
+      return;
+    }
+    setErrors({});
     setSaving(true);
     try {
       // Ưu tiên URL/key ảnh đã upload lên server; chưa upload được thì dùng base64.
@@ -235,6 +262,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
           onChange={handleChange}
           placeholder="Họ và tên đầy đủ trên CCCD"
           disabled={locked}
+          error={errors.cccdFullName}
         />
         <Input
           label="Số CCCD"
@@ -243,6 +271,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
           onChange={handleChange}
           placeholder="Số định danh cá nhân trên CCCD"
           disabled={locked}
+          error={errors.cccdNumber}
         />
         <div className="personal-info-cccd__row">
           <Select
@@ -253,6 +282,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
             options={GENDERS}
             placeholder="Chọn giới tính"
             disabled={locked}
+            error={errors.cccdGender}
           />
           <Input
             label="Ngày sinh"
@@ -261,6 +291,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
             value={form.cccdDateOfBirth}
             onChange={handleChange}
             disabled={locked}
+            error={errors.cccdDateOfBirth}
           />
         </div>
         <div className="personal-info-cccd__row">
@@ -271,6 +302,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
             value={form.cccdIssueDate}
             onChange={handleChange}
             disabled={locked}
+            error={errors.cccdIssueDate}
           />
           <Input
             label="Ngày hết hạn"
@@ -279,6 +311,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
             value={form.cccdExpiryDate}
             onChange={handleChange}
             disabled={locked}
+            error={errors.cccdExpiryDate}
           />
         </div>
         <Input
@@ -288,6 +321,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
           onChange={handleChange}
           placeholder="VD: Cục Cảnh sát QLHC về TTXH"
           disabled={locked}
+          error={errors.cccdIssuePlace}
         />
         <div className="personal-info-cccd__address-wrap">
           <Input
@@ -297,6 +331,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
             onChange={handleChange}
             placeholder="Địa chỉ Nơi thường trú trên CCCD"
             disabled={locked}
+            error={errors.cccdAddress}
           />
           <span className="personal-info-cccd__counter">
             {form.cccdAddress.length}/{MAX_ADDRESS_LEN}
@@ -308,6 +343,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
           onPick={handlePickImage('frontImageUrl', 'frontImageKey')}
           onClear={clearImage('frontImageUrl', 'frontImageKey')}
           disabled={locked}
+          error={errors.frontImageUrl}
         />
         <CccdImageUpload
           label="Ảnh CCCD mặt sau"
@@ -315,16 +351,17 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
           onPick={handlePickImage('backImageUrl', 'backImageKey')}
           onClear={clearImage('backImageUrl', 'backImageKey')}
           disabled={locked}
+          error={errors.backImageUrl}
         />
       </div>
 
       {!locked && (
         <div className="personal-info-cccd__actions">
-          <Button variant="outline" disabled={!isValid || saving} onClick={() => handleSave(false)}>
+          <Button variant="outline" disabled={saving} onClick={() => handleSave(false)}>
             {saving ? 'Đang xử lý...' : 'Lưu Hồ Sơ'}
           </Button>
           {!isApprovedSeller && (
-            <Button variant="accent" disabled={!isValid || saving} onClick={() => handleSave(true)}>
+            <Button variant="accent" disabled={saving} onClick={() => handleSave(true)}>
               {saving ? 'Đang xử lý...' : 'Lưu & Đăng Ký Người Bán'}
             </Button>
           )}

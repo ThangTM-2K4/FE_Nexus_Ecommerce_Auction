@@ -202,6 +202,25 @@
     background: rgba(10, 65, 116, 0.06);
     border-color: #523F77;
   }
+
+  &.input-error {
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+}
+
+.seller-file-preview {
+  display: block;
+  margin-top: 10px;
+  max-width: 220px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
 }
 
 .seller-file-name {
@@ -209,6 +228,19 @@
   margin-top: 6px;
   font-size: 12px;
   color: #64748b;
+}
+
+.seller-file-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.seller-field-optional {
+  font-weight: 500;
+  color: #94a3b8;
 }
 
 .seller-bank-note {

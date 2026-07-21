@@ -119,7 +119,9 @@ const writeLocalSellerApplication = (userId, form, application) => {
     documents: [
       'CCCD mặt trước',
       'CCCD mặt sau',
-      form.businessType === 'business' ? 'Giấy phép kinh doanh' : 'Giấy tờ định danh',
+      // Giấy phép kinh doanh giờ bắt buộc với mọi loại hình -> luôn có trong hồ sơ duyệt.
+      'Giấy phép kinh doanh',
+      ...(form.businessType === 'business' ? ['Mã số thuế doanh nghiệp'] : []),
     ],
   };
   try {

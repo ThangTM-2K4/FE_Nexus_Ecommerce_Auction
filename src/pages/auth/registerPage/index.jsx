@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { register, getGoogleLoginUrl } from "../../../services/authService";
@@ -25,6 +25,8 @@ function RegisterPage() {
     useState(false);
 
   const [errors, setErrors] = useState({});
+
+  const [agreedTerms, setAgreedTerms] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -85,6 +87,11 @@ function RegisterPage() {
   ) {
     newErrors.confirmPassword =
       "Mật khẩu không khớp";
+  }
+
+  if (!agreedTerms) {
+    newErrors.agreedTerms =
+      "Vui lòng đọc và đồng ý với Điều khoản & Điều kiện sử dụng";
   }
 
   setErrors(newErrors);
@@ -302,10 +309,32 @@ function RegisterPage() {
             )}
           </div>
 
+          <div className="terms-agree">
+            <label className="terms-agree__row">
+              <input
+                type="checkbox"
+                checked={agreedTerms}
+                onChange={(e) => {
+                  setAgreedTerms(e.target.checked);
+                  setErrors((prev) => ({ ...prev, agreedTerms: "" }));
+                }}
+              />
+              <span>
+                Tôi đã đọc và đồng ý với{" "}
+                <Link to="/terms" target="_blank" rel="noopener noreferrer">
+                  Điều khoản &amp; Điều kiện sử dụng
+                </Link>
+              </span>
+            </label>
+            {errors.agreedTerms && (
+              <p className="field-error">{errors.agreedTerms}</p>
+            )}
+          </div>
+
           <button
             type="submit"
             className="register-btn"
-            disabled={loading}
+            disabled={loading || !agreedTerms}
           >
             {loading
               ? "Đang đăng ký..."
