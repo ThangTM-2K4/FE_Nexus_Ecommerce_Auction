@@ -1662,3 +1662,103 @@
   h4 { font-size: 14px; font-weight: 600; color: $color-primary-dark; margin-bottom: 6px; }
   div { display: flex; justify-content: space-between; strong { color: $color-primary; } span { font-size: 12px; color: $color-text-muted; } }
 }
+
+// ==========================================
+// UNIFIED ADMIN BUTTON STYLING SYSTEM
+// ==========================================
+.adm-user-card__footer button,
+.adm-product-card footer button,
+.adm-auction-card footer button,
+.adm-order-timeline__card footer button,
+.adm-bid-feed__actions button,
+.adm-wallet-card footer button,
+.adm-fee-card button,
+.adm-coupon-ticket__actions button,
+.adm-review-card footer button,
+.adm-fraud-alert footer button,
+.adm-kanban__card footer button,
+.adm-payment-card footer button,
+.adm-withdrawal-card footer button,
+.adm-auction-order-card footer button,
+.adm-shipping-card button,
+.adm-category-item__actions button,
+.adm-brand-chip__actions button,
+.adm-content-doc__actions button,
+.adm-banner-preview__body footer button,
+.adm-card footer button,
+.adm-cat-parent__actions button,
+.adm-cat-child__actions button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 5px 12px !important;
+  height: 28px !important;
+  border: 1px solid rgba($color-primary, 0.15) !important;
+  border-radius: $radius-sm !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  color: $color-text-muted !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+  box-shadow: none !important;
+  transform: none !important;
+
+  &:hover {
+    border-color: $color-primary !important;
+    color: $color-primary !important;
+    background: rgba($color-primary, 0.1) !important;
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+  }
+
+  // Variant: primary / edit / action
+  &.primary, &.act-edit, &.edit {
+    color: $color-primary !important;
+    border-color: rgba($color-primary, 0.3) !important;
+    &:hover {
+      border-color: $color-primary !important;
+      background: rgba($color-primary, 0.12) !important;
+    }
+  }
+
+  // Variant: success / approve / active
+  &.success, &.act-add, &.act-toggle, &.approve, &.save:not(.danger) {
+    color: $color-success !important;
+    border-color: rgba($color-success, 0.3) !important;
+    &:hover {
+      border-color: $color-success !important;
+      background: rgba($color-success, 0.12) !important;
+    }
+  }
+
+  // Variant: danger / delete / reject
+  &.danger, &.act-delete, &.delete, &.reject {
+    color: $color-danger !important;
+    border-color: rgba($color-danger, 0.3) !important;
+    &:hover {
+      border-color: $color-danger !important;
+      background: rgba($color-danger, 0.12) !important;
+    }
+  }
+
+  // Variant: secondary / default / cancel
+  &.secondary, &.cancel {
+    color: $color-text-muted !important;
+    border-color: $color-border-light !important;
+    &:hover {
+      border-color: $color-text !important;
+      color: $color-text !important;
+      background: rgba($color-text, 0.08) !important;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+  }
+}
+
