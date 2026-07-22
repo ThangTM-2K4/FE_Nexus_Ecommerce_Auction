@@ -13,7 +13,6 @@
   display: block;
   border-radius: $radius-sm;
   overflow: hidden;
-  aspect-ratio: 398.34 / 115;
   background: $surface-muted;
   min-height: 0;
 
@@ -37,5 +36,6 @@
 
   .banner {
     flex: 1;
+    aspect-ratio: 398.34 / 115;
   }
 }

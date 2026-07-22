@@ -2,25 +2,35 @@
 
 .profile-info {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .profile-info__grid {
   display: grid;
-  grid-template-columns: 1fr 200px;
-  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'fields avatar';
+  gap: 1.5rem 2rem;
   align-items: start;
+  min-width: 0;
 
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'avatar'
+      'fields';
+    gap: 1.5rem;
   }
 }
 
 // Bố cục 2 cột: Email | SĐT — Tên | Giới tính — Ngày sinh | CCCD
 .profile-info__fields {
+  grid-area: fields;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
   align-items: start;
+  min-width: 0;
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
@@ -31,6 +41,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 
   input,
   select {
@@ -50,13 +61,11 @@
     }
   }
 
-  // Ô Select (Giới tính) cao bằng các ô 42px để 2 cột thẳng hàng
   .common-select__field {
     min-height: 42px;
   }
 }
 
-// Hàng nhãn: tên field bên trái, badge xác minh bên phải
 .profile-info__label-row {
   display: flex;
   align-items: center;
@@ -72,7 +81,6 @@
   }
 }
 
-// Khung bao ô nhập + nhãn/nút xác minh (flex row) — badge nằm CẠNH chữ, không đè lên.
 .profile-info__control {
   display: flex;
   align-items: center;
@@ -89,7 +97,6 @@
     box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
   }
 
-  // <input> bên trong bỏ viền riêng, để khung ngoài lo — text tự cắt trước badge
   input {
     flex: 1;
     min-width: 0;
@@ -106,7 +113,6 @@
     }
   }
 
-  // Biến thể chỉ đọc (CCCD): không có <input>, hiển thị giá trị dạng text
   &--readonly {
     padding: 0 6px 0 12px;
     border-style: dashed;
@@ -114,7 +120,6 @@
   }
 }
 
-// Nhãn/nút xác minh — flex child, KHÔNG absolute nên không bao giờ đè lên chữ
 .profile-slot {
   flex-shrink: 0;
   display: inline-flex;
@@ -167,52 +172,84 @@
 }
 
 .profile-info__avatar-block {
+  grid-area: avatar;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  width: 148px;
+  flex-shrink: 0;
+  padding: 16px 14px;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  background: $surface-soft;
   text-align: center;
+  box-sizing: border-box;
+
+  @media (max-width: 1024px) {
+    width: 100%;
+    max-width: 220px;
+    margin: 0 auto;
+  }
 }
 
 .profile-info__avatar {
-  width: 100px;
-  height: 100px;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, $raspberry, $lavender);
   color: $surface;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .user-avatar__initials {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: $surface;
   }
 }
 
 .profile-info__upload-btn {
+  width: 100%;
+  max-width: 120px;
+  box-sizing: border-box;
   border: 1px solid $border;
   background: $surface;
   color: $ink;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: $radius-sm;
   font-size: 0.82rem;
   cursor: pointer;
   font-family: inherit;
+  white-space: nowrap;
+  transition: border-color $transition-fast, color $transition-fast;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: $raspberry;
     color: $raspberry;
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: default;
   }
 }
 
 .profile-info__upload-hint {
-  font-size: 0.72rem;
+  margin: 0;
+  width: 100%;
+  font-size: 0.7rem;
   color: $ink-muted;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+.profile-info__upload-error {
+  margin: 0;
+  width: 100%;
+  font-size: 0.72rem;
+  color: $color-danger;
+  line-height: 1.45;
 }
 
 .profile-info__actions {
@@ -282,7 +319,7 @@
   font-weight: 600;
   font-family: inherit;
   letter-spacing: 0.35em;
-  text-indent: 0.35em; // bù letter-spacing để chữ căn giữa thật sự
+  text-indent: 0.35em;
   text-align: center;
   color: $ink;
   background: $surface-soft;

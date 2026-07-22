@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../AuthContext';
 
 const CartContext = createContext(null);
@@ -21,12 +21,62 @@ const saveCart = (userId, items) => {
 
 const variantKey = (variant) => variant || '';
 
+const mergeCartItems = (userItems, guestItems) => {
+  const next = [...userItems];
+
+  guestItems.forEach((guestItem) => {
+    const match = next.find(
+      (item) =>
+        item.productId === guestItem.productId &&
+        variantKey(item.variant) === variantKey(guestItem.variant),
+    );
+
+    if (match) {
+      next.splice(next.indexOf(match), 1, {
+        ...match,
+        quantity: match.quantity + guestItem.quantity,
+        selected: match.selected || guestItem.selected,
+      });
+      return;
+    }
+
+    next.push({
+      ...guestItem,
+      id: `cart-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    });
+  });
+
+  return next;
+};
+
 export function CartProvider({ children }) {
   const { user } = useAuth();
   const userId = user?.id;
+  const prevUserIdRef = useRef(userId);
   const [cartItems, setCartItems] = useState(() => loadCart(userId));
 
   useEffect(() => {
+    const prevUserId = prevUserIdRef.current;
+    prevUserIdRef.current = userId;
+
+    if (!userId) {
+      setCartItems(loadCart(null));
+      return;
+    }
+
+    if (!prevUserId) {
+      const guestItems = loadCart(null);
+      const userItems = loadCart(userId);
+
+      if (guestItems.length > 0) {
+        const merged = mergeCartItems(userItems, guestItems);
+        setCartItems(merged);
+        saveCart(userId, merged);
+        saveCart(null, []);
+        return;
+      }
+    }
+
     setCartItems(loadCart(userId));
   }, [userId]);
 
@@ -120,9 +170,15 @@ export function CartProvider({ children }) {
       .reduce((sum, i) => sum + i.price * i.quantity, 0);
   }, [cartItems]);
 
+  const cartCount = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
+    [cartItems],
+  );
+
   const value = useMemo(
     () => ({
       cartItems,
+      cartCount,
       addToCart,
       buyNow,
       updateQuantity,
@@ -136,6 +192,7 @@ export function CartProvider({ children }) {
     }),
     [
       cartItems,
+      cartCount,
       addToCart,
       buyNow,
       updateQuantity,

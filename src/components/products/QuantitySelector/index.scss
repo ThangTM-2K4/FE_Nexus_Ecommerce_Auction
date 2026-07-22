@@ -11,40 +11,58 @@
 .quantity-selector__row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .quantity-selector__control {
   display: inline-flex;
   align-items: stretch;
-  border: 1px solid $border;
+  border: 1px solid $border-soft;
   border-radius: $radius-sm;
   overflow: hidden;
+  background: $surface;
+  box-shadow: $shadow-sm;
 
   button {
-    width: 32px;
+    @include flex-center;
+
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
     background: $surface-soft;
     color: $ink-muted;
-    font-size: 1rem;
-    transition: background $transition-fast;
+    font-size: 1.05rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background $transition-fast, color $transition-fast;
 
     &:hover:not(:disabled) {
-      background: $surface-muted;
+      background: rgba($accent, 0.1);
+      color: $accent-dark;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba($raspberry, 0.45);
+      outline-offset: -2px;
     }
 
     &:disabled {
-      opacity: 0.45;
+      opacity: 0.4;
       cursor: not-allowed;
     }
   }
 
   input {
-    width: 52px;
+    width: 48px;
+    height: 36px;
     border: none;
-    border-left: 1px solid $border;
-    border-right: 1px solid $border;
+    border-left: 1px solid $border-soft;
+    border-right: 1px solid $border-soft;
     text-align: center;
     font-size: 0.88rem;
+    font-weight: 600;
     color: $ink;
     background: $surface;
     -moz-appearance: textfield;
@@ -54,15 +72,27 @@
       -webkit-appearance: none;
       margin: 0;
     }
+
+    &:focus {
+      outline: none;
+      background: rgba($blush-pink, 0.2);
+    }
   }
 }
 
 .quantity-selector__stock {
-  font-size: 0.78rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: $radius-pill;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: rgba($color-success, 0.12);
   color: $color-success;
 
   &--out {
+    background: rgba($color-danger, 0.1);
     color: $color-danger;
   }
 }
