@@ -1,36 +1,40 @@
-@use "../../../styles/palette" as p;
-@use "../../../styles/_auction-variables" as *;
+@use "../../../styles/auction/variables" as *;
 
 .auc-create-page {
   position: relative;
-  min-height: calc(100vh - 64px);
-  margin: -24px -32px;
-  padding: 24px 32px;
-  width: auto;
+  min-height: calc(100vh - $header-height);
+  width: 100%;
+  padding-bottom: 40px;
+  overflow: clip;
 
   &__pattern {
     position: absolute;
-    inset: 0;
+    inset: -5%;
     background:
-      radial-gradient(circle at 10% 15%, rgba(p.$blush-pink, 0.45), transparent 42%),
-      radial-gradient(circle at 90% 80%, rgba(p.$sky-pale, 0.42), transparent 48%),
-      radial-gradient(circle at 70% 30%, rgba(p.$lavender, 0.18), transparent 35%),
-      p.$gradient-page;
+      radial-gradient(circle at 10% 15%, rgba($royal-purple, 0.25), transparent 42%),
+      radial-gradient(circle at 90% 80%, rgba($obsidian, 0.42), transparent 48%),
+      radial-gradient(circle at 70% 30%, rgba($midnight-violet, 0.5), transparent 35%),
+      $auction-bg-page;
     z-index: 0;
     pointer-events: none;
+    animation: subtleBreathe 15s ease-in-out infinite;
   }
+}
+
+@keyframes subtleBreathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
 }
 
 .auc-create {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(400px, 44%);
-  gap: 32px;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
   width: 100%;
-  max-width: none;
-  align-items: stretch;
-  min-height: calc(100vh - 140px);
+  max-width: 1200px;
+  margin: 0 auto;
 
   &__main {
     min-width: 0;
@@ -38,54 +42,43 @@
 
   &__aside {
     position: sticky;
-    top: 80px;
+    top: calc(#{$header-height} + 24px);
     align-self: start;
     display: flex;
     flex-direction: column;
     border-radius: $radius-lg;
     overflow: hidden;
-    box-shadow: $shadow-md;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   }
 
   &__aside-content {
-    position: relative;
-    z-index: 1;
-    flex: 1;
-    min-height: 100%;
-    padding: 36px 28px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    color: white;
-    overflow-y: auto;
-    background: linear-gradient(
-      180deg,
-      rgba(0, 29, 57, 0.25) 0%,
-      rgba(0, 29, 57, 0.7) 45%,
-      rgba(10, 65, 116, 0.95) 100%
-    );
+    background: rgba($midnight-violet, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid $auction-border-subtle;
+    padding: 32px 24px;
+    color: $bone;
 
     h3 {
-      font-size: 26px;
+      font-size: 22px;
       font-weight: 700;
       line-height: 1.35;
       margin-bottom: 14px;
     }
 
     > p {
-      font-size: 15px;
-      opacity: 0.92;
+      font-size: 14px;
+      color: $mist-lavender;
       line-height: 1.6;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     h4 {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 12px;
-      opacity: 0.9;
+      color: $antique-gold;
     }
   }
 
@@ -99,35 +92,32 @@
       gap: 10px;
 
       li {
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1.45;
-        padding-left: 18px;
+        padding-left: 16px;
         position: relative;
-        opacity: 0.95;
+        color: $bone;
 
         &::before {
           content: "";
           position: absolute;
           left: 0;
-          top: 7px;
-          width: 7px;
-          height: 7px;
+          top: 6px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
-          background: $color-gradient-mid;
+          background: $gold-bright;
         }
       }
     }
   }
 
   &__rules {
-    flex: 1;
     margin-bottom: 24px;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba($obsidian, 0.4);
     border-radius: $radius-md;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    overflow-y: auto;
-    max-height: 340px;
+    border: 1px solid $auction-border-subtle;
 
     ol {
       list-style: none;
@@ -138,9 +128,9 @@
 
       li {
         counter-increment: rule-counter;
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1.45;
-        padding-left: 28px;
+        padding-left: 24px;
         position: relative;
 
         &::before {
@@ -148,12 +138,12 @@
           position: absolute;
           left: 0;
           top: 0;
-          width: 20px;
-          height: 20px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
-          background: $color-gradient-mid;
-          color: $color-primary-dark;
-          font-size: 11px;
+          background: rgba($antique-gold, 0.2);
+          color: $gold-bright;
+          font-size: 10px;
           font-weight: 700;
           display: flex;
           align-items: center;
@@ -165,11 +155,12 @@
           font-size: 13px;
           font-weight: 700;
           margin-bottom: 2px;
+          color: $bone;
         }
 
         span {
           display: block;
-          opacity: 0.85;
+          color: $mist-lavender;
           font-size: 12px;
         }
       }
@@ -179,9 +170,9 @@
   &__aside-badge {
     display: inline-block;
     align-self: flex-start;
-    background: $color-gradient-mid;
-    color: $color-primary-dark;
-    font-size: 11px;
+    background: rgba($antique-gold, 0.2);
+    color: $gold-bright;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.6px;
     padding: 6px 14px;
@@ -193,19 +184,20 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
-    padding-top: 24px;
-    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    padding-top: 20px;
+    border-top: 1px solid $auction-border-subtle;
 
     strong {
       display: block;
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 700;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      color: $gold-bright;
     }
 
     span {
-      font-size: 13px;
-      opacity: 0.85;
+      font-size: 12px;
+      color: $mist-lavender;
       line-height: 1.35;
     }
   }
@@ -216,7 +208,7 @@
     gap: 8px;
     background: none;
     border: none;
-    color: $color-primary;
+    color: $gold-bright;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -232,13 +224,13 @@
     h1 {
       font-size: 26px;
       font-weight: 700;
-      color: $color-primary-dark;
+      color: $bone;
       margin-bottom: 6px;
     }
 
     p {
       font-size: 14px;
-      color: $color-text-muted;
+      color: $mist-lavender;
     }
   }
 
@@ -249,24 +241,25 @@
   }
 
   &__card {
-    background: $color-bg-card;
-    border: 1px solid $color-border-lighter;
+    background: rgba($obsidian, 0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid $auction-border-subtle;
     border-radius: $radius-lg;
-    padding: 24px;
-    box-shadow: $shadow-sm;
+    padding: 28px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 
     h2 {
       font-size: 18px;
       font-weight: 700;
-      color: $color-primary-dark;
+      color: $bone;
       margin-bottom: 20px;
       padding-bottom: 12px;
-      border-bottom: 1px solid $color-border-lighter;
+      border-bottom: 1px solid $auction-border-subtle;
     }
 
     .hint {
       font-size: 13px;
-      color: $color-text-muted;
+      color: $mist-lavender;
       margin: -12px 0 16px;
     }
   }
@@ -276,36 +269,45 @@
 
     label {
       display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: $color-primary-dark;
       margin-bottom: 8px;
+      font-weight: 500;
+      color: $bone;
+      font-size: 14px;
+
+      .required-star {
+        color: #ff4d4f;
+        margin-left: 2px;
+        font-weight: bold;
+      }
     }
 
-    input,
-    select,
-    textarea {
+    input, select, textarea {
       width: 100%;
       min-width: 0;
-      padding: 12px 14px;
-      border: 1px solid $color-border;
+      padding: 12px 16px;
+      border: 1px solid rgba($mist-lavender, 0.3);
       border-radius: $radius-md;
       font-size: 14px;
       font-family: inherit;
-      color: $color-text;
-      background: white;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      color: $bone;
+      background: rgba(255, 255, 255, 0.08);
+      transition: all 0.2s;
       box-sizing: border-box;
 
       &:focus {
         outline: none;
-        border-color: $color-primary;
-        box-shadow: 0 0 0 3px rgba(10, 65, 116, 0.1);
+        border-color: $gold-bright;
+        box-shadow: 0 0 0 3px rgba($antique-gold, 0.15);
+        background: rgba(255, 255, 255, 0.12);
       }
 
       &.error {
-        border-color: $color-danger;
-        background: $color-danger-bg;
+        border-color: #ff4d4f;
+        background: rgba(255, 77, 79, 0.05);
+      }
+
+      &::placeholder {
+        color: rgba($mist-lavender, 0.6);
       }
     }
 
@@ -331,7 +333,7 @@
   .field-error {
     display: block;
     font-size: 12px;
-    color: $color-danger;
+    color: #ff4d4f;
     margin-top: 6px;
   }
 
@@ -342,40 +344,41 @@
     justify-content: center;
     gap: 8px;
     padding: 32px 20px;
-    border: 2px dashed $color-border;
+    border: 2px dashed $auction-border-subtle;
     border-radius: $radius-lg;
-    background: $color-bg;
+    background: rgba($obsidian, 0.3);
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
+    transition: all 0.2s;
     text-align: center;
 
     svg {
       font-size: 32px;
-      color: $color-primary;
+      color: $mist-lavender;
     }
 
     span {
       font-size: 14px;
       font-weight: 600;
-      color: $color-primary-dark;
+      color: $bone;
     }
 
     em {
       font-size: 12px;
-      color: $color-text-muted;
+      color: $mist-lavender;
       font-style: normal;
     }
 
     input { display: none; }
 
     &:hover {
-      border-color: $color-primary;
-      background: rgba(10, 65, 116, 0.04);
+      border-color: $gold-bright;
+      background: rgba($antique-gold, 0.05);
+      svg { color: $gold-bright; }
     }
 
     &.error {
-      border-color: $color-danger;
-      background: $color-danger-bg;
+      border-color: #ff4d4f;
+      background: rgba(255, 77, 79, 0.05);
     }
   }
 
@@ -391,20 +394,20 @@
     aspect-ratio: 1;
     border-radius: $radius-sm;
     overflow: hidden;
-    border: 1px solid $color-border-lighter;
+    border: 1px solid $auction-border-subtle;
 
-    img,
-    .auc-image {
+    img, .auc-image {
       width: 100%;
       height: 100%;
+      object-fit: cover;
     }
 
     .preview-badge {
       position: absolute;
-      bottom: 6px;
-      left: 6px;
-      background: $color-primary-dark;
-      color: white;
+      bottom: 4px;
+      left: 4px;
+      background: rgba($obsidian, 0.8);
+      color: $gold-bright;
       font-size: 10px;
       font-weight: 700;
       padding: 2px 6px;
@@ -413,8 +416,8 @@
 
     .preview-remove {
       position: absolute;
-      top: 6px;
-      right: 6px;
+      top: 4px;
+      right: 4px;
       width: 24px;
       height: 24px;
       border: none;
@@ -426,8 +429,9 @@
       align-items: center;
       justify-content: center;
       font-size: 11px;
+      transition: background 0.2s;
 
-      &:hover { background: $color-danger; }
+      &:hover { background: #ff4d4f; }
     }
   }
 
@@ -437,14 +441,13 @@
     align-items: center;
     gap: 16px;
     padding: 16px;
-    background: $color-bg;
+    background: rgba($obsidian, 0.3);
     border-radius: $radius-md;
-    border: 1px solid $color-border-lighter;
+    border: 1px solid $auction-border-subtle;
 
-    img,
-    .auc-image {
-      width: 80px;
-      height: 80px;
+    img, .auc-image {
+      width: 60px;
+      height: 60px;
       border-radius: $radius-sm;
       flex-shrink: 0;
       opacity: 0.5;
@@ -452,7 +455,7 @@
 
     span {
       font-size: 13px;
-      color: $color-text-muted;
+      color: $mist-lavender;
     }
   }
 
@@ -465,7 +468,7 @@
       gap: 10px;
       cursor: pointer;
       font-size: 14px;
-      color: $color-text-muted;
+      color: $mist-lavender;
       line-height: 1.5;
 
       input {
@@ -473,12 +476,12 @@
         height: 18px;
         margin-top: 2px;
         flex-shrink: 0;
-        accent-color: $color-primary;
+        accent-color: $antique-gold;
         cursor: pointer;
       }
 
       strong {
-        color: $color-primary;
+        color: $gold-bright;
         font-weight: 600;
       }
     }
@@ -492,17 +495,17 @@
 
     .btn-cancel {
       padding: 12px 24px;
-      border: 1px solid $color-border;
+      border: 1px solid $auction-border-subtle;
       border-radius: $radius-md;
-      background: white;
-      color: $color-text-muted;
+      background: transparent;
+      color: $mist-lavender;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
 
       &:hover {
-        border-color: $color-primary;
-        color: $color-primary;
+        border-color: $mist-lavender;
+        color: $bone;
       }
     }
 
@@ -510,119 +513,127 @@
       padding: 12px 28px;
       border: none;
       border-radius: $radius-md;
-      background: $color-primary-dark;
-      color: white;
+      background: linear-gradient(135deg, $antique-gold, $gold-bright);
+      color: $obsidian;
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 14px rgba($antique-gold, 0.3);
 
-      &:hover:not(:disabled) { background: $color-primary; }
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba($antique-gold, 0.5);
+      }
       &:disabled { opacity: 0.7; cursor: not-allowed; }
     }
   }
+}
 
-  .auc-create__promo {
-    grid-column: 1 / -1;
-    margin-top: 24px;
-    padding-top: 36px;
-    border-top: 1px solid $color-border-lighter;
+.auc-create__promo {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 40px auto 0;
+  padding-top: 36px;
+  border-top: 1px solid $auction-border-subtle;
 
-    &-header {
-      text-align: center;
-      margin-bottom: 28px;
+  &-header {
+    text-align: center;
+    margin-bottom: 32px;
 
-      h2 {
-        font-size: 22px;
-        font-weight: 700;
-        color: $color-primary-dark;
-        margin-bottom: 8px;
-      }
-
-      p {
-        font-size: 14px;
-        color: $color-text-muted;
-      }
-    }
-
-    &-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-    }
-  }
-
-  .promo-card {
-    background: $color-bg-card;
-    border: 1px solid $color-border-lighter;
-    border-radius: $radius-lg;
-    padding: 24px 20px;
-    box-shadow: $shadow-sm;
-    transition: box-shadow 0.2s, transform 0.2s;
-    display: flex;
-    flex-direction: column;
-
-    &:hover {
-      box-shadow: $shadow-md;
-      transform: translateY(-2px);
-    }
-
-    &__badge {
-      display: inline-block;
-      align-self: flex-start;
-      background: rgba(10, 65, 116, 0.1);
-      color: $color-primary;
-      font-size: 10px;
+    h2 {
+      font-size: 24px;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      padding: 4px 10px;
-      border-radius: 4px;
-      margin-bottom: 14px;
-    }
-
-    &__icon {
-      width: 48px;
-      height: 48px;
-      border-radius: $radius-md;
-      background: linear-gradient(135deg, $color-gradient-light, $color-gradient-mid);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      font-size: 20px;
-      color: $color-primary-dark;
-    }
-
-    h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: $color-primary-dark;
+      color: $bone;
       margin-bottom: 8px;
-      line-height: 1.3;
     }
 
     p {
-      font-size: 13px;
-      color: $color-text-muted;
-      line-height: 1.5;
-      flex: 1;
-      margin-bottom: 14px;
+      font-size: 15px;
+      color: $mist-lavender;
     }
+  }
 
-    &__highlight {
-      font-size: 12px;
-      font-weight: 600;
-      color: $color-primary;
-      padding-top: 12px;
-      border-top: 1px solid $color-border-lighter;
-    }
+  &-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+.promo-card {
+  background: rgba($midnight-violet, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid $auction-border-subtle;
+  border-radius: $radius-lg;
+  padding: 24px 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    border-color: $gold-bright;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    transform: translateY(-4px);
+  }
+
+  &__badge {
+    display: inline-block;
+    align-self: flex-start;
+    background: rgba($antique-gold, 0.15);
+    color: $gold-bright;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: $radius-md;
+    background: rgba($antique-gold, 0.1);
+    border: 1px solid rgba($antique-gold, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 20px;
+    color: $gold-bright;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: $bone;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  p {
+    font-size: 13px;
+    color: $mist-lavender;
+    line-height: 1.5;
+    flex: 1;
+    margin-bottom: 16px;
+  }
+
+  &__highlight {
+    font-size: 12px;
+    font-weight: 600;
+    color: $gold-bright;
+    padding-top: 12px;
+    border-top: 1px solid $auction-border-subtle;
   }
 }
 
 @media (max-width: 1100px) {
   .auc-create {
-    grid-template-columns: minmax(0, 1fr) minmax(340px, 38%);
-    gap: 24px;
+    grid-template-columns: 1fr 300px;
   }
   .auc-create__promo-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -632,16 +643,10 @@
 @media (max-width: 960px) {
   .auc-create {
     grid-template-columns: 1fr;
-    min-height: auto;
+    gap: 32px;
 
     &__aside {
       position: static;
-      min-height: 420px;
-    }
-
-    &__aside-content {
-      justify-content: center;
-      padding: 32px 28px;
     }
   }
 }
@@ -664,7 +669,6 @@
 
     &__actions {
       flex-direction: column-reverse;
-
       button { width: 100%; }
     }
   }

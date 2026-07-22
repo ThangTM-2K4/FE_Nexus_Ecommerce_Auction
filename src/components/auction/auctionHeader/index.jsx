@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { FiMenu, FiSearch, FiX } from 'react-icons/fi';
+import { useAuth } from '../../../context/AuthContext';
 import './index.scss';
 
 const NAV_ITEMS = [
   { to: '/auction', label: 'Đấu giá', end: true },
-  { to: '/auction#categories', label: 'Danh mục' },
-  { to: '/auction#locations', label: 'Địa điểm' },
-  { to: '/auction#how-it-works', label: 'Cách thức hoạt động' },
+  { to: '/auction/categories', label: 'Danh mục' },
+  { to: '/auction/locations', label: 'Địa điểm' },
+  { to: '/auction/how-it-works', label: 'Cách thức hoạt động' },
+  { to: '/auction/my-bids', label: 'Đấu giá của tôi' },
 ];
 
 export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
   const navigate = useNavigate();
+  const { isBuyerMode, isSellerMode } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [localQuery, setLocalQuery] = useState(searchQuery);
 
@@ -33,7 +36,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
         <Link to="/auction" className="auction-header__logo" aria-label="BidDoubleTK — Khu đấu giá">
           <img src="/images/logo/logo.png" alt="BidDoubleTK" />
           <strong>
-            Bid<span>DoubleTK</span>
+            Bid<span>DoubleTK</span> <span className="auction-tag" style={{ fontSize: '10px', color: '#E8C468', marginLeft: '4px', verticalAlign: 'middle', textTransform: 'uppercase' }}>Auction</span>
           </strong>
         </Link>
 
@@ -49,7 +52,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
         </form>
 
         <nav className="auction-header__nav" aria-label="Điều hướng đấu giá">
-          {NAV_ITEMS.map((item) => (
+          {isBuyerMode && NAV_ITEMS.map((item) => (
             <NavLink
               key={item.label}
               to={item.to}
@@ -65,18 +68,16 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
           <Link to="/" className="auction-header__home-link">
             Về cửa hàng
           </Link>
-          <Link to="/auction/my-bids" className="auction-header__home-link" style={{ borderColor: 'transparent' }}>
-            Của tôi
-          </Link>
-          <Link to="/auction/profile" className="auction-header__home-link" style={{ borderColor: 'transparent' }}>
-            Hồ sơ
-          </Link>
-          <Link to="/auction/seller" className="auction-header__home-link" style={{ borderColor: 'transparent' }}>
-            Kênh người bán
-          </Link>
-          <Link to="/auction/create" className="auction-header__home-link" style={{ background: 'rgba(123, 76, 171, 0.45)', color: '#fff', borderColor: 'transparent' }}>
-            Tạo đấu giá
-          </Link>
+          {isSellerMode && (
+            <>
+              <Link to="/auction/profile" className="auction-header__home-link" style={{ borderColor: 'transparent' }}>
+                Hồ sơ
+              </Link>
+              <Link to="/auction/create" className="auction-header__home-link" style={{ background: 'rgba(123, 76, 171, 0.45)', color: '#fff', borderColor: 'transparent' }}>
+                Tạo đấu giá mới
+              </Link>
+            </>
+          )}
           <button
             type="button"
             className="auction-header__menu-btn"
@@ -101,7 +102,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
               aria-label="Tìm kiếm đấu giá"
             />
           </form>
-          {NAV_ITEMS.map((item) => (
+          {isBuyerMode && NAV_ITEMS.map((item) => (
             <NavLink
               key={item.label}
               to={item.to}

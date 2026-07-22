@@ -28,16 +28,20 @@
     padding: 12px 24px;
     border: none;
     border-radius: $radius-sm;
-    background: $color-btn-primary-bg;
+    background: linear-gradient(135deg, $color-gold, #c29921);
     color: $color-primary-dark;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
-    transition: background 0.2s;
+    transition: all 0.3s $ease;
+    box-shadow: 0 4px 14px rgba(232, 196, 104, 0.4);
 
-    &:hover { background: $color-btn-primary-hover; }
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(232, 196, 104, 0.6);
+    }
   }
 
   &__stats {
@@ -54,6 +58,13 @@
     padding: 24px;
     position: relative;
     overflow: hidden;
+    transition: all 0.3s $ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      border-color: rgba(232, 196, 104, 0.3);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
 
     &__label {
       display: block;
@@ -143,6 +154,13 @@
         color: $color-text-muted;
         letter-spacing: 0.5px;
         border-bottom: 1px solid $color-border-lighter;
+      }
+
+      tr {
+        transition: background 0.2s;
+        &:hover {
+          background: rgba(255, 255, 255, 0.03);
+        }
       }
 
       td {

@@ -5,14 +5,17 @@
 
   h1 {
     margin: 0 0 0.35rem;
-    font-size: clamp(1.45rem, 3vw, 2rem);
-    color: $bone;
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
     font-weight: 800;
+    background: linear-gradient(135deg, $bone, $mist-lavender);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
   }
 
   p {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: $mist-lavender;
 
     strong {
@@ -20,12 +23,42 @@
       font-weight: 800;
     }
   }
+
+  .auction-browse-page__tabs {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+
+    button {
+      padding: 10px 20px;
+      border: 1px solid $auction-border-subtle;
+      border-radius: $radius-pill;
+      background: rgba($midnight-violet, 0.5);
+      color: $mist-lavender;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        background: rgba($royal-purple, 0.5);
+        color: $bone;
+      }
+
+      &.active {
+        background: rgba($antique-gold, 0.15);
+        color: $gold-bright;
+        border-color: rgba($gold-bright, 0.5);
+        box-shadow: 0 0 12px $auction-gold-glow;
+      }
+    }
+  }
 }
 
 .auction-browse-page__grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: 1.25rem;
 
   @media (min-width: 540px) {
     grid-template-columns: repeat(2, 1fr);
@@ -33,26 +66,36 @@
 
   @media (min-width: $breakpoint-tablet) {
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.15rem;
+    gap: 1.5rem;
   }
 
   @media (min-width: $breakpoint-desktop) {
     grid-template-columns: repeat(4, 1fr);
   }
+  
+  > div {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      transform: translateY(-4px);
+    }
+  }
 }
 
 .auction-browse-page__empty {
   grid-column: 1 / -1;
-  padding: 2.5rem 1rem;
+  padding: 3rem 1.5rem;
   text-align: center;
   border-radius: $radius-lg;
-  background: rgba($midnight-violet, 0.75);
-  border: 1px dashed rgba($royal-purple, 0.4);
+  background: rgba($midnight-violet, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba($antique-gold, 0.2);
   color: $bone;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
 
   p {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 1rem;
     color: $mist-lavender;
   }
 }
