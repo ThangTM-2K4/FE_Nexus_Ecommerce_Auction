@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuctionIntroBanner from '../../../components/auction/auctionIntroBanner';
 import AuctionFilterBar, { EMPTY_FILTERS } from '../../../components/auction/auctionFilterBar';
 import AuctionCard from '../../../components/auction/auctionCard';
 import { auctionListings, countLiveAuctions } from '../../../data/auctionData';
+import { useAuth } from '../../../context/AuthContext';
 import './index.scss';
 
 const HOUR = 3_600_000;
@@ -61,9 +62,23 @@ function sortListings(list, sortBy) {
 
 export default function AuctionBrowsePage() {
   const navigate = useNavigate();
+  const { isBuyerMode } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('ending-soon');
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'live';
+  
+  const setActiveTab = (tab) => {
+    setSearchParams((prev) => {
+      if (tab === 'live') {
+        prev.delete('tab');
+      } else {
+        prev.set('tab', tab);
+      }
+      return prev;
+    });
+  };
 
   const liveCount = useMemo(() => countLiveAuctions(auctionListings), []);
 
@@ -77,11 +92,18 @@ export default function AuctionBrowsePage() {
       if (!matchesEndingWithin(item, filters.endingWithin)) return false;
       if (!matchesPriceRange(item, filters.priceRange)) return false;
       if (filters.excludeEnded === 'ended' && item.endTime <= Date.now()) return false;
+      
+      if (activeTab === 'upcoming') {
+        if (!item.isUpcoming) return false;
+      } else {
+        if (item.isUpcoming) return false;
+      }
+      
       return true;
     });
 
     return sortListings(filtered, sortBy);
-  }, [searchQuery, sortBy, filters]);
+  }, [searchQuery, sortBy, filters, activeTab]);
 
   return (
     <div className="auction-browse-page">
@@ -92,9 +114,28 @@ export default function AuctionBrowsePage() {
         <p>
           Hiện có <strong>{liveCount}</strong> phiên đang diễn ra trên sàn
         </p>
+
+        {isBuyerMode && (
+          <div className="auction-browse-page__tabs">
+            <button 
+              type="button" 
+              className={activeTab === 'live' ? 'active' : ''}
+              onClick={() => setActiveTab('live')}
+            >
+              Đấu giá trực tuyến
+            </button>
+            <button 
+              type="button" 
+              className={activeTab === 'upcoming' ? 'active' : ''}
+              onClick={() => setActiveTab('upcoming')}
+            >
+              Chuẩn bị đấu giá
+            </button>
+          </div>
+        )}
       </header>
 
-      <div className="auction-browse-page__locations" id="locations" aria-hidden />
+
 
       <AuctionFilterBar
         searchQuery={searchQuery}
