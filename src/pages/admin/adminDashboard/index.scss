@@ -11,20 +11,23 @@
     align-items: flex-start;
     gap: 24px;
     padding: 24px;
-    background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+    background: linear-gradient(135deg, #4B2E83, #241B3E);
+    border: 1px solid rgba(232, 196, 104, 0.25);
     border-radius: $radius-lg;
     color: #fff;
 
     h2 {
       font-size: 22px;
       margin: 6px 0 8px;
+      color: $color-accent-mid;
     }
 
     p {
       font-size: 14px;
-      opacity: 0.9;
+      opacity: 0.95;
       max-width: 560px;
       line-height: 1.5;
+      color: #EDE7F6;
     }
   }
 
@@ -53,13 +56,17 @@
 
       &:first-child {
         background: $color-accent;
-        color: $color-primary-dark;
+        color: #12101A;
       }
 
       &:last-child {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.1);
         color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
       }
     }
   }

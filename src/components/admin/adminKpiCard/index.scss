@@ -26,8 +26,12 @@
   }
 
   &.highlight {
-    background: linear-gradient(135deg, rgba($color-accent, 0.12), rgba($color-accent-mid, 0.08));
-    border-color: rgba($color-accent, 0.35);
+    background: linear-gradient(135deg, rgba($color-accent, 0.16), rgba($color-accent-mid, 0.06));
+    border-color: $color-accent;
+
+    strong {
+      color: $color-accent;
+    }
   }
 
   &.warn strong {
