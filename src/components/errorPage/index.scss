@@ -1,0 +1,417 @@
+@use '../../styles/palette' as *;
+
+.error-page {
+  --error-lottie-primary: #{$raspberry};
+  --error-lottie-secondary: #{$lavender};
+
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  box-sizing: border-box;
+  font-family: $font-sans;
+  overflow: hidden;
+}
+
+.error-page__glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(72px);
+  opacity: 0.55;
+  z-index: 0;
+}
+
+.error-page__glow--primary {
+  width: min(58vmax, 520px);
+  height: min(58vmax, 520px);
+  top: -12%;
+  right: -8%;
+  background: color-mix(in srgb, var(--error-lottie-primary) 42%, transparent);
+}
+
+.error-page__glow--secondary {
+  width: min(48vmax, 440px);
+  height: min(48vmax, 440px);
+  bottom: -14%;
+  left: -10%;
+  background: color-mix(in srgb, var(--error-lottie-secondary) 38%, transparent);
+}
+
+.error-page__inner {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  text-align: center;
+  z-index: 1;
+}
+
+.error-page__watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  font-size: clamp(9rem, 34vw, 16rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: color-mix(in srgb, var(--error-lottie-primary) 18%, transparent);
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.error-page__code {
+  margin: 0;
+  font-size: clamp(4.5rem, 18vw, 7.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: $surface;
+  text-shadow: 0 8px 28px rgba($indigo, 0.14);
+}
+
+.error-page__tagline {
+  margin: 10px 0 0;
+  font-size: clamp(0.9rem, 2.6vw, 1.05rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba($surface, 0.86);
+}
+
+.error-page__art {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: clamp(12px, 3vw, 28px) auto;
+  width: min(440px, 94vw);
+  min-height: clamp(160px, 32vw, 260px);
+  opacity: 1;
+
+  svg:not(.error-lottie svg) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+.error-page__art-placeholder {
+  width: min(320px, 80vw);
+  aspect-ratio: 4 / 3;
+  border-radius: $radius-lg;
+  background: linear-gradient(
+    135deg,
+    rgba($surface, 0.14) 0%,
+    rgba($surface, 0.06) 100%
+  );
+  animation: error-art-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes error-art-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.error-page__title {
+  margin: 0 0 10px;
+  font-size: clamp(1.15rem, 3.5vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.error-page__description {
+  margin: 0 auto 28px;
+  max-width: 460px;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  line-height: 1.6;
+}
+
+.error-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.error-page__action-link {
+  text-decoration: none;
+}
+
+// ── 401: warm auth gate ──
+.error-page--401 {
+  --error-lottie-primary: #{$live-red-hot};
+  --error-lottie-secondary: #{$raspberry};
+
+  background: linear-gradient(
+    158deg,
+    color-mix(in srgb, var(--error-lottie-primary) 74%, #{$blush-pink}) 0%,
+    color-mix(in srgb, var(--error-lottie-secondary) 68%, #{$indigo}) 100%
+  );
+
+  .error-page__title,
+  .error-page__description {
+    color: $surface;
+  }
+
+  .error-page__description {
+    opacity: 0.9;
+  }
+
+  .common-btn--accent {
+    background: $surface;
+    color: $raspberry;
+
+    &:hover:not(.is-disabled) {
+      background: rgba($surface, 0.92);
+    }
+  }
+}
+
+// ── 403: mint guard / forbidden ──
+.error-page--403 {
+  --error-lottie-primary: #{$sky-pale};
+  --error-lottie-secondary: #{$lavender};
+
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--error-lottie-primary) 62%, #{$surface}) 0%,
+    color-mix(in srgb, var(--error-lottie-secondary) 55%, #{$blush-pink}) 52%,
+    color-mix(in srgb, var(--error-lottie-primary) 40%, #{$raspberry}) 100%
+  );
+
+  .error-page__code {
+    color: $indigo;
+    text-shadow: none;
+  }
+
+  .error-page__tagline {
+    color: $slate;
+  }
+
+  .error-page__title {
+    color: $indigo;
+  }
+
+  .error-page__description {
+    color: $ink-soft;
+  }
+
+  .common-btn--accent {
+    background: $indigo;
+    color: $surface;
+
+    &:hover:not(.is-disabled) {
+      background: $accent-dark;
+    }
+  }
+}
+
+// ── 404: blush lost page ──
+.error-page--404 {
+  --error-lottie-primary: #{$blush-pink};
+  --error-lottie-secondary: #{$raspberry};
+
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--error-lottie-primary) 70%, #{$surface}) 0%,
+    color-mix(in srgb, var(--error-lottie-secondary) 62%, #{$lavender}) 100%
+  );
+
+  .error-page__code {
+    color: $surface;
+  }
+
+  .error-page__title,
+  .error-page__description {
+    color: $surface;
+  }
+
+  .error-page__description {
+    opacity: 0.9;
+  }
+
+  .common-btn--accent {
+    background: $indigo;
+    color: $surface;
+
+    &:hover:not(.is-disabled) {
+      background: $accent-dark;
+    }
+  }
+}
+
+// ── 500: soft light + watermark ──
+.error-page--500 {
+  --error-lottie-primary: #{$color-warning};
+  --error-lottie-secondary: #{$slate};
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--error-lottie-primary) 22%, #{$surface-soft}) 0%,
+    $surface-soft 42%,
+    color-mix(in srgb, var(--error-lottie-secondary) 18%, #{$surface}) 100%
+  );
+
+  .error-page__code {
+    color: $indigo;
+  }
+
+  .error-page__tagline {
+    color: $slate;
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+
+  .error-page__title {
+    color: $indigo;
+  }
+
+  .error-page__description {
+    color: $ink-muted;
+  }
+
+  .error-page__art {
+    margin-top: clamp(24px, 5vw, 40px);
+  }
+
+  .error-page__glow--primary {
+    opacity: 0.35;
+    background: color-mix(in srgb, var(--error-lottie-primary) 28%, transparent);
+  }
+
+  .error-page__glow--secondary {
+    opacity: 0.28;
+    background: color-mix(in srgb, var(--error-lottie-secondary) 24%, transparent);
+  }
+}
+
+// ── 503: dark maintenance ──
+.error-page--503 {
+  --error-lottie-primary: #{$slate};
+  --error-lottie-secondary: #{$indigo};
+
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--error-lottie-primary) 55%, #{$indigo}) 0%,
+    color-mix(in srgb, var(--error-lottie-secondary) 72%, #{$accent-dark}) 100%
+  );
+
+  .error-page__tagline {
+    color: rgba($surface, 0.78);
+  }
+
+  .error-page__title,
+  .error-page__description {
+    color: $surface;
+  }
+
+  .error-page__description {
+    opacity: 0.84;
+  }
+
+  .common-btn--accent {
+    background: $sky-pale;
+    color: $indigo;
+
+    &:hover:not(.is-disabled) {
+      background: $surface;
+    }
+  }
+}
+
+// ── SVG fallback tokens ──
+.error-illu {
+  &__ink {
+    fill: $indigo;
+    stroke: $indigo;
+  }
+
+  &__surface {
+    fill: $surface;
+  }
+
+  &__accent {
+    fill: $raspberry;
+  }
+
+  &__soft {
+    fill: rgba($blush-pink, 0.85);
+  }
+
+  &__lavender {
+    fill: $lavender;
+  }
+
+  &__sky {
+    fill: $sky-pale;
+  }
+
+  &__warn {
+    fill: $color-warning;
+    stroke: $color-warning;
+  }
+
+  &__line {
+    stroke: $indigo;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  &__line-light {
+    stroke: $surface;
+    stroke-width: 3;
+    stroke-linecap: round;
+    fill: none;
+  }
+}
+
+.error-page--401,
+.error-page--404 {
+  .error-illu__ink,
+  .error-illu__line {
+    stroke: $indigo;
+    fill: $indigo;
+  }
+}
+
+.error-page--503 {
+  .error-illu__ink {
+    fill: $indigo;
+  }
+}
+
+@media (max-width: 640px) {
+  .error-page {
+    padding: 32px 18px;
+  }
+
+  .error-page__actions {
+    flex-direction: column;
+    width: 100%;
+
+    .common-btn,
+    .error-page__action-link {
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .common-btn {
+      justify-content: center;
+      min-height: 46px;
+    }
+  }
+}

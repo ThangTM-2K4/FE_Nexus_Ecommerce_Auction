@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { FiHeart } from 'react-icons/fi';
 import './index.scss';
 
 /** Gallery ảnh SP: ảnh lớn + thumbnail cuộn ngang */
@@ -72,7 +73,8 @@ export default function ProductGallery({ gallery = [], likeCount = 0 }) {
           ))}
         </div>
         <button type="button" className="product-gallery__like">
-          ♥ Đã thích ({likeCount.toLocaleString('vi-VN')})
+          <FiHeart className="product-gallery__like-icon" aria-hidden="true" />
+          <span>Đã thích ({likeCount.toLocaleString('vi-VN')})</span>
         </button>
       </div>
     </div>

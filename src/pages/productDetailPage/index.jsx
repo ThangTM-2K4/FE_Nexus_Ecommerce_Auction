@@ -21,7 +21,7 @@ import './index.scss';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
-  const { isAuthenticated, handleProductClick, handleRequireLogin } = useProductNavigate();
+  const { handleProductClick } = useProductNavigate();
 
   const product = useMemo(() => getProductDetail(id), [id]);
   const shopProducts = useMemo(() => getShopProducts(id), [id]);
@@ -87,9 +87,7 @@ export default function ProductDetailPage() {
             title="CÁC SẢN PHẨM KHÁC CỦA SHOP"
             columns={6}
             rows={8}
-            isLoggedIn={isAuthenticated}
             onLoadMore={handleShopLoadMore}
-            onRequireLogin={handleRequireLogin}
             onProductClick={handleProductClick}
             viewAllLabel="Xem Tất Cả"
           />
@@ -101,9 +99,7 @@ export default function ProductDetailPage() {
             title="CÓ THỂ BẠN CŨNG THÍCH"
             columns={6}
             rows={8}
-            isLoggedIn={isAuthenticated}
             onLoadMore={handleSimilarLoadMore}
-            onRequireLogin={handleRequireLogin}
             onProductClick={handleProductClick}
             viewAllLabel="Xem Tất Cả"
           />

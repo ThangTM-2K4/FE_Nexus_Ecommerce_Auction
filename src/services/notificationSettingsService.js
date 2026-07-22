@@ -34,14 +34,35 @@ export const updateNotificationSettings = async (userId, settings) => {
 
 export const toggleGroupItem = async (userId, groupKey, itemKey, value) => {
   const settings = getStored(userId);
+  const group = settings[groupKey];
+  if (!group?.enabled) return settings;
+
   const updated = {
     ...settings,
     [groupKey]: {
-      ...settings[groupKey],
+      ...group,
       items: {
-        ...settings[groupKey].items,
-        [itemKey]: { ...settings[groupKey].items[itemKey], enabled: value },
+        ...group.items,
+        [itemKey]: { ...group.items[itemKey], enabled: value },
       },
+    },
+  };
+  save(userId, updated);
+  return updated;
+};
+
+export const toggleNotificationGroup = async (userId, groupKey, enabled) => {
+  const settings = getStored(userId);
+  const group = settings[groupKey];
+  const updatedItems = Object.fromEntries(
+    Object.entries(group.items).map(([key, item]) => [key, { ...item, enabled }]),
+  );
+  const updated = {
+    ...settings,
+    [groupKey]: {
+      ...group,
+      enabled,
+      items: updatedItems,
     },
   };
   save(userId, updated);

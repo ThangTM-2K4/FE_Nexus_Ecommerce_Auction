@@ -5,6 +5,7 @@ import Footer from '@/components/homepage/footer';
 import EmptyState from '@/components/profile/emptyState';
 import Button from '@/components/common/button';
 import Modal from '@/components/common/modal';
+import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import CartShopGroup from './components/cartShopGroup';
 import CartSummaryBar from './components/cartSummaryBar';
@@ -12,6 +13,7 @@ import './index.scss';
 
 export default function CartPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const {
     cartItems,
     toggleSelectAll,
@@ -47,6 +49,14 @@ export default function CartPage() {
       removeItem(removeTarget.id);
       setRemoveTarget(null);
     }
+  };
+
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { redirectTo: '/checkout' } });
+      return;
+    }
+    navigate('/checkout');
   };
 
   return (
@@ -86,7 +96,7 @@ export default function CartPage() {
           onToggleAll={handleToggleAll}
           selectedCount={selectedCount}
           totalPrice={totalPrice}
-          onCheckout={() => navigate('/checkout')}
+          onCheckout={handleCheckout}
         />
       )}
 

@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import UserAvatar from '../../common/userAvatar';
 import { ACCOUNT_MENU } from '../../../data/accountMenu';
 import './index.scss';
 
@@ -19,22 +20,19 @@ export default function AccountSidebar() {
   const { pathname } = useLocation();
   const { user } = useAuth();
 
-  const initials = user?.fullName
-    ? user.fullName
-        .split(' ')
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()
-    : '?';
-
   return (
     <aside className="account-sidebar" aria-label="Menu tài khoản">
       <div className="account-sidebar__user">
-        <span className="account-sidebar__avatar">{initials}</span>
+        <UserAvatar
+          avatar={user?.avatar}
+          name={user?.fullName}
+          className="account-sidebar__avatar"
+        />
         <div>
           <strong>{user?.fullName}</strong>
-          <small>{user?.email}</small>
+          <Link to="/profile" className="account-sidebar__edit-link">
+            ✏️ Sửa Hồ Sơ
+          </Link>
         </div>
       </div>
 

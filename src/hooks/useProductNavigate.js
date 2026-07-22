@@ -7,8 +7,7 @@ const scrollToTop = () => {
 };
 
 /**
- * Hook dùng chung: điều hướng tới chi tiết SP khi đã login,
- * hoặc sang login kèm redirect state khi chưa login.
+ * Hook dùng chung: điều hướng SP và yêu cầu đăng nhập (kèm redirect nếu cần).
  */
 export function useProductNavigate() {
   const navigate = useNavigate();
@@ -16,27 +15,33 @@ export function useProductNavigate() {
 
   const handleProductClick = useCallback(
     (id) => {
-      const target = `/product/${id}`;
       scrollToTop();
-
-      if (isAuthenticated) {
-        navigate(target);
-        return;
-      }
-
-      navigate('/login', { state: { redirectTo: target } });
+      navigate(`/product/${id}`);
     },
-    [isAuthenticated, navigate],
+    [navigate],
   );
 
-  const handleRequireLogin = useCallback(() => {
-    scrollToTop();
-    navigate('/login');
-  }, [navigate]);
+  const handleRequireLogin = useCallback(
+    (redirectTo) => {
+      scrollToTop();
+      navigate('/login', { state: redirectTo ? { redirectTo } : undefined });
+    },
+    [navigate],
+  );
+
+  const requireAuth = useCallback(
+    (redirectTo = '/checkout') => {
+      if (isAuthenticated) return true;
+      handleRequireLogin(redirectTo);
+      return false;
+    },
+    [isAuthenticated, handleRequireLogin],
+  );
 
   return {
     isAuthenticated,
     handleProductClick,
     handleRequireLogin,
+    requireAuth,
   };
 }
