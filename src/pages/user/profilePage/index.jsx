@@ -55,7 +55,7 @@ export default function ProfilePage() {
         <AccountLayout title="Hồ Sơ" description="Quản lý thông tin tài khoản của bạn">
           <div className="profile-layout">
             <ProfileInfo userId={user.id} profile={profile} onUpdate={handleProfileUpdate} />
-            <BuyerTrustScore />
+            <BuyerTrustScore profile={profile} />
           </div>
         </AccountLayout>
       </main>

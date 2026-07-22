@@ -15,16 +15,17 @@
   }
 }
 
-// Bố cục 2 cột: Email | SĐT — Tên | Giới tính — Ngày sinh | CCCD
+// Mỗi field một hàng (full-width) như ô Email — dễ đọc, không bị bó hẹp/cắt chữ.
 .profile-info__fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1.25rem;
   align-items: start;
+}
 
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
+// Field chiếm trọn chiều ngang (vd Email dài) — không bị bó trong 1 cột
+.profile-info__field--full {
+  grid-column: 1 / -1;
 }
 
 .profile-info__field {

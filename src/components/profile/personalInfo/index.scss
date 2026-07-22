@@ -52,7 +52,10 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  max-width: 560px;
+  // Rộng hơn (trước 560px) để các ô nhập/địa chỉ không bị bó hẹp, chữ không bị
+  // che, đồng thời tận dụng khoảng trống thừa bên phải của khung hồ sơ.
+  max-width: 760px;
+  width: 100%;
 
   // Cho ô Giới tính (Select) cao bằng các ô Input 42px để hàng 2 cột thẳng
   .common-select__field {

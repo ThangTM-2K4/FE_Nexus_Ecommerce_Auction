@@ -321,7 +321,7 @@ function RegisterPage() {
               />
               <span>
                 Tôi đã đọc và đồng ý với{" "}
-                <Link to="/terms" target="_blank" rel="noopener noreferrer">
+                <Link to="/terms" state={{ from: "/register" }}>
                   Điều khoản &amp; Điều kiện sử dụng
                 </Link>
               </span>

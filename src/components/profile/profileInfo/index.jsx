@@ -12,7 +12,6 @@ import './index.scss';
 const GENDERS = [
   { value: 'male', label: 'Nam' },
   { value: 'female', label: 'Nữ' },
-  { value: 'other', label: 'Khác' },
 ];
 
 // Chỉ PENDING mới khoá nút "Xác minh" — REJECTED phải cho nộp lại.
@@ -259,13 +258,13 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
   return (
     <section className="profile-section profile-info" id="verification">
       <div className="profile-section-header">
-        <h2>Thông tin & xác minh</h2>
+        <h2>Thông tin & Xác minh</h2>
       </div>
 
       <div className="profile-info__grid">
         <div className="profile-info__fields">
-          {/* EMAIL */}
-          <div className="profile-info__field">
+          {/* EMAIL — chiếm trọn hàng để email dài không bị cắt chữ */}
+          <div className="profile-info__field profile-info__field--full">
             <div className="profile-info__label-row">
               <label htmlFor="profile-email">Email</label>
             </div>
