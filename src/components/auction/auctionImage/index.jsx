@@ -6,6 +6,7 @@ export default function AuctionImage({
   alt,
   categoryLabel,
   isLive = false,
+  isUpcoming = false,
   className = '',
 }) {
   const [hasError, setHasError] = useState(false);
@@ -20,6 +21,7 @@ export default function AuctionImage({
         </div>
       )}
       {isLive && <span className="auction-image__live">TRỰC TIẾP</span>}
+      {isUpcoming && <span className="auction-image__upcoming">CHUẨN BỊ</span>}
       {categoryLabel && <span className="auction-image__category">{categoryLabel}</span>}
     </div>
   );

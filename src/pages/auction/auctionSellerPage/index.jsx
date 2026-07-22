@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaPlus } from "react-icons/fa";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { FaPlus, FaTimes } from "react-icons/fa";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { sellerStats, sellerAuctions } from "../../../data/auctionMockData";
@@ -8,7 +8,21 @@ import "./index.scss";
 
 export default function AuctionSellerPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab') || 'all';
+  const setTab = (t) => {
+    setSearchParams(prev => {
+      if (t === 'all') prev.delete('tab');
+      else prev.set('tab', t);
+      return prev;
+    });
+  };
+  const [selectedUpcoming, setSelectedUpcoming] = useState(null);
+
+  const filteredAuctions = sellerAuctions.filter((item) => {
+    if (tab === "all") return true;
+    return item.status.type === tab;
+  });
 
   return (
     <AuctionSidebarLayout sidebarActive="auctions">
@@ -49,6 +63,7 @@ export default function AuctionSellerPage() {
             {[
               { id: "all", label: "Tất cả" },
               { id: "active", label: "Đang diễn ra" },
+              { id: "upcoming", label: "Chuẩn bị đấu giá" },
               { id: "ended", label: "Đã kết thúc" },
             ].map((t) => (
               <button
@@ -74,8 +89,13 @@ export default function AuctionSellerPage() {
                 </tr>
               </thead>
               <tbody>
-                {sellerAuctions.map((item) => (
-                  <tr key={item.id}>
+                {filteredAuctions.map((item) => (
+                  <tr 
+                    key={item.id} 
+                    onClick={() => item.status.type === 'upcoming' && setSelectedUpcoming(item)}
+                    style={{ cursor: item.status.type === 'upcoming' ? 'pointer' : 'default' }}
+                    title={item.status.type === 'upcoming' ? "Bấm vào để xem người đã đăng ký" : ""}
+                  >
                     <td className="product-cell">
                       <AuctionImage src={item.image} alt={item.name} />
                       <div>
@@ -88,7 +108,11 @@ export default function AuctionSellerPage() {
                         {item.status.label}
                       </span>
                     </td>
-                    <td>{item.bids}</td>
+                    <td>
+                      {item.status.type === 'upcoming' 
+                        ? `${item.registeredUsers?.length || 0} đăng ký` 
+                        : item.bids}
+                    </td>
                     <td className="price">{item.currentPrice}</td>
                     <td className="time">{item.timeLeft}</td>
                   </tr>
@@ -102,6 +126,41 @@ export default function AuctionSellerPage() {
           </button>
         </section>
       </div>
+
+      {selectedUpcoming && (
+        <div className="auc-seller__modal-overlay" onClick={() => setSelectedUpcoming(null)}>
+          <div className="auc-seller__modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Người đã đăng ký tham gia</h3>
+              <button type="button" onClick={() => setSelectedUpcoming(null)}><FaTimes /></button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-product">
+                <AuctionImage src={selectedUpcoming.image} alt={selectedUpcoming.name} />
+                <div>
+                  <strong>{selectedUpcoming.name}</strong>
+                  <span>{selectedUpcoming.code}</span>
+                </div>
+              </div>
+              <ul className="registered-list">
+                {selectedUpcoming.registeredUsers && selectedUpcoming.registeredUsers.length > 0 ? (
+                  selectedUpcoming.registeredUsers.map(user => (
+                    <li key={user.id} onClick={() => navigate('/auction/profile')}>
+                      <AuctionImage src={user.avatar} alt={user.name} />
+                      <div>
+                        <strong>{user.name}</strong>
+                        <span>Đăng ký {user.time}</span>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <p className="no-data">Chưa có người đăng ký nào.</p>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </AuctionSidebarLayout>
   );
 }

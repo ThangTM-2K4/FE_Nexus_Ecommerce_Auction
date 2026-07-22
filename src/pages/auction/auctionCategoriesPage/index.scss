@@ -1,0 +1,72 @@
+@use "../../../styles/auction/variables" as *;
+
+.auc-categories-page {
+  padding: 40px 0;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  &__header {
+    text-align: center;
+    margin-bottom: 40px;
+
+    h1 {
+      font-size: 32px;
+      color: $bone;
+      margin-bottom: 12px;
+    }
+    p {
+      color: $mist-lavender;
+      font-size: 16px;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+    padding: 0 24px;
+  }
+}
+
+.category-card {
+  background: rgba($midnight-violet, 0.4);
+  border: 1px solid $auction-border-subtle;
+  border-radius: $radius-lg;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &__icon {
+    font-size: 36px;
+    background: rgba($obsidian, 0.5);
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $radius-md;
+    border: 1px solid $auction-border-subtle;
+  }
+
+  &__info {
+    h3 {
+      color: $bone;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    p {
+      color: $gold-bright;
+      font-size: 13px;
+    }
+  }
+
+  &:hover {
+    background: rgba($obsidian, 0.6);
+    border-color: $gold-bright;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+}
