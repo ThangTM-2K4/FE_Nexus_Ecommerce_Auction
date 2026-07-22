@@ -17,7 +17,7 @@ export default function AuctionFooter() {
             <img src="/images/logo/logo.png" alt="BidDoubleTK" />
             <span>
               <strong>
-                Bid<span>DoubleTK</span>
+                Bid<span>DoubleTK</span> <span className="auction-tag" style={{ fontSize: '10px', color: '#E8C468', marginLeft: '4px', verticalAlign: 'middle', textTransform: 'uppercase' }}>Auction</span>
               </strong>
               <small>Sàn đấu giá đa danh mục</small>
             </span>
