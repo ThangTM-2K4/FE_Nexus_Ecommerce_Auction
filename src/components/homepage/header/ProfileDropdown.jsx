@@ -7,6 +7,7 @@ import './ProfileDropdown.scss';
 
 export default function ProfileDropdown({ onClose, variant }) {
   const isStaff = variant === 'staff';
+  const isAdmin = variant === 'admin';
   const { user, logout, isApprovedSeller, isBuyerMode, switchAccountMode } = useAuth();
   const navigate = useNavigate();
   const panelRef = useRef(null);
@@ -50,14 +51,16 @@ export default function ProfileDropdown({ onClose, variant }) {
   };
 
   const sellerStatus = user?.sellerStatus;
-  const currentModeLabel = isStaff
+  const currentModeLabel = isAdmin
+    ? 'Admin'
+    : isStaff
     ? 'Quản lý'
     : user?.currentMode === 'SELLER'
     ? 'Người bán'
     : 'Người mua';
 
   const becomeSellerItem = () => {
-    if (isStaff) return null; // Trang quản lý không có mục "Trở thành Người bán"
+    if (isStaff || isAdmin) return null; // Trang quản lý/admin không có mục "Trở thành Người bán"
     if (isApprovedSeller) return null;
     if (!sellerStatus) {
       return { to: '/profile/become-seller', label: 'Trở thành Người bán' };
@@ -72,11 +75,11 @@ export default function ProfileDropdown({ onClose, variant }) {
   };
 
   const menuItems = [
-    { to: isStaff ? '/staff/profile' : '/profile', label: 'Hồ sơ của tôi' },
+    { to: isAdmin ? '/admin/profile' : isStaff ? '/staff/profile' : '/profile', label: 'Hồ sơ của tôi' },
     becomeSellerItem(),
     // Chỉ seller đã duyệt mới được chuyển qua lại Người mua/Người bán
-    // (không áp dụng cho tài khoản quản lý).
-    !isStaff && isApprovedSeller ? { action: 'switch', label: 'Chuyển tài khoản' } : null,
+    // (không áp dụng cho tài khoản quản lý/admin).
+    !isStaff && !isAdmin && isApprovedSeller ? { action: 'switch', label: 'Chuyển tài khoản' } : null,
   ].filter(Boolean);
 
   return (

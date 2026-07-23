@@ -1,4 +1,4 @@
-@use "../../../styles/auction-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
 .adm-dashboard {
   display: flex;
@@ -11,23 +11,21 @@
     align-items: flex-start;
     gap: 24px;
     padding: 24px;
-    background: linear-gradient(135deg, #4B2E83, #241B3E);
-    border: 1px solid rgba(232, 196, 104, 0.25);
+    background: linear-gradient(135deg, $color-primary-dark 0%, $color-primary 55%, $color-accent-mid 100%);
     border-radius: $radius-lg;
     color: #fff;
 
     h2 {
       font-size: 22px;
       margin: 6px 0 8px;
-      color: $color-accent-mid;
+      color: #fff;
     }
 
     p {
       font-size: 14px;
-      opacity: 0.95;
+      opacity: 0.88;
       max-width: 560px;
       line-height: 1.5;
-      color: #EDE7F6;
     }
   }
 
@@ -55,17 +53,17 @@
       white-space: nowrap;
 
       &:first-child {
-        background: $color-accent;
-        color: #12101A;
+        background: #fff;
+        color: $color-primary-dark;
       }
 
       &:last-child {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.15);
         color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
 
         &:hover {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.25);
         }
       }
     }

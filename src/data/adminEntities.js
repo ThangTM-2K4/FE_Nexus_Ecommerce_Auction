@@ -47,10 +47,10 @@ export const mockSellerWarehouses = [
 ];
 
 export const mockAuctions = [
-  { id: "DG-8821", title: "Rolex Submariner Date — 2023", seller: "LuxuryTime VN", startPrice: "250.000.000đ", currentPrice: "312.000.000đ", highestBid: "312.000.000đ", winner: "—", endTime: "05/07/2026 18:00", status: "Đang diễn ra", bids: 47 },
-  { id: "DG-8815", title: "iPhone 16 Pro Max 256GB", seller: "TechHub Store", startPrice: "25.000.000đ", currentPrice: "28.500.000đ", highestBid: "28.500.000đ", winner: "—", endTime: "05/07/2026 16:30", status: "Sắp kết thúc", bids: 23 },
-  { id: "DG-8802", title: "Tranh sơn dầu cổ — Thế kỷ XIX", seller: "Vintage Collect", startPrice: "80.000.000đ", currentPrice: "125.000.000đ", highestBid: "125.000.000đ", winner: "Lê Minh Cường", endTime: "30/06/2026 20:00", status: "Hoàn thành", bids: 31 },
-  { id: "DG-8798", title: "Nike Air Jordan 1 Retro OG", seller: "Sneaker World", startPrice: "5.000.000đ", currentPrice: "8.200.000đ", highestBid: "8.200.000đ", winner: "—", endTime: "06/07/2026 12:00", status: "Đang diễn ra", bids: 15 },
+  { id: "DG-8821", title: "Rolex Submariner Date — 2023", seller: "LuxuryTime VN", startPrice: "250.000.000đ", currentPrice: "312.000.000đ", highestBid: "312.000.000đ", winner: "—", endTime: "05/07/2026 18:00", status: "Đang diễn ra",  },
+  { id: "DG-8815", title: "iPhone 16 Pro Max 256GB", seller: "TechHub Store", startPrice: "25.000.000đ", currentPrice: "28.500.000đ", highestBid: "28.500.000đ", winner: "—", endTime: "05/07/2026 16:30", status: "Sắp kết thúc", },
+  { id: "DG-8802", title: "Tranh sơn dầu cổ — Thế kỷ XIX", seller: "Vintage Collect", startPrice: "80.000.000đ", currentPrice: "125.000.000đ", highestBid: "125.000.000đ", winner: "Lê Minh Cường", endTime: "30/06/2026 20:00", status: "Hoàn thành" },
+  { id: "DG-8798", title: "Nike Air Jordan 1 Retro OG", seller: "Sneaker World", startPrice: "5.000.000đ", currentPrice: "8.200.000đ", highestBid: "8.200.000đ", winner: "—", endTime: "06/07/2026 12:00", status: "Đang diễn ra",  },
   { id: "DG-8790", title: "Sony PlayStation 5 Pro", seller: "TechHub Store", startPrice: "12.000.000đ", currentPrice: "12.000.000đ", highestBid: "—", winner: "—", endTime: "04/07/2026 10:00", status: "Đã hủy", bids: 0 },
 ];
 
