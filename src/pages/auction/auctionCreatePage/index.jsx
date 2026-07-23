@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
   FaCloudUploadAlt,
+  FaFileAlt,
   FaTimes,
   FaCrown,
   FaShieldAlt,
@@ -12,6 +13,7 @@ import {
 import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
+import Select from "../../../components/common/select";
 import { productCategories } from "../../../data/auctionMockData";
 import { auctionImages } from "../../../data/auctionImages";
 import "./index.scss";
@@ -30,12 +32,26 @@ const initialForm = {
   agreeRules: false,
 };
 
+const categoryOptions = [
+  { value: "", label: "Chọn danh mục" },
+  ...productCategories.map((category) => ({ value: category.id, label: category.label })),
+];
+
+const conditionOptions = [
+  { value: "", label: "Chọn tình trạng" },
+  { value: "new", label: "Mới 100%" },
+  { value: "likenew", label: "Like New 95–99%" },
+  { value: "good", label: "Tốt 85–94%" },
+  { value: "used", label: "Đã qua sử dụng" },
+];
+
 export default function AuctionCreatePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState(initialForm);
   const [previews, setPreviews] = useState([]);
+  const [documents, setDocuments] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,6 +81,28 @@ export default function AuctionCreatePage() {
       if (target) URL.revokeObjectURL(target.url);
       return prev.filter((p) => p.id !== id);
     });
+  };
+
+  const handleDocumentChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    const availableSlots = 3 - documents.length;
+
+    if (files.length > availableSlots) {
+      toast.error("Tối đa 3 giấy tờ liên quan");
+    }
+
+    setDocuments((prev) => [
+      ...prev,
+      ...files.slice(0, Math.max(0, availableSlots)).map((file) => ({
+        id: [file.name, Date.now(), Math.random().toString(16).slice(2)].join("-"),
+        name: file.name,
+      })),
+    ]);
+    e.target.value = "";
+  };
+
+  const removeDocument = (id) => {
+    setDocuments((prev) => prev.filter((document) => document.id !== id));
   };
 
   const validateForm = () => {
@@ -246,25 +284,15 @@ export default function AuctionCreatePage() {
 
             <div className="field-row">
               <div className="field">
-                <label htmlFor="category">Danh mục <span className="required-star">*</span></label>
-                <select
-                  id="category"
+                <Select
+                  label={<><span>Danh mục</span> <span className="required-star">*</span></>}
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className={errors.category ? "error" : ""}
-                  required
-                >
-                  <option value="">Chọn danh mục</option>
-                  {productCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.category && (
-                  <span className="field-error">{errors.category}</span>
-                )}
+                  options={categoryOptions}
+                  theme="dark"
+                  error={errors.category}
+                />
               </div>
 
               <div className="field">
@@ -285,24 +313,15 @@ export default function AuctionCreatePage() {
             </div>
 
             <div className="field">
-              <label htmlFor="condition">Tình trạng <span className="required-star">*</span></label>
-              <select
-                id="condition"
+              <Select
+                label={<><span>Tình trạng</span> <span className="required-star">*</span></>}
                 name="condition"
                 value={formData.condition}
                 onChange={handleChange}
-                className={errors.condition ? "error" : ""}
-                required
-              >
-                <option value="">Chọn tình trạng</option>
-                <option value="new">Mới 100%</option>
-                <option value="likenew">Like New 95–99%</option>
-                <option value="good">Tốt 85–94%</option>
-                <option value="used">Đã qua sử dụng</option>
-              </select>
-              {errors.condition && (
-                <span className="field-error">{errors.condition}</span>
-              )}
+                options={conditionOptions}
+                theme="dark"
+                error={errors.condition}
+              />
             </div>
 
             <div className="field">
@@ -369,6 +388,42 @@ export default function AuctionCreatePage() {
                 <span>Chưa có ảnh — hãy tải lên ít nhất 1 ảnh</span>
               </div>
             )}
+
+          </section>
+
+          <section className="auc-create__card">
+            <h2>Giấy tờ & Chứng nhận sản phẩm</h2>
+            <p className="hint">
+              Tải lên chứng từ nguồn gốc, hóa đơn chính hãng, giấy bảo hành hoặc giấy kiểm định (PDF / PNG / JPG).
+            </p>
+
+            <div className="document-upload">
+              <div className="document-upload__info">
+                <FaFileAlt />
+                <div>
+                  <strong>Chứng từ & Hóa đơn xác thực</strong>
+                  <span>Hóa đơn mua hàng, giấy kiểm định, thẻ bảo hành (Tối đa 3 tệp)</span>
+                </div>
+              </div>
+              <label className="document-upload__button">
+                Tải chứng nhận
+                <input type="file" accept="image/*,application/pdf" multiple onChange={handleDocumentChange} />
+              </label>
+            </div>
+
+            {documents.length > 0 && (
+              <ul className="document-list">
+                {documents.map((document) => (
+                  <li key={document.id}>
+                    <FaFileAlt />
+                    <span>{document.name}</span>
+                    <button type="button" onClick={() => removeDocument(document.id)} aria-label={"Xóa " + document.name}>
+                      <FaTimes />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           <section className="auc-create__card">
@@ -376,7 +431,7 @@ export default function AuctionCreatePage() {
 
             <div className="field-row field-row--3">
               <div className="field">
-                <label htmlFor="startPrice">Giá khởi điểm (VNĐ) <span className="required-star">*</span></label>
+                <label htmlFor="startPrice">Giá khởi điểm  <span className="required-star">*</span></label>
                 <input
                   id="startPrice"
                   name="startPrice"
@@ -394,7 +449,7 @@ export default function AuctionCreatePage() {
               </div>
 
               <div className="field">
-                <label htmlFor="reservePrice">Giá dự trữ (VNĐ)</label>
+                <label htmlFor="reservePrice">Giá dự trữ </label>
                 <input
                   id="reservePrice"
                   name="reservePrice"
@@ -407,7 +462,7 @@ export default function AuctionCreatePage() {
               </div>
 
               <div className="field">
-                <label htmlFor="bidIncrement">Bước giá (VNĐ) <span className="required-star">*</span></label>
+                <label htmlFor="bidIncrement">Bước giá  <span className="required-star">*</span></label>
                 <input
                   id="bidIncrement"
                   name="bidIncrement"
