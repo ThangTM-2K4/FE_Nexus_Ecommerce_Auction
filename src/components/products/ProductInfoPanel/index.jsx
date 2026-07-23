@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiChevronDown } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { formatPrice } from "@/utils/formatPrice";
-import { useCart } from "@/context/CartContext";
-import { useProductNavigate } from "@/hooks/useProductNavigate";
-import Button from "@/components/common/button";
+import { useCart } from "@/context/CartContext";import Button from "@/components/common/button";
 import VariantSelector, { getVariantPriceLabel } from "../VariantSelector";
 import QuantitySelector from "../QuantitySelector";
 import "./index.scss";
@@ -13,7 +12,6 @@ import "./index.scss";
 export default function ProductInfoPanel({ product }) {
   const navigate = useNavigate();
   const { addToCart, buyNow } = useCart();
-  const { isAuthenticated, handleRequireLogin } = useProductNavigate();
   const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0]);
   const [quantity, setQuantity] = useState(1);
   const [policiesOpen, setPoliciesOpen] = useState(true);
@@ -36,19 +34,11 @@ export default function ProductInfoPanel({ product }) {
   });
 
   const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      handleRequireLogin();
-      return;
-    }
     addToCart(buildCartProduct(), quantity);
     toast.success("Đã thêm vào giỏ hàng");
   };
 
   const handleBuyNow = () => {
-    if (!isAuthenticated) {
-      handleRequireLogin();
-      return;
-    }
     buyNow(buildCartProduct(), quantity);
     navigate("/cart");
   };
@@ -62,14 +52,15 @@ export default function ProductInfoPanel({ product }) {
       <h1 className="product-info-panel__title">{product.title}</h1>
 
       <div className="product-info-panel__meta">
-        <span className="product-info-panel__rating">
-          <strong>{product.rating}</strong> ★
-        </span>
-        <span className="product-info-panel__divider">|</span>
-        <span>{product.reviewCount.toLocaleString("vi-VN")} Đánh Giá</span>
-        <span className="product-info-panel__divider">|</span>
-        <span>{product.soldCount} Đã Bán</span>
-        <button type="button" className="product-info-panel__report">
+        <div className="product-info-panel__meta-main">
+          <span className="product-info-panel__rating">
+            <strong>{product.rating}</strong> ★
+          </span>
+          <span className="product-info-panel__divider">|</span>
+          <span>{product.reviewCount.toLocaleString("vi-VN")} Đánh Giá</span>
+          <span className="product-info-panel__divider">|</span>
+          <span>{product.soldCount} Đã Bán</span>
+        </div>        <button type="button" className="product-info-panel__report">
           Tố cáo
         </button>
       </div>
@@ -107,14 +98,23 @@ export default function ProductInfoPanel({ product }) {
             type="button"
             className="product-info-panel__policy-toggle"
             onClick={() => setPoliciesOpen((v) => !v)}
+            aria-expanded={policiesOpen}
           >
-            An Tâm Mua Sắm Cùng Shopee {policiesOpen ? "∧" : "∨"}
-          </button>
+            <span className="product-info-panel__policy-toggle-text">
+              An Tâm Mua Sắm Cùng BidDoubleTk
+            </span>
+            <FiChevronDown
+              className={`product-info-panel__policy-chevron ${policiesOpen ? "is-open" : ""}`}
+              aria-hidden="true"
+            />          </button>
           {policiesOpen && (
             <ul className="product-info-panel__policy-list">
               {product.policies.map((policy) => (
-                <li key={policy.text}>
-                  <span aria-hidden="true">{policy.icon}</span> {policy.text}
+                <li key={policy.text} className="product-info-panel__policy-item">
+                  <span className="product-info-panel__policy-icon" aria-hidden="true">
+                    {policy.icon}
+                  </span>
+                  <span className="product-info-panel__policy-text">{policy.text}</span>
                 </li>
               ))}
             </ul>
@@ -122,18 +122,25 @@ export default function ProductInfoPanel({ product }) {
         </div>
       </div>
 
-      <VariantSelector
-        variants={product.variants}
-        selectedId={selectedVariant?.id}
-        onChange={setSelectedVariant}
-      />
+      <div className="product-info-panel__row product-info-panel__row--variant">
+        <span className="product-info-panel__label">Hàng Hóa</span>
+        <VariantSelector
+          variants={product.variants}
+          selectedId={selectedVariant?.id}
+          onChange={setSelectedVariant}
+        />
+      </div>
 
-      <QuantitySelector
-        value={quantity}
-        max={product.stock}
-        inStock={product.inStock}
-        onChange={setQuantity}
-      />
+      <div className="product-info-panel__row product-info-panel__row--quantity">
+        <span className="product-info-panel__label">Số lượng</span>
+        <QuantitySelector
+          value={quantity}
+          max={product.stock}
+          inStock={product.inStock}
+          onChange={setQuantity}
+          showLabel={false}
+        />
+      </div>
 
       <div className="product-info-panel__actions">
         <Button

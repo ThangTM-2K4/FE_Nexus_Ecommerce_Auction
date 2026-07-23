@@ -4,6 +4,9 @@ import * as notificationSettingsService from '../../../services/notificationSett
 import ToggleGroup from './toggleGroup';
 import './index.scss';
 
+const SECTION_SUBTITLE =
+  'Thông báo và nhắc nhở quan trọng về tài khoản sẽ không thể bị tắt';
+
 const GROUP_CONFIG = {
   email: {
     title: 'Email thông báo',
@@ -19,7 +22,7 @@ const GROUP_CONFIG = {
   },
   zalo: {
     title: 'Thông báo Zalo',
-    itemLabels: { promotions: 'Khuyến mãi' },
+    itemLabels: { promotions: 'Khuyến mãi (Shopee Việt Nam)' },
   },
 };
 
@@ -36,8 +39,22 @@ export default function NotificationSettingsPage() {
     });
   }, [user?.id]);
 
+  const handleGroupToggle = async (groupKey, value) => {
+    const updated = await notificationSettingsService.toggleNotificationGroup(
+      user.id,
+      groupKey,
+      value,
+    );
+    setSettings(updated);
+  };
+
   const handleItemToggle = async (groupKey, itemKey, value) => {
-    const updated = await notificationSettingsService.toggleGroupItem(user.id, groupKey, itemKey, value);
+    const updated = await notificationSettingsService.toggleGroupItem(
+      user.id,
+      groupKey,
+      itemKey,
+      value,
+    );
     setSettings(updated);
   };
 
@@ -45,12 +62,15 @@ export default function NotificationSettingsPage() {
     return <p className="notif-settings__loading">Đang tải cài đặt...</p>;
   }
 
+  const groupKeys = Object.keys(GROUP_CONFIG);
+
   return (
     <div className="notif-settings">
       <h1 className="notif-settings__title">Cài Đặt Thông Báo</h1>
-      <hr className="notif-settings__divider" />
+      <hr className="notif-settings__divider notif-settings__divider--header" />
 
-      {Object.entries(GROUP_CONFIG).map(([groupKey, config], idx) => {
+      {groupKeys.map((groupKey, idx) => {
+        const config = GROUP_CONFIG[groupKey];
         const group = settings[groupKey];
         const items = Object.entries(group.items).map(([key, item]) => ({
           key,
@@ -60,16 +80,18 @@ export default function NotificationSettingsPage() {
         }));
 
         return (
-          <div key={groupKey}>
+          <div key={groupKey} className="notif-settings__section">
             <ToggleGroup
               title={config.title}
+              description={SECTION_SUBTITLE}
               enabled={group.enabled}
-              locked={group.locked}
-              onToggle={() => {}}
+              onToggle={(value) => handleGroupToggle(groupKey, value)}
               items={items}
               onItemToggle={(itemKey, value) => handleItemToggle(groupKey, itemKey, value)}
             />
-            {idx < Object.keys(GROUP_CONFIG).length - 1 && <hr className="notif-settings__divider" />}
+            {idx < groupKeys.length - 1 && (
+              <hr className="notif-settings__divider notif-settings__divider--section" />
+            )}
           </div>
         );
       })}

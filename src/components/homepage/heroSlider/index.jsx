@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import styles from './index.module.scss';
 
 /**
@@ -57,7 +58,9 @@ export default function HeroSlider({ images = [], autoPlayInterval = 3000 }) {
           onClick={goPrev}
           aria-label="Banner trước"
         >
-          ‹
+          <span className={styles.arrowIcon} aria-hidden="true">
+            <FiChevronLeft />
+          </span>
         </button>
         <button
           type="button"
@@ -65,22 +68,24 @@ export default function HeroSlider({ images = [], autoPlayInterval = 3000 }) {
           onClick={goNext}
           aria-label="Banner sau"
         >
-          ›
+          <span className={styles.arrowIcon} aria-hidden="true">
+            <FiChevronRight />
+          </span>
         </button>
-      </div>
 
-      <div className={styles.dots} role="tablist" aria-label="Chọn banner">
-        {images.map((item, index) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={index === activeIndex}
-            aria-label={`Banner ${index + 1}`}
-            className={`${styles.dot} ${index === activeIndex ? styles.dotActive : ''}`}
-            onClick={() => goTo(index)}
-          />
-        ))}
+        <div className={styles.dots} role="tablist" aria-label="Chọn banner">
+          {images.map((item, index) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={index === activeIndex}
+              aria-label={`Banner ${index + 1}`}
+              className={`${styles.dot} ${index === activeIndex ? styles.dotActive : ''}`}
+              onClick={() => goTo(index)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

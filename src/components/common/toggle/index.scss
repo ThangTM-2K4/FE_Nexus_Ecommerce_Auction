@@ -8,7 +8,7 @@
   background: rgba($slate, 0.35);
   padding: 2px;
   cursor: pointer;
-  transition: background $transition-fast;
+  transition: background 0.25s ease;
   flex-shrink: 0;
 
   &.is-on {
@@ -16,8 +16,11 @@
   }
 
   &.is-disabled {
-    opacity: 0.65;
     cursor: not-allowed;
+
+    &:not(.is-on) {
+      opacity: 0.65;
+    }
   }
 }
 
@@ -28,7 +31,7 @@
   border-radius: 50%;
   background: $surface;
   box-shadow: $shadow-sm;
-  transition: transform $transition-fast;
+  transition: transform 0.25s ease;
 }
 
 .common-toggle.is-on .common-toggle__thumb {

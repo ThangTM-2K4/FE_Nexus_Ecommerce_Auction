@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import SwitchAccountModal from './SwitchAccountModal';
+import UserAvatar from '../../common/userAvatar';
 import './ProfileDropdown.scss';
 
 export default function ProfileDropdown({ onClose, variant }) {
@@ -48,15 +49,6 @@ export default function ProfileDropdown({ onClose, variant }) {
     }
   };
 
-  const initials = user?.fullName
-    ? user.fullName
-        .split(' ')
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()
-    : '?';
-
   const sellerStatus = user?.sellerStatus;
   const currentModeLabel = isStaff
     ? 'Quản lý'
@@ -91,7 +83,11 @@ export default function ProfileDropdown({ onClose, variant }) {
     <>
       <div className="header-profile-panel" ref={panelRef} role="menu">
         <div className="header-profile-user">
-          <span className="header-profile-avatar-lg">{initials}</span>
+          <UserAvatar
+            avatar={user?.avatar}
+            name={user?.fullName}
+            className="header-profile-avatar-lg"
+          />
           <div>
             <strong>{user?.fullName}</strong>
             <small>{user?.email}</small>

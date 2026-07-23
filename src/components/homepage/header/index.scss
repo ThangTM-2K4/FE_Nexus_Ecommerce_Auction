@@ -691,9 +691,13 @@
   color: $deep;
   font-size: 0.65rem;
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+
+  .user-avatar__initials {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: $deep;
+  }
 }
 
 .header-profile-seller-dot {

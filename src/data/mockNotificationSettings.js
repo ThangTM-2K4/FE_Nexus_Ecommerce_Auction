@@ -1,25 +1,40 @@
 export const DEFAULT_NOTIFICATION_SETTINGS = {
   email: {
     enabled: true,
-    locked: true,
+    locked: false,
     items: {
-      orderUpdates: { enabled: true, description: 'Nhận email khi đơn hàng có cập nhật trạng thái' },
-      promotions: { enabled: true, description: 'Nhận email về khuyến mãi và ưu đãi mới' },
-      surveys: { enabled: false, description: 'Nhận email mời tham gia khảo sát trải nghiệm' },
+      orderUpdates: {
+        enabled: true,
+        description: 'Cập nhật về tình trạng vận chuyển của tất cả các đơn hàng',
+      },
+      promotions: {
+        enabled: true,
+        description: 'Cập nhật về các ưu đãi và khuyến mãi sắp tới',
+      },
+      surveys: {
+        enabled: false,
+        description: 'Đồng ý nhận khảo sát để cho chúng tôi được lắng nghe bạn',
+      },
     },
   },
   sms: {
     enabled: true,
-    locked: true,
+    locked: false,
     items: {
-      promotions: { enabled: false, description: 'Nhận SMS về khuyến mãi từ Shop Auction' },
+      promotions: {
+        enabled: false,
+        description: 'Cập nhật về các ưu đãi và khuyến mãi sắp tới',
+      },
     },
   },
   zalo: {
     enabled: true,
-    locked: true,
+    locked: false,
     items: {
-      promotions: { enabled: true, description: 'Nhận thông báo khuyến mãi qua Zalo Shop Auction Việt Nam' },
+      promotions: {
+        enabled: true,
+        description: 'Cập nhật về các ưu đãi và khuyến mãi sắp tới',
+      },
     },
   },
 };
