@@ -122,10 +122,17 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
 
   const avatarInputRef = useRef(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  // Ảnh đại diện hỏng (URL 404 / lỗi tải) → quay về hiển thị chữ cái đầu.
+  const [avatarError, setAvatarError] = useState(false);
 
   useEffect(() => {
     if (profile) setForm({ ...profile });
   }, [profile]);
+
+  // Đổi ảnh (chọn ảnh mới / hồ sơ nạp lại) thì bỏ cờ lỗi để thử hiển thị lại.
+  useEffect(() => {
+    setAvatarError(false);
+  }, [form.avatar]);
 
   // Ảnh đại diện: chọn file -> upload POST /uploads/avatar -> cập nhật hồ sơ.
   // Hiện ảnh xem trước ngay bằng data URL trong lúc chờ backend trả về.
@@ -367,7 +374,11 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
 
         <div className="profile-info__avatar-block">
           <div className="profile-info__avatar">
-            {form.avatar ? <img src={form.avatar} alt="Ảnh đại diện" /> : initials || '?'}
+            {form.avatar && !avatarError ? (
+              <img src={form.avatar} alt="Ảnh đại diện" onError={() => setAvatarError(true)} />
+            ) : (
+              initials || '?'
+            )}
           </div>
           <input
             ref={avatarInputRef}
