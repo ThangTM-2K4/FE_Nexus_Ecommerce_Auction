@@ -1,17 +1,37 @@
 import { useEffect, useState } from 'react';
-import * as buyerTrustService from '../../../services/buyerTrustService';
+import { useAuth } from '../../../context/AuthContext';
+import * as reputationService from '../../../services/reputationService';
 import './index.scss';
 
-export default function BuyerTrustScore() {
-  const [trust, setTrust] = useState(null);
+const RANK_LABEL = {
+  Silver: 'Bạc',
+  Gold: 'Vàng',
+  Platinum: 'Bạch Kim',
+  Diamond: 'Kim Cương',
+};
+
+const DESCRIPTION =
+  'Điểm uy tín phản ánh mức độ tin cậy khi mua hàng và tham gia đấu giá. ' +
+  'Điểm tăng khi bạn xác minh tài khoản, hoàn tất giao dịch và bị trừ khi vi phạm; ' +
+  'điểm cao giúp tăng giới hạn đấu giá và được người bán ưu tiên xử lý đơn.';
+
+// "Uy Tín Người Mua" — đọc điểm THẬT từ hồ sơ (getMe trả kèm reputation),
+// fallback về công thức tính khi backend chưa có điểm. Không còn hardcode.
+export default function BuyerTrustScore({ profile }) {
+  const { user } = useAuth();
+  const [buyer, setBuyer] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    buyerTrustService.getBuyerTrust().then((data) => {
-      setTrust(data);
-      setLoading(false);
-    });
-  }, []);
+    if (!user?.id || !profile) return;
+    setLoading(true);
+    reputationService
+      .getUserReputation(user.id, profile, user?.sellerStatus)
+      .then((data) => {
+        setBuyer(data.buyerProfile);
+        setLoading(false);
+      });
+  }, [user?.id, user?.sellerStatus, profile]);
 
   if (loading) {
     return (
@@ -21,9 +41,11 @@ export default function BuyerTrustScore() {
     );
   }
 
-  if (!trust) return null;
+  if (!buyer) return null;
 
-  const progress = Math.min(100, Math.round((trust.score / trust.maxScore) * 100));
+  const progress = reputationService.getRankProgress(buyer.score, buyer.rank);
+  const nextRank = reputationService.getNextRank(buyer.rank);
+  const pointsToNext = reputationService.getPointsToNextRank(buyer.score, buyer.rank);
 
   return (
     <section className="profile-section buyer-trust">
@@ -35,15 +57,12 @@ export default function BuyerTrustScore() {
       <div className="buyer-trust__stats">
         <div className="buyer-trust__stat">
           <span className="buyer-trust__stat-label">Điểm</span>
-          <span className="buyer-trust__stat-value">
-            {trust.score}
-            <small>/ {trust.maxScore}</small>
-          </span>
+          <span className="buyer-trust__stat-value">{buyer.score}</span>
         </div>
 
         <div className="buyer-trust__stat">
           <span className="buyer-trust__stat-label">Hạng</span>
-          <span className="buyer-trust__badge">{trust.level}</span>
+          <span className="buyer-trust__badge">{RANK_LABEL[buyer.rank] || buyer.rank}</span>
         </div>
       </div>
 
@@ -54,14 +73,18 @@ export default function BuyerTrustScore() {
           aria-valuenow={progress}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label="Điểm uy tín người mua"
+          aria-label="Tiến độ lên hạng tiếp theo"
         >
           <div className="buyer-trust__bar-fill" style={{ width: `${progress}%` }} />
         </div>
-        <span className="buyer-trust__bar-pct">{progress}%</span>
+        <span className="buyer-trust__bar-pct">
+          {nextRank
+            ? `Còn ${pointsToNext} điểm để lên ${RANK_LABEL[nextRank] || nextRank}`
+            : 'Đã đạt hạng cao nhất'}
+        </span>
       </div>
 
-      <p className="buyer-trust__desc">{trust.description}</p>
+      <p className="buyer-trust__desc">{DESCRIPTION}</p>
     </section>
   );
 }

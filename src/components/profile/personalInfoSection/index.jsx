@@ -7,7 +7,6 @@ import Select from '../../common/select';
 const GENDERS = [
   { value: 'male', label: 'Nam' },
   { value: 'female', label: 'Nữ' },
-  { value: 'other', label: 'Khác' },
 ];
 
 export default function PersonalInfoSection({ userId, profile, onUpdate }) {

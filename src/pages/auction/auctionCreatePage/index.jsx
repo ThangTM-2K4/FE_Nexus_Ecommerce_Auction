@@ -231,27 +231,29 @@ export default function AuctionCreatePage() {
             <h2>Thông tin sản phẩm</h2>
 
             <div className="field">
-              <label htmlFor="title">Tên sản phẩm *</label>
+              <label htmlFor="title">Tên sản phẩm <span className="required-star">*</span></label>
               <input
                 id="title"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="VD: Rolex Submariner Date 41mm"
-                className={errors.title ? "error" : ""}
+                className={errors.title ? "error" : ""} 
+                required
               />
               {errors.title && <span className="field-error">{errors.title}</span>}
             </div>
 
             <div className="field-row">
               <div className="field">
-                <label htmlFor="category">Danh mục *</label>
+                <label htmlFor="category">Danh mục <span className="required-star">*</span></label>
                 <select
                   id="category"
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
                   className={errors.category ? "error" : ""}
+                  required
                 >
                   <option value="">Chọn danh mục</option>
                   {productCategories.map((cat) => (
@@ -266,7 +268,7 @@ export default function AuctionCreatePage() {
               </div>
 
               <div className="field">
-                <label htmlFor="brand">Thương hiệu *</label>
+                <label htmlFor="brand">Thương hiệu <span className="required-star">*</span></label>
                 <input
                   id="brand"
                   name="brand"
@@ -274,6 +276,7 @@ export default function AuctionCreatePage() {
                   onChange={handleChange}
                   placeholder="VD: Rolex, Apple, Leica..."
                   className={errors.brand ? "error" : ""}
+                  required
                 />
                 {errors.brand && (
                   <span className="field-error">{errors.brand}</span>
@@ -282,13 +285,14 @@ export default function AuctionCreatePage() {
             </div>
 
             <div className="field">
-              <label htmlFor="condition">Tình trạng *</label>
+              <label htmlFor="condition">Tình trạng <span className="required-star">*</span></label>
               <select
                 id="condition"
                 name="condition"
                 value={formData.condition}
                 onChange={handleChange}
                 className={errors.condition ? "error" : ""}
+                required
               >
                 <option value="">Chọn tình trạng</option>
                 <option value="new">Mới 100%</option>
@@ -302,7 +306,7 @@ export default function AuctionCreatePage() {
             </div>
 
             <div className="field">
-              <label htmlFor="description">Mô tả chi tiết *</label>
+              <label htmlFor="description">Mô tả chi tiết <span className="required-star">*</span></label>
               <textarea
                 id="description"
                 name="description"
@@ -311,6 +315,7 @@ export default function AuctionCreatePage() {
                 onChange={handleChange}
                 placeholder="Mô tả rõ tình trạng, xuất xứ, phụ kiện đi kèm..."
                 className={errors.description ? "error" : ""}
+                required
               />
               {errors.description && (
                 <span className="field-error">{errors.description}</span>
@@ -371,7 +376,7 @@ export default function AuctionCreatePage() {
 
             <div className="field-row field-row--3">
               <div className="field">
-                <label htmlFor="startPrice">Giá khởi điểm (VNĐ) *</label>
+                <label htmlFor="startPrice">Giá khởi điểm (VNĐ) <span className="required-star">*</span></label>
                 <input
                   id="startPrice"
                   name="startPrice"
@@ -381,6 +386,7 @@ export default function AuctionCreatePage() {
                   onChange={handleChange}
                   placeholder="1000000"
                   className={errors.startPrice ? "error" : ""}
+                  required
                 />
                 {errors.startPrice && (
                   <span className="field-error">{errors.startPrice}</span>
@@ -401,7 +407,7 @@ export default function AuctionCreatePage() {
               </div>
 
               <div className="field">
-                <label htmlFor="bidIncrement">Bước giá (VNĐ) *</label>
+                <label htmlFor="bidIncrement">Bước giá (VNĐ) <span className="required-star">*</span></label>
                 <input
                   id="bidIncrement"
                   name="bidIncrement"
@@ -411,6 +417,7 @@ export default function AuctionCreatePage() {
                   onChange={handleChange}
                   placeholder="500000"
                   className={errors.bidIncrement ? "error" : ""}
+                  required
                 />
                 {errors.bidIncrement && (
                   <span className="field-error">{errors.bidIncrement}</span>
@@ -420,7 +427,7 @@ export default function AuctionCreatePage() {
 
             <div className="field-row">
               <div className="field">
-                <label htmlFor="startDate">Ngày bắt đầu *</label>
+                <label htmlFor="startDate">Ngày bắt đầu <span className="required-star">*</span></label>
                 <input
                   id="startDate"
                   name="startDate"
@@ -428,6 +435,7 @@ export default function AuctionCreatePage() {
                   value={formData.startDate}
                   onChange={handleChange}
                   className={errors.startDate ? "error" : ""}
+                  required
                 />
                 {errors.startDate && (
                   <span className="field-error">{errors.startDate}</span>
@@ -435,7 +443,7 @@ export default function AuctionCreatePage() {
               </div>
 
               <div className="field">
-                <label htmlFor="endDate">Ngày kết thúc *</label>
+                <label htmlFor="endDate">Ngày kết thúc <span className="required-star">*</span></label>
                 <input
                   id="endDate"
                   name="endDate"
@@ -443,6 +451,7 @@ export default function AuctionCreatePage() {
                   value={formData.endDate}
                   onChange={handleChange}
                   className={errors.endDate ? "error" : ""}
+                  required
                 />
                 {errors.endDate && (
                   <span className="field-error">{errors.endDate}</span>
@@ -483,7 +492,7 @@ export default function AuctionCreatePage() {
                 Hủy
               </button>
               <button type="submit" className="btn-submit" disabled={loading}>
-                {loading ? "Đang tạo..." : "Tạo phiên đấu giá"}
+                {loading ? "Đang xử lý..." : "Đăng kí tạo phiên đấu giá"}
               </button>
             </div>
           </section>
@@ -531,8 +540,9 @@ export default function AuctionCreatePage() {
               </div>
             </div>
           </aside>
+        </div>
           
-          <section className="auc-create__promo">
+        <section className="auc-create__promo">
           <div className="auc-create__promo-header">
             <h2>Tại sao bán trên Auction House?</h2>
             <p>Nền tảng đấu giá uy tín — kết nối người mua và người bán minh bạch, hiệu quả.</p>
@@ -554,7 +564,6 @@ export default function AuctionCreatePage() {
             })}
           </div>
         </section>
-        </div>
       </div>
     </AuctionSidebarLayout>
   );

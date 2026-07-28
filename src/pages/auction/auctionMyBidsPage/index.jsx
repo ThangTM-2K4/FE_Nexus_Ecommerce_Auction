@@ -7,14 +7,30 @@ import "./index.scss";
 
 export default function AuctionMyBidsPage() {
   const [view, setView] = useState("grid");
+  const [activeTab, setActiveTab] = useState("current");
 
   return (
     <AuctionSidebarLayout sidebarActive="bids">
       <div className="auc-my-bids">
         <div className="auc-my-bids__header">
           <div>
-            <h1>Đấu Giá Đa Nhiệm</h1>
-            <p>Giám sát 3 phiên đấu giá trực tiếp cùng lúc.</p>
+            <h1>Đấu Giá Của Tôi</h1>
+            <div className="auc-my-bids__tabs">
+              <button
+                type="button"
+                className={activeTab === "current" ? "active" : ""}
+                onClick={() => setActiveTab("current")}
+              >
+                Phiên hiện tại
+              </button>
+              <button
+                type="button"
+                className={activeTab === "history" ? "active" : ""}
+                onClick={() => setActiveTab("history")}
+              >
+                Lịch sử sản phẩm đấu giá
+              </button>
+            </div>
           </div>
           <div className="auc-my-bids__view-toggle">
             <button
@@ -35,7 +51,12 @@ export default function AuctionMyBidsPage() {
         </div>
 
         <div className={`auc-my-bids__grid ${view}`}>
-          {myBidsAuctions.map((auction) => (
+          {activeTab === "history" ? (
+            <div className="auc-my-bids__empty" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "3rem", background: "rgba(30, 20, 50, 0.4)", borderRadius: "12px", color: "#EDE7F6" }}>
+              <p>Chưa có lịch sử sản phẩm đấu giá nào.</p>
+            </div>
+          ) : (
+            myBidsAuctions.map((auction) => (
             <div key={auction.id} className="bid-card">
               <div className="bid-card__image">
                 <AuctionImage src={auction.image} alt={auction.title} />
@@ -97,7 +118,7 @@ export default function AuctionMyBidsPage() {
                 </div>
               </div>
             </div>
-          ))}
+          )))}
         </div>
       </div>
     </AuctionSidebarLayout>

@@ -2,16 +2,16 @@ import { FiClock } from 'react-icons/fi';
 import { useCountdown } from '../../../hooks/useCountdown';
 import './index.scss';
 
-function formatCountdown({ days, hours, minutes, seconds, isEnded }) {
+function formatCountdown({ days, hours, minutes, seconds, isEnded, isUpcoming }) {
   if (isEnded) return 'Đã kết thúc';
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m ${seconds}s`;
+  
+  const timeStr = days > 0 ? `${days}d ${hours}h` : (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m ${seconds}s`);
+  return isUpcoming ? `Bắt đầu sau ${timeStr}` : timeStr;
 }
 
-export default function AuctionCountdown({ endTime }) {
+export default function AuctionCountdown({ endTime, isUpcoming }) {
   const { days, hours, minutes, seconds, isEnded, totalMs } = useCountdown(endTime);
-  const isUrgent = !isEnded && totalMs < 3_600_000;
+  const isUrgent = !isEnded && !isUpcoming && totalMs < 3_600_000;
 
   const className = [
     'auction-countdown',
@@ -24,7 +24,7 @@ export default function AuctionCountdown({ endTime }) {
   return (
     <span className={className} aria-live="polite">
       <FiClock size={14} aria-hidden />
-      {formatCountdown({ days, hours, minutes, seconds, isEnded })}
+      {formatCountdown({ days, hours, minutes, seconds, isEnded, isUpcoming })}
     </span>
   );
 }

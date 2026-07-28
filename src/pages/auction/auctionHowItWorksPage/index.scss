@@ -1,0 +1,109 @@
+@use "../../../styles/auction/variables" as *;
+
+.auc-how-it-works-page {
+  padding: 40px 0;
+  max-width: 900px;
+  margin: 0 auto;
+
+  &__header {
+    text-align: center;
+    margin-bottom: 50px;
+
+    h1 {
+      font-size: 32px;
+      color: $bone;
+      margin-bottom: 12px;
+    }
+    p {
+      color: $mist-lavender;
+      font-size: 16px;
+    }
+  }
+
+  &__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 0 24px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      bottom: 20px;
+      left: 64px;
+      width: 2px;
+      background: rgba($antique-gold, 0.2);
+    }
+  }
+}
+
+.step-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  position: relative;
+  z-index: 1;
+  background: rgba($midnight-violet, 0.4);
+  border: 1px solid $auction-border-subtle;
+  border-radius: $radius-lg;
+  padding: 32px;
+  transition: all 0.3s ease;
+
+  &__num {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, $antique-gold, $gold-bright);
+    color: $obsidian;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    box-shadow: 0 4px 16px rgba($antique-gold, 0.4);
+    margin-left: -8px; // Pull left to center over the line
+  }
+
+  &__content {
+    h3 {
+      font-size: 22px;
+      color: $bone;
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 15px;
+      color: $mist-lavender;
+      line-height: 1.6;
+    }
+  }
+
+  &:hover {
+    border-color: $gold-bright;
+    transform: translateX(8px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    
+    .step-card__num {
+      transform: scale(1.1);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .auc-how-it-works-page__steps::before {
+    display: none;
+  }
+  
+  .step-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    
+    &__num {
+      margin-left: 0;
+    }
+  }
+}

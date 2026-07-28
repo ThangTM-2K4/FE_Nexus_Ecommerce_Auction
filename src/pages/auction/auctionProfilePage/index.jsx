@@ -1,15 +1,81 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaMapMarkerAlt, FaShieldAlt, FaStar,
 } from "react-icons/fa";
+import { useAuth } from "../../../context/AuthContext";
+import * as profileService from "../../../services/profileService";
+import * as shopService from "../../../services/shopService";
+import ProfileInfo from "../../../components/profile/profileInfo";
+import BuyerTrustScore from "../../../components/profile/buyerTrustScore";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { profileData } from "../../../data/auctionMockData";
+import "../../../pages/user/profilePage/index.scss";
 import "./index.scss";
 
 export default function AuctionProfilePage() {
+  const { user, isSellerMode, refreshUser } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [shopProfile, setShopProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [reviewTab, setReviewTab] = useState("all");
-  const data = profileData;
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setLoading(true);
+    Promise.all([
+      profileService.getProfile(user.id),
+      shopService.getShopProfile(user.id, user)
+    ])
+      .then(([prof, shop]) => {
+        setProfile(prof);
+        setShopProfile(shop);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error loading profiles:", err);
+        setLoading(false);
+      });
+  }, [user?.id, user]);
+
+  const handleProfileUpdate = (updated) => {
+    setProfile(updated);
+    refreshUser();
+  };
+
+  if (loading) {
+    return (
+      <AuctionSidebarLayout sidebarActive="profile">
+        <div style={{ padding: "40px", textAlign: "center", color: "#b9b4c7" }}>
+          Đang tải hồ sơ...
+        </div>
+      </AuctionSidebarLayout>
+    );
+  }
+
+  if (!isSellerMode) {
+    return (
+      <AuctionSidebarLayout sidebarActive="profile">
+        <div className="profile-layout">
+          <ProfileInfo userId={user?.id} profile={profile} onUpdate={handleProfileUpdate} />
+          <BuyerTrustScore profile={profile} />
+        </div>
+      </AuctionSidebarLayout>
+    );
+  }
+
+  const data = {
+    name: shopProfile?.shopName || profile?.fullName || profileData.name,
+    avatar: shopProfile?.logo || profile?.avatar || profileData.avatar,
+    badge: "Trusted Seller",
+    bio: shopProfile?.description || profileData.bio,
+    location: shopProfile?.businessAddress || profile?.address || profileData.location,
+    verified: profile?.isNationalIdVerified || profileData.verified,
+    reputation: profileData.reputation,
+    totalReviews: profileData.totalReviews,
+    stats: profileData.stats,
+    reviews: profileData.reviews,
+  };
 
   return (
     <AuctionSidebarLayout sidebarActive="profile">

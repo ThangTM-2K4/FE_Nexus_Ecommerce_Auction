@@ -1,4 +1,4 @@
-﻿@use "../../../styles/_auction-variables" as *;
+@use "../../../styles/_auction-variables" as *;
 
 .auc-profile {
   &__header-row {
@@ -72,13 +72,14 @@
     }
 
     &--rep {
-      background: $color-btn-primary-bg;
-    color: $color-primary-dark;
+      background: linear-gradient(135deg, $color-btn-primary-bg, #6a3fa3);
+      color: $color-primary-dark;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 8px 32px rgba(75, 46, 131, 0.4);
 
       .rep-label {
         font-size: 11px;
@@ -122,6 +123,13 @@
       border: 1px solid $color-border-lighter;
       border-radius: $radius-lg;
       padding: 20px;
+      transition: all 0.3s $ease;
+
+      &:hover {
+        transform: translateY(-4px);
+        border-color: rgba(232, 196, 104, 0.3);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      }
 
       &-label {
         display: block;
@@ -195,14 +203,22 @@
     .review {
       display: flex;
       gap: 16px;
-      padding-bottom: 20px;
+      padding: 16px;
+      border-radius: $radius-md;
+      margin-bottom: 12px;
+      border: 1px solid transparent;
       border-bottom: 1px solid $color-border-lighter;
-      margin-bottom: 20px;
+      transition: all 0.3s $ease;
+
+      &:hover {
+        background: rgba(255,255,255,0.03);
+        border-color: $color-border-lighter;
+        transform: translateX(4px);
+      }
 
       &:last-of-type {
-        border-bottom: none;
+        border-bottom-color: transparent;
         margin-bottom: 0;
-        padding-bottom: 0;
       }
 
       .review-avatar {
@@ -278,8 +294,3 @@
     &__stats { grid-template-columns: 1fr; }
   }
 }
-
-
-
-
-

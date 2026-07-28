@@ -6,12 +6,14 @@ import {
 import { toast } from "react-toastify";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { getAuctionDetail } from "../../../data/auctionMockData";
+import { useAuth } from "../../../context/AuthContext";
 import "./index.scss";
 
 export default function AuctionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const product = getAuctionDetail(Number(id));
+  const { isSellerMode } = useAuth();
+  const product = getAuctionDetail(id);
   const [selectedImage, setSelectedImage] = useState(0);
   const [liked, setLiked] = useState(false);
   const [bidAmount, setBidAmount] = useState("");
@@ -90,7 +92,12 @@ export default function AuctionDetailPage() {
                 <h1>{product.title}</h1>
                 <button type="button" className={liked ? "liked" : ""} onClick={() => setLiked(l => !l)}><FaHeart /></button>
               </div>
-              <div className="auc-detail__seller">
+              <div 
+                className="auc-detail__seller" 
+                onClick={() => navigate('/auction/profile')}
+                style={{ cursor: 'pointer' }}
+                title="Xem hồ sơ người bán"
+              >
                 <AuctionImage
                   src={product.sellerAvatar}
                   alt={product.seller}
@@ -128,37 +135,49 @@ export default function AuctionDetailPage() {
                 <div className="timer-bar"><div style={{ width: "65%" }} /></div>
               </div>
 
-              <div className="bid-form">
-                <label>ĐẶT GIÁ THẦU CỦA BẠN</label>
-                <div className="bid-input">
-                  <span>₫</span>
-                  <input
-                    type="number"
-                    placeholder={`Tối thiểu ${minBid.toLocaleString("vi-VN")}`}
-                    value={bidAmount}
-                    onChange={(e) => setBidAmount(e.target.value)}
-                  />
+              {isSellerMode ? null : product.isUpcoming ? (
+                <div className="bid-form">
+                  <label>ĐĂNG KÝ THAM GIA ĐẤU GIÁ</label>
+                  <p className="disclaimer" style={{ marginBottom: "16px", fontSize: "14px", color: "#b9b4c7" }}>
+                    Phiên đấu giá chưa bắt đầu. Đăng ký để nhận thông báo và quyền tham gia khi phiên diễn ra.
+                  </p>
+                  <button type="button" className="confirm-btn" onClick={() => toast.success("Đã đăng ký tham gia đấu giá thành công!")}>
+                    <FaGavel /> Đăng ký đấu giá
+                  </button>
                 </div>
-                <div className="increments">
-                  {[500000, 1000000, 5000000].map((inc) => (
-                    <button
-                      key={inc}
-                      type="button"
-                      onClick={() =>
-                        setBidAmount(String((Number(bidAmount) || minBid) + inc))
-                      }
-                    >
-                      +{(inc / 1000000).toFixed(inc < 1000000 ? 1 : 0)}M
-                    </button>
-                  ))}
+              ) : (
+                <div className="bid-form">
+                  <label>ĐẶT GIÁ THẦU CỦA BẠN</label>
+                  <div className="bid-input">
+                    <span>₫</span>
+                    <input
+                      type="number"
+                      placeholder={`Tối thiểu ${minBid.toLocaleString("vi-VN")}`}
+                      value={bidAmount}
+                      onChange={(e) => setBidAmount(e.target.value)}
+                    />
+                  </div>
+                  <div className="increments">
+                    {[500000, 1000000, 5000000].map((inc) => (
+                      <button
+                        key={inc}
+                        type="button"
+                        onClick={() =>
+                          setBidAmount(String((Number(bidAmount) || minBid) + inc))
+                        }
+                      >
+                        +{(inc / 1000000).toFixed(inc < 1000000 ? 1 : 0)}M
+                      </button>
+                    ))}
+                  </div>
+                  <button type="button" className="confirm-btn" onClick={handleBid}>
+                    <FaGavel /> Xác Nhận Đặt Giá
+                  </button>
+                  <p className="disclaimer">
+                    Bằng việc đặt giá, bạn đồng ý với điều khoản đấu giá
+                  </p>
                 </div>
-                <button type="button" className="confirm-btn" onClick={handleBid}>
-                  <FaGavel /> Xác Nhận Đặt Giá
-                </button>
-                <p className="disclaimer">
-                  Bằng việc đặt giá, bạn đồng ý với điều khoản đấu giá
-                </p>
-              </div>
+              )}
             </div>
 
             <div className="auc-detail__card">
@@ -169,7 +188,12 @@ export default function AuctionDetailPage() {
               <ul className="history-list">
                 {product.bidHistory.map((bid, i) => (
                   <li key={i} className={bid.isLeader ? "leader" : ""}>
-                    <div className="history-user">
+                    <div 
+                      className="history-user"
+                      onClick={() => isSellerMode && navigate('/auction/profile')}
+                      style={{ cursor: isSellerMode ? 'pointer' : 'default' }}
+                      title={isSellerMode ? "Xem hồ sơ người dùng" : ""}
+                    >
                       <AuctionImage
                         src={bid.avatar}
                         alt={bid.user}

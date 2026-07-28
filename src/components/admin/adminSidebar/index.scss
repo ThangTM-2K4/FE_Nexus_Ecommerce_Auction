@@ -65,7 +65,7 @@
 
     &.active {
       background: linear-gradient(135deg, $color-primary-dark, $color-primary);
-      color: #fff;
+      color: #12101A;
       font-weight: 600;
       box-shadow: 0 4px 12px rgba($color-primary, 0.25);
     }
@@ -73,13 +73,14 @@
 
   &__footer {
     margin-top: auto;
-    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    background: linear-gradient(135deg, #241B3E, #1c1430);
+    border: 1px solid rgba(143, 127, 191, 0.2);
     border-radius: $radius-lg;
     padding: 16px 12px;
     text-align: center;
 
     p {
-      color: rgba(255, 255, 255, 0.9);
+      color: #8F7FBF;
       font-size: 11px;
       margin-bottom: 10px;
       line-height: 1.4;
@@ -91,13 +92,13 @@
       border: none;
       border-radius: $radius-sm;
       background: $color-accent;
-      color: $color-primary-dark;
+      color: #12101A;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
 
       &:hover {
-        background: $color-gradient-light;
+        background: $color-accent-mid;
       }
     }
   }
