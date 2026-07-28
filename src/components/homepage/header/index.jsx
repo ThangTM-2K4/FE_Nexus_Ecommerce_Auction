@@ -24,6 +24,23 @@ export default function Header() {
   } = useAuth();
   const { cartCount } = useCart();
 
+  // Xác định role để ẩn các mục chỉ dành cho người dùng thường
+  const userRoles = (() => {
+    const raw = [];
+    if (user?.role) raw.push(user.role);
+    if (user?.roleName) raw.push(user.roleName);
+    if (user?.roleCode) raw.push(user.roleCode);
+    if (Array.isArray(user?.roles)) raw.push(...user.roles);
+    return raw
+      .map((r) => (typeof r === 'string' ? r : r?.code ?? r?.name ?? ''))
+      .filter(Boolean)
+      .map((s) => String(s).toUpperCase().replace(/^ROLE_/, ''));
+  })();
+  const isAdmin = userRoles.some((r) => r === 'ADMIN' || r === 'SUPER_ADMIN');
+  const isStaffRole = userRoles.some((r) => r === 'STAFF' || r === 'SUPPORT_STAFF');
+  const isAdminOrStaff = isAdmin || isStaffRole;
+  const profileVariant = isAdmin ? 'admin' : isStaffRole ? 'staff' : undefined;
+
   useEffect(() => {
     if (!user?.id) {
       setUnreadCount(0);
@@ -64,7 +81,7 @@ export default function Header() {
             ) : (
               <a href="#seller-center">Kênh Người Bán</a>
             )}
-            {!isApprovedSeller && (
+            {!isApprovedSeller && !isAdminOrStaff && (
               <Link
                 to={isAuthenticated ? "/profile/become-seller" : "/register"}
               >
@@ -169,7 +186,7 @@ export default function Header() {
                       />
                     )}
                   </button>
-                  {showProfile && <ProfileDropdown onClose={closeDropdowns} />}
+                  {showProfile && <ProfileDropdown onClose={closeDropdowns} variant={profileVariant} />}
                 </div>
               </div>
             )}

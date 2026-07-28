@@ -66,6 +66,8 @@ export default function AuctionFilterBar({
     onFiltersChange({ ...filters, [key]: value });
   };
 
+  const hasActiveFilters = Object.values(filters).some(Boolean) || !!searchQuery.trim();
+
   return (
     <section className="auction-filter-bar" aria-label="Bộ lọc và sắp xếp đấu giá">
       <div className="auction-filter-bar__toolbar">
@@ -110,6 +112,20 @@ export default function AuctionFilterBar({
             />
           </div>
         ))}
+
+        {hasActiveFilters && (
+          <button
+            type="button"
+            className="auction-filter-bar__reset-pill-btn"
+            onClick={() => {
+              onFiltersChange(EMPTY_FILTERS);
+              onSearchChange('');
+            }}
+            title="Xóa tất cả bộ lọc"
+          >
+            <FiX size={14} /> Xóa bộ lọc
+          </button>
+        )}
       </div>
 
       {drawerOpen && (

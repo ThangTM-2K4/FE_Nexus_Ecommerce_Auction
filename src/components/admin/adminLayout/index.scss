@@ -1,8 +1,8 @@
-@use "../../../styles/auction-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
 .adm-layout {
   min-height: 100vh;
-  background: #12101A;
+  background: $color-bg;
 
   &__body {
     display: flex;

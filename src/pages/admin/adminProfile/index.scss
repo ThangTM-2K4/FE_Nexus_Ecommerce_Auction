@@ -1,6 +1,6 @@
-﻿@use "../../../styles/staff-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
-.stf-profile {
+.adm-profile {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -89,7 +89,7 @@
 
   &__info li {
     display: grid;
-    grid-template-columns: 32px 130px 1fr;
+    grid-template-columns: 32px 160px 1fr;
     align-items: center;
     gap: 10px;
     padding: 12px 0;
