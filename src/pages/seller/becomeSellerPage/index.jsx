@@ -14,6 +14,10 @@ const STEPS = ["Thông tin cửa hàng", "Tài khoản ngân hàng"];
 
 import { resolveBankLabel } from "../../../services/bankService";
 import BankSelect from "../../../components/common/bankSelect";
+import Select from "../../../components/common/select";
+import Input from "../../../components/common/input";
+import Checkbox from "../../../components/common/checkbox";
+import { useProvinces, useWards } from "../../../services/locationService";
 
 // Dịch các thông báo lỗi tiếng Anh thường gặp từ backend sang tiếng Việt.
 const translateApiError = (msg) => {
@@ -50,14 +54,90 @@ const initialForm = {
   businessType: "individual",
   shopName: "",
   taxCode: "",
+  contactPhone: "",
   businessLicense: "",
   businessLicenseFileName: "",
   pickupAddress: "",
+  returnAddress: "",
   bankName: "",
   bankNameCustom: "",
   accountNumber: "",
   accountHolder: "",
 };
+
+// Địa chỉ có cấu trúc (2 cấp: Tỉnh/Thành phố → Phường/Xã) giống form thêm địa chỉ
+// ở Hồ sơ, thay cho ô textarea nhập tay.
+const emptyAddr = {
+  provinceCode: "",
+  provinceName: "",
+  wardCode: "",
+  wardName: "",
+  addressLine: "",
+};
+
+// Ghép địa chỉ có cấu trúc thành 1 chuỗi để gửi backend + hiển thị lại (staff duyệt).
+const composeAddr = (a) =>
+  [a.addressLine?.trim(), a.wardName, a.provinceName].filter(Boolean).join(", ");
+
+// Khối nhập 1 địa chỉ: Tỉnh/Thành phố + Phường/Xã (cùng hàng) rồi Địa chỉ cụ thể.
+function AddressFields({ idPrefix, value, onChange, errors = {} }) {
+  const { provinces, loading: loadingProvinces } = useProvinces();
+  const { wards, loading: loadingWards } = useWards(value.provinceCode);
+
+  const handleProvince = (e) => {
+    const provinceCode = e.target.value;
+    const provinceName = provinces.find((p) => p.value === provinceCode)?.label || "";
+    // Đổi tỉnh → reset phường/xã đã chọn.
+    onChange({ ...value, provinceCode, provinceName, wardCode: "", wardName: "" });
+  };
+
+  const handleWard = (e) => {
+    const wardCode = e.target.value;
+    const wardName = wards.find((w) => w.value === wardCode)?.label || "";
+    onChange({ ...value, wardCode, wardName });
+  };
+
+  return (
+    <div className="seller-addr">
+      <div className="seller-addr__row">
+        <Select
+          label="Tỉnh / Thành phố"
+          name={`${idPrefix}-province`}
+          value={value.provinceCode}
+          onChange={handleProvince}
+          options={provinces}
+          placeholder={loadingProvinces ? "Đang tải tỉnh/thành..." : "Chọn Tỉnh/Thành phố"}
+          disabled={loadingProvinces}
+          error={errors.province}
+        />
+        <Select
+          label="Phường / Xã"
+          name={`${idPrefix}-ward`}
+          value={value.wardCode}
+          onChange={handleWard}
+          options={wards}
+          placeholder={
+            !value.provinceCode
+              ? "Chọn Tỉnh/Thành phố trước"
+              : loadingWards
+                ? "Đang tải phường/xã..."
+                : "Chọn Phường/Xã"
+          }
+          disabled={!value.provinceCode || loadingWards}
+          error={errors.ward}
+        />
+      </div>
+      <Input
+        label="Địa chỉ cụ thể"
+        name={`${idPrefix}-line`}
+        value={value.addressLine}
+        onChange={(e) => onChange({ ...value, addressLine: e.target.value })}
+        placeholder="Số nhà, tên đường..."
+        error={errors.line}
+      />
+    </div>
+  );
+}
 
 // Upload thật một chứng từ (giấy phép kinh doanh...) -> lưu data URL trong form để
 // đính kèm đơn và hiển thị lại cho staff/admin duyệt. Nhận ảnh (JPG/PNG) hoặc PDF.
@@ -117,6 +197,10 @@ export default function BecomeSellerPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(initialForm);
+  const [pickupAddr, setPickupAddr] = useState(emptyAddr);
+  const [returnAddr, setReturnAddr] = useState(emptyAddr);
+  // Mặc định địa chỉ nhận & trả hàng giống nhau → chỉ nhập 1 lần.
+  const [sameAddress, setSameAddress] = useState(true);
   const [profile, setProfile] = useState(null);
   const [application, setApplication] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -138,10 +222,6 @@ export default function BecomeSellerPage() {
       if (app?.status && app.status !== user.sellerStatus) {
         updateUser({ sellerStatus: app.status });
       }
-      setForm((prev) => ({
-        ...prev,
-        pickupAddress: prev.pickupAddress || p.cccdAddress || '',
-      }));
       setLoading(false);
     };
     load();
@@ -156,16 +236,44 @@ export default function BecomeSellerPage() {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
+  const handlePickupChange = (v) => {
+    setPickupAddr(v);
+    if (errors.pickup) setErrors((prev) => ({ ...prev, pickup: null }));
+  };
+
+  const handleReturnChange = (v) => {
+    setReturnAddr(v);
+    if (errors.return) setErrors((prev) => ({ ...prev, return: null }));
+  };
+
+  // Kiểm tra 1 địa chỉ có cấu trúc — trả về object lỗi theo từng ô, hoặc null nếu hợp lệ.
+  const validateAddr = (a) => {
+    const e = {};
+    if (!a.provinceCode) e.province = "Vui lòng chọn Tỉnh/Thành phố";
+    if (!a.wardCode) e.ward = "Vui lòng chọn Phường/Xã";
+    if (!a.addressLine.trim()) e.line = "Vui lòng nhập địa chỉ cụ thể";
+    return Object.keys(e).length ? e : null;
+  };
+
   const validateStep = (s) => {
     const next = {};
     if (s === 0) {
-      const isBusiness = form.businessType === "business";
       if (!form.shopName.trim()) next.shopName = "Vui lòng nhập tên shop / doanh nghiệp";
-      // Mã số thuế doanh nghiệp: bắt buộc với doanh nghiệp; cá nhân không bắt buộc.
-      if (isBusiness && !form.taxCode.trim()) next.taxCode = "Vui lòng nhập mã số thuế doanh nghiệp";
+      // Mã số thuế: BẮT BUỘC với cả cá nhân lẫn doanh nghiệp.
+      if (!form.taxCode.trim()) next.taxCode = "Vui lòng nhập mã số thuế";
+      // Số điện thoại liên hệ: bắt buộc, 10 số bắt đầu bằng 0.
+      if (!form.contactPhone.trim()) next.contactPhone = "Vui lòng nhập số điện thoại liên hệ";
+      else if (!/^0\d{9}$/.test(form.contactPhone.trim()))
+        next.contactPhone = "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0)";
       // Giấy phép kinh doanh: BẮT BUỘC với mọi loại hình.
       if (!form.businessLicense) next.businessLicense = "Vui lòng tải lên giấy phép kinh doanh";
-      if (!form.pickupAddress.trim()) next.pickupAddress = "Vui lòng nhập địa chỉ lấy hàng";
+      // Địa chỉ nhận hàng (và trả hàng nếu khác).
+      const pickupErr = validateAddr(pickupAddr);
+      if (pickupErr) next.pickup = pickupErr;
+      if (!sameAddress) {
+        const returnErr = validateAddr(returnAddr);
+        if (returnErr) next.return = returnErr;
+      }
     }
     if (s === 1) {
       if (!form.bankName) next.bankName = "Vui lòng chọn ngân hàng";
@@ -180,10 +288,25 @@ export default function BecomeSellerPage() {
   };
 
   const nextStep = () => {
-    if (validateStep(step)) setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    if (!validateStep(step)) return;
+    if (step === 0) {
+      // Ghép địa chỉ có cấu trúc thành chuỗi cho payload + phần "Xem lại".
+      const pickupStr = composeAddr(pickupAddr);
+      const returnStr = sameAddress ? pickupStr : composeAddr(returnAddr);
+      setForm((prev) => ({ ...prev, pickupAddress: pickupStr, returnAddress: returnStr }));
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
   };
 
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
+
+  // Đưa toàn bộ form (kể cả địa chỉ có cấu trúc) về mặc định.
+  const resetForm = () => {
+    setForm(initialForm);
+    setPickupAddr(emptyAddr);
+    setReturnAddr(emptyAddr);
+    setSameAddress(true);
+  };
 
   const buildPayload = () => ({
     ...form,
@@ -205,7 +328,7 @@ export default function BecomeSellerPage() {
       refreshUser();
       setApplication(app);
       setResubmitMode(false);
-      setForm(initialForm);
+      resetForm();
       toast.success("Đã gửi đơn đăng ký người bán");
       navigate("/");
     } catch (err) {
@@ -223,7 +346,7 @@ export default function BecomeSellerPage() {
       refreshUser();
       setApplication(app);
       setResubmitMode(false);
-      setForm(initialForm);
+      resetForm();
       setStep(0);
       toast.success("Đã nộp lại đơn đăng ký");
     } catch (err) {
@@ -323,7 +446,7 @@ export default function BecomeSellerPage() {
               type="button"
               className="seller-submit-btn"
               onClick={() => {
-                setForm(initialForm);
+                resetForm();
                 setResubmitMode(true);
                 setStep(0);
               }}
@@ -485,8 +608,7 @@ export default function BecomeSellerPage() {
               <div className="seller-field">
                 <label className="field-label" htmlFor="taxCode">
                   {isIndividual ? "Mã số thuế cá nhân" : "Mã số thuế doanh nghiệp"}
-                  {!isIndividual && <span className="required"> *</span>}
-                  {isIndividual && <span className="seller-field-optional"> (không bắt buộc)</span>}
+                  <span className="required"> *</span>
                 </label>
                 <input
                   id="taxCode"
@@ -497,6 +619,23 @@ export default function BecomeSellerPage() {
                   className={errors.taxCode ? "input-error" : ""}
                 />
                 {errors.taxCode && <span className="field-error">{errors.taxCode}</span>}
+              </div>
+
+              <div className="seller-field">
+                <label className="field-label" htmlFor="contactPhone">
+                  Số điện thoại liên hệ
+                  <span className="required"> *</span>
+                </label>
+                <input
+                  id="contactPhone"
+                  name="contactPhone"
+                  type="tel"
+                  value={form.contactPhone}
+                  onChange={handleChange}
+                  placeholder="VD: 0901234567"
+                  className={errors.contactPhone ? "input-error" : ""}
+                />
+                {errors.contactPhone && <span className="field-error">{errors.contactPhone}</span>}
               </div>
 
               <FileInput
@@ -513,21 +652,41 @@ export default function BecomeSellerPage() {
                 }
               />
 
-              <div className="seller-field seller-field--full">
-                <label className="field-label" htmlFor="pickupAddress">
-                  Địa chỉ lấy hàng / địa chỉ shop
+              <div className="seller-field seller-field--full seller-addr-block">
+                <label className="field-label">
+                  {sameAddress ? "Địa chỉ nhận hàng & trả hàng" : "Địa chỉ nhận hàng"}
                   <span className="required"> *</span>
                 </label>
-                <textarea
-                  id="pickupAddress"
-                  name="pickupAddress"
-                  value={form.pickupAddress}
-                  onChange={handleChange}
-                  rows={3}
-                  placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
-                  className={errors.pickupAddress ? "input-error" : ""}
+                <AddressFields
+                  idPrefix="pickup"
+                  value={pickupAddr}
+                  onChange={handlePickupChange}
+                  errors={errors.pickup}
                 />
-                {errors.pickupAddress && <span className="field-error">{errors.pickupAddress}</span>}
+
+                {!sameAddress && (
+                  <div className="seller-addr-block__return">
+                    <label className="field-label">
+                      Địa chỉ trả hàng
+                      <span className="required"> *</span>
+                    </label>
+                    <AddressFields
+                      idPrefix="return"
+                      value={returnAddr}
+                      onChange={handleReturnChange}
+                      errors={errors.return}
+                    />
+                  </div>
+                )}
+
+                <div className="seller-addr-block__same">
+                  <Checkbox
+                    id="same-address"
+                    label="Địa chỉ nhận hàng và trả hàng giống nhau"
+                    checked={sameAddress}
+                    onChange={(v) => setSameAddress(v)}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -604,11 +763,13 @@ export default function BecomeSellerPage() {
                     <span>{isIndividual ? "Mã số thuế cá nhân" : "Mã số thuế doanh nghiệp"}</span>
                     <strong>{form.taxCode || "—"}</strong>
                   </div>
+                  <div><span>Số điện thoại liên hệ</span><strong>{form.contactPhone || "—"}</strong></div>
                   <div>
                     <span>Giấy phép kinh doanh</span>
                     <strong>{form.businessLicense ? "✓ Đã tải lên" : "Chưa tải lên"}</strong>
                   </div>
-                  <div><span>Địa chỉ</span><strong>{form.pickupAddress}</strong></div>
+                  <div><span>Địa chỉ nhận hàng</span><strong>{form.pickupAddress}</strong></div>
+                  <div><span>Địa chỉ trả hàng</span><strong>{form.returnAddress}</strong></div>
                   <div><span>Ngân hàng</span><strong>{resolvedBank} — {form.accountNumber}</strong></div>
                 </div>
               </div>

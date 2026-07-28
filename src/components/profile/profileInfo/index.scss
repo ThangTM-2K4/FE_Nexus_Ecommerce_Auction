@@ -15,10 +15,12 @@
   }
 }
 
-// Bố cục 2 cột: Email | SĐT — Tên | Giới tính — Ngày sinh | CCCD
+// Bố cục 2 cột: Email | SĐT — Tên | Giới tính — Ngày sinh | CCCD.
+// Cột trái (Email, Tên, Ngày sinh) chứa nội dung dài nên rộng hơn; cột phải
+// (SĐT, Giới tính, CCCD) ngắn nên hẹp lại, tránh thừa khoảng trống.
 .profile-info__fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
 
@@ -186,10 +188,13 @@
   place-items: center;
   overflow: hidden;
 
+  // contain (không phải cover) để logo/badge hiện đủ, không bị vòng tròn cắt mất
+  // các cạnh; nền trắng lấp phần lề khi ảnh không vuông.
   img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    background: #fff;
   }
 }
 
