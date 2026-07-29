@@ -28,6 +28,9 @@ const translateApiError = (msg) => {
   if (m.includes("verified email")) {
     return "Bạn cần xác thực email trước khi đăng ký người bán.";
   }
+  if (m.includes("identity verification") || (m.includes("identity") && m.includes("verif"))) {
+    return "Bạn cần hoàn tất xác minh danh tính (CCCD) trước khi đăng ký người bán. Vào Hồ sơ → Thông tin cá nhân để xác minh CCCD.";
+  }
   if (m.includes("already") && m.includes("seller")) {
     return "Tài khoản này đã đăng ký người bán rồi.";
   }
@@ -393,7 +396,17 @@ export default function BecomeSellerPage() {
         <Header />
         <main className="become-seller-main">
           <div className="seller-card seller-status-card pending">
-            <img src="/images/seller/status/pending.svg" alt="" className="seller-status-illustration" />
+            <div className="seller-status-waiting" role="img" aria-label="Đang chờ duyệt">
+              <span className="seller-status-waiting__pulse" />
+              <span className="seller-status-waiting__pulse seller-status-waiting__pulse--delay" />
+              <svg viewBox="0 0 64 64" className="seller-status-waiting__clock" aria-hidden="true">
+                <circle cx="32" cy="32" r="26" className="seller-status-waiting__face" />
+                <circle cx="32" cy="32" r="26" className="seller-status-waiting__ring" />
+                <line x1="32" y1="32" x2="32" y2="16" className="seller-status-waiting__hand seller-status-waiting__hand--min" />
+                <line x1="32" y1="32" x2="44" y2="32" className="seller-status-waiting__hand seller-status-waiting__hand--hour" />
+                <circle cx="32" cy="32" r="2.6" className="seller-status-waiting__pin" />
+              </svg>
+            </div>
             <h1>Đơn đang chờ duyệt</h1>
             <div className="seller-status-meta">
               <div>
@@ -478,8 +491,15 @@ export default function BecomeSellerPage() {
                 {checks.phoneVerified ? "✓" : "○"} Xác thực số điện thoại
                 <small>Nhập SĐT và xác thực tại mục Xác minh tài khoản</small>
               </li>
+              <li className={checks.nationalIdVerified ? "done" : "pending"}>
+                {checks.nationalIdVerified ? "✓" : "○"} Xác minh danh tính (CCCD)
+                <small>Bắt buộc để đăng ký người bán — xác minh tại Thông tin cá nhân</small>
+              </li>
             </ul>
-            <Link to="/profile#verification" className="seller-submit-btn">
+            <Link
+              to={checks.nationalIdVerified ? "/profile#verification" : "/profile/personal-info"}
+              className="seller-submit-btn"
+            >
               Hoàn thiện hồ sơ
             </Link>
           </div>

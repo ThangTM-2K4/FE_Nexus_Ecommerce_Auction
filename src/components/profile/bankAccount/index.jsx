@@ -187,8 +187,6 @@ export default function BankAccountPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editTarget ? 'Sửa Tài Khoản Ngân Hàng' : 'Thêm Tài Khoản Ngân Hàng'}
-        showBack
-        onBack={() => setModalOpen(false)}
         footer={modalFooter}
       >
         <BankAccountForm initial={editTarget} onSubmit={handleSubmit} />

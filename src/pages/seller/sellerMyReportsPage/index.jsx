@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
@@ -10,6 +10,8 @@ import {
   FaTruck,
   FaFileExport,
   FaPrint,
+  FaArrowRight,
+  FaTimes,
 } from "react-icons/fa";
 import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import {
@@ -18,6 +20,8 @@ import {
   marketingReport,
   sellerOrders,
   walletStats,
+  revenueSummary,
+  productStats,
   formatCurrency,
 } from "../../../data/sellerMockData";
 import { statusLabel } from "../../../utils/sellerOrderStatus";
@@ -36,6 +40,8 @@ export default function MyReportsPage() {
   const navigate = useNavigate();
   const labelsRef = useRef(null);
   const marketingRef = useRef(null);
+  // Báo cáo đang được xem trước (null = đóng modal).
+  const [preview, setPreview] = useState(null);
 
   const exportOrders = () => {
     const headers = ["Mã đơn", "Khách hàng", "Sản phẩm", "Giá trị", "Trạng thái", "Thời gian"];
@@ -64,7 +70,7 @@ export default function MyReportsPage() {
     toast.success("Đã xuất báo cáo marketing");
   };
 
-  // Hành động theo từng loại báo cáo.
+  // Hành động thật sự chạy khi bấm nút xác nhận trong modal xem trước.
   const reportAction = (id) => {
     switch (id) {
       case "balance": return { label: "Xuất báo cáo", icon: FaFileExport, onClick: exportBalance };
@@ -77,6 +83,71 @@ export default function MyReportsPage() {
     }
   };
 
+  // Nội dung bảng xem trước cho từng loại báo cáo.
+  const previewContent = (id) => {
+    switch (id) {
+      case "balance":
+        return {
+          headers: ["Chỉ số", "Số tiền"],
+          rows: [
+            ["Số dư khả dụng", formatCurrency(walletStats.availableBalance)],
+            ["Số dư đang chờ", formatCurrency(walletStats.pendingBalance)],
+            ["Đã rút", formatCurrency(walletStats.withdrawnAmount)],
+          ],
+        };
+      case "income":
+        return {
+          headers: ["Chỉ số", "Giá trị"],
+          rows: [
+            ["Doanh thu gộp", formatCurrency(revenueSummary.grossRevenue)],
+            ["Doanh thu ròng", formatCurrency(revenueSummary.netRevenue)],
+            ["Phí sàn", formatCurrency(revenueSummary.commissionFee)],
+            ["Hoàn tiền", formatCurrency(revenueSummary.refundAmount)],
+            ["Lợi nhuận ròng", formatCurrency(revenueSummary.profit)],
+          ],
+        };
+      case "marketing":
+        return {
+          headers: ["Chiến dịch", "Doanh thu", "ROAS"],
+          rows: marketingReport.campaigns.map((c) => [
+            c.name, formatCurrency(c.revenue), `${(c.revenue / c.spend).toFixed(1)}x`,
+          ]),
+        };
+      case "sales":
+        return {
+          headers: ["Chỉ số", "Giá trị"],
+          rows: [
+            ["Tổng sản phẩm", productStats.total],
+            ["Đang bán", productStats.active],
+            ["Hết hàng", productStats.outOfStock],
+            ["Bị khóa", productStats.locked],
+            ["Chờ duyệt", productStats.pending],
+          ],
+        };
+      case "orders-export":
+        return {
+          note: `Xem trước 4 / ${sellerOrders.length} đơn — bấm nút bên dưới để xuất toàn bộ ra CSV.`,
+          headers: ["Mã đơn", "Khách hàng", "Giá trị"],
+          rows: sellerOrders.slice(0, 4).map((o) => [o.id, o.customer, formatCurrency(o.amount)]),
+        };
+      case "shipping-labels":
+        return {
+          headers: ["Mã phiếu", "Đơn hàng", "Đơn vị VC"],
+          rows: printedShippingLabels.map((l) => [l.id, l.order, l.carrier]),
+        };
+      default:
+        return { headers: [], rows: [] };
+    }
+  };
+
+  const closePreview = () => setPreview(null);
+
+  // Bấm nút xác nhận trong modal → chạy hành động thật rồi đóng modal.
+  const confirmPreview = () => {
+    if (preview) reportAction(preview.id).onClick();
+    closePreview();
+  };
+
   const reprint = (id) => toast.info(`Đang gửi phiếu ${id} tới máy in...`);
   const download = () => {
     const headers = ["Mã phiếu", "Đơn hàng", "Đơn vị VC", "Thời gian in", "Số trang"];
@@ -84,6 +155,10 @@ export default function MyReportsPage() {
     exportCsv(`phieu-gui-hang-${todayStamp()}.csv`, headers, rows);
     toast.success("Đã tải danh sách phiếu gửi hàng");
   };
+
+  const previewData = preview ? previewContent(preview.id) : null;
+  const previewAction = preview ? reportAction(preview.id) : null;
+  const ConfirmIcon = previewAction?.icon;
 
   return (
     <div className="slr-page">
@@ -96,8 +171,6 @@ export default function MyReportsPage() {
         <div className="slr-report-grid">
           {reportCatalog.map((r) => {
             const Icon = ICONS[r.icon] ?? FaChartLine;
-            const action = reportAction(r.id);
-            const ActionIcon = action.icon;
             return (
               <div key={r.id} className="slr-report-card">
                 <div className="slr-report-card__icon"><Icon /></div>
@@ -106,9 +179,8 @@ export default function MyReportsPage() {
                   <p>{r.desc}</p>
                   <span className="slr-report-card__period">{r.period}</span>
                 </div>
-                <button type="button" className="slr-btn slr-btn--ghost" onClick={action.onClick}>
-                  {ActionIcon && <ActionIcon />}
-                  {action.label}
+                <button type="button" className="slr-btn slr-btn--ghost slr-report-card__action" onClick={() => setPreview(r)}>
+                  Xem trước <FaArrowRight />
                 </button>
               </div>
             );
@@ -191,6 +263,54 @@ export default function MyReportsPage() {
           </div>
         </div>
       </section>
+
+      {preview && previewData && (
+        <div className="slr-modal-overlay" onClick={closePreview}>
+          <div className="slr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="slr-modal__head">
+              <div>
+                <h4>Xem trước · {preview.name}</h4>
+                <p>{preview.desc}</p>
+              </div>
+              <button type="button" className="slr-modal__close" onClick={closePreview} aria-label="Đóng">
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="slr-modal__body">
+              {previewData.note && <p className="slr-modal__note">{previewData.note}</p>}
+              <div className="slr-table-wrap">
+                <table className="slr-table slr-table--compact">
+                  <thead>
+                    <tr>
+                      {previewData.headers.map((h) => <th key={h}>{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewData.rows.map((row, i) => (
+                      <tr key={i}>
+                        {row.map((cell, j) => (
+                          <td key={j}>{j === 0 ? <strong>{cell}</strong> : cell}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="slr-modal__foot">
+              <button type="button" className="slr-btn slr-btn--ghost" onClick={closePreview}>
+                Đóng
+              </button>
+              <button type="button" className="slr-btn slr-btn--primary" onClick={confirmPreview}>
+                {ConfirmIcon && <ConfirmIcon />}
+                {previewAction.label}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
