@@ -125,12 +125,20 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
 
   const avatarInputRef = useRef(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  // Ảnh đại diện hỏng (URL 404 / lỗi tải) → quay về hiển thị chữ cái đầu.
+  const [avatarError, setAvatarError] = useState(false);
   const [avatarUploadError, setAvatarUploadError] = useState('');
 
   useEffect(() => {
     if (profile) setForm({ ...profile });
   }, [profile]);
+  // Đổi ảnh (chọn ảnh mới / hồ sơ nạp lại) thì bỏ cờ lỗi để thử hiển thị lại.
+  useEffect(() => {
+    setAvatarError(false);
+  }, [form.avatar]);
 
+  // Ảnh đại diện: chọn file -> upload POST /uploads/avatar -> cập nhật hồ sơ.
+  // Hiện ảnh xem trước ngay bằng data URL trong lúc chờ backend trả về.
   const handlePickAvatar = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -400,6 +408,36 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
               />
             </div>
           </div>
+        </div>
+
+        <div className="profile-info__avatar-block">
+          <div className="profile-info__avatar">
+            {form.avatar && !avatarError ? (
+              <img src={form.avatar} alt="Ảnh đại diện" onError={() => setAvatarError(true)} />
+            ) : (
+              initials || '?'
+            )}
+          </div>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png"
+            hidden
+            onChange={handlePickAvatar}
+          />
+          <button
+            type="button"
+            className="profile-info__upload-btn"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={avatarUploading}
+          >
+            {avatarUploading ? 'Đang tải...' : 'Chọn ảnh'}
+          </button>
+          <p className="profile-info__upload-hint">
+            Dung lượng tối đa 1MB
+            <br />
+            Định dạng: .JPEG, .PNG
+          </p>
         </div>
       </div>
 
