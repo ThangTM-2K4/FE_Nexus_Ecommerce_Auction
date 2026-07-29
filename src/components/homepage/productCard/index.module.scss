@@ -140,3 +140,21 @@
   color: $ink-muted;
   white-space: nowrap;
 }
+
+.rating {
+  font-size: 0.65rem;
+  color: $ink-muted;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ratingStar {
+  color: $live-red;
+  font-size: 0.72rem;
+}
+
+.soldInline {
+  color: $ink-muted;
+}

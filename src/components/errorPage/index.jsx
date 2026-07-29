@@ -116,7 +116,12 @@ export default function ErrorPage({
 
             if (action.to) {
               return (
-                <Link key={key} to={action.to} className="error-page__action-link">
+                <Link
+                  key={key}
+                  to={action.to}
+                  state={action.state}
+                  className="error-page__action-link"
+                >
                   <Button variant={variant}>{action.label}</Button>
                 </Link>
               );

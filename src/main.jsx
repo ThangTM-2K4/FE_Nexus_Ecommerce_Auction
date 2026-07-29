@@ -8,6 +8,7 @@ import ScrollToTop from './components/profile/scrollToTop';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
+import { ChatProvider } from './context/ChatContext.jsx';
 import './App.scss';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -17,8 +18,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <CartProvider>
           <OrderProvider>
-            <App />
-            <ToastContainer position="top-right" autoClose={3000} />
+            <ChatProvider>
+              <App />
+              <ToastContainer position="top-right" autoClose={3000} />
+            </ChatProvider>
           </OrderProvider>
         </CartProvider>
       </AuthProvider>

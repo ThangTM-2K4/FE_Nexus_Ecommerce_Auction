@@ -1,0 +1,97 @@
+@use '../../../../styles/palette' as *;
+
+.shop-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shop-pagination--compact {
+  button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid $border-soft;
+    border-radius: $radius-sm;
+    background: $surface;
+    color: $ink;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      border-color: rgba($raspberry, 0.45);
+      color: $accent;
+    }
+  }
+}
+
+.shop-pagination__status {
+  font-size: 0.82rem;
+  color: $ink-muted;
+  min-width: 36px;
+  text-align: center;
+}
+
+.shop-pagination--full {
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 0 8px;
+}
+
+.shop-pagination__arrow {
+  width: 32px;
+  height: 32px;
+  border: 1px solid $border-soft;
+  border-radius: $radius-sm;
+  background: $surface;
+  color: $ink;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    border-color: rgba($raspberry, 0.45);
+    color: $accent;
+  }
+}
+
+.shop-pagination__numbers {
+  display: flex;
+  gap: 4px;
+}
+
+.shop-pagination__page {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  color: $ink-muted;
+  cursor: pointer;
+
+  &:hover {
+    color: $live-red;
+  }
+
+  &.is-active {
+    border-color: $live-red;
+    color: $live-red;
+    font-weight: 600;
+    background: rgba($blush-pink, 0.35);
+  }
+}

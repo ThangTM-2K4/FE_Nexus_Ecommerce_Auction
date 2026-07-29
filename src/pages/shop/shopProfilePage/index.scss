@@ -1,0 +1,23 @@
+@use '../../../styles/palette' as *;
+
+.shop-profile-page {
+  padding: 0 0 32px;
+}
+
+.shop-profile-page__shell {
+  width: min(1240px, calc(100% - 40px));
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.shop-profile-page__catalog {
+  scroll-margin-top: 80px;
+}
+
+@media (max-width: 640px) {
+  .shop-profile-page__shell {
+    width: calc(100% - 24px);
+  }
+}
