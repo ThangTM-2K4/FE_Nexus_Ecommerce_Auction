@@ -1,31 +1,7 @@
 import api from '../config/api';
 import { updateSessionUser } from './authService';
 import { syncBankFromSellerApplication } from './bankAccountService';
-
-const safeUrl = (v) => {
-  if (!v) return '';
-  if (typeof v === 'string' && v.startsWith('data:')) return 'uploaded';
-  return v;
-};
-
-// Backend dùng enum PascalCase: "Individual" | "Business". Form lưu chữ thường
-// ("individual"/"business") nên phải chuyển đúng enum, nếu không register bị
-// từ chối (400) và đơn không được tạo.
-const toSellerTypeEnum = (t) => {
-  const v = String(t ?? '').toLowerCase();
-  return v === 'business' ? 'Business' : 'Individual';
-};
-
-const toRegisterBody = (form) => ({
-  sellerType: toSellerTypeEnum(form.businessType),
-  businessName: form.shopName,
-  taxCode: form.taxCode,
-  businessLicenseUrl: safeUrl(form.businessLicense),
-  address: form.pickupAddress,
-  bankAccountNumber: form.accountNumber,
-  bankName: form.bankName,
-  bankAccountHolder: form.accountHolder,
-});
+import { toRegisterBody } from './sellerPayload';
 
 // Response backend bọc kiểu { data, message }. Phải phân biệt "data = null"
 // (không có đơn) với "không bọc". Nếu dùng ?? sẽ nhầm data:null thành cả cục
