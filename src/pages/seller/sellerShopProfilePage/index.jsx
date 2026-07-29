@@ -439,7 +439,6 @@ export default function ShopProfilePage() {
               </div>
               <div>
                 <h3>{profile.shopName || "Shop chưa đặt tên"}</h3>
-                <span>Đây là giao diện Shop mà người mua sẽ nhìn thấy</span>
               </div>
             </div>
 

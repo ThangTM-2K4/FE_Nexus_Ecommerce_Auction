@@ -20,13 +20,18 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  // Không cho các nút xuống dòng -> hàng thao tác luôn thẳng, không bị "gãy".
+  flex-wrap: nowrap;
+  white-space: nowrap;
 
+  // Nút biểu tượng (sửa / lưu / huỷ) — ô vuông 32px.
   .slr-btn-plain {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 32px;
     height: 32px;
+    flex-shrink: 0;
     padding: 0;
     border: none;
     background: none;
@@ -39,6 +44,46 @@
     &:hover {
       background: rgba($color-primary, 0.08);
       color: $color-primary;
+    }
+  }
+}
+
+// Nút bật/tắt dạng CHỮ — tự rộng theo nội dung (không bị ép vào ô 32px như trước
+// khiến chữ "Tắt/Bật" bị bó, hàng thao tác trông gãy).
+.slr-shipping-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-pill;
+  background: $color-bg-card;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+
+  // "Tắt" (đang bật -> bấm để tắt) = viền/chữ xám nhạt.
+  &.is-on {
+    color: $color-text-muted;
+    &:hover {
+      border-color: $color-danger;
+      color: $color-danger;
+      background: rgba($color-danger, 0.06);
+    }
+  }
+
+  // "Bật" (đang tắt -> bấm để bật) = nhấn mạnh màu thương hiệu.
+  &.is-off {
+    border-color: rgba($color-primary, 0.35);
+    color: $color-primary;
+    &:hover {
+      background: rgba($color-primary, 0.08);
     }
   }
 }

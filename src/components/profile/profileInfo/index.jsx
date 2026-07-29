@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { FaCamera } from 'react-icons/fa';
 import * as profileService from '../../../services/profileService';
 import { uploadAvatar } from '../../../services/avatarService';
 import { getApiErrorMessage } from '../../../utils/apiResponse';
@@ -125,17 +126,11 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
 
   const avatarInputRef = useRef(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  // Ảnh đại diện hỏng (URL 404 / lỗi tải) → quay về hiển thị chữ cái đầu.
-  const [avatarError, setAvatarError] = useState(false);
   const [avatarUploadError, setAvatarUploadError] = useState('');
 
   useEffect(() => {
     if (profile) setForm({ ...profile });
   }, [profile]);
-  // Đổi ảnh (chọn ảnh mới / hồ sơ nạp lại) thì bỏ cờ lỗi để thử hiển thị lại.
-  useEffect(() => {
-    setAvatarError(false);
-  }, [form.avatar]);
 
   // Ảnh đại diện: chọn file -> upload POST /uploads/avatar -> cập nhật hồ sơ.
   // Hiện ảnh xem trước ngay bằng data URL trong lúc chờ backend trả về.
@@ -272,13 +267,24 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
 
       <div className="profile-info__grid">
         <div className="profile-info__avatar-block">
-          <UserAvatar
-            avatar={user?.avatar}
-            name={user?.fullName || form.fullName}
-            className="profile-info__avatar"
-            loading={avatarUploading}
-            alt="Ảnh đại diện"
-          />
+          <div className="profile-info__avatar-shell">
+            <UserAvatar
+              avatar={user?.avatar}
+              name={user?.fullName || form.fullName}
+              className="profile-info__avatar"
+              loading={avatarUploading}
+              alt="Ảnh đại diện"
+            />
+            <button
+              type="button"
+              className="profile-info__avatar-cam"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarUploading}
+              aria-label="Đổi ảnh đại diện"
+            >
+              <FaCamera />
+            </button>
+          </div>
           <input
             ref={avatarInputRef}
             type="file"
@@ -292,7 +298,7 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
             onClick={() => avatarInputRef.current?.click()}
             disabled={avatarUploading}
           >
-            {avatarUploading ? 'Đang tải...' : 'Chọn ảnh'}
+            {avatarUploading ? 'Đang tải...' : 'Đổi ảnh đại diện'}
           </button>
           {avatarUploadError ? (
             <p className="profile-info__upload-error" role="alert">
@@ -408,36 +414,6 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
               />
             </div>
           </div>
-        </div>
-
-        <div className="profile-info__avatar-block">
-          <div className="profile-info__avatar">
-            {form.avatar && !avatarError ? (
-              <img src={form.avatar} alt="Ảnh đại diện" onError={() => setAvatarError(true)} />
-            ) : (
-              initials || '?'
-            )}
-          </div>
-          <input
-            ref={avatarInputRef}
-            type="file"
-            accept="image/jpeg,image/png"
-            hidden
-            onChange={handlePickAvatar}
-          />
-          <button
-            type="button"
-            className="profile-info__upload-btn"
-            onClick={() => avatarInputRef.current?.click()}
-            disabled={avatarUploading}
-          >
-            {avatarUploading ? 'Đang tải...' : 'Chọn ảnh'}
-          </button>
-          <p className="profile-info__upload-hint">
-            Dung lượng tối đa 1MB
-            <br />
-            Định dạng: .JPEG, .PNG
-          </p>
         </div>
       </div>
 

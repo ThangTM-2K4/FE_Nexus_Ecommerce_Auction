@@ -37,13 +37,17 @@ const formatDate = (iso) => {
 
 // Ô tải ảnh CCCD trực tiếp từ máy (không dán URL nữa)
 function CccdImageUpload({ label, value, onPick, onClear, disabled, error }) {
-  const canShow = isDisplayableImage(value);
+  // Nếu ảnh tải hỏng (vd URL nội bộ backend không truy cập được) thì coi như chưa
+  // có ảnh -> hiện lại nút chọn ảnh thay vì icon ảnh vỡ.
+  const [loadError, setLoadError] = useState(false);
+  useEffect(() => setLoadError(false), [value]);
+  const canShow = isDisplayableImage(value) && !loadError;
   return (
     <div className="personal-info-cccd__upload">
       <span className="personal-info-cccd__upload-label">{label}</span>
       {canShow ? (
         <div className="personal-info-cccd__preview">
-          <img src={value} alt={label} />
+          <img src={value} alt={label} onError={() => setLoadError(true)} />
           {!disabled && (
             <button type="button" className="personal-info-cccd__preview-remove" onClick={onClear}>
               Xoá ảnh

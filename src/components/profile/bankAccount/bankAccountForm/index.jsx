@@ -10,7 +10,6 @@ const emptyForm = {
   bankCode: '',
   accountNumber: '',
   accountHolder: '',
-  nationalId: '',
   isDefault: true,
 };
 
@@ -78,13 +77,6 @@ export default function BankAccountForm({ initial, onSubmit }) {
         value={form.accountHolder}
         onChange={handleChange}
         placeholder="NGUYEN VAN A"
-      />
-      <Input
-        label="Số CMND"
-        name="nationalId"
-        value={form.nationalId}
-        onChange={handleChange}
-        placeholder="Số CMND/CCCD"
       />
       <Checkbox label="Đặt làm mặc định" checked={form.isDefault} onChange={handleCheckbox} id="bank-default" />
 
