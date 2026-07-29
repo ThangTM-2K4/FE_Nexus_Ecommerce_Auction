@@ -11,7 +11,8 @@
   aspect-ratio: 796.66 / 235;
   background: $surface-muted;
 
-  &:hover {
+  &:hover,
+  &:focus-within {
     .arrow {
       opacity: 1;
     }
@@ -37,54 +38,152 @@
 }
 
 .arrow {
+  @include flex-center;
+
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba($deep, 0.45);
-  color: $surface;
-  font-size: 22px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity $transition-fast, background $transition-fast;
   z-index: 2;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid rgba($sky-pale, 0.55);
+  border-radius: 50%;
+  background: rgba($surface, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: $ink;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: $shadow-sm;
+  opacity: 0;
+  transition:
+    opacity $transition-fast,
+    background $transition-fast,
+    transform $transition-fast,
+    box-shadow $transition-fast,
+    border-color $transition-fast;
 
   &:hover {
-    background: rgba($deep, 0.65);
+    background: rgba($surface, 0.9);
+    border-color: rgba($lavender, 0.65);
+    box-shadow: $shadow-md;
+    transform: translateY(-50%) scale(1.06);
+  }
+
+  &:active {
+    transform: translateY(-50%) scale(0.98);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid rgba($raspberry, 0.55);
+    outline-offset: 2px;
+  }
+}
+
+.arrowIcon {
+  @include flex-center;
+
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+  font-size: 22px;
+  pointer-events: none;
+
+  svg {
+    display: block;
+    width: 1em;
+    height: 1em;
   }
 }
 
 .arrowPrev {
-  left: 10px;
+  left: 16px;
 }
 
 .arrowNext {
-  right: 10px;
+  right: 16px;
 }
 
 .dots {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 3;
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 5px;
+  pointer-events: none;
 }
 
 .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: $radius-pill;
-  background: rgba($steel, 0.35);
+  width: 6px;
+  height: 6px;
   padding: 0;
-  transition: width $transition-fast, background $transition-fast;
+  border: none;
+  border-radius: $radius-pill;
+  background: rgba($surface, 0.5);
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    width $transition,
+    background $transition,
+    opacity $transition;
+
+  &:hover:not(.dotActive) {
+    background: rgba($surface, 0.72);
+  }
 
   &Active {
-    width: 20px;
-    background: $gradient-accent;
-    box-shadow: $shadow-accent;
+    width: 18px;
+    background: rgba($surface, 0.95);
+    box-shadow: 0 1px 4px rgba($indigo, 0.18);
+  }
+}
+
+@media (max-width: 640px) {
+  .arrow {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    opacity: 1;
+  }
+
+  .arrowIcon {
+    font-size: 20px;
+  }
+
+  .arrowPrev {
+    left: 8px;
+  }
+
+  .arrowNext {
+    right: 8px;
+  }
+
+  .dots {
+    bottom: 10px;
+  }
+
+  .dot {
+    width: 5px;
+    height: 5px;
+
+    &Active {
+      width: 14px;
+    }
+  }
+}
+
+@media (hover: none) {
+  .arrow {
+    opacity: 1;
   }
 }

@@ -98,6 +98,30 @@
     font-size: 1rem;
     color: $mist-lavender;
   }
+
+  .auction-browse-page__reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 10px 22px;
+    border: 1px solid rgba($antique-gold, 0.6);
+    border-radius: $radius-pill;
+    background: rgba($royal-purple, 0.4);
+    color: $gold-bright;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba($royal-purple, 0.8);
+      border-color: $gold-bright;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba($antique-gold, 0.25);
+    }
+  }
 }
 
 .auction-browse-page__locations {

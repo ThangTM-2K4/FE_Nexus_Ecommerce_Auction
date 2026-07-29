@@ -11,7 +11,7 @@ import { useProductNavigate } from '../../../hooks/useProductNavigate';
 import './index.scss';
 
 export default function HomePage() {
-  const { isAuthenticated, handleProductClick, handleRequireLogin } = useProductNavigate();
+  const { handleProductClick } = useProductNavigate();
   const [extraProducts, setExtraProducts] = useState([]);
 
   const handleLoadMore = useCallback(() => {
@@ -44,9 +44,7 @@ export default function HomePage() {
             title="GỢI Ý HÔM NAY"
             columns={6}
             rows={8}
-            isLoggedIn={isAuthenticated}
             onLoadMore={handleLoadMore}
-            onRequireLogin={handleRequireLogin}
             onProductClick={handleProductClick}
           />
         </div>

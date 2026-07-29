@@ -1,4 +1,4 @@
-@use "../../../styles/auction-variables" as *;
+﻿@use "../../../styles/staff-variables" as *;
 
 .adm-table-wrap {
   overflow-x: auto;
@@ -191,7 +191,7 @@
 
       &.save {
         background: linear-gradient(135deg, $color-primary-dark, $color-primary);
-        color: #fff;
+        color: #12101A;
       }
 
       &.cancel {

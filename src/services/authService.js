@@ -1,6 +1,7 @@
 
 import api from "../config/api";
 import { GOOGLE_LOGIN_URL } from "../config/endpoints";
+import { clearMockAvatarRecord, resolveAvatarForUser } from "./avatarService";
 
 
 const SESSION_KEY = "user";
@@ -15,7 +16,7 @@ const readStoredUser = () => {
   if (!raw) return null;
 
   try {
-    return JSON.parse(raw);
+    return resolveAvatarForUser(JSON.parse(raw));
   } catch {
     return null;
   }
@@ -120,6 +121,7 @@ const normalizeSessionUser = (userSource, previousUser = null) => {
       userSource.email?.split("@")[0] ??
       previousUser?.username ??
       "",
+    avatar: userSource.avatar ?? previousUser?.avatar ?? null,
     role,
     roles: roleCodes.length ? roleCodes : previousUser?.roles,
     sellerStatus: normalizeSellerStatus(
@@ -175,6 +177,7 @@ export const clearSession = () => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(EXPIRES_AT_KEY);
+  clearMockAvatarRecord();
 };
 
 export const isSessionValid = () => {

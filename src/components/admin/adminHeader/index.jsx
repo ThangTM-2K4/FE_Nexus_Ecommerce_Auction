@@ -68,9 +68,7 @@ const AdminHeader = () => {
             options={ROLE_OPTIONS}
           />
 
-          <button type="button" className="adm-header__link" onClick={() => navigate("/")}>
-            Trang chủ
-          </button>
+      
           <button
             type="button"
             className="adm-header__bell"
@@ -90,7 +88,7 @@ const AdminHeader = () => {
               <span>{initials}</span>
             </button>
             {showProfile && (
-              <ProfileDropdown onClose={() => setShowProfile(false)} />
+              <ProfileDropdown onClose={() => setShowProfile(false)} variant="admin" />
             )}
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FaTh, FaList, FaGavel } from "react-icons/fa";
+import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { myBidsAuctions } from "../../../data/auctionMockData";
@@ -8,6 +9,50 @@ import "./index.scss";
 export default function AuctionMyBidsPage() {
   const [view, setView] = useState("grid");
   const [activeTab, setActiveTab] = useState("current");
+  const [bidAmounts, setBidAmounts] = useState({});
+
+  const parseIncrement = (str) => {
+    const clean = str.replace(/[^0-9]/g, "");
+    const val = Number(clean);
+    if (str.toUpperCase().includes("K")) {
+      return val * 1000;
+    }
+    if (str.toUpperCase().includes("M")) {
+      return val * 1000000;
+    }
+    return val;
+  };
+
+  const handleIncrement = (auction, incStr) => {
+    const currentInput = bidAmounts[auction.id] || "";
+    const currentVal = currentInput
+      ? Number(currentInput.replace(/[^0-9]/g, ""))
+      : Number(auction.currentPrice.replace(/[^0-9]/g, ""));
+    const inc = parseIncrement(incStr);
+    const newVal = currentVal + inc;
+    setBidAmounts({
+      ...bidAmounts,
+      [auction.id]: newVal.toLocaleString("vi-VN")
+    });
+  };
+
+  const handleInputChange = (auctionId, value) => {
+    const rawVal = value.replace(/[^0-9]/g, "");
+    const numVal = Number(rawVal);
+    setBidAmounts({
+      ...bidAmounts,
+      [auctionId]: rawVal ? numVal.toLocaleString("vi-VN") : ""
+    });
+  };
+
+  const handleConfirmBid = (auction) => {
+    const amountStr = bidAmounts[auction.id];
+    if (!amountStr) {
+      toast.error("Vui lòng nhập giá hoặc chọn mức tăng!");
+      return;
+    }
+    toast.success(`🎉 Đặt giá ${amountStr} VNĐ thành công cho sản phẩm ${auction.title}!`);
+  };
 
   return (
     <AuctionSidebarLayout sidebarActive="bids">
@@ -79,18 +124,30 @@ export default function AuctionMyBidsPage() {
 
                 <div className="bid-card__increments">
                   {auction.bidIncrements.map((inc) => (
-                    <button key={inc} type="button">{inc}</button>
+                    <button
+                      key={inc}
+                      type="button"
+                      onClick={() => handleIncrement(auction, inc)}
+                    >
+                      {inc}
+                    </button>
                   ))}
                 </div>
 
                 <div className="bid-card__input">
-                  <input type="text" placeholder="Nhập giá của bạn..." />
+                  <input
+                    type="text"
+                    placeholder="Nhập giá của bạn..."
+                    value={bidAmounts[auction.id] || ""}
+                    onChange={(e) => handleInputChange(auction.id, e.target.value)}
+                  />
                   <span>VNĐ</span>
                 </div>
 
                 <button
                   type="button"
                   className={`bid-card__confirm bid-card__confirm--${auction.buttonStyle}`}
+                  onClick={() => handleConfirmBid(auction)}
                 >
                   <FaGavel /> Xác nhận đặt giá
                 </button>

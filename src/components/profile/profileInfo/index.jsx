@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import * as profileService from '../../../services/profileService';
+import { uploadAvatar } from '../../../services/avatarService';
 import { getApiErrorMessage } from '../../../utils/apiResponse';
-import { readImageAsDataUrl } from '../../../utils/imageUpload';
+import { useAuth } from '../../../context/AuthContext';
+import UserAvatar from '../../common/userAvatar';
 import Button from '../../common/button';
 import Select from '../../common/select';
 import Modal from '../../common/modal';
@@ -110,6 +112,7 @@ function OtpModal({
 }
 
 export default function ProfileInfo({ userId, profile, onUpdate }) {
+  const { user, updateUser } = useAuth();
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(null);
@@ -124,11 +127,11 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
   const [avatarUploading, setAvatarUploading] = useState(false);
   // Ảnh đại diện hỏng (URL 404 / lỗi tải) → quay về hiển thị chữ cái đầu.
   const [avatarError, setAvatarError] = useState(false);
+  const [avatarUploadError, setAvatarUploadError] = useState('');
 
   useEffect(() => {
     if (profile) setForm({ ...profile });
   }, [profile]);
-
   // Đổi ảnh (chọn ảnh mới / hồ sơ nạp lại) thì bỏ cờ lỗi để thử hiển thị lại.
   useEffect(() => {
     setAvatarError(false);
@@ -140,16 +143,22 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (file.size > 1024 * 1024) return toast.error('Ảnh tối đa 1MB');
+
+    setAvatarUploadError('');
     setAvatarUploading(true);
+
     try {
-      const preview = await readImageAsDataUrl(file);
-      setForm((prev) => ({ ...prev, avatar: preview }));
-      const updated = await profileService.uploadAvatar(userId, file);
-      onUpdate(updated);
+      const avatarUrl = await uploadAvatar(file, {
+        onPreview: (previewUrl) => updateUser({ avatar: previewUrl }),
+      });
+
+      updateUser({ avatar: avatarUrl });
+      onUpdate({ ...profile, avatar: avatarUrl });
+      setForm((prev) => ({ ...prev, avatar: avatarUrl }));
       toast.success('Cập nhật ảnh đại diện thành công');
     } catch (err) {
-      toast.error(getApiErrorMessage(err, 'Tải ảnh đại diện thất bại'));
+      const message = err?.message || getApiErrorMessage(err, 'Tải ảnh đại diện thất bại');
+      setAvatarUploadError(message);
     } finally {
       setAvatarUploading(false);
     }
@@ -255,13 +264,6 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
 
   const idStatusLabel = ID_PENDING_LABEL[profile.identityStatus] || null;
 
-  const initials = form.fullName
-    ?.split(' ')
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
   return (
     <section className="profile-section profile-info" id="verification">
       <div className="profile-section-header">
@@ -269,6 +271,42 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
       </div>
 
       <div className="profile-info__grid">
+        <div className="profile-info__avatar-block">
+          <UserAvatar
+            avatar={user?.avatar}
+            name={user?.fullName || form.fullName}
+            className="profile-info__avatar"
+            loading={avatarUploading}
+            alt="Ảnh đại diện"
+          />
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+            hidden
+            onChange={handlePickAvatar}
+          />
+          <button
+            type="button"
+            className="profile-info__upload-btn"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={avatarUploading}
+          >
+            {avatarUploading ? 'Đang tải...' : 'Chọn ảnh'}
+          </button>
+          {avatarUploadError ? (
+            <p className="profile-info__upload-error" role="alert">
+              {avatarUploadError}
+            </p>
+          ) : (
+            <p className="profile-info__upload-hint">
+              Dung lượng tối đa 1MB
+              <br />
+              Định dạng: .JPEG, .PNG
+            </p>
+          )}
+        </div>
+
         <div className="profile-info__fields">
           {/* EMAIL — chiếm trọn hàng để email dài không bị cắt chữ */}
           <div className="profile-info__field profile-info__field--full">

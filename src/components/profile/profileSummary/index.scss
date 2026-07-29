@@ -36,9 +36,14 @@
   color: $surface;
   font-size: 1.25rem;
   font-weight: 700;
-  display: grid;
-  place-items: center;
   flex-shrink: 0;
+  overflow: hidden;
+
+  .user-avatar__initials {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $surface;
+  }
 }
 
 @media (max-width: 1024px) {

@@ -150,6 +150,16 @@ export default function AuctionBrowsePage() {
         {filteredListings.length === 0 ? (
           <div className="auction-browse-page__empty" role="status">
             <p>Không tìm thấy phiên đấu giá phù hợp. Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm.</p>
+            <button
+              type="button"
+              className="auction-browse-page__reset-btn"
+              onClick={() => {
+                setFilters(EMPTY_FILTERS);
+                setSearchQuery('');
+              }}
+            >
+              Xóa tất cả bộ lọc
+            </button>
           </div>
         ) : (
           filteredListings.map((auction) => (
