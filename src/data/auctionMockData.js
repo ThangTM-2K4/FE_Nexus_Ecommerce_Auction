@@ -108,8 +108,7 @@ export const sidebarMenuItems = [
   {
     id: "watchlist",
     label: "Đang theo dõi",
-    path: "/auction/browse",
-    hash: "watchlist",
+    path: "/auction/watchlist",
     icon: "heart",
     section: "buy",
   },
@@ -408,9 +407,55 @@ const auctionCatalog = {
 export const auctionDetail = auctionCatalog[101];
 
 export const getAuctionDetail = (id) => {
-  if (auctionCatalog[id]) return auctionCatalog[id];
-  const matchedKey = Object.keys(auctionCatalog).find((k) => String(k) === String(id));
+  if (!id) return auctionCatalog[101];
+
+  const strId = String(id).trim();
+  const normalizedSlug = strId.replace(/\s+/g, "-");
+
+  // Direct lookup
+  if (auctionCatalog[strId]) return auctionCatalog[strId];
+  if (auctionCatalog[normalizedSlug]) return auctionCatalog[normalizedSlug];
+
+  // Try matching numeric ID or auc-X
+  const matchedKey = Object.keys(auctionCatalog).find((k) => {
+    const kStr = String(k).toLowerCase();
+    const targetStr = strId.toLowerCase();
+    const normTarget = normalizedSlug.toLowerCase();
+    return (
+      kStr === targetStr ||
+      kStr === normTarget ||
+      kStr === `auc-${targetStr}` ||
+      kStr === targetStr.replace(/^auc-?/, "")
+    );
+  });
   if (matchedKey) return auctionCatalog[matchedKey];
+
+  // Try ongoingAuctions
+  const ongoingMatch = ongoingAuctions.find(
+    (item) => String(item.id) === strId || `auc-${item.id}` === normalizedSlug
+  );
+  if (ongoingMatch) {
+    return {
+      id: ongoingMatch.id,
+      title: ongoingMatch.title,
+      breadcrumbs: ["ĐẤU GIÁ", "SẢN PHẨM", ongoingMatch.title],
+      seller: "LUXURY_SELLER",
+      sellerAvatar: img.avatars.seller,
+      sellerVerified: true,
+      images: [ongoingMatch.image],
+      badge: ongoingMatch.badge?.label || "ĐANG DIỄN RA",
+      description: ongoingMatch.description || ongoingMatch.title,
+      specs: { brand: "Thương hiệu cao cấp", condition: "Like New 99%", movement: "Chính hãng", year: "2023" },
+      currentPrice: ongoingMatch.currentPrice,
+      leader: "minh_vip99",
+      leaderAvatar: img.avatars.bidder1,
+      timeLeft: ongoingMatch.timeLeft,
+      bidHistory: [
+        { user: "minh_vip99", avatar: img.avatars.bidder1, amount: ongoingMatch.currentPrice, time: "2 phút trước", isLeader: true }
+      ],
+    };
+  }
+
   return auctionCatalog[101];
 };
 

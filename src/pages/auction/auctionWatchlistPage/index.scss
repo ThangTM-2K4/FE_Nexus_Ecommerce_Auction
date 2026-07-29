@@ -1,0 +1,333 @@
+@use "../../../styles/_auction-variables" as *;
+
+.auc-watchlist-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  &__title-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #f87171;
+    flex-shrink: 0;
+  }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 800;
+    color: $color-primary-dark;
+    margin: 0 0 4px;
+  }
+
+  p {
+    font-size: 13px;
+    color: $color-text-muted;
+    margin: 0;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .btn-clear-all {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: #ef4444;
+      }
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 4px;
+
+      button {
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        color: $color-text-muted;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+
+        &.active {
+          background: rgba(232, 196, 104, 0.18);
+          border-color: rgba(232, 196, 104, 0.5);
+          color: $color-primary;
+        }
+      }
+    }
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 60px 20px;
+    gap: 16px;
+
+    .empty-icon-wrapper {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.12);
+      border: 2px dashed rgba(239, 68, 68, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      color: #f87171;
+      opacity: 0.7;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ede7f6;
+      margin: 0;
+    }
+
+    p {
+      font-size: 14px;
+      color: $color-text-muted;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .btn-browse {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #e8c468, #c29921);
+      color: #120b22;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(232, 196, 104, 0.4);
+      }
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+
+    @media (max-width: 1100px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 700px) {
+      grid-template-columns: 1fr;
+    }
+
+    &.list {
+      grid-template-columns: 1fr;
+
+      .watchlist-card {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        max-height: unset;
+
+        .watchlist-card__image {
+          height: 100%;
+          border-radius: 14px 0 0 14px;
+        }
+
+        .watchlist-card__body {
+          border-radius: 0 14px 14px 0;
+        }
+      }
+    }
+  }
+}
+
+// ─── Watchlist Card ───────────────────────────────────────────────────────────
+.watchlist-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-lighter;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow: 0 10px 28px rgba(239, 68, 68, 0.12);
+  }
+
+  &__image {
+    position: relative;
+    flex-shrink: 0;
+
+    .auction-image {
+      aspect-ratio: 16 / 9;
+      height: 180px;
+    }
+  }
+
+  &__remove {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.85);
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    backdrop-filter: blur(6px);
+
+    &:hover {
+      background: #ef4444;
+      transform: scale(1.1);
+    }
+  }
+
+  &__body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 8px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ede7f6;
+    line-height: 1.4;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__desc {
+    font-size: 12px;
+    color: $color-text-muted;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 8px 10px;
+    border-radius: 8px;
+
+    span {
+      font-size: 11px;
+      color: $color-text-muted;
+      font-weight: 600;
+    }
+
+    strong {
+      font-size: 15px;
+      font-weight: 800;
+      color: $color-primary;
+    }
+  }
+
+  &__added {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: $color-text-muted;
+
+    svg {
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+  }
+
+  &__bid-btn {
+    margin-top: auto;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #e8c468, #c29921);
+    color: #120b22;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(232, 196, 104, 0.4);
+    }
+  }
+}

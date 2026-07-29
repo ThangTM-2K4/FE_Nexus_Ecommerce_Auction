@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { FiMenu, FiSearch, FiX } from 'react-icons/fi';
+import { FaWallet, FaUser, FaTrophy, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../../../context/AuthContext';
 import './index.scss';
 
@@ -14,9 +15,23 @@ const NAV_ITEMS = [
 
 export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
   const navigate = useNavigate();
-  const { isBuyerMode, isSellerMode } = useAuth();
+  const { user, isBuyerMode, isSellerMode, logout, isAuthenticated } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [localQuery, setLocalQuery] = useState(searchQuery);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const profileRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
@@ -30,13 +45,32 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
     onSearchChange?.(event.target.value);
   };
 
+  const avatarUrl =
+    user?.avatar ||
+    user?.avatarUrl ||
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
+  const userName = user?.name || user?.fullName || 'Nguyễn Minh Đức';
+  const userEmail = user?.email || 'minhduc@nexus.com';
+
   return (
     <header className="auction-header">
       <div className="auction-header__inner">
         <Link to="/auction" className="auction-header__logo" aria-label="BidDoubleTK — Khu đấu giá">
           <img src="/images/logo/logo.png" alt="BidDoubleTK" />
           <strong>
-            Bid<span>DoubleTK</span> <span className="auction-tag" style={{ fontSize: '10px', color: '#E8C468', marginLeft: '4px', verticalAlign: 'middle', textTransform: 'uppercase' }}>Auction</span>
+            Bid<span>DoubleTK</span>{' '}
+            <span
+              className="auction-tag"
+              style={{
+                fontSize: '10px',
+                color: '#E8C468',
+                marginLeft: '4px',
+                verticalAlign: 'middle',
+                textTransform: 'uppercase',
+              }}
+            >
+              Auction
+            </span>
           </strong>
         </Link>
 
@@ -52,32 +86,124 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
         </form>
 
         <nav className="auction-header__nav" aria-label="Điều hướng đấu giá">
-          {isBuyerMode && NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => (isActive ? 'is-active' : undefined)}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {isBuyerMode &&
+            NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.label}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) => (isActive ? 'is-active' : undefined)}
+              >
+                {item.label}
+              </NavLink>
+            ))}
         </nav>
 
         <div className="auction-header__actions">
           <Link to="/" className="auction-header__home-link">
             Về cửa hàng
           </Link>
+
           {isSellerMode && (
             <>
-              <Link to="/auction/profile" className="auction-header__home-link" style={{ borderColor: 'transparent' }}>
+              <Link
+                to="/auction/profile"
+                className="auction-header__home-link"
+                style={{ borderColor: 'transparent' }}
+              >
                 Hồ sơ
               </Link>
-              <Link to="/auction/create" className="auction-header__home-link" style={{ background: 'rgba(123, 76, 171, 0.45)', color: '#fff', borderColor: 'transparent' }}>
+              <Link
+                to="/auction/create"
+                className="auction-header__home-link"
+                style={{
+                  background: 'rgba(123, 76, 171, 0.45)',
+                  color: '#fff',
+                  borderColor: 'transparent',
+                }}
+              >
                 Tạo đấu giá mới
               </Link>
             </>
           )}
+
+          {/* ─── Profile Circle & Wallet Balance Dropdown ─── */}
+          <div className="auction-header__profile-container" ref={profileRef}>
+            <button
+              type="button"
+              className="auction-header__profile-trigger"
+              onClick={() => setShowProfileMenu((prev) => !prev)}
+              title="Hồ sơ tài khoản & Ví tiền"
+            >
+              <img src={avatarUrl} alt={userName} className="profile-avatar-circle" />
+              <div className="profile-info-pill">
+                <span className="user-name">{userName}</span>
+                <span className="wallet-balance">
+                  <FaWallet className="wallet-icon" /> 50.000.000 ₫
+                </span>
+              </div>
+            </button>
+
+            {showProfileMenu && (
+              <div className="auction-header__profile-dropdown">
+                <div className="dropdown-user-header">
+                  <img src={avatarUrl} alt={userName} className="dropdown-avatar-large" />
+                  <div>
+                    <strong className="dropdown-name">{userName}</strong>
+                    <span className="dropdown-email">{userEmail}</span>
+                  </div>
+                </div>
+
+                <div className="dropdown-wallet-card">
+                  <div className="wallet-row">
+                    <span>
+                      <FaWallet style={{ color: '#e8c468', marginRight: 4 }} /> Ví Nexus Pay:
+                    </span>
+                    <strong className="balance-val">50.000.000 ₫</strong>
+                  </div>
+                  <div className="wallet-row sub">
+                    <span>Tiền cọc đóng băng:</span>
+                    <span className="frozen-val">0 ₫</span>
+                  </div>
+                </div>
+
+                <ul className="dropdown-nav-list">
+                  <li>
+                    <Link to="/auction/my-bids" onClick={() => setShowProfileMenu(false)}>
+                      <FaTrophy className="menu-icon" style={{ color: '#e8c468' }} /> Đấu giá của tôi
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/profile/personal-info" onClick={() => setShowProfileMenu(false)}>
+                      <FaUser className="menu-icon" /> Thông tin tài khoản
+                    </Link>
+                  </li>
+                  {isAuthenticated ? (
+                    <li>
+                      <button
+                        type="button"
+                        className="dropdown-logout-btn"
+                        onClick={() => {
+                          logout();
+                          setShowProfileMenu(false);
+                          navigate('/login');
+                        }}
+                      >
+                        <FaSignOutAlt className="menu-icon" /> Đăng xuất
+                      </button>
+                    </li>
+                  ) : (
+                    <li>
+                      <Link to="/login" onClick={() => setShowProfileMenu(false)}>
+                        🔑 Đăng nhập
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             className="auction-header__menu-btn"
@@ -102,17 +228,18 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
               aria-label="Tìm kiếm đấu giá"
             />
           </form>
-          {isBuyerMode && NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => (isActive ? 'is-active' : undefined)}
-              onClick={() => setMobileOpen(false)}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {isBuyerMode &&
+            NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.label}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) => (isActive ? 'is-active' : undefined)}
+                onClick={() => setMobileOpen(false)}
+              >
+                {item.label}
+              </NavLink>
+            ))}
         </nav>
       )}
     </header>
