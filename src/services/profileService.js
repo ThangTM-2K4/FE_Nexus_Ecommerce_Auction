@@ -63,6 +63,9 @@ const fetchIdentity = async () => {
 };
 
 // Đổi tên field từ /identity-verifications/me sang các field CCCD dùng trong profile.
+// LƯU Ý: KHÔNG lấy ảnh (identityFrontImageUrl/identityBackImageUrl) — chúng là URL
+// nội bộ backend (http://localhost:8081/...) trình duyệt KHÔNG tải được → vỡ ảnh.
+// Ảnh CCCD cũng không cần hiển thị lại; chỉ đồng bộ thông tin chữ.
 const identityToCccd = (iv) => {
   if (!iv) return null;
   return {
@@ -74,8 +77,6 @@ const identityToCccd = (iv) => {
     cccdExpiryDate: iv.expiryDate || '',
     cccdIssuePlace: iv.issuePlace || '',
     cccdAddress: iv.permanentAddress || '',
-    cccdFrontImageUrl: iv.identityFrontImageUrl || '',
-    cccdBackImageUrl: iv.identityBackImageUrl || '',
   };
 };
 

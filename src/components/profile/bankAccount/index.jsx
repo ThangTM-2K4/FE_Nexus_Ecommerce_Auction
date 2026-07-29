@@ -100,7 +100,7 @@ export default function BankAccountPage() {
   const modalFooter = (
     <>
       <button type="button" className="bank-page__back-link" onClick={() => setModalOpen(false)}>
-        TRỞ LẠI
+       
       </button>
       <Button
         variant="accent"
