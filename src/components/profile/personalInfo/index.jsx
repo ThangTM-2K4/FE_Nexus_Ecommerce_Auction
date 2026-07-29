@@ -21,6 +21,20 @@ const GENDERS = [
 const isDisplayableImage = (v) =>
   typeof v === 'string' && (v.startsWith('data:') || v.startsWith('http'));
 
+// Che số CCCD, chỉ để lộ 4 số cuối: 079198001234 -> ********1234
+const maskCccd = (num) => {
+  const s = String(num || '').trim();
+  if (s.length <= 4) return s;
+  return '*'.repeat(s.length - 4) + s.slice(-4);
+};
+
+// Hiển thị ngày ISO (yyyy-mm-dd) dạng dd/mm/yyyy cho dễ đọc.
+const formatDate = (iso) => {
+  const s = String(iso || '').trim();
+  const [y, m, d] = s.split('-');
+  return d && m && y ? `${d}/${m}/${y}` : s || '—';
+};
+
 // Ô tải ảnh CCCD trực tiếp từ máy (không dán URL nữa)
 function CccdImageUpload({ label, value, onPick, onClear, disabled, error }) {
   const canShow = isDisplayableImage(value);
@@ -273,6 +287,44 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
 
       <hr className="personal-info-cccd__divider" />
 
+      {locked ? (
+        // Đã xác minh / đang chờ duyệt: chỉ hiển thị thông tin (đọc), không cho nhập.
+        // Số CCCD che bớt, không hiển thị ảnh CCCD.
+        <div className="personal-info-cccd__readonly">
+          <div className="personal-info-cccd__ro-item">
+            <span>Họ và tên</span>
+            <strong>{form.cccdFullName || '—'}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Số CCCD</span>
+            <strong>{maskCccd(form.cccdNumber) || '—'}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Giới tính</span>
+            <strong>{form.cccdGender || '—'}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Ngày sinh</span>
+            <strong>{formatDate(form.cccdDateOfBirth)}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Ngày cấp</span>
+            <strong>{formatDate(form.cccdIssueDate)}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Ngày hết hạn</span>
+            <strong>{formatDate(form.cccdExpiryDate)}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Nơi cấp</span>
+            <strong>{form.cccdIssuePlace || '—'}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item personal-info-cccd__ro-item--full">
+            <span>Địa chỉ thường trú</span>
+            <strong>{form.cccdAddress || '—'}</strong>
+          </div>
+        </div>
+      ) : (
       <div className="personal-info-cccd__fields">
         <Input
           label="Họ và tên"
@@ -373,6 +425,7 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
           error={errors.backImageUrl}
         />
       </div>
+      )}
 
       {!locked && (
         <div className="personal-info-cccd__actions">

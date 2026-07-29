@@ -52,14 +52,31 @@ const pickReputation = (src) => {
   return { score, rank };
 };
 
-// Lấy trạng thái xác minh CMND thật từ endpoint riêng
-const fetchIdentityStatus = async () => {
+// Lấy hồ sơ xác minh CCCD thật từ endpoint riêng. Trả cả object (trạng thái +
+// toàn bộ thông tin CCCD) để hiển thị lại lên giao diện, không chỉ mỗi status.
+const fetchIdentity = async () => {
   try {
-    const iv = unwrap(await api.get('/identity-verifications/me'));
-    return iv?.status ? String(iv.status).toUpperCase() : null;
+    return unwrap(await api.get('/identity-verifications/me'));
   } catch {
     return null; // chưa nộp / 404
   }
+};
+
+// Đổi tên field từ /identity-verifications/me sang các field CCCD dùng trong profile.
+const identityToCccd = (iv) => {
+  if (!iv) return null;
+  return {
+    cccdFullName: iv.fullName || '',
+    cccdNumber: iv.identityNumber || '',
+    cccdGender: iv.gender || '',
+    cccdDateOfBirth: iv.dateOfBirth || '',
+    cccdIssueDate: iv.issueDate || '',
+    cccdExpiryDate: iv.expiryDate || '',
+    cccdIssuePlace: iv.issuePlace || '',
+    cccdAddress: iv.permanentAddress || '',
+    cccdFrontImageUrl: iv.identityFrontImageUrl || '',
+    cccdBackImageUrl: iv.identityBackImageUrl || '',
+  };
 };
 
 const buildProfile = (src, identityStatus) => ({
@@ -137,7 +154,17 @@ export const getProfile = async (userId) => {
     });
   }
 
-  let identityStatus = await fetchIdentityStatus();
+  const identity = await fetchIdentity();
+  let identityStatus = identity?.status ? String(identity.status).toUpperCase() : null;
+
+  // Thông tin CCCD từ hồ sơ xác minh (API) là nguồn thật để hiển thị lại lên giao
+  // diện (họ tên, số CCCD, giới tính, ngày sinh...). API thắng khi có giá trị.
+  const identityCccd = identityToCccd(identity);
+  if (identityCccd) {
+    Object.entries(identityCccd).forEach(([k, v]) => {
+      if (v) src[k] = v;
+    });
+  }
 
   // Backend chưa có API cho staff duyệt CCCD — quyết định duyệt/từ chối của
   // staff lưu local phải thắng trạng thái PENDING (hoặc chưa nộp) từ API.
