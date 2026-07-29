@@ -1,4 +1,5 @@
 import api from '../config/api';
+import { extractUploadKey, normalizeUploadKey } from './uploadResponse';
 import { getCurrentUser, updateSessionUser } from './authService';
 
 const profileKey = (userId) => `profile_${userId}`;
@@ -257,7 +258,7 @@ export const uploadIdentityImage = async (file) => {
   const fd = new FormData();
   fd.append('file', file);
   const res = await api.post('/uploads/identity', fd, MULTIPART);
-  return extractUploadUrl(res);
+  return extractUploadKey(res);
 };
 
 // ── EMAIL ── (xác thực khi đăng ký; ở đây cho gửi lại + nhập OTP)
@@ -321,8 +322,8 @@ export const submitIdentityVerification = async (
     expiryDate,
     issuePlace,
     permanentAddress,
-    frontImageKey,
-    backImageKey,
+    frontImageKey: normalizeUploadKey(frontImageKey),
+    backImageKey: normalizeUploadKey(backImageKey),
   });
   // Backend cập nhật fullName/gender/dateOfBirth từ CCCD -> đọc lại getMe rồi đồng bộ
   // vào session để header/lời chào cũng hiển thị thông tin mới ngay, không chỉ trang hồ sơ.
