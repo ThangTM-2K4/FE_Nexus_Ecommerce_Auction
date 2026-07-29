@@ -1,4 +1,4 @@
-@use '../../../styles/palette' as *;
+@use "../../../styles/palette" as *;
 
 .profile-info {
   width: 100%;
@@ -9,7 +9,7 @@
 .profile-info__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: 'fields avatar';
+  grid-template-areas: "fields avatar";
   gap: 1.5rem 2rem;
   align-items: start;
   min-width: 0;
@@ -17,8 +17,8 @@
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
     grid-template-areas:
-      'avatar'
-      'fields';
+      "avatar"
+      "fields";
     gap: 1.5rem;
   }
 }
@@ -34,7 +34,6 @@
   align-items: start;
   min-width: 0;
 }
-
 
 // Field chiếm trọn chiều ngang (vd Email dài) — không bị bó trong 1 cột
 .profile-info__field--full {
@@ -94,7 +93,9 @@
   border: 1px solid $border-soft;
   border-radius: $radius-sm;
   background: $surface;
-  transition: border-color $transition-fast, box-shadow $transition-fast;
+  transition:
+    border-color $transition-fast,
+    box-shadow $transition-fast;
 
   &:focus-within {
     border-color: $raspberry;
@@ -207,7 +208,6 @@
   font-size: 1.35rem;
   font-weight: 700;
 
-
   // contain (không phải cover) để logo/badge hiện đủ, không bị vòng tròn cắt mất
   // các cạnh; nền trắng lấp phần lề khi ảnh không vuông.
   img {
@@ -215,156 +215,159 @@
     height: 100%;
     object-fit: contain;
     background: #fff;
-  .user-avatar__initials {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: $surface;
-  }
-}
-
-.profile-info__upload-btn {
-  width: 100%;
-  max-width: 120px;
-  box-sizing: border-box;
-  border: 1px solid $border;
-  background: $surface;
-  color: $ink;
-  padding: 8px 14px;
-  border-radius: $radius-sm;
-  font-size: 0.82rem;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  transition: border-color $transition-fast, color $transition-fast;
-
-  &:hover:not(:disabled) {
-    border-color: $raspberry;
-    color: $raspberry;
+    .user-avatar__initials {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: $surface;
+    }
   }
 
-  &:disabled {
-    opacity: 0.65;
-    cursor: default;
-  }
-}
-
-.profile-info__upload-hint {
-  margin: 0;
-  width: 100%;
-  font-size: 0.7rem;
-  color: $ink-muted;
-  line-height: 1.45;
-}
-
-.profile-info__upload-error {
-  margin: 0;
-  width: 100%;
-  font-size: 0.72rem;
-  color: $color-danger;
-  line-height: 1.45;
-}
-
-.profile-info__actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid $border-soft;
-}
-
-// ---- Popup nhập OTP ----
-.otp-modal.common-modal {
-  max-width: 400px;
-}
-
-.otp-modal .common-modal__footer {
-  padding: 16px 24px 22px;
-  border-top: 0;
-}
-
-.otp-modal__confirm {
-  width: 100%;
-  height: 46px;
-  font-size: 0.95rem;
-}
-
-.otp-modal__body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 8px 4px 0;
-}
-
-.otp-modal__icon {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  margin-bottom: 14px;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  background: rgba($raspberry, 0.1);
-}
-
-.otp-modal__hint {
-  margin: 0 0 20px;
-  font-size: 0.9rem;
-  color: $ink-muted;
-  line-height: 1.6;
-
-  strong {
-    display: block;
-    margin-top: 2px;
-    font-size: 1rem;
-    color: $ink;
-  }
-}
-
-.otp-modal__input {
-  width: 100%;
-  height: 56px;
-  padding: 0 16px;
-  border: 1.5px solid $border-soft;
-  border-radius: $radius-md;
-  font-size: 1.4rem;
-  font-weight: 600;
-  font-family: inherit;
-  letter-spacing: 0.35em;
-  text-indent: 0.35em;
-  text-align: center;
-  color: $ink;
-  background: $surface-soft;
-
-  &::placeholder {
-    color: $ink-faint;
-    font-weight: 400;
-  }
-
-  &:focus {
-    outline: none;
-    border-color: $raspberry;
+  .profile-info__upload-btn {
+    width: 100%;
+    max-width: 120px;
+    box-sizing: border-box;
+    border: 1px solid $border;
     background: $surface;
-    box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
+    color: $ink;
+    padding: 8px 14px;
+    border-radius: $radius-sm;
+    font-size: 0.82rem;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition:
+      border-color $transition-fast,
+      color $transition-fast;
+
+    &:hover:not(:disabled) {
+      border-color: $raspberry;
+      color: $raspberry;
+    }
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: default;
+    }
   }
-}
 
-.otp-modal__resend {
-  margin: 16px auto 0;
-  border: 0;
-  background: none;
-  color: $raspberry;
-  font-size: 0.82rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    text-decoration: underline;
+  .profile-info__upload-hint {
+    margin: 0;
+    width: 100%;
+    font-size: 0.7rem;
+    color: $ink-muted;
+    line-height: 1.45;
   }
 
-  &:disabled {
-    opacity: 0.6;
-    cursor: default;
+  .profile-info__upload-error {
+    margin: 0;
+    width: 100%;
+    font-size: 0.72rem;
+    color: $color-danger;
+    line-height: 1.45;
+  }
+
+  .profile-info__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid $border-soft;
+  }
+
+  // ---- Popup nhập OTP ----
+  .otp-modal.common-modal {
+    max-width: 400px;
+  }
+
+  .otp-modal .common-modal__footer {
+    padding: 16px 24px 22px;
+    border-top: 0;
+  }
+
+  .otp-modal__confirm {
+    width: 100%;
+    height: 46px;
+    font-size: 0.95rem;
+  }
+
+  .otp-modal__body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 8px 4px 0;
+  }
+
+  .otp-modal__icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    background: rgba($raspberry, 0.1);
+  }
+
+  .otp-modal__hint {
+    margin: 0 0 20px;
+    font-size: 0.9rem;
+    color: $ink-muted;
+    line-height: 1.6;
+
+    strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 1rem;
+      color: $ink;
+    }
+  }
+
+  .otp-modal__input {
+    width: 100%;
+    height: 56px;
+    padding: 0 16px;
+    border: 1.5px solid $border-soft;
+    border-radius: $radius-md;
+    font-size: 1.4rem;
+    font-weight: 600;
+    font-family: inherit;
+    letter-spacing: 0.35em;
+    text-indent: 0.35em;
+    text-align: center;
+    color: $ink;
+    background: $surface-soft;
+
+    &::placeholder {
+      color: $ink-faint;
+      font-weight: 400;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $raspberry;
+      background: $surface;
+      box-shadow: 0 0 0 3px rgba($raspberry, 0.12);
+    }
+  }
+
+  .otp-modal__resend {
+    margin: 16px auto 0;
+    border: 0;
+    background: none;
+    color: $raspberry;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      text-decoration: underline;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
   }
 }
