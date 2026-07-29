@@ -6,7 +6,7 @@ import Footer from '@/components/homepage/footer';
 import { useCart } from '@/context/CartContext';
 import { useOrder } from '@/context/OrderContext';
 import { getApiErrorMessage } from '@/utils/apiResponse';
-import { getDefaultCheckoutAddress } from '@/data/mockDefaultAddress';
+import * as addressService from '@/services/addressService';
 import { MOCK_SHIPPING_FEE } from '@/data/mockCheckout';
 import CheckoutAddressCard from './components/checkoutAddressCard';
 import CheckoutProductList from './components/checkoutProductList';
@@ -22,12 +22,17 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [note, setNote] = useState('');
   const [placing, setPlacing] = useState(false);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [loadingAddress, setLoadingAddress] = useState(true);
 
   const selectedItems = getSelectedItems();
   const subtotal = getTotalPrice();
   const shippingFee = MOCK_SHIPPING_FEE;
   const total = subtotal + shippingFee;
-  const address = getDefaultCheckoutAddress();
+  const address =
+    addresses.find((item) => item.id === selectedAddressId) ||
+    addressService.pickDefaultAddress(addresses);
 
   useEffect(() => {
     if (selectedItems.length === 0) {
@@ -35,8 +40,41 @@ export default function CheckoutPage() {
     }
   }, [selectedItems.length, navigate]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAddresses = async () => {
+      setLoadingAddress(true);
+      try {
+        const list = await addressService.getAddresses();
+        if (cancelled) return;
+        setAddresses(list);
+        const defaultAddr = addressService.pickDefaultAddress(list);
+        setSelectedAddressId(defaultAddr?.id ?? null);
+      } catch (err) {
+        if (!cancelled) {
+          toast.error(getApiErrorMessage(err, 'Không tải được địa chỉ nhận hàng'));
+          setAddresses([]);
+          setSelectedAddressId(null);
+        }
+      } finally {
+        if (!cancelled) setLoadingAddress(false);
+      }
+    };
+
+    loadAddresses();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handlePlaceOrder = async () => {
     if (selectedItems.length === 0) return;
+
+    if (!address) {
+      toast.error('Vui lòng thêm và chọn địa chỉ nhận hàng');
+      return;
+    }
 
     setPlacing(true);
     try {
@@ -73,7 +111,13 @@ export default function CheckoutPage() {
           <h1 className="checkout-page__title">Thanh Toán</h1>
 
           <div className="checkout-page__content">
-            <CheckoutAddressCard address={address} />
+            <CheckoutAddressCard
+              address={address}
+              addresses={addresses}
+              loading={loadingAddress}
+              selectedAddressId={selectedAddressId}
+              onSelectAddress={setSelectedAddressId}
+            />
             <CheckoutProductList items={selectedItems} />
             <CheckoutPayment
               paymentMethod={paymentMethod}
@@ -87,6 +131,7 @@ export default function CheckoutPage() {
               total={total}
               onPlaceOrder={handlePlaceOrder}
               placing={placing}
+              disabled={loadingAddress || !address}
             />
           </div>
         </div>

@@ -7,7 +7,7 @@ export default function SellerRoute({ children }) {
   const { isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/401" replace />;
   }
 
   const { sellerStatus } = user;

@@ -28,7 +28,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   if (!isAuthenticated) {
     return (
       <Navigate
-        to="/login"
+        to="/401"
         replace
         state={{ redirectTo: location.pathname + location.search }}
       />
@@ -40,14 +40,13 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     const allowed = allowedRoles.map((r) => String(r).toUpperCase().replace(/^ROLE_/, ''));
     const ok = tokens.some((t) => allowed.includes(t));
     if (!ok) {
-      // Chẩn đoán: in ra role thật của backend để biết cần khớp gì
       console.warn('[ProtectedRoute] Bị chặn.', {
         allowedRoles: allowed,
         roleTokens: tokens,
         'user.role': user?.role,
         'user.roles': user?.roles,
       });
-      return <Navigate to="/" replace />;
+      return <Navigate to="/403" replace />;
     }
   }
 
