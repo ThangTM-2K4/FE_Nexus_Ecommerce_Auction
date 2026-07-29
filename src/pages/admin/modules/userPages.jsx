@@ -634,12 +634,12 @@ export const AdminSellerVerification = () => {
                 <div><dt>Mã số thuế</dt><dd>{item.taxCode ?? "—"}</dd></div>
               </dl>
               <footer>
-                <button type="button" className="adm-toolbar__btn adm-toolbar__btn--secondary" onClick={() => openDetail(item)}>Xem chi tiết</button>
+                <button type="button" className="secondary" onClick={() => openDetail(item)}>Xem chi tiết</button>
                 {isPending(item) && (
                   <>
                     <button
                       type="button"
-                      className="adm-toolbar__btn adm-toolbar__btn--primary"
+                      className="success"
                       onClick={() => handleApprove(item)}
                       disabled={processingId === item.id}
                     >
@@ -647,7 +647,7 @@ export const AdminSellerVerification = () => {
                     </button>
                     <button
                       type="button"
-                      className="adm-toolbar__btn adm-toolbar__btn--danger"
+                      className="danger"
                       onClick={() => { setRejectTarget(item); setRejectReason(""); }}
                       disabled={processingId === item.id}
                     >

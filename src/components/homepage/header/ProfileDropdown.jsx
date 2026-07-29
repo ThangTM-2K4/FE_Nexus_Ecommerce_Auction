@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import SwitchAccountModal from './SwitchAccountModal';
+import UserAvatar from '../../common/userAvatar';
 import './ProfileDropdown.scss';
 
 export default function ProfileDropdown({ onClose, variant }) {
   const isStaff = variant === 'staff';
+  const isAdmin = variant === 'admin';
   const { user, logout, isApprovedSeller, isBuyerMode, switchAccountMode } = useAuth();
   const navigate = useNavigate();
   const panelRef = useRef(null);
@@ -48,24 +50,17 @@ export default function ProfileDropdown({ onClose, variant }) {
     }
   };
 
-  const initials = user?.fullName
-    ? user.fullName
-        .split(' ')
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()
-    : '?';
-
   const sellerStatus = user?.sellerStatus;
-  const currentModeLabel = isStaff
+  const currentModeLabel = isAdmin
+    ? 'Admin'
+    : isStaff
     ? 'Quản lý'
     : user?.currentMode === 'SELLER'
     ? 'Người bán'
     : 'Người mua';
 
   const becomeSellerItem = () => {
-    if (isStaff) return null; // Trang quản lý không có mục "Trở thành Người bán"
+    if (isStaff || isAdmin) return null; // Trang quản lý/admin không có mục "Trở thành Người bán"
     if (isApprovedSeller) return null;
     if (!sellerStatus) {
       return { to: '/profile/become-seller', label: 'Trở thành Người bán' };
@@ -80,18 +75,22 @@ export default function ProfileDropdown({ onClose, variant }) {
   };
 
   const menuItems = [
-    { to: isStaff ? '/staff/profile' : '/profile', label: 'Hồ sơ của tôi' },
+    { to: isAdmin ? '/admin/profile' : isStaff ? '/staff/profile' : '/profile', label: 'Hồ sơ của tôi' },
     becomeSellerItem(),
     // Chỉ seller đã duyệt mới được chuyển qua lại Người mua/Người bán
-    // (không áp dụng cho tài khoản quản lý).
-    !isStaff && isApprovedSeller ? { action: 'switch', label: 'Chuyển tài khoản' } : null,
+    // (không áp dụng cho tài khoản quản lý/admin).
+    !isStaff && !isAdmin && isApprovedSeller ? { action: 'switch', label: 'Chuyển tài khoản' } : null,
   ].filter(Boolean);
 
   return (
     <>
       <div className="header-profile-panel" ref={panelRef} role="menu">
         <div className="header-profile-user">
-          <span className="header-profile-avatar-lg">{initials}</span>
+          <UserAvatar
+            avatar={user?.avatar}
+            name={user?.fullName}
+            className="header-profile-avatar-lg"
+          />
           <div>
             <strong>{user?.fullName}</strong>
             <small>{user?.email}</small>

@@ -48,11 +48,57 @@
   margin: 1.25rem 0 1.5rem;
 }
 
+// Bảng hiển thị thông tin CCCD ở chế độ đọc (khi đã xác minh / chờ duyệt).
+.personal-info-cccd__readonly {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  max-width: 760px;
+  width: 100%;
+  background: $border-soft;
+  border: 1px solid $border-soft;
+  border-radius: 12px;
+  overflow: hidden;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.personal-info-cccd__ro-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  background: $surface;
+
+  span {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: $ink-muted;
+  }
+
+  strong {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: $ink;
+    word-break: break-word;
+  }
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+}
+
 .personal-info-cccd__fields {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  max-width: 560px;
+  // Rộng hơn (trước 560px) để các ô nhập/địa chỉ không bị bó hẹp, chữ không bị
+  // che, đồng thời tận dụng khoảng trống thừa bên phải của khung hồ sơ.
+  max-width: 760px;
+  width: 100%;
 
   // Cho ô Giới tính (Select) cao bằng các ô Input 42px để hàng 2 cột thẳng
   .common-select__field {

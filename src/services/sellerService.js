@@ -297,5 +297,7 @@ export const checkSellerPreconditions = (profile) => ({
 
 export const allPreconditionsMet = (profile) => {
   const checks = checkSellerPreconditions(profile);
-  return checks.emailVerified && checks.phoneVerified;
+  // Backend từ chối register nếu CHƯA xác minh danh tính (CCCD) — chặn ngay ở
+  // đây để người dùng thấy checklist rõ ràng thay vì lỗi tiếng Anh lúc nộp cuối.
+  return checks.emailVerified && checks.phoneVerified && checks.nationalIdVerified;
 };

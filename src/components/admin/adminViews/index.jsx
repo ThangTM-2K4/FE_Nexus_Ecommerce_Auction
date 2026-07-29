@@ -175,7 +175,7 @@ export const AuctionCard = ({ auction, onAction, actions = [] }) => {
         </div>
       )}
       <div className="adm-auction-card__meta">
-        <span>{auction.bids} lượt bid</span>
+       
         <span>Kết thúc: {auction.endTime}</span>
       </div>
       <AdminStatusBadge status={auction.status} />

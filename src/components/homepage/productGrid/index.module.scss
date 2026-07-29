@@ -34,14 +34,46 @@
 }
 
 .viewAll {
+  @include flex-center;
+
+  gap: 2px;
+  padding: 6px 12px;
+  border: 1px solid rgba($lavender, 0.5);
+  border-radius: $radius-pill;
+  background: rgba($surface, 0.9);
+  font: inherit;
   font-size: 0.82rem;
   font-weight: 600;
-  color: $navy;
+  color: $accent-dark;
   white-space: nowrap;
-  transition: color $transition-fast;
+  cursor: pointer;
+  transition:
+    color $transition-fast,
+    background $transition-fast,
+    border-color $transition-fast,
+    box-shadow $transition-fast;
 
   &:hover {
-    color: $teal;
+    color: $accent;
+    background: rgba($blush-pink, 0.45);
+    border-color: rgba($accent, 0.35);
+    box-shadow: $shadow-sm;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($raspberry, 0.45);
+    outline-offset: 2px;
+  }
+}
+
+.viewAllIcon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform $transition-fast;
+
+  .viewAll:hover & {
+    transform: translateX(2px);
   }
 }
 

@@ -220,3 +220,35 @@
 .input-error {
   @include auth.auth-input-error;
 }
+
+// Thông báo lỗi chung của form (vd sai thông tin đăng nhập) — hiện rõ dưới các ô nhập.
+.login-card .form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba($live-red, 0.08);
+  border: 1px solid rgba($live-red, 0.35);
+  color: $live-red;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  line-height: 1.4;
+
+  &::before {
+    content: "!";
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: $live-red;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+  }
+}

@@ -104,6 +104,29 @@
   font-weight: 600;
 }
 
+.auction-filter-bar__reset-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px dashed rgba(#ff4d4f, 0.6);
+  border-radius: $radius-pill;
+  background: rgba(#ff4d4f, 0.1);
+  color: #ff7875;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: center;
+
+  &:hover {
+    background: rgba(#ff4d4f, 0.2);
+    border-color: #ff4d4f;
+    color: #fff;
+  }
+}
+
 .auction-filter-bar__drawer-backdrop {
   position: fixed;
   inset: 0;

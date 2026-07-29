@@ -14,15 +14,34 @@ import './index.scss';
 const GENDERS = [
   { value: 'Nam', label: 'Nam' },
   { value: 'Nữ', label: 'Nữ' },
-  { value: 'Khác', label: 'Khác' },
 ];
+
+// Chỉ hiển thị được base64 (data:) hoặc URL đầy đủ (http). Nếu value là KEY server
+// (vd "identity/abc.jpg") thì <img> sẽ vỡ ảnh -> coi như không có ảnh xem trước.
+const isDisplayableImage = (v) =>
+  typeof v === 'string' && (v.startsWith('data:') || v.startsWith('http'));
+
+// Che số CCCD, chỉ để lộ 4 số cuối: 079198001234 -> ********1234
+const maskCccd = (num) => {
+  const s = String(num || '').trim();
+  if (s.length <= 4) return s;
+  return '*'.repeat(s.length - 4) + s.slice(-4);
+};
+
+// Hiển thị ngày ISO (yyyy-mm-dd) dạng dd/mm/yyyy cho dễ đọc.
+const formatDate = (iso) => {
+  const s = String(iso || '').trim();
+  const [y, m, d] = s.split('-');
+  return d && m && y ? `${d}/${m}/${y}` : s || '—';
+};
 
 // Ô tải ảnh CCCD trực tiếp từ máy (không dán URL nữa)
 function CccdImageUpload({ label, value, onPick, onClear, disabled, error }) {
+  const canShow = isDisplayableImage(value);
   return (
     <div className="personal-info-cccd__upload">
       <span className="personal-info-cccd__upload-label">{label}</span>
-      {value ? (
+      {canShow ? (
         <div className="personal-info-cccd__preview">
           <img src={value} alt={label} />
           {!disabled && (
@@ -74,10 +93,12 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
     cccdExpiryDate: '',
     cccdIssuePlace: '',
     cccdAddress: '',
-    frontImageUrl: '', // data URL để xem trước
+    frontImageUrl: '', // data URL để XEM TRƯỚC (hiển thị được, không vỡ ảnh)
     backImageUrl: '',
-    frontImageKey: '', // URL/key ảnh sau khi upload lên server (dùng khi nộp)
+    frontImageKey: '', // KEY ảnh sau khi upload lên server (dùng khi NỘP, không hiển thị)
     backImageKey: '',
+    frontImageFile: null, // giữ File để upload lại lúc lưu nếu upload nền chưa xong/lỗi
+    backImageFile: null,
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
@@ -96,6 +117,8 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
         cccdAddress: profile.cccdAddress || '',
         frontImageUrl: profile.cccdFrontImageUrl || '',
         backImageUrl: profile.cccdBackImageUrl || '',
+        frontImageKey: profile.cccdFrontImageKey || '',
+        backImageKey: profile.cccdBackImageKey || '',
       }));
     }
   }, [profile]);
@@ -139,27 +162,28 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
   // Chọn ảnh từ máy: xem trước ngay bằng data URL, đồng thời upload lên server
   // (POST /uploads/identity) để lấy URL/key thật dùng khi nộp hồ sơ. Upload lỗi
   // thì vẫn giữ base64 làm phương án dự phòng (nộp best-effort).
-  const handlePickImage = (previewKey, uploadKey) => async (e) => {
+  const handlePickImage = (previewKey, uploadKey, fileKey) => async (e) => {
     const file = e.target.files?.[0];
     e.target.value = ''; // cho phép chọn lại cùng 1 file
     if (!file) return;
     try {
       const dataUrl = await readImageAsDataUrl(file);
-      setForm((prev) => ({ ...prev, [previewKey]: dataUrl, [uploadKey]: '' }));
+      // Giữ File để nếu upload nền lỗi thì còn upload lại được lúc bấm Lưu.
+      setForm((prev) => ({ ...prev, [previewKey]: dataUrl, [uploadKey]: '', [fileKey]: file }));
       clearError(previewKey);
       try {
-        const url = await profileService.uploadIdentityImage(file);
-        if (url) setForm((prev) => ({ ...prev, [uploadKey]: url }));
+        const key = await profileService.uploadIdentityImage(file);
+        if (key) setForm((prev) => ({ ...prev, [uploadKey]: key }));
       } catch {
-        /* giữ base64, không chặn UX */
+        /* upload lại lúc lưu; không chặn UX */
       }
     } catch (err) {
       toast.error(err.message || 'Không tải được ảnh');
     }
   };
 
-  const clearImage = (previewKey, uploadKey) => () =>
-    setForm((prev) => ({ ...prev, [previewKey]: '', [uploadKey]: '' }));
+  const clearImage = (previewKey, uploadKey, fileKey) => () =>
+    setForm((prev) => ({ ...prev, [previewKey]: '', [uploadKey]: '', [fileKey]: null }));
 
   // Lưu hồ sơ CCCD. goToSellerRegister = true thì lưu xong chuyển sang trang
   // đăng ký Người bán; false thì chỉ lưu (nhiều người chỉ muốn cập nhật hồ sơ).
@@ -174,12 +198,22 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
     setErrors({});
     setSaving(true);
     try {
-      // Ưu tiên URL/key ảnh đã upload lên server; chưa upload được thì dùng base64.
-      const frontImage = form.frontImageKey || form.frontImageUrl;
-      const backImage = form.backImageKey || form.backImageUrl;
+      // Đảm bảo có KEY ảnh trên server để nộp hồ sơ. Nếu lúc chọn ảnh upload nền
+      // chưa xong/lỗi, thử upload lại tại đây bằng File đã giữ.
+      let frontKey = form.frontImageKey;
+      let backKey = form.backImageKey;
+      try {
+        if (!frontKey && form.frontImageFile)
+          frontKey = await profileService.uploadIdentityImage(form.frontImageFile);
+        if (!backKey && form.backImageFile)
+          backKey = await profileService.uploadIdentityImage(form.backImageFile);
+      } catch {
+        /* nếu vẫn thiếu key, bước nộp bên dưới sẽ báo lỗi rõ ràng */
+      }
 
-      // 1) Lưu thông tin cá nhân (họ tên, số CCCD, địa chỉ, ảnh) + đẩy địa chỉ lên backend.
-      // Dữ liệu này được form đăng ký Người bán đọc lại để hiển thị cho staff duyệt.
+      // 1) Lưu thông tin cá nhân vào hồ sơ. Ảnh XEM TRƯỚC lưu bằng base64 (hiển thị
+      // được, không vỡ ảnh); KEY server lưu riêng để nộp/nộp lại. Dữ liệu này được
+      // form đăng ký Người bán đọc lại để hiển thị cho staff duyệt.
       const cccdData = {
         cccdFullName: form.cccdFullName,
         cccdNumber: form.cccdNumber,
@@ -189,35 +223,34 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
         cccdExpiryDate: form.cccdExpiryDate,
         cccdIssuePlace: form.cccdIssuePlace,
         cccdAddress: form.cccdAddress,
-        cccdFrontImageUrl: frontImage,
-        cccdBackImageUrl: backImage,
+        cccdFrontImageUrl: form.frontImageUrl, // base64 để HIỂN THỊ
+        cccdBackImageUrl: form.backImageUrl,
+        cccdFrontImageKey: frontKey, // key server để NỘP
+        cccdBackImageKey: backKey,
       };
-      const saved = await profileService.updateCccdInfo(userId, cccdData);
+      await profileService.updateCccdInfo(userId, cccdData);
 
-      // 2) Nộp hồ sơ xác thực CCCD thật (staff duyệt để đủ điều kiện làm seller).
-      // Best-effort: nếu backend từ chối ảnh base64 dài, vẫn giữ dữ liệu đã lưu local.
-      let updated = saved;
-      try {
-        updated = await profileService.submitIdentityVerification(userId, {
-          fullName: form.cccdFullName.trim(),
-          gender: form.cccdGender.trim(),
-          dateOfBirth: form.cccdDateOfBirth,
-          identityNumber: form.cccdNumber.trim(),
-          issueDate: form.cccdIssueDate,
-          expiryDate: form.cccdExpiryDate,
-          issuePlace: form.cccdIssuePlace.trim(),
-          permanentAddress: form.cccdAddress.trim(),
-          frontImageUrl: frontImage,
-          backImageUrl: backImage,
-        });
-      } catch {
-        /* giữ dữ liệu local, không chặn UX */
-      }
+      // 2) Nộp hồ sơ xác thực CCCD vào DATABASE (POST /identity-verifications).
+      // Đây là bước lưu thật — KHÔNG nuốt lỗi để người dùng biết nếu lưu thất bại.
+      const updated = await profileService.submitIdentityVerification(userId, {
+        fullName: form.cccdFullName.trim(),
+        gender: form.cccdGender.trim(),
+        dateOfBirth: form.cccdDateOfBirth,
+        identityNumber: form.cccdNumber.trim(),
+        issueDate: form.cccdIssueDate,
+        expiryDate: form.cccdExpiryDate,
+        issuePlace: form.cccdIssuePlace.trim(),
+        permanentAddress: form.cccdAddress.trim(),
+        frontImageKey: frontKey,
+        backImageKey: backKey,
+      });
 
       // 3) Đã có đơn/hồ sơ seller (đang chờ duyệt hoặc đã là người bán) thì
       // đồng bộ CCCD mới sang bên seller (Hồ Sơ Shop + trang staff duyệt).
       const syncedToSeller = syncProfileToSellerApplication(userId, cccdData);
 
+      // Cập nhật key ảnh vào state để lần lưu sau không phải upload lại.
+      setForm((prev) => ({ ...prev, frontImageKey: frontKey, backImageKey: backKey }));
       onUpdate(updated);
 
       if (goToSellerRegister) {
@@ -254,6 +287,44 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
 
       <hr className="personal-info-cccd__divider" />
 
+      {locked ? (
+        // Đã xác minh / đang chờ duyệt: chỉ hiển thị thông tin (đọc), không cho nhập.
+        // Số CCCD che bớt, không hiển thị ảnh CCCD.
+        <div className="personal-info-cccd__readonly">
+          <div className="personal-info-cccd__ro-item">
+            <span>Họ và tên</span>
+            <strong>{form.cccdFullName || '—'}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Số CCCD</span>
+            <strong>{maskCccd(form.cccdNumber) || '—'}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Giới tính</span>
+            <strong>{form.cccdGender || '—'}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Ngày sinh</span>
+            <strong>{formatDate(form.cccdDateOfBirth)}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Ngày cấp</span>
+            <strong>{formatDate(form.cccdIssueDate)}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Ngày hết hạn</span>
+            <strong>{formatDate(form.cccdExpiryDate)}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item">
+            <span>Nơi cấp</span>
+            <strong>{form.cccdIssuePlace || '—'}</strong>
+          </div>
+          <div className="personal-info-cccd__ro-item personal-info-cccd__ro-item--full">
+            <span>Địa chỉ thường trú</span>
+            <strong>{form.cccdAddress || '—'}</strong>
+          </div>
+        </div>
+      ) : (
       <div className="personal-info-cccd__fields">
         <Input
           label="Họ và tên"
@@ -340,20 +411,21 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
         <CccdImageUpload
           label="Ảnh CCCD mặt trước"
           value={form.frontImageUrl}
-          onPick={handlePickImage('frontImageUrl', 'frontImageKey')}
-          onClear={clearImage('frontImageUrl', 'frontImageKey')}
+          onPick={handlePickImage('frontImageUrl', 'frontImageKey', 'frontImageFile')}
+          onClear={clearImage('frontImageUrl', 'frontImageKey', 'frontImageFile')}
           disabled={locked}
           error={errors.frontImageUrl}
         />
         <CccdImageUpload
           label="Ảnh CCCD mặt sau"
           value={form.backImageUrl}
-          onPick={handlePickImage('backImageUrl', 'backImageKey')}
-          onClear={clearImage('backImageUrl', 'backImageKey')}
+          onPick={handlePickImage('backImageUrl', 'backImageKey', 'backImageFile')}
+          onClear={clearImage('backImageUrl', 'backImageKey', 'backImageFile')}
           disabled={locked}
           error={errors.backImageUrl}
         />
       </div>
+      )}
 
       {!locked && (
         <div className="personal-info-cccd__actions">

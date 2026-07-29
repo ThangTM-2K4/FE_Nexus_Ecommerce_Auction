@@ -30,8 +30,8 @@ const normalizeGender = (g) => {
   if (!v) return '';
   if (['male', 'm', 'nam'].includes(v)) return 'male';
   if (['female', 'f', 'nữ', 'nu'].includes(v)) return 'female';
-  if (['male', 'female', 'other'].includes(v)) return v;
-  return 'other';
+  // Chỉ còn 2 giới tính Nam/Nữ — giá trị khác coi như chưa chọn.
+  return '';
 };
 
 // getMe hiện trả kèm điểm uy tín. Backend chưa cố định tên field nên dò nhiều
@@ -52,14 +52,31 @@ const pickReputation = (src) => {
   return { score, rank };
 };
 
-// Lấy trạng thái xác minh CMND thật từ endpoint riêng
-const fetchIdentityStatus = async () => {
+// Lấy hồ sơ xác minh CCCD thật từ endpoint riêng. Trả cả object (trạng thái +
+// toàn bộ thông tin CCCD) để hiển thị lại lên giao diện, không chỉ mỗi status.
+const fetchIdentity = async () => {
   try {
-    const iv = unwrap(await api.get('/identity-verifications/me'));
-    return iv?.status ? String(iv.status).toUpperCase() : null;
+    return unwrap(await api.get('/identity-verifications/me'));
   } catch {
     return null; // chưa nộp / 404
   }
+};
+
+// Đổi tên field từ /identity-verifications/me sang các field CCCD dùng trong profile.
+const identityToCccd = (iv) => {
+  if (!iv) return null;
+  return {
+    cccdFullName: iv.fullName || '',
+    cccdNumber: iv.identityNumber || '',
+    cccdGender: iv.gender || '',
+    cccdDateOfBirth: iv.dateOfBirth || '',
+    cccdIssueDate: iv.issueDate || '',
+    cccdExpiryDate: iv.expiryDate || '',
+    cccdIssuePlace: iv.issuePlace || '',
+    cccdAddress: iv.permanentAddress || '',
+    cccdFrontImageUrl: iv.identityFrontImageUrl || '',
+    cccdBackImageUrl: iv.identityBackImageUrl || '',
+  };
 };
 
 const buildProfile = (src, identityStatus) => ({
@@ -97,6 +114,9 @@ const buildProfile = (src, identityStatus) => ({
   cccdAddress: src.cccdAddress || '',
   cccdFrontImageUrl: src.cccdFrontImageUrl || '',
   cccdBackImageUrl: src.cccdBackImageUrl || '',
+  // Key ảnh đã upload lên server (để nộp lại hồ sơ mà không cần upload lại)
+  cccdFrontImageKey: src.cccdFrontImageKey || '',
+  cccdBackImageKey: src.cccdBackImageKey || '',
   // Điểm uy tín backend trả kèm getMe (null nếu chưa có → tự tính ở reputationService)
   reputation: pickReputation(src),
 });
@@ -134,7 +154,17 @@ export const getProfile = async (userId) => {
     });
   }
 
-  let identityStatus = await fetchIdentityStatus();
+  const identity = await fetchIdentity();
+  let identityStatus = identity?.status ? String(identity.status).toUpperCase() : null;
+
+  // Thông tin CCCD từ hồ sơ xác minh (API) là nguồn thật để hiển thị lại lên giao
+  // diện (họ tên, số CCCD, giới tính, ngày sinh...). API thắng khi có giá trị.
+  const identityCccd = identityToCccd(identity);
+  if (identityCccd) {
+    Object.entries(identityCccd).forEach(([k, v]) => {
+      if (v) src[k] = v;
+    });
+  }
 
   // Backend chưa có API cho staff duyệt CCCD — quyết định duyệt/từ chối của
   // staff lưu local phải thắng trạng thái PENDING (hoặc chưa nộp) từ API.
@@ -274,10 +304,13 @@ export const submitIdentityVerification = async (
     expiryDate,
     issuePlace,
     permanentAddress,
-    frontImageUrl,
-    backImageUrl,
+    frontImageKey,
+    backImageKey,
   }
 ) => {
+  // Contract backend (SubmitIdentityVerificationRequest) dùng frontImageKey/backImageKey
+  // — là KEY ảnh trả về từ POST /uploads/identity, KHÔNG phải base64/URL. Gửi sai tên
+  // field trước đây khiến ảnh (và cả hồ sơ) không lưu được vào database.
   await api.post('/identity-verifications', {
     fullName,
     gender,
@@ -287,8 +320,8 @@ export const submitIdentityVerification = async (
     expiryDate,
     issuePlace,
     permanentAddress,
-    frontImageUrl,
-    backImageUrl,
+    frontImageKey,
+    backImageKey,
   });
   // Backend cập nhật fullName/gender/dateOfBirth từ CCCD -> đọc lại getMe rồi đồng bộ
   // vào session để header/lời chào cũng hiển thị thông tin mới ngay, không chỉ trang hồ sơ.
@@ -315,8 +348,12 @@ export const updateCccdInfo = async (
     cccdExpiryDate = '',
     cccdIssuePlace = '',
     cccdAddress,
+    // cccdFrontImageUrl/BackImageUrl = ảnh xem trước (base64/URL hiển thị được).
+    // cccdFrontImageKey/BackImageKey = key server (dùng khi nộp hồ sơ, KHÔNG hiển thị).
     cccdFrontImageUrl = '',
     cccdBackImageUrl = '',
+    cccdFrontImageKey = '',
+    cccdBackImageKey = '',
   }
 ) => {
   if (cccdAddress?.trim()) {
@@ -337,6 +374,8 @@ export const updateCccdInfo = async (
     cccdAddress,
     cccdFrontImageUrl,
     cccdBackImageUrl,
+    cccdFrontImageKey,
+    cccdBackImageKey,
   });
 };
 

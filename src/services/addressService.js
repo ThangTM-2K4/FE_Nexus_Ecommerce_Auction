@@ -66,22 +66,22 @@ export const getAddresses = async () => {
 };
 
 // Các hàm mutation trả về danh sách mới (re-fetch) để nơi gọi set thẳng vào state.
-export const addAddress = async (_userId, address) => {
+export const addAddress = async (address) => {
   await api.post(BASE, toApiBody(address));
   return getAddresses();
 };
 
-export const updateAddress = async (_userId, id, data) => {
+export const updateAddress = async (id, data) => {
   await api.put(`${BASE}/${id}`, toApiBody(data));
   return getAddresses();
 };
 
-export const deleteAddress = async (_userId, id) => {
+export const deleteAddress = async (id) => {
   await api.delete(`${BASE}/${id}`);
   return getAddresses();
 };
 
-export const setDefaultAddress = async (_userId, id) => {
+export const setDefaultAddress = async (id) => {
   await api.patch(`${BASE}/${id}/default`);
   return getAddresses();
 };
@@ -90,3 +90,7 @@ export const getAddressById = async (id) => {
   const res = await api.get(`${BASE}/${id}`);
   return normalize(unwrap(res));
 };
+
+/** Lấy địa chỉ mặc định từ danh sách (hoặc phần tử đầu). */
+export const pickDefaultAddress = (list = []) =>
+  list.find((a) => a.isDefault) || list[0] || null;

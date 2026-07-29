@@ -1,4 +1,4 @@
-@use "../../../styles/auction-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
 .adm-sidebar {
   width: 260px;
@@ -73,13 +73,14 @@
 
   &__footer {
     margin-top: auto;
-    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    background: linear-gradient(135deg, rgba($color-primary-dark, 0.08), rgba($color-primary, 0.05));
+    border: 1px solid $color-border-light;
     border-radius: $radius-lg;
     padding: 16px 12px;
     text-align: center;
 
     p {
-      color: rgba(255, 255, 255, 0.9);
+      color: $color-text-muted;
       font-size: 11px;
       margin-bottom: 10px;
       line-height: 1.4;
@@ -91,13 +92,13 @@
       border: none;
       border-radius: $radius-sm;
       background: $color-accent;
-      color: $color-primary-dark;
+      color: #fff;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
 
       &:hover {
-        background: $color-gradient-light;
+        background: $color-primary-dark;
       }
     }
   }

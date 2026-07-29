@@ -1,4 +1,4 @@
-@use "../../../styles/auction-variables" as *;
+﻿@use "../../../styles/staff-variables" as *;
 
 .adm-toolbar {
   display: flex;
@@ -92,7 +92,7 @@
 
     &--primary {
       background: linear-gradient(135deg, $color-primary-dark, $color-primary);
-      color: #fff;
+      color: #12101A;
     }
 
     &--secondary {

@@ -13,6 +13,7 @@ import TermsPage from "./pages/auth/termsPage";
 
 import HomePage from "./pages/homepage/homePage";
 import ProductDetailPage from "./pages/productDetailPage";
+import ShopProfilePage from "./pages/shop/shopProfilePage";
 import CartPage from "./pages/cartPage";
 import CheckoutPage from "./pages/checkoutPage";
 
@@ -68,8 +69,16 @@ import AuctionHowItWorksPage from "./pages/auction/auctionHowItWorksPage";
 import ProtectedRoute from "./config/ProtectedRoute";
 import SellerRoute from "./config/SellerRoute";
 
+import Error401Page from "./pages/errors/401";
+import Error403Page from "./pages/errors/403";
+import Error404Page from "./pages/errors/404";
+import Error500Page from "./pages/errors/500";
+import Error503Page from "./pages/errors/503";
+import SiteChatWidget from "./chat";
+
 function App() {
   return (
+    <>
     <Routes>
   {/* ==========================
       Auth Pages
@@ -94,15 +103,9 @@ function App() {
     <Route path="/" element={<HomePage />} />
     <Route path="/home" element={<HomePage />} />
     <Route path="/product/:id" element={<ProductDetailPage />} />
+    <Route path="/shop/:shopId" element={<ShopProfilePage />} />
 
-    <Route
-      path="/cart"
-      element={
-        <ProtectedRoute>
-          <CartPage />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/cart" element={<CartPage />} />
 
     <Route
       path="/checkout"
@@ -298,7 +301,17 @@ function App() {
     <Route path="activity" element={<StaffActivity />} />
     <Route path="notifications" element={<StaffNotifications />} />
   </Route>
+
+  {/* Error pages */}
+  <Route path="/401" element={<Error401Page />} />
+  <Route path="/403" element={<Error403Page />} />
+  <Route path="/404" element={<Error404Page />} />
+  <Route path="/500" element={<Error500Page />} />
+  <Route path="/503" element={<Error503Page />} />
+  <Route path="*" element={<Error404Page />} />
 </Routes>
+    <SiteChatWidget />
+    </>
   );
 }
 

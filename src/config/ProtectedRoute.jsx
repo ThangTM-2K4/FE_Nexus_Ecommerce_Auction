@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 // Chuẩn hoá role về mảng token chữ HOA, bỏ tiền tố ROLE_.
@@ -23,9 +23,16 @@ export function getRoleTokens(user) {
 
 export default function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, user } = useAuth();
+  const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to="/401"
+        replace
+        state={{ redirectTo: location.pathname + location.search }}
+      />
+    );
   }
 
   if (allowedRoles?.length) {
@@ -33,14 +40,13 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     const allowed = allowedRoles.map((r) => String(r).toUpperCase().replace(/^ROLE_/, ''));
     const ok = tokens.some((t) => allowed.includes(t));
     if (!ok) {
-      // Chẩn đoán: in ra role thật của backend để biết cần khớp gì
       console.warn('[ProtectedRoute] Bị chặn.', {
         allowedRoles: allowed,
         roleTokens: tokens,
         'user.role': user?.role,
         'user.roles': user?.roles,
       });
-      return <Navigate to="/" replace />;
+      return <Navigate to="/403" replace />;
     }
   }
 

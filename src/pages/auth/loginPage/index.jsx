@@ -26,6 +26,9 @@ function LoginPage() {
 
   const [errors, setErrors] = useState({});
 
+  // Lỗi chung của cả form (vd sai thông tin đăng nhập) — hiện rõ ngay dưới các ô nhập.
+  const [formError, setFormError] = useState("");
+
   const [formData, setFormData] = useState({
     login: "",
     password: "",
@@ -62,6 +65,8 @@ function LoginPage() {
       ...prev,
       [name]: "",
     }));
+
+    setFormError("");
   };
 
   const validateForm = () => {
@@ -129,27 +134,31 @@ function LoginPage() {
         }
       }, 1000);
     } catch (err) {
-      const newErrors = {};
       const detail =
         err.response?.data?.detail || err.response?.data?.message || "";
 
       if (err.response?.status === 401) {
         // BE gộp LOCKED/BANNED/BLOCKED/INACTIVE vào chung câu detail này.
         if (detail === ACCOUNT_BLOCKED_DETAIL || /not allowed/i.test(detail)) {
-          toast.error(
-            "Tài khoản của bạn đã bị khóa vì sai thông tin đăng nhập nhiều lần. Vui lòng thử lại sau 15 phút.",
-          );
+          const blockedMsg =
+            "Tài khoản của bạn đã bị khóa vì sai thông tin đăng nhập nhiều lần. Vui lòng thử lại sau 15 phút.";
+          setFormError(blockedMsg);
+          toast.error(blockedMsg);
           return;
         }
 
-        // Còn lại là sai email/số điện thoại hoặc mật khẩu.
-        newErrors.login = "Thông tin đăng nhập không chính xác";
-        setErrors(newErrors);
-        toast.error("Thông tin đăng nhập không chính xác");
+        // Còn lại là sai email/số điện thoại hoặc mật khẩu — tô đỏ cả 2 ô và hiện
+        // rõ thông báo ngay dưới form (không chỉ dòng nhỏ dưới ô email).
+        const credMsg = "Email/số điện thoại hoặc mật khẩu không chính xác";
+        setErrors({ login: " ", password: " " });
+        setFormError(credMsg);
+        toast.error(credMsg);
         return;
       }
 
-      toast.error(err.message || "Đăng nhập thất bại");
+      const genericMsg = err.message || "Đăng nhập thất bại";
+      setFormError(genericMsg);
+      toast.error(genericMsg);
     } finally {
       setLoading(false);
     }
@@ -210,6 +219,12 @@ function LoginPage() {
 
             <div className="field-error">{errors.password || "\u00A0"}</div>
           </div>
+
+          {formError && (
+            <div className="form-error" role="alert">
+              {formError}
+            </div>
+          )}
 
           <button
             type="button"

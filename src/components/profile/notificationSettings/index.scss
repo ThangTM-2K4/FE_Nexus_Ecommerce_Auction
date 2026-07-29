@@ -2,23 +2,39 @@
 
 .notif-settings {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .notif-settings__title {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: $ink;
   margin: 0;
+  line-height: 1.3;
 }
 
 .notif-settings__divider {
   border: 0;
   border-top: 1px solid $border-soft;
-  margin: 1.25rem 0;
+  margin: 0;
+}
+
+.notif-settings__divider--header {
+  margin: 1rem 0 0;
+}
+
+.notif-settings__divider--section {
+  margin: 0;
+}
+
+.notif-settings__section:last-child .toggle-group {
+  padding-bottom: 0;
 }
 
 .notif-settings__loading {
   color: $ink-muted;
-  padding: 2rem;
+  padding: 1.5rem;
   text-align: center;
+  font-size: 0.875rem;
 }

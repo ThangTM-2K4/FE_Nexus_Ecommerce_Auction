@@ -1,0 +1,3 @@
+Place Lottie animation files here (401.json … 503.json).
+Primary source for the app: src/assets/lottie/
+Run `npm run sync:lottie` to copy from d:/FPT/ki_6/.

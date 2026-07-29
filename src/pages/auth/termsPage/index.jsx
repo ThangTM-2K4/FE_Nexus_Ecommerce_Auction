@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import {
   REGISTER_TERMS_SECTIONS,
@@ -10,13 +10,16 @@ import './index.scss';
 // điều khoản ở trang Đăng ký. Đây là trang công khai (không cần đăng nhập).
 export default function TermsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Trang này thường mở ở TAB MỚI (link điều khoản ở trang đăng ký dùng target="_blank"),
-  // nên tab mới không có lịch sử để navigate(-1). Nếu có lịch sử thì quay lại, nếu không
-  // thì về thẳng trang đăng ký để nút luôn hoạt động.
+  // Mở trong CÙNG tab (link điều khoản không còn dùng target="_blank"), nên
+  // navigate(-1) quay lại ĐÚNG trang trước đó (đăng ký/đăng nhập) — giữ nguyên
+  // đường link cũ thay vì nhảy sang một trang đăng ký mới. Nếu không có lịch sử
+  // (mở trực tiếp bằng URL) thì về nơi được truyền qua state, mặc định /register.
+  const fallback = location.state?.from || '/register';
   const goBack = () => {
     if (window.history.length > 1) navigate(-1);
-    else navigate('/register');
+    else navigate(fallback);
   };
 
   return (
@@ -54,8 +57,8 @@ export default function TermsPage() {
         </div>
 
         <div className="terms-footer">
-          <button type="button" className="terms-primary-btn" onClick={() => navigate('/register')}>
-            Tôi đã đọc — Quay lại đăng ký
+          <button type="button" className="terms-primary-btn" onClick={goBack}>
+            Tôi đã đọc — Quay lại
           </button>
         </div>
       </div>

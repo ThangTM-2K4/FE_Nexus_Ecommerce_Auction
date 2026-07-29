@@ -1,65 +1,124 @@
 @use '../../../../styles/palette' as *;
 
 .toggle-group {
-  padding: 1.25rem 0;
+  padding: 16px 0 20px;
+  min-width: 0;
+  box-sizing: border-box;
+
+  .common-toggle {
+    width: 40px;
+    height: 22px;
+    padding: 2px;
+  }
+
+  .common-toggle__thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  .common-toggle.is-on .common-toggle__thumb {
+    transform: translateX(18px);
+  }
 }
 
 .toggle-group__main {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .toggle-group__info {
   flex: 1;
+  min-width: 0;
+}
 
-  strong {
-    display: block;
-    font-size: 0.95rem;
-    color: $ink;
-    margin-bottom: 4px;
-  }
+.toggle-group__title {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: $ink;
+  line-height: 1.35;
+  margin: 0 0 2px;
+}
 
-  p {
-    font-size: 0.82rem;
-    color: $ink-muted;
-    line-height: 1.45;
-  }
+.toggle-group__subtitle {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: $ink-muted;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.toggle-group__parent-toggle {
+  flex-shrink: 0;
+  padding-top: 1px;
 }
 
 .toggle-group__items {
   list-style: none;
-  margin: 1rem 0 0;
-  padding: 0 0 0 1.25rem;
-  border-left: 2px solid $border-soft;
+  margin: 12px 0 0;
+  padding: 0 0 0 24px;
 }
 
 .toggle-group__item {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px 0;
+  gap: 12px;
+  padding: 10px 0;
 
-  &:not(:last-child) {
-    border-bottom: 1px solid rgba($border-soft, 0.6);
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+
+  .common-toggle {
+    margin-top: 1px;
   }
 }
 
 .toggle-group__item-info {
   flex: 1;
+  min-width: 0;
+}
 
-  span {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: $ink;
+.toggle-group__item-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: $ink;
+  line-height: 1.35;
+}
+
+.toggle-group__item-desc {
+  margin: 1px 0 0;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: $ink-muted;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .toggle-group {
+    padding: 14px 0 18px;
   }
 
-  p {
-    margin-top: 4px;
-    font-size: 0.78rem;
-    color: $ink-muted;
-    line-height: 1.4;
+  .toggle-group__items {
+    padding-left: 16px;
+  }
+
+  .toggle-group__main,
+  .toggle-group__item {
+    gap: 10px;
+  }
+
+  .toggle-group__item {
+    padding: 8px 0;
   }
 }

@@ -1,4 +1,4 @@
-@use "../../../styles/auction-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
 // ── User cards ──
 .adm-user-card {
@@ -23,7 +23,7 @@
     height: 48px;
     border-radius: 50%;
     background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
-    color: #fff;
+    color: #12101A;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -201,7 +201,7 @@
     height: 40px;
     border-radius: $radius-md;
     background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
-    color: #fff;
+    color: #12101A;
     font-size: 13px;
     font-weight: 700;
     display: flex;
@@ -352,6 +352,7 @@
 .adm-auction-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-auto-rows: 1fr;
   gap: 14px;
 }
 
@@ -362,6 +363,9 @@
   padding: 18px;
   position: relative;
   transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 
   &.live {
     border-color: rgba($color-danger, 0.35);
@@ -424,13 +428,14 @@
     font-size: 11px;
     color: $color-text-muted;
     margin-bottom: 10px;
+    padding-bottom: 2px;
   }
 
   footer {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
-    margin-top: 12px;
+    margin-top: auto;
     padding-top: 12px;
     border-top: 1px solid $color-border-light;
 
@@ -595,18 +600,19 @@
   background: linear-gradient(135deg, $color-primary-dark, $color-primary);
   border-radius: $radius-lg;
   padding: 20px;
-  color: #fff;
+  color: #12101A;
   transition: transform 0.25s ease;
 
   &:hover { transform: scale(1.02); }
 
-  header h3 { font-size: 16px; font-weight: 700; }
-  header span { font-size: 11px; opacity: 0.8; }
+  header h3 { font-size: 16px; font-weight: 700; color: #12101A; }
+  header span { font-size: 11px; opacity: 0.9; color: rgba(18, 16, 26, 0.8); }
 
   &__balance {
     font-size: 28px;
     font-weight: 800;
     margin: 16px 0;
+    color: #12101A;
   }
 
   dl {
@@ -614,8 +620,8 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     margin-bottom: 14px;
-    dt { font-size: 10px; opacity: 0.7; }
-    dd { font-size: 12px; font-weight: 600; }
+    dt { font-size: 10px; opacity: 0.8; color: rgba(18, 16, 26, 0.7); }
+    dd { font-size: 12px; font-weight: 600; color: #12101A; }
   }
 
   footer {
@@ -623,14 +629,14 @@
     gap: 8px;
     button {
       padding: 6px 14px;
-      border: 1px solid rgba(255,255,255,0.3);
+      border: 1px solid rgba(18, 16, 26, 0.2);
       border-radius: $radius-sm;
-      background: rgba(255,255,255,0.1);
-      color: #fff;
+      background: rgba(18, 16, 26, 0.08);
+      color: #12101A;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
-      &:hover { background: rgba(255,255,255,0.2); }
+      &:hover { background: rgba(18, 16, 26, 0.15); }
     }
   }
 }
@@ -693,7 +699,7 @@
   &__left {
     width: 100px;
     background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
-    color: #fff;
+    color: #12101A;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1378,7 +1384,7 @@
     justify-content: center;
     font-size: 13px;
     font-weight: 700;
-    color: #fff;
+    color: #12101A;
     background: linear-gradient(135deg, $color-primary-dark, $color-primary);
   }
 
@@ -1661,3 +1667,103 @@
   h4 { font-size: 14px; font-weight: 600; color: $color-primary-dark; margin-bottom: 6px; }
   div { display: flex; justify-content: space-between; strong { color: $color-primary; } span { font-size: 12px; color: $color-text-muted; } }
 }
+
+// ==========================================
+// UNIFIED ADMIN BUTTON STYLING SYSTEM
+// ==========================================
+.adm-user-card__footer button,
+.adm-product-card footer button,
+.adm-auction-card footer button,
+.adm-order-timeline__card footer button,
+.adm-bid-feed__actions button,
+.adm-wallet-card footer button,
+.adm-fee-card button,
+.adm-coupon-ticket__actions button,
+.adm-review-card footer button,
+.adm-fraud-alert footer button,
+.adm-kanban__card footer button,
+.adm-payment-card footer button,
+.adm-withdrawal-card footer button,
+.adm-auction-order-card footer button,
+.adm-shipping-card button,
+.adm-category-item__actions button,
+.adm-brand-chip__actions button,
+.adm-content-doc__actions button,
+.adm-banner-preview__body footer button,
+.adm-card footer button,
+.adm-cat-parent__actions button,
+.adm-cat-child__actions button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 5px 12px !important;
+  height: 28px !important;
+  border: 1px solid rgba($color-primary, 0.15) !important;
+  border-radius: $radius-sm !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  color: $color-text-muted !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+  box-shadow: none !important;
+  transform: none !important;
+
+  &:hover {
+    border-color: $color-primary !important;
+    color: $color-primary !important;
+    background: rgba($color-primary, 0.1) !important;
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+  }
+
+  // Variant: primary / edit / action
+  &.primary, &.act-edit, &.edit {
+    color: $color-primary !important;
+    border-color: rgba($color-primary, 0.3) !important;
+    &:hover {
+      border-color: $color-primary !important;
+      background: rgba($color-primary, 0.12) !important;
+    }
+  }
+
+  // Variant: success / approve / active
+  &.success, &.act-add, &.act-toggle, &.approve, &.save:not(.danger) {
+    color: $color-success !important;
+    border-color: rgba($color-success, 0.3) !important;
+    &:hover {
+      border-color: $color-success !important;
+      background: rgba($color-success, 0.12) !important;
+    }
+  }
+
+  // Variant: danger / delete / reject
+  &.danger, &.act-delete, &.delete, &.reject {
+    color: $color-danger !important;
+    border-color: rgba($color-danger, 0.3) !important;
+    &:hover {
+      border-color: $color-danger !important;
+      background: rgba($color-danger, 0.12) !important;
+    }
+  }
+
+  // Variant: secondary / default / cancel
+  &.secondary, &.cancel {
+    color: $color-text-muted !important;
+    border-color: $color-border-light !important;
+    &:hover {
+      border-color: $color-text !important;
+      color: $color-text !important;
+      background: rgba($color-text, 0.08) !important;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+  }
+}
+

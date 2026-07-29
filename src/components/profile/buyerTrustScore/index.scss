@@ -70,13 +70,14 @@
 
 .buyer-trust__bar-wrap {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
   margin-bottom: 12px;
 }
 
 .buyer-trust__bar {
-  flex: 1;
+  width: 100%;
   height: 12px;
   background: rgba($mist, 0.6);
   border-radius: $radius-pill;
@@ -94,7 +95,6 @@
   font-size: 0.8rem;
   font-weight: 700;
   color: $ink-muted;
-  min-width: 36px;
   text-align: right;
 }
 

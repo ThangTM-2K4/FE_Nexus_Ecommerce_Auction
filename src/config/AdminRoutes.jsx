@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AdminLayout from "../components/admin/adminLayout";
 import AdminDashboard from "../pages/admin/adminDashboard";
+import AdminProfile from "../pages/admin/adminProfile";
 import {
   AdminUsers,
   AdminSellerVerification,
@@ -37,6 +38,7 @@ export default function AdminRoutes() {
       <Route element={<AdminLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="profile" element={<AdminProfile />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="seller-verification" element={<AdminSellerVerification />} />
         <Route path="products" element={<AdminProducts />} />

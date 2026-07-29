@@ -40,3 +40,106 @@
   margin-top: 6px;
   line-height: 1.5;
 }
+
+.checkout-address-card__hint,
+.checkout-address-card__empty p {
+  font-size: 0.88rem;
+  color: $ink-muted;
+  margin: 0;
+}
+
+.checkout-address-card__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkout-address-card__link,
+.checkout-address-picker__link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $accent;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.checkout-address-picker {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkout-address-picker__item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid $border-soft;
+  border-radius: $radius-sm;
+  background: $surface;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color $transition-fast, background $transition-fast;
+
+  &:hover,
+  &.is-selected {
+    border-color: rgba($raspberry, 0.45);
+    background: rgba($blush-pink, 0.25);
+  }
+}
+
+.checkout-address-picker__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.checkout-address-picker__name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: $ink;
+}
+
+.checkout-address-picker__phone {
+  font-size: 0.82rem;
+  color: $ink-muted;
+}
+
+.checkout-address-picker__default {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: $live-red;
+  border: 1px solid rgba($live-red, 0.35);
+  border-radius: $radius-pill;
+  padding: 1px 8px;
+}
+
+.checkout-address-picker__line {
+  margin: 0;
+  font-size: 0.82rem;
+  color: $ink-muted;
+  line-height: 1.45;
+}
+
+.checkout-address-picker__empty {
+  text-align: center;
+  padding: 12px 0 4px;
+
+  p {
+    margin: 0 0 10px;
+    color: $ink-muted;
+  }
+}
+
+.checkout-address-picker__footer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid $border-soft;
+  text-align: center;
+}

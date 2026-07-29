@@ -1,0 +1,10 @@
+// ─── Staff Variables ────────────────────────────────────────────────────────
+// Dùng chung palette sáng (Raspberry Bloom) giống seller/homepage.
+// KHÔNG dùng auction/variables vì đó là dark theme riêng cho auction zone.
+@forward "./palette";
+@use "./palette" as p;
+
+// Các biến bổ sung mà staff SCSS dùng nhưng palette không định nghĩa sẵn
+$color-gradient-dark:   p.$indigo;                      // #523F77
+$color-gold:            p.$raspberry;                   // dùng accent màu chính
+$color-gold-bg:         rgba(p.$blush-pink, 0.45);      // nền nhạt hồng
