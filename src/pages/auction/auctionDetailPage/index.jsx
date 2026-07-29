@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  FaHeart, FaCheckCircle, FaClock, FaGavel, FaArrowLeft, FaShieldAlt, FaExclamationTriangle, FaTimes,
+  FaHeart, FaCheckCircle, FaClock, FaGavel, FaArrowLeft, FaShieldAlt, FaExclamationTriangle, FaTimes, FaTrophy, FaMapMarkerAlt, FaTruck, FaMoneyBillWave, FaBuilding, FaWallet,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import AuctionImage from "../../../components/auction/auctionImage";
@@ -9,14 +9,147 @@ import { getAuctionDetail } from "../../../data/auctionMockData";
 import { useAuth } from "../../../context/AuthContext";
 import "./index.scss";
 
+const BID_HISTORY_KEY = "auc_bid_history";
+
+function maskUsername(name, isCurrentUser) {
+  if (isCurrentUser) return name;
+  if (!name) return "***";
+  if (name.length <= 3) return name.slice(0, 1) + "***";
+  return name.slice(0, 3) + "***";
+}
+
+function isSameUser(currentUser, bidUser) {
+  if (!currentUser || !bidUser) return false;
+  const target = String(bidUser).trim().toLowerCase();
+  const names = [currentUser.name, currentUser.fullName, currentUser.email, currentUser.username]
+    .filter(Boolean)
+    .map((s) => String(s).trim().toLowerCase());
+  return names.includes(target) || target === "bạn";
+}
+
+function saveBidToHistory(user, product, amount) {
+  const existing = JSON.parse(localStorage.getItem(BID_HISTORY_KEY) || "[]");
+  const entry = {
+    id: Date.now(),
+    auctionId: product.id,
+    title: product.title,
+    image: product.images?.[0] || "",
+    category: product.breadcrumbs?.[1] || "",
+    amount,
+    currency: String(product.currentPrice).includes("$") ? "USD" : "VND",
+    bidAt: new Date().toISOString(),
+    userName: user?.name || user?.fullName || user?.email || "Bạn",
+    userAvatar: user?.avatar || user?.avatarUrl || "",
+    status: "winning",
+  };
+  localStorage.setItem(BID_HISTORY_KEY, JSON.stringify([entry, ...existing].slice(0, 200)));
+}
+
+function formatSeconds(totalSeconds) {
+  if (totalSeconds <= 0) return "00:00:00";
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    const remHours = hours % 24;
+    return `${days} ngày ${pad(remHours)}:${pad(minutes)}:${pad(seconds)}`;
+  }
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
+function parseTimeToSeconds(str) {
+  if (!str) return 300;
+  if (str.includes("ngày")) {
+    const days = parseInt(str) || 1;
+    return days * 86400;
+  }
+  const parts = str.split(":").map(Number);
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  return 180;
+}
+
 export default function AuctionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isSellerMode } = useAuth();
   const product = getAuctionDetail(id);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(() => {
+    try {
+      const list = JSON.parse(localStorage.getItem("auc_watchlist") || "[]");
+      return list.some((item) => String(item.id) === String(product?.id));
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleLike = () => {
+    if (!product) return;
+    try {
+      const list = JSON.parse(localStorage.getItem("auc_watchlist") || "[]");
+      const exists = list.some((item) => String(item.id) === String(product.id));
+      let updated = [];
+      if (exists) {
+        updated = list.filter((item) => String(item.id) !== String(product.id));
+        toast.info("Đã gỡ sản phẩm khỏi mục Đang Theo Dõi");
+      } else {
+        updated = [
+          {
+            id: product.id,
+            title: product.title,
+            description: product.description || "",
+            image: product.images?.[0] || "",
+            currentPrice: currentPrice || product.currentPrice,
+            categoryLabel: product.breadcrumbs?.[1] || "",
+            timeLeft: product.timeLeft || "24h",
+            addedAt: new Date().toISOString(),
+          },
+          ...list,
+        ];
+        toast.success("🎉 Đã thêm sản phẩm vào mục Đang Theo Dõi!");
+      }
+      localStorage.setItem("auc_watchlist", JSON.stringify(updated));
+      window.dispatchEvent(new Event("storage"));
+      setLiked(!exists);
+    } catch {
+      setLiked((l) => !l);
+    }
+  };
   const [bidAmount, setBidAmount] = useState("");
+
+  const [currentPrice, setCurrentPrice] = useState(() => product?.currentPrice || "");
+  const [leader, setLeader] = useState(() => product?.leader || "");
+  const [leaderAvatar, setLeaderAvatar] = useState(() => product?.leaderAvatar || "");
+  const [bidHistory, setBidHistory] = useState(() => product?.bidHistory || []);
+
+  // Real-time Countdown timer state
+  const [secondsLeft, setSecondsLeft] = useState(() => parseTimeToSeconds(product?.timeLeft));
+  const [isAuctionEnded, setIsAuctionEnded] = useState(false);
+
+  // 12h Payment timer state
+  const [payTimerSeconds, setPayTimerSeconds] = useState(12 * 3600); // 12 hours = 43200 seconds
+  const [isPaymentExpired, setIsPaymentExpired] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+
+  // Checkout & Address Selection Modal state
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [addressTab, setAddressTab] = useState("default"); // 'default' | 'new'
+  const [customAddress, setCustomAddress] = useState({
+    fullName: "",
+    phone: "",
+    province: "",
+    district: "",
+    streetAddress: "",
+  });
+  const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState("wallet");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const [showRegModal, setShowRegModal] = useState(false);
   const [regStep, setRegStep] = useState(1);
@@ -24,6 +157,92 @@ export default function AuctionDetailPage() {
   const [paymentMethod, setPaymentMethod] = useState("wallet");
   const [isRegistering, setIsRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+
+  // Load history & initial top leader
+  useEffect(() => {
+    if (!product) return;
+
+    let stored = [];
+    try {
+      stored = JSON.parse(localStorage.getItem(BID_HISTORY_KEY) || "[]");
+    } catch {
+      stored = [];
+    }
+
+    const localBidsForThis = stored.filter(
+      (item) => String(item.auctionId) === String(product.id)
+    );
+
+    let mergedHistory = Array.isArray(product.bidHistory) ? [...product.bidHistory] : [];
+
+    if (localBidsForThis.length > 0) {
+      const isUsd = String(product.currentPrice || "").includes("$");
+      const formattedLocal = localBidsForThis.map((b) => {
+        const formattedAmt = isUsd
+          ? `$${Number(b.amount).toLocaleString("en-US")}`
+          : `${Number(b.amount).toLocaleString("vi-VN")}đ`;
+        return {
+          user: b.userName,
+          avatar: b.userAvatar || product.leaderAvatar,
+          amount: formattedAmt,
+          rawAmount: b.amount,
+          time: "Vừa xong",
+          isLeader: false,
+          isYou: true,
+        };
+      });
+
+      mergedHistory = [...formattedLocal, ...mergedHistory];
+    }
+
+    if (mergedHistory.length > 0) {
+      mergedHistory[0] = { ...mergedHistory[0], isLeader: true };
+      const topBid = mergedHistory[0];
+      setCurrentPrice(topBid.amount || product.currentPrice);
+      setLeader(topBid.user || product.leader);
+      setLeaderAvatar(topBid.avatar || product.leaderAvatar);
+    } else {
+      setCurrentPrice(product.currentPrice || "");
+      setLeader(product.leader || "");
+      setLeaderAvatar(product.leaderAvatar || "");
+    }
+
+    setBidHistory(mergedHistory);
+  }, [product]);
+
+  // Real-time Countdown timer tick
+  useEffect(() => {
+    if (isAuctionEnded) return;
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setIsAuctionEnded(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isAuctionEnded]);
+
+  // 12h Payment timer tick (runs when auction ended and not yet paid or expired)
+  useEffect(() => {
+    if (!isAuctionEnded || isPaid || isPaymentExpired) return;
+    const interval = setInterval(() => {
+      setPayTimerSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setIsPaymentExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isAuctionEnded, isPaid, isPaymentExpired]);
 
   const handleOpenRegistration = () => {
     if (!user) {
@@ -70,10 +289,11 @@ export default function AuctionDetailPage() {
     );
   }
 
-  const isUsd = String(product.currentPrice).includes("$");
+  const isUsd = String(currentPrice || product.currentPrice).includes("$");
+  const currentPriceNum = Number(String(currentPrice).replace(/[^0-9]/g, "")) || 0;
 
-  const minBid = product.currentPrice
-    ? Number(String(product.currentPrice).replace(/[^0-9]/g, "")) + (isUsd ? 500 : 500000)
+  const minBid = currentPriceNum
+    ? currentPriceNum + (isUsd ? 500 : 500000)
     : (isUsd ? 500 : 500000);
 
   const increments = isUsd
@@ -97,6 +317,15 @@ export default function AuctionDetailPage() {
   };
 
   const handleBid = () => {
+    if (!user) {
+      toast.info("Vui lòng đăng nhập để đặt giá!");
+      navigate("/login", { state: { redirectTo: `/auction/detail/${id}` } });
+      return;
+    }
+    if (isAuctionEnded) {
+      toast.error("Phiên đấu giá đã kết thúc, không thể đặt giá nữa!");
+      return;
+    }
     const amount = Number(String(bidAmount).replace(/[^0-9]/g, ""));
     if (!bidAmount || amount < minBid) {
       toast.error(
@@ -104,10 +333,101 @@ export default function AuctionDetailPage() {
       );
       return;
     }
+
+    const userName = user.name || user.fullName || user.email || "Bạn";
+    const userAvatar = user.avatar || user.avatarUrl || product.leaderAvatar;
+    const formattedAmount = isUsd
+      ? `$${amount.toLocaleString("en-US")}`
+      : `${amount.toLocaleString("vi-VN")}đ`;
+
+    saveBidToHistory(user, product, amount);
+
+    const newBidItem = {
+      user: userName,
+      avatar: userAvatar,
+      amount: formattedAmount,
+      rawAmount: amount,
+      time: "Vừa xong",
+      isLeader: true,
+      isYou: true,
+    };
+
+    const updatedHistory = [
+      newBidItem,
+      ...bidHistory.map((b) => ({ ...b, isLeader: false })),
+    ];
+    setBidHistory(updatedHistory);
+    setCurrentPrice(formattedAmount);
+    setLeader(userName);
+    setLeaderAvatar(userAvatar);
+
     toast.success(
-      `🎉 Đặt giá ${isUsd ? "$" : ""}${amount.toLocaleString(isUsd ? "en-US" : "vi-VN")}${isUsd ? "" : " ₫"} thành công!`
+      `🎉 Đặt giá ${formattedAmount} thành công! Bạn đang là người dẫn đầu.`
     );
+    setBidAmount("");
   };
+
+  // Winner checkout submit handler
+  const handleConfirmCheckout = async () => {
+    if (addressTab === "new") {
+      if (
+        !customAddress.fullName ||
+        !customAddress.phone ||
+        !customAddress.streetAddress
+      ) {
+        toast.error("Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận!");
+        return;
+      }
+    }
+
+    try {
+      setIsProcessingPayment(true);
+      await new Promise((r) => setTimeout(r, 1200));
+
+      const finalAddress =
+        addressTab === "default"
+          ? {
+              recipient: user?.name || user?.fullName || "Nguyễn Minh Đức",
+              phone: user?.phone || "0912 345 678",
+              fullAddress:
+                user?.address ||
+                "123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+              isDefault: true,
+            }
+          : {
+              recipient: customAddress.fullName,
+              phone: customAddress.phone,
+              fullAddress: `${customAddress.streetAddress}${customAddress.district ? `, ${customAddress.district}` : ""}${customAddress.province ? `, ${customAddress.province}` : ""}`,
+              isDefault: false,
+            };
+
+      const orders = JSON.parse(localStorage.getItem("auc_orders") || "[]");
+      const newOrder = {
+        id: `AUC-WIN-${product.id}-${Date.now()}`,
+        productTitle: product.title,
+        productImage: images[0] || "",
+        finalPrice: currentPrice,
+        paidAt: new Date().toISOString(),
+        paymentMethod: checkoutPaymentMethod,
+        address: finalAddress,
+        status: "processing",
+      };
+      localStorage.setItem("auc_orders", JSON.stringify([newOrder, ...orders]));
+
+      setIsPaid(true);
+      setShowCheckoutModal(false);
+      toast.success("🎉 Thanh toán thành công! Đơn hàng trúng thầu đang được chuẩn bị giao.");
+    } catch {
+      toast.error("Thanh toán thất bại, vui lòng thử lại!");
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const breadcrumbs = product.breadcrumbs || ["ĐẤU GIÁ", "CHI TIẾT"];
+  const images = product.images?.length ? product.images : [""];
+  const specs = product.specs || {};
+  const isUserWinner = isSameUser(user, leader);
 
   return (
     <div className="auc-detail">
@@ -115,155 +435,282 @@ export default function AuctionDetailPage() {
         <button type="button" className="auc-detail__back" onClick={() => navigate(-1)}>
           <FaArrowLeft /> Quay lại
         </button>
-        {product.breadcrumbs.map((crumb, i) => (
+        {breadcrumbs.map((crumb, i) => (
           <span key={crumb}>{i > 0 && " / "}{crumb}</span>
         ))}
       </nav>
 
-        <div className="auc-detail__grid">
-          <div className="auc-detail__gallery">
-            <div className="auc-detail__main-image">
-              <AuctionImage
-                src={product.images[selectedImage]}
-                alt={product.title}
-              />
-              <span className="auc-detail__badge">{product.badge}</span>
-            </div>
-
-            <div className="auc-detail__thumbs">
-              {product.images.map((img, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={selectedImage === i ? "active" : ""}
-                  onClick={() => setSelectedImage(i)}
-                >
-                  <AuctionImage src={img} alt={`Thumb ${i + 1}`} />
-                </button>
-              ))}
-            </div>
-
-            <section className="auc-detail__specs">
-              <h3>Chi tiết sản phẩm</h3>
-              <p>{product.description}</p>
-              <div className="auc-detail__specs-grid">
-                <div><span>THƯƠNG HIỆU</span><strong>{product.specs.brand}</strong></div>
-                <div><span>TÌNH TRẠNG</span><strong>{product.specs.condition}</strong></div>
-                <div><span>LOẠI MÁY</span><strong>{product.specs.movement}</strong></div>
-                <div><span>NĂM SẢN XUẤT</span><strong>{product.specs.year}</strong></div>
+      {/* ─── Winner & Ended Banner Zone ─── */}
+      {isAuctionEnded && (
+        <div className="auc-winner-banner-wrapper">
+          {isUserWinner ? (
+            isPaid ? (
+              <div className="auc-winner-banner auc-winner-banner--paid">
+                <div className="auc-winner-banner__header">
+                  <FaCheckCircle className="icon icon-success" />
+                  <div>
+                    <h3>ĐÃ THANH TOÁN THÀNH CÔNG!</h3>
+                    <p>Mã đơn hàng: <strong>#AUC-WIN-{product.id}</strong> — Đơn hàng đang được đóng gói & chuyển đến địa chỉ nhận.</p>
+                  </div>
+                </div>
               </div>
-            </section>
+            ) : isPaymentExpired ? (
+              <div className="auc-winner-banner auc-winner-banner--expired">
+                <div className="auc-winner-banner__header">
+                  <FaExclamationTriangle className="icon icon-danger" />
+                  <div>
+                    <h3>QUÁ HẠN THANH TOÁN 12 GiỜ</h3>
+                    <p>Đã tịch thu 100% tiền đặt cọc (5.000.000 ₫) và hủy kết quả trúng thầu theo Quy chế đấu giá.</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="auc-winner-banner auc-winner-banner--win">
+                <div className="auc-winner-banner__header">
+                  <FaTrophy className="icon-trophy" />
+                  <div>
+                    <h3>🎉 CHÚC MỪNG BẠN ĐÃ TRÚNG THẦU SẢN PHẨM NÀY!</h3>
+                    <p>Giá trúng thầu cuối cùng: <strong>{currentPrice}</strong></p>
+                  </div>
+                </div>
+                <div className="auc-winner-banner__deadline">
+                  <div className="deadline-time">
+                    <FaClock /> Thời hạn thanh toán còn lại: <strong>{formatSeconds(payTimerSeconds)}</strong>
+                  </div>
+                  <p className="deadline-warning">
+                    ⚠️ Vui lòng hoàn tất thanh toán trong vòng 12 giờ. Quá thời hạn sẽ bị tịch thu 100% tiền đặt cọc (5.000.000 ₫) và hủy kết quả.
+                  </p>
+                  <div className="deadline-actions">
+                    <button
+                      type="button"
+                      className="btn-pay-now"
+                      onClick={() => setShowCheckoutModal(true)}
+                    >
+                      <FaGavel /> Thanh toán ngay & Chọn địa chỉ nhận
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-demo-expire"
+                      onClick={() => setIsPaymentExpired(true)}
+                      title="Thử nghiệm trường hợp quá hạn thanh toán 12h"
+                    >
+                      ⚡ Giả lập Quá hạn 12h (Demo)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="auc-winner-banner auc-winner-banner--ended">
+              <FaClock style={{ fontSize: 18, color: '#e8c468' }} />
+              <span>
+                Phiên đấu giá đã kết thúc. Người trúng thầu: <strong>{maskUsername(leader, isSameUser(user, leader))}</strong> với giá <strong>{currentPrice}</strong>.
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="auc-detail__grid">
+        <div className="auc-detail__gallery">
+          <div className="auc-detail__main-image">
+            <AuctionImage
+              src={images[selectedImage] || images[0]}
+              alt={product.title}
+            />
+            <span className="auc-detail__badge">
+              {isAuctionEnded ? "ĐÃ KẾT THÚC" : product.badge}
+            </span>
           </div>
 
-          <aside className="auc-detail__sidebar">
-            <div className="auc-detail__card">
-              <div className="auc-detail__title-row">
-                <h1>{product.title}</h1>
-                <button type="button" className={liked ? "liked" : ""} onClick={() => setLiked(l => !l)}><FaHeart /></button>
-              </div>
-              <div 
-                className="auc-detail__seller" 
-                onClick={() => navigate(`/auction/profile?seller=${encodeURIComponent(product.seller)}`)}
-                style={{ cursor: 'pointer' }}
-                title="Xem hồ sơ người bán"
+          <div className="auc-detail__thumbs">
+            {images.map((img, i) => (
+              <button
+                key={i}
+                type="button"
+                className={selectedImage === i ? "active" : ""}
+                onClick={() => setSelectedImage(i)}
               >
+                <AuctionImage src={img} alt={`Thumb ${i + 1}`} />
+              </button>
+            ))}
+          </div>
+
+          <section className="auc-detail__specs">
+            <h3>Chi tiết sản phẩm</h3>
+            <p>{product.description}</p>
+            <div className="auc-detail__specs-grid">
+              <div><span>THƯƠNG HIỆU</span><strong>{specs.brand || "N/A"}</strong></div>
+              <div><span>TÌNH TRẠNG</span><strong>{specs.condition || "N/A"}</strong></div>
+              <div><span>LOẠI MÁY</span><strong>{specs.movement || "N/A"}</strong></div>
+              <div><span>NĂM SẢN XUẤT</span><strong>{specs.year || "N/A"}</strong></div>
+            </div>
+          </section>
+        </div>
+
+        <aside className="auc-detail__sidebar">
+          <div className="auc-detail__card">
+            <div className="auc-detail__title-row">
+              <h1>{product.title}</h1>
+              <button type="button" className={liked ? "liked" : ""} onClick={handleToggleLike} title={liked ? "Bỏ theo dõi" : "Theo dõi phiên đấu giá"}>
+                <FaHeart style={{ color: liked ? '#ef4444' : undefined }} />
+              </button>
+            </div>
+            <div 
+              className="auc-detail__seller" 
+              onClick={() => navigate(`/auction/profile?seller=${encodeURIComponent(product.seller)}`)}
+              style={{ cursor: 'pointer' }}
+              title="Xem hồ sơ người bán"
+            >
+              <AuctionImage
+                src={product.sellerAvatar}
+                alt={product.seller}
+                className="auc-detail__seller-avatar"
+              />
+              <div>
+                <span>NGƯỜI BÁN UY TÍN</span>
+                <strong>
+                  {product.seller}
+                  {product.sellerVerified && <FaCheckCircle />}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="auc-detail__card auc-detail__card--bid">
+            <span className="label">GIÁ HIỆN TẠI</span>
+            <div className="price">{currentPrice || product.currentPrice}</div>
+
+            <div className="leader">
+              <span>NGƯỜI DẪN ĐẦU</span>
+              <div className="leader-badge">
                 <AuctionImage
-                  src={product.sellerAvatar}
-                  alt={product.seller}
-                  className="auc-detail__seller-avatar"
+                  src={leaderAvatar || product.leaderAvatar}
+                  alt={leader || product.leader}
+                  className="leader-avatar"
                 />
-                <div>
-                  <span>NGƯỜI BÁN UY TÍN</span>
-                  <strong>
-                    {product.seller}
-                    {product.sellerVerified && <FaCheckCircle />}
-                  </strong>
-                </div>
+                {maskUsername(leader || product.leader, isSameUser(user, leader || product.leader))}
               </div>
             </div>
 
-            <div className="auc-detail__card auc-detail__card--bid">
-              <span className="label">GIÁ HIỆN TẠI</span>
-              <div className="price">{product.currentPrice}</div>
-
-              <div className="leader">
-                <span>NGƯỜI DẪN ĐẦU</span>
-                <div className="leader-badge">
-                  <AuctionImage
-                    src={product.leaderAvatar}
-                    alt={product.leader}
-                    className="leader-avatar"
-                  />
-                  {product.leader}
-                </div>
+            <div className="timer">
+              <span><FaClock /> THỜI GIAN CÒN LẠI</span>
+              <strong className={isAuctionEnded ? "ended" : ""}>
+                {isAuctionEnded ? "00:00:00 (Đã kết thúc)" : formatSeconds(secondsLeft)}
+              </strong>
+              <div className="timer-bar">
+                <div style={{ width: isAuctionEnded ? "0%" : `${Math.min(100, (secondsLeft / 300) * 100)}%` }} />
               </div>
-
-              <div className="timer">
-                <span><FaClock /> THỜI GIAN CÒN LẠI</span>
-                <strong>{product.timeLeft}</strong>
-                <div className="timer-bar"><div style={{ width: "65%" }} /></div>
-              </div>
-
-              {isSellerMode ? null : product.isUpcoming ? (
-                <div className="bid-form">
-                  <label>ĐĂNG KÝ THAM GIA ĐẤU GIÁ</label>
-                  <p className="disclaimer" style={{ marginBottom: "16px", fontSize: "14px", color: "#b9b4c7" }}>
-                    Phiên đấu giá chưa bắt đầu. Đăng ký để đặt cọc và nhận quyền tham gia khi phiên diễn ra.
-                  </p>
-                  {isRegistered ? (
-                    <button type="button" className="confirm-btn" style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff" }} disabled>
-                      <FaCheckCircle /> Đã đăng ký tham gia
-                    </button>
-                  ) : (
-                    <button type="button" className="confirm-btn" onClick={handleOpenRegistration}>
-                      <FaGavel /> Đăng ký đấu giá
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="bid-form">
-                  <label>ĐẶT GIÁ THẦU CỦA BẠN</label>
-                  <div className="bid-input">
-                    <span>{isUsd ? "$" : "₫"}</span>
-                    <input
-                      type="text"
-                      placeholder={`Tối thiểu ${minBid.toLocaleString(isUsd ? "en-US" : "vi-VN")}`}
-                      value={bidAmount}
-                      onChange={(e) => {
-                        const rawVal = e.target.value.replace(/[^0-9]/g, "");
-                        const numVal = Number(rawVal);
-                        setBidAmount(rawVal ? numVal.toLocaleString(isUsd ? "en-US" : "vi-VN") : "");
-                      }}
-                    />
-                  </div>
-                  <div className="increments">
-                    {increments.map((inc) => (
-                      <button
-                        key={inc.value}
-                        type="button"
-                        onClick={() => handleIncrement(inc.value)}
-                      >
-                        {inc.label}
-                      </button>
-                    ))}
-                  </div>
-                  <button type="button" className="confirm-btn" onClick={handleBid}>
-                    <FaGavel /> Xác Nhận Đặt Giá
-                  </button>
-                  <p className="disclaimer">
-                    Bằng việc đặt giá, bạn đồng ý với điều khoản đấu giá
-                  </p>
-                </div>
+              {!isAuctionEnded && (
+                <button
+                  type="button"
+                  className="btn-demo-quick-end"
+                  onClick={() => {
+                    setSecondsLeft(0);
+                    setIsAuctionEnded(true);
+                    toast.info("⚡ Đã kích hoạt kết thúc phiên đấu giá!");
+                  }}
+                  title="Chạy thử đếm ngược về 0"
+                >
+                  ⚡ Hết giờ ngay (Demo)
+                </button>
               )}
             </div>
 
-            <div className="auc-detail__card">
-              <div className="history-header">
-                <h3>LỊCH SỬ ĐẤU GIÁ ({product.bidHistory.length})</h3>
-                <a href="#">Xem tất cả</a>
+            {isSellerMode ? null : isAuctionEnded ? (
+              <div className="bid-form">
+                <label>TRẠNG THÁI PHIÊN ĐẤU GIÁ</label>
+                {isUserWinner ? (
+                  isPaid ? (
+                    <button type="button" className="confirm-btn" style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff" }} disabled>
+                      <FaCheckCircle /> Đã hoàn tất thanh toán
+                    </button>
+                  ) : isPaymentExpired ? (
+                    <button type="button" className="confirm-btn" style={{ background: "rgba(220, 38, 38, 0.2)", color: "#f87171", border: "1px solid #ef4444" }} disabled>
+                      <FaExclamationTriangle /> Đã quá hạn 12h - Tịch thu cọc
+                    </button>
+                  ) : (
+                    <button type="button" className="confirm-btn" onClick={() => setShowCheckoutModal(true)}>
+                      <FaGavel /> Thanh Toán Trúng Thầu (Hạn 12h)
+                    </button>
+                  )
+                ) : (
+                  <button type="button" className="confirm-btn" style={{ background: "rgba(255,255,255,0.1)", color: "#8f7fbf" }} disabled>
+                    Phiên đấu giá đã kết thúc
+                  </button>
+                )}
               </div>
-              <ul className="history-list">
-                {product.bidHistory.map((bid, i) => (
+            ) : product.isUpcoming ? (
+              <div className="bid-form">
+                <label>ĐĂNG KÝ THAM GIA ĐẤU GIÁ</label>
+                <p className="disclaimer" style={{ marginBottom: "16px", fontSize: "14px", color: "#b9b4c7" }}>
+                  Phiên đấu giá chưa bắt đầu. Đăng ký để đặt cọc và nhận quyền tham gia khi phiên diễn ra.
+                </p>
+                {isRegistered ? (
+                  <button type="button" className="confirm-btn" style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff" }} disabled>
+                    <FaCheckCircle /> Đã đăng ký tham gia
+                  </button>
+                ) : (
+                  <button type="button" className="confirm-btn" onClick={handleOpenRegistration}>
+                    <FaGavel /> Đăng ký đấu giá
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="bid-form">
+                <label>ĐẶT GIÁ THẦU CỦA BẠN</label>
+                <div className="auc-wallet-balance-box">
+                  <div className="wallet-balance-header">
+                    <span><FaWallet style={{ color: "#e8c468", marginRight: 4 }} /> Số dư ví Nexus Pay khả dụng:</span>
+                    <strong>{isUsd ? "$50,000" : "50.000.000 ₫"}</strong>
+                  </div>
+                  <span className="wallet-status-badge">✓ Đủ điều kiện đặt giá</span>
+                </div>
+                <div className="bid-input">
+                  <span>{isUsd ? "$" : "₫"}</span>
+                  <input
+                    type="text"
+                    placeholder={`Tối thiểu ${minBid.toLocaleString(isUsd ? "en-US" : "vi-VN")}`}
+                    value={bidAmount}
+                    onChange={(e) => {
+                      const rawVal = e.target.value.replace(/[^0-9]/g, "");
+                      const numVal = Number(rawVal);
+                      setBidAmount(rawVal ? numVal.toLocaleString(isUsd ? "en-US" : "vi-VN") : "");
+                    }}
+                  />
+                </div>
+                <div className="increments">
+                  {increments.map((inc) => (
+                    <button
+                      key={inc.value}
+                      type="button"
+                      onClick={() => handleIncrement(inc.value)}
+                    >
+                      {inc.label}
+                    </button>
+                  ))}
+                </div>
+                <button type="button" className="confirm-btn" onClick={handleBid}>
+                  <FaGavel /> Xác Nhận Đặt Giá
+                </button>
+                <p className="disclaimer">
+                  Bằng việc đặt giá, bạn đồng ý với điều khoản đấu giá
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="auc-detail__card">
+            <div className="history-header">
+              <h3>LỊCH SỬ ĐẤU GIÁ ({bidHistory.length})</h3>
+              <a href="#">Xem tất cả</a>
+            </div>
+            <ul className="history-list">
+              {bidHistory.map((bid, i) => {
+                const isMe = isSameUser(user, bid.user) || bid.isYou;
+                const displayName = maskUsername(bid.user, isMe);
+                const bidAttemptNum = bidHistory.length - i;
+                return (
                   <li key={i} className={bid.isLeader ? "leader" : ""}>
                     <div 
                       className="history-user"
@@ -273,22 +720,188 @@ export default function AuctionDetailPage() {
                     >
                       <AuctionImage
                         src={bid.avatar}
-                        alt={bid.user}
+                        alt={displayName}
                         className="history-avatar"
                       />
                       <div>
-                        <strong>{bid.user}</strong>
+                        <strong style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {displayName}
+                          {isMe && <span className="my-bid-tag">Bạn</span>}
+                          <span className="auc-bid-attempt-tag">Lần {bidAttemptNum}</span>
+                        </strong>
                         <span>{bid.time}</span>
                       </div>
                     </div>
                     <em>{bid.amount}</em>
                   </li>
-                ))}
-              </ul>
-            </div>
-          </aside>
-        </div>
+                );
+              })}
+            </ul>
+          </div>
+        </aside>
+      </div>
 
+      {/* ─── Winner Checkout Modal & Address Selection ─── */}
+      {showCheckoutModal && (
+        <div className="auc-modal-overlay" onClick={() => setShowCheckoutModal(false)}>
+          <div className="auc-modal auc-modal--checkout" onClick={(e) => e.stopPropagation()}>
+            <div className="auc-modal__header">
+              <h3>
+                <FaTrophy style={{ color: "#e8c468" }} />
+                Thanh Toán Đơn Hàng Trúng Thầu
+              </h3>
+              <button type="button" onClick={() => setShowCheckoutModal(false)}><FaTimes /></button>
+            </div>
+
+            <div className="auc-modal__body">
+              {/* Product summary */}
+              <div className="deposit-product-card">
+                <AuctionImage src={images[0]} alt={product.title} />
+                <div>
+                  <strong>{product.title}</strong>
+                  <span style={{ color: "#e8c468", fontWeight: 700, fontSize: "14px", display: "block", marginTop: "4px" }}>
+                    Giá trúng thầu: {currentPrice}
+                  </span>
+                </div>
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="checkout-summary-box">
+                <div className="summary-row">
+                  <span>Giá trúng thầu:</span>
+                  <strong>{currentPrice}</strong>
+                </div>
+                <div className="summary-row" style={{ color: '#10b981' }}>
+                  <span>Tiền cọc đã cọc (Khấu trừ):</span>
+                  <strong>- 5.000.000 ₫</strong>
+                </div>
+                <div className="summary-row divider">
+                  <span>Phí vận chuyển:</span>
+                  <strong style={{ color: '#10b981' }}>Miễn phí (Giao hàng tận nhà)</strong>
+                </div>
+              </div>
+
+              {/* Address Selection */}
+              <div className="address-section">
+                <label style={{ fontSize: '12px', color: '#b9b4c7', display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                  <FaMapMarkerAlt style={{ color: '#e8c468', marginRight: 4 }} /> ĐỊA CHỈ NHẬN HÀNG
+                </label>
+                <div className="address-tabs">
+                  <button
+                    type="button"
+                    className={addressTab === "default" ? "active" : ""}
+                    onClick={() => setAddressTab("default")}
+                  >
+                    Địa chỉ mặc định
+                  </button>
+                  <button
+                    type="button"
+                    className={addressTab === "new" ? "active" : ""}
+                    onClick={() => setAddressTab("new")}
+                  >
+                    Nhập địa chỉ mới
+                  </button>
+                </div>
+
+                {addressTab === "default" ? (
+                  <div className="address-card address-card--selected">
+                    <div className="address-card__header">
+                      <strong>👤 {user?.name || user?.fullName || "Nguyễn Minh Đức"}</strong>
+                      <span className="badge-default">Mặc định</span>
+                    </div>
+                    <p className="address-card__phone">📞 {user?.phone || "0912 345 678"}</p>
+                    <p className="address-card__detail">
+                      🏠 {user?.address || "123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="new-address-form">
+                    <div className="form-row">
+                      <input
+                        type="text"
+                        placeholder="Họ và tên người nhận (*)"
+                        value={customAddress.fullName}
+                        onChange={(e) => setCustomAddress({ ...customAddress, fullName: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Số điện thoại (*)"
+                        value={customAddress.phone}
+                        onChange={(e) => setCustomAddress({ ...customAddress, phone: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-row">
+                      <input
+                        type="text"
+                        placeholder="Tỉnh / Thành phố"
+                        value={customAddress.province}
+                        onChange={(e) => setCustomAddress({ ...customAddress, province: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Quận / Huyện"
+                        value={customAddress.district}
+                        onChange={(e) => setCustomAddress({ ...customAddress, district: e.target.value })}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Địa chỉ chi tiết (Số nhà, tên đường...) (*)"
+                      value={customAddress.streetAddress}
+                      onChange={(e) => setCustomAddress({ ...customAddress, streetAddress: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Method */}
+              <div>
+                <label style={{ fontSize: '12px', color: '#b9b4c7', display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                  <FaMoneyBillWave style={{ color: '#e8c468', marginRight: 4 }} /> PHƯƠNG THỨC THANH TOÁN
+                </label>
+                <div className="payment-options">
+                  <label className={checkoutPaymentMethod === 'wallet' ? 'selected' : ''}>
+                    <input
+                      type="radio"
+                      name="checkoutPaymentMethod"
+                      value="wallet"
+                      checked={checkoutPaymentMethod === 'wallet'}
+                      onChange={() => setCheckoutPaymentMethod('wallet')}
+                    />
+                    <span>Ví Nexus Pay (Số dư khả dụng: 50.000.000 ₫)</span>
+                  </label>
+                  <label className={checkoutPaymentMethod === 'bank' ? 'selected' : ''}>
+                    <input
+                      type="radio"
+                      name="checkoutPaymentMethod"
+                      value="bank"
+                      checked={checkoutPaymentMethod === 'bank'}
+                      onChange={() => setCheckoutPaymentMethod('bank')}
+                    />
+                    <span>Chuyển khoản Ngân hàng (Mã QR Napas 24/7)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="auc-modal__actions">
+                <button type="button" className="btn-secondary" onClick={() => setShowCheckoutModal(false)}>
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={isProcessingPayment}
+                  onClick={handleConfirmCheckout}
+                >
+                  {isProcessingPayment ? "Đang xử lý thanh toán..." : "Xác Nhận Thanh Toán & Giao Hàng"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Registration Modal ─── */}
       {showRegModal && (
         <div className="auc-modal-overlay" onClick={() => setShowRegModal(false)}>
           <div className="auc-modal" onClick={(e) => e.stopPropagation()}>
@@ -343,7 +956,7 @@ export default function AuctionDetailPage() {
               ) : (
                 <>
                   <div className="deposit-product-card">
-                    <AuctionImage src={product.images[0]} alt={product.title} />
+                    <AuctionImage src={images[0]} alt={product.title} />
                     <div>
                       <strong>{product.title}</strong>
                       <span>Giá khởi điểm: {product.currentPrice}</span>
@@ -424,7 +1037,6 @@ export default function AuctionDetailPage() {
           </div>
         </div>
       )}
-      </div>
+    </div>
   );
 }
-

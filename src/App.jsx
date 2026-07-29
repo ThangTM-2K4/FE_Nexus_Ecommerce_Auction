@@ -65,6 +65,7 @@ import AuctionSellerPage from "./pages/auction/auctionSellerPage";
 import AuctionCategoriesPage from "./pages/auction/auctionCategoriesPage";
 import AuctionLocationsPage from "./pages/auction/auctionLocationsPage";
 import AuctionHowItWorksPage from "./pages/auction/auctionHowItWorksPage";
+import AuctionWatchlistPage from "./pages/auction/auctionWatchlistPage";
 
 import ProtectedRoute from "./config/ProtectedRoute";
 import SellerRoute from "./config/SellerRoute";
@@ -232,13 +233,28 @@ function App() {
         <Route index element={<AuctionBrowsePage />} />
         <Route path="browse" element={<AuctionBrowsePage />} />
         <Route path="detail/:id" element={<AuctionDetailPage />} />
-        <Route path="create" element={<AuctionCreatePage />} />
-        <Route path="my-bids" element={<AuctionMyBidsPage />} />
+        <Route
+          path="create"
+          element={
+            <ProtectedRoute>
+              <AuctionCreatePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="my-bids"
+          element={
+            <ProtectedRoute>
+              <AuctionMyBidsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="profile" element={<AuctionProfilePage />} />
         <Route path="seller" element={<AuctionSellerPage />} />
         <Route path="categories" element={<AuctionCategoriesPage />} />
         <Route path="locations" element={<AuctionLocationsPage />} />
         <Route path="how-it-works" element={<AuctionHowItWorksPage />} />
+        <Route path="watchlist" element={<AuctionWatchlistPage />} />
       </Route>
 
   {/* Seller */}
