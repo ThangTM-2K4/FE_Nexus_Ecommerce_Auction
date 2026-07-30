@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaBalanceScale } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { formatPrice } from '../../../utils/formatPrice';
+import { isItemInCompare, toggleCompareItem } from '../../../utils/compareAuction';
 import AuctionImage from '../auctionImage';
 import AuctionCountdown from '../auctionCountdown';
 import './index.scss';
@@ -61,9 +62,19 @@ export function toggleWatchlist(auction) {
 
 export default function AuctionCard({ auction, onClick }) {
   const [isHearted, setIsHearted] = useState(() => isItemInWatchlist(auction?.id));
+  const [isCompared, setIsCompared] = useState(() => isItemInCompare(auction?.id));
 
   useEffect(() => {
     setIsHearted(isItemInWatchlist(auction?.id));
+    setIsCompared(isItemInCompare(auction?.id));
+
+    const onStorage = (e) => {
+      if (!e.key || e.key === "auc_compare_list") {
+        setIsCompared(isItemInCompare(auction?.id));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, [auction?.id]);
 
   const handleClick = () => onClick?.(auction);
@@ -76,6 +87,21 @@ export default function AuctionCard({ auction, onClick }) {
       toast.success('🎉 Đã thêm sản phẩm vào mục Đang Theo Dõi!');
     } else {
       toast.info('Đã gỡ sản phẩm khỏi mục Đang Theo Dõi');
+    }
+  };
+
+  const handleCompareClick = (e) => {
+    e.stopPropagation();
+    const result = toggleCompareItem(auction);
+    if (!result.success && result.reason === "limit_reached") {
+      toast.warning("Tối đa 3 sản phẩm để so sánh cùng lúc!");
+      return;
+    }
+    setIsCompared(result.isAdded);
+    if (result.isAdded) {
+      toast.success(`⚖️ Đã thêm ${auction.title} vào danh sách so sánh!`);
+    } else {
+      toast.info("Đã gỡ sản phẩm khỏi danh sách so sánh");
     }
   };
 
@@ -118,8 +144,16 @@ export default function AuctionCard({ auction, onClick }) {
             <span>{auction.isUpcoming ? "Giá khởi điểm" : "Giá thầu hiện tại"}</span>
             <strong>{displayPrice}</strong>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <AuctionCountdown endTime={auction.endTime} isUpcoming={auction.isUpcoming} />
+            <button
+              type="button"
+              className={`auction-card__compare-btn ${isCompared ? 'active' : ''}`}
+              onClick={handleCompareClick}
+              title={isCompared ? "Bỏ so sánh" : "Thêm vào so sánh (tối đa 3 sản phẩm)"}
+            >
+              <FaBalanceScale />
+            </button>
             <button
               type="button"
               className={`auction-card__heart-btn ${isHearted ? 'active' : ''}`}

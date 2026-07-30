@@ -106,3 +106,28 @@
     color: #ff4d4f;
   }
 }
+
+.auction-card__compare-btn {
+  background: transparent;
+  border: none;
+  color: $mist-lavender;
+  font-size: 1.05rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+
+  &:hover {
+    color: #e8c468;
+    background: rgba(232, 196, 104, 0.12);
+    transform: scale(1.1);
+  }
+
+  &.active {
+    color: #e8c468;
+    background: rgba(232, 196, 104, 0.2);
+  }
+}

@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import AuctionHeader from '../auctionHeader';
 import AuctionFooter from '../auctionFooter';
+import AuctionCompareBar from '../auctionCompareBar';
 import './index.scss';
 
 export default function AuctionLayout() {
@@ -10,6 +11,7 @@ export default function AuctionLayout() {
       <main className="auction-layout__main">
         <Outlet />
       </main>
+      <AuctionCompareBar />
       <AuctionFooter />
     </div>
   );

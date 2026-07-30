@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuctionIntroBanner from '../../../components/auction/auctionIntroBanner';
 import AuctionFilterBar, { EMPTY_FILTERS } from '../../../components/auction/auctionFilterBar';
@@ -68,6 +68,13 @@ export default function AuctionBrowsePage() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'live';
+  const categoryParam = searchParams.get('category');
+
+  useEffect(() => {
+    if (categoryParam) {
+      setFilters((prev) => ({ ...prev, category: categoryParam }));
+    }
+  }, [categoryParam]);
   
   const setActiveTab = (tab) => {
     setSearchParams((prev) => {
