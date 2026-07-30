@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FaTh, FaList, FaGavel, FaTrophy, FaHistory, FaClock, FaTrash, FaTruck, FaMapMarkerAlt, FaCalendarAlt, FaCheckCircle, FaTimes, FaBoxOpen, FaReceipt, FaMoneyBillWave, FaBarcode,
+  FaTh, FaList, FaGavel, FaTrophy, FaHistory, FaClock, FaTrash, FaTruck, FaMapMarkerAlt, FaCalendarAlt, FaCheckCircle, FaTimes, FaBoxOpen, FaReceipt, FaMoneyBillWave, FaBarcode, FaSearch, FaFilter,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
+import AuctionCountdown from "../../../components/auction/auctionCountdown";
 import { myBidsAuctions } from "../../../data/auctionMockData";
 import { useAuth } from "../../../context/AuthContext";
 import "./index.scss";
@@ -111,6 +112,13 @@ export default function AuctionMyBidsPage() {
   const [wonOrders, setWonOrders] = useState([]);
   const [liveAuctions, setLiveAuctions] = useState(myBidsAuctions);
   const [selectedWonOrder, setSelectedWonOrder] = useState(null);
+  
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'leading' | 'outbid' | 'watching'
+  
+  // Bid Confirmation Modal state
+  const [pendingBidModal, setPendingBidModal] = useState(null);
 
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -241,6 +249,27 @@ export default function AuctionMyBidsPage() {
     });
   })();
 
+  // Filtered Lists for Search & Filter
+  const filteredLiveAuctions = liveAuctions.filter((auction) => {
+    const matchQuery = !searchQuery.trim() || auction.title.toLowerCase().includes(searchQuery.toLowerCase().trim());
+    const matchStatus = statusFilter === "all" || auction.status.type === statusFilter;
+    return matchQuery && matchStatus;
+  });
+
+  const filteredWonOrders = wonOrders.filter((order) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      order.productTitle?.toLowerCase().includes(q) ||
+      order.id?.toLowerCase().includes(q)
+    );
+  });
+
+  const filteredHistory = historyWithAttempts.filter((entry) => {
+    if (!searchQuery.trim()) return true;
+    return entry.title?.toLowerCase().includes(searchQuery.toLowerCase().trim());
+  });
+
   const parseIncrement = (str) => {
     const clean = str.replace(/[^0-9]/g, "");
     const val = Number(clean);
@@ -266,7 +295,8 @@ export default function AuctionMyBidsPage() {
     setBidAmounts({ ...bidAmounts, [auctionId]: rawVal ? numVal.toLocaleString(isUsd ? "en-US" : "vi-VN") : "" });
   };
 
-  const handleConfirmBid = (auction) => {
+  // Trigger Bid Confirmation Modal
+  const handleInitiateBid = (auction) => {
     if (!isAuthenticated) {
       toast.info("Vui lòng đăng nhập để đặt giá!");
       navigate("/login", { state: { redirectTo: "/auction/my-bids" } });
@@ -289,6 +319,25 @@ export default function AuctionMyBidsPage() {
       ? `$${amount.toLocaleString("en-US")}`
       : `${amount.toLocaleString("vi-VN")} ₫`;
 
+    const diff = amount - currentPriceNum;
+    const formattedDiff = isUsd
+      ? `$${diff.toLocaleString("en-US")}`
+      : `${diff.toLocaleString("vi-VN")} ₫`;
+
+    setPendingBidModal({
+      auction,
+      amount,
+      formattedAmount,
+      currentPrice: auction.currentPrice,
+      diff: formattedDiff,
+      isUsd,
+    });
+  };
+
+  // Perform Bid Execution after modal confirmation
+  const handleExecuteBid = () => {
+    if (!pendingBidModal) return;
+    const { auction, amount, formattedAmount, isUsd } = pendingBidModal;
     const userName = user?.name || user?.fullName || user?.email || "Bạn";
     const userAvatar = user?.avatar || user?.avatarUrl || "";
 
@@ -315,6 +364,7 @@ export default function AuctionMyBidsPage() {
 
     toast.success(`🎉 Đặt giá ${formattedAmount} thành công cho ${auction.title}! Bạn đang dẫn đầu.`);
     setBidAmounts({ ...bidAmounts, [auction.id]: "" });
+    setPendingBidModal(null);
   };
 
   return (
@@ -375,21 +425,73 @@ export default function AuctionMyBidsPage() {
           </div>
         </div>
 
+        {/* ─── Search & Filter Toolbar ─── */}
+        <div className="auc-my-bids__toolbar">
+          <div className="auc-my-bids__search">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm sản phẩm trong danh sách..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button type="button" className="btn-clear-search" onClick={() => setSearchQuery("")}>
+                <FaTimes />
+              </button>
+            )}
+          </div>
+
+          {activeTab === "current" && (
+            <div className="auc-my-bids__filters">
+              <FaFilter className="filter-icon" />
+              <button
+                type="button"
+                className={statusFilter === "all" ? "active" : ""}
+                onClick={() => setStatusFilter("all")}
+              >
+                Tất cả
+              </button>
+              <button
+                type="button"
+                className={statusFilter === "leading" ? "active" : ""}
+                onClick={() => setStatusFilter("leading")}
+              >
+                🏆 Đang dẫn đầu
+              </button>
+              <button
+                type="button"
+                className={statusFilter === "outbid" ? "active" : ""}
+                onClick={() => setStatusFilter("outbid")}
+              >
+                ⚡ Bị vượt giá
+              </button>
+              <button
+                type="button"
+                className={statusFilter === "watching" ? "active" : ""}
+                onClick={() => setStatusFilter("watching")}
+              >
+                👀 Đang quan tâm
+              </button>
+            </div>
+          )}
+        </div>
+
         {activeTab === "won" ? (
           /* ─── Tab: Đấu giá đã thắng ─── */
           <div className="auc-won-panel">
             <div className="auc-won-panel__toolbar">
               <div className="auc-won-panel__title">
                 <FaTrophy className="trophy-icon" />
-                <span>Các sản phẩm bạn đã trúng thầu ({wonOrders.length})</span>
+                <span>Các sản phẩm bạn đã trúng thầu ({filteredWonOrders.length})</span>
               </div>
             </div>
 
-            {wonOrders.length === 0 ? (
+            {filteredWonOrders.length === 0 ? (
               <div className="auc-bid-history-panel__empty">
                 <FaTrophy className="empty-icon" style={{ color: "#e8c468" }} />
-                <h3>Chưa có sản phẩm trúng thầu nào</h3>
-                <p>Tham gia đấu giá ngay để trở thành người chiến thắng sản phẩm yêu thích.</p>
+                <h3>Chưa tìm thấy sản phẩm trúng thầu phù hợp</h3>
+                <p>Thử tìm kiếm với từ khóa khác hoặc tham gia các phiên đấu giá mới.</p>
                 <button
                   type="button"
                   className="auc-bid-history-panel__browse-btn"
@@ -400,7 +502,7 @@ export default function AuctionMyBidsPage() {
               </div>
             ) : (
               <div className={`auc-won-grid ${view}`}>
-                {wonOrders.map((order) => (
+                {filteredWonOrders.map((order) => (
                   <div key={order.id} className="auc-won-card">
                     <div className="auc-won-card__image-container">
                       <AuctionImage src={order.productImage} alt={order.productTitle} />
@@ -467,7 +569,7 @@ export default function AuctionMyBidsPage() {
             <div className="auc-bid-history-panel__toolbar">
               <div className="auc-bid-history-panel__title">
                 <FaTrophy className="trophy-icon" />
-                <span>Lịch sử các lần đấu giá của bạn</span>
+                <span>Lịch sử các lần đấu giá của bạn ({filteredHistory.length})</span>
               </div>
               {bidHistory.length > 0 && (
                 <button
@@ -480,11 +582,11 @@ export default function AuctionMyBidsPage() {
               )}
             </div>
 
-            {bidHistory.length === 0 ? (
+            {filteredHistory.length === 0 ? (
               <div className="auc-bid-history-panel__empty">
                 <FaHistory className="empty-icon" />
-                <h3>Chưa có lịch sử đấu giá</h3>
-                <p>Khi bạn đặt giá thành công, lịch sử sẽ xuất hiện tại đây.</p>
+                <h3>Chưa có lịch sử đấu giá phù hợp</h3>
+                <p>Thử tìm kiếm với tên sản phẩm khác.</p>
                 <button
                   type="button"
                   className="auc-bid-history-panel__browse-btn"
@@ -495,7 +597,7 @@ export default function AuctionMyBidsPage() {
               </div>
             ) : (
               <div className="auc-bid-history-panel__list">
-                {historyWithAttempts.map((entry) => (
+                {filteredHistory.map((entry) => (
                   <div key={entry.id} className="auc-bid-history-item">
                     <div className="auc-bid-history-item__image">
                       {entry.image ? (
@@ -557,96 +659,105 @@ export default function AuctionMyBidsPage() {
         ) : (
           /* ─── Tab: Phiên hiện tại ─── */
           <div className={`auc-my-bids__grid ${view}`}>
-            {liveAuctions.map((auction) => {
-              const isUsd = String(auction.currentPrice).includes("$");
-              return (
-                <div key={auction.id} className="bid-card">
-                  <div className="bid-card__image">
-                    <AuctionImage src={auction.image} alt={auction.title} />
-                    <span className={`bid-card__status bid-card__status--${auction.status.type}`}>
-                      {auction.status.label}
-                    </span>
+            {filteredLiveAuctions.length === 0 ? (
+              <div className="auc-bid-history-panel__empty" style={{ gridColumn: "1 / -1" }}>
+                <FaGavel className="empty-icon" />
+                <h3>Không tìm thấy phiên đấu giá nào</h3>
+                <p>Không có sản phẩm nào khớp với bộ lọc và tìm kiếm của bạn.</p>
+              </div>
+            ) : (
+              filteredLiveAuctions.map((auction) => {
+                const isUsd = String(auction.currentPrice).includes("$");
+                return (
+                  <div key={auction.id} className="bid-card">
+                    <div className="bid-card__image">
+                      <AuctionImage src={auction.image} alt={auction.title} />
+                      <span className={`bid-card__status bid-card__status--${auction.status.type}`}>
+                        {auction.status.label}
+                      </span>
+                    </div>
+
+                    <div className="bid-card__body">
+                      <h3>{auction.title}</h3>
+
+                      <div className="bid-card__timer">
+                        <span>Kết thúc trong:</span>
+                        <AuctionCountdown endTime={auction.endTime || (Date.now() + 15120000)} />
+                      </div>
+
+                      <div className="bid-card__price">
+                        <span>GIÁ HIỆN TẠI</span>
+                        <strong>{auction.currentPrice}</strong>
+                      </div>
+
+                      <div className="bid-card__increments">
+                        {auction.bidIncrements.map((inc) => (
+                          <button
+                            key={inc}
+                            type="button"
+                            onClick={() => handleIncrement(auction, inc)}
+                          >
+                            {inc}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="bid-card__input">
+                        <input
+                          type="text"
+                          placeholder="Nhập giá của bạn..."
+                          value={bidAmounts[auction.id] || ""}
+                          onChange={(e) => handleInputChange(auction.id, e.target.value, isUsd)}
+                        />
+                        <span>{isUsd ? "USD" : "VNĐ"}</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        className={`bid-card__confirm bid-card__confirm--${auction.buttonStyle}`}
+                        onClick={() => handleInitiateBid(auction)}
+                      >
+                        <FaGavel /> Xác nhận đặt giá
+                      </button>
+
+                      <div className="bid-card__history">
+                        <h4>LỊCH SỬ ĐẶT GIÁ</h4>
+                        <ul>
+                          {auction.bidHistory.map((bid, i) => {
+                            const isMe = isSameUser(user, bid.user) || bid.isYou;
+                            const displayName = maskUsername(bid.user, isMe);
+                            const attemptNum = auction.bidHistory.length - i;
+                            return (
+                              <li
+                                key={i}
+                                className={bid.isYou ? (bid.isLeader ? "you-leading" : "you-outbid") : ""}
+                              >
+                                <span className="bid-history-user">
+                                  {bid.avatar ? (
+                                    <AuctionImage
+                                      src={bid.avatar}
+                                      alt={displayName}
+                                      className="bid-history-avatar"
+                                    />
+                                  ) : (
+                                    <span className="bid-history-avatar-placeholder">
+                                      {(displayName || "?")[0].toUpperCase()}
+                                    </span>
+                                  )}
+                                  {displayName}
+                                  <span className="auc-bid-attempt-tag">Lần {attemptNum}</span>
+                                </span>
+                                <em>{bid.amount}</em>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="bid-card__body">
-                    <h3>{auction.title}</h3>
-
-                    <div className="bid-card__timer">
-                      Kết thúc trong: <em>{auction.timeLeft}</em>
-                    </div>
-
-                    <div className="bid-card__price">
-                      <span>GIÁ HIỆN TẠI</span>
-                      <strong>{auction.currentPrice}</strong>
-                    </div>
-
-                    <div className="bid-card__increments">
-                      {auction.bidIncrements.map((inc) => (
-                        <button
-                          key={inc}
-                          type="button"
-                          onClick={() => handleIncrement(auction, inc)}
-                        >
-                          {inc}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="bid-card__input">
-                      <input
-                        type="text"
-                        placeholder="Nhập giá của bạn..."
-                        value={bidAmounts[auction.id] || ""}
-                        onChange={(e) => handleInputChange(auction.id, e.target.value, isUsd)}
-                      />
-                      <span>{isUsd ? "USD" : "VNĐ"}</span>
-                    </div>
-
-                    <button
-                      type="button"
-                      className={`bid-card__confirm bid-card__confirm--${auction.buttonStyle}`}
-                      onClick={() => handleConfirmBid(auction)}
-                    >
-                      <FaGavel /> Xác nhận đặt giá
-                    </button>
-
-                    <div className="bid-card__history">
-                      <h4>LỊCH SỬ ĐẶT GIÁ</h4>
-                      <ul>
-                        {auction.bidHistory.map((bid, i) => {
-                          const isMe = isSameUser(user, bid.user) || bid.isYou;
-                          const displayName = maskUsername(bid.user, isMe);
-                          const attemptNum = auction.bidHistory.length - i;
-                          return (
-                            <li
-                              key={i}
-                              className={bid.isYou ? (bid.isLeader ? "you-leading" : "you-outbid") : ""}
-                            >
-                              <span className="bid-history-user">
-                                {bid.avatar ? (
-                                  <AuctionImage
-                                    src={bid.avatar}
-                                    alt={displayName}
-                                    className="bid-history-avatar"
-                                  />
-                                ) : (
-                                  <span className="bid-history-avatar-placeholder">
-                                    {(displayName || "?")[0].toUpperCase()}
-                                  </span>
-                                )}
-                                {displayName}
-                                <span className="auc-bid-attempt-tag">Lần {attemptNum}</span>
-                              </span>
-                              <em>{bid.amount}</em>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         )}
       </div>
@@ -755,6 +866,61 @@ export default function AuctionMyBidsPage() {
             <div className="auc-modal__footer">
               <button type="button" className="btn-close-won-modal" onClick={() => setSelectedWonOrder(null)}>
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modal Xác Nhận Đặt Giá ─── */}
+      {pendingBidModal && (
+        <div className="auc-modal-overlay" onClick={() => setPendingBidModal(null)}>
+          <div className="auc-modal auc-modal--confirm-bid" onClick={(e) => e.stopPropagation()}>
+            <div className="auc-modal__header">
+              <h3>
+                <FaGavel style={{ color: "#e8c468" }} />
+                Xác Nhận Đặt Giá Thầu
+              </h3>
+              <button type="button" onClick={() => setPendingBidModal(null)}><FaTimes /></button>
+            </div>
+
+            <div className="auc-modal__body">
+              <div className="won-detail-product-card">
+                <AuctionImage src={pendingBidModal.auction.image} alt={pendingBidModal.auction.title} />
+                <div>
+                  <strong>{pendingBidModal.auction.title}</strong>
+                  <span style={{ color: "#8f7fbf", fontSize: "13px", display: "block", marginTop: "4px" }}>
+                    Phiên đấu giá đang diễn ra
+                  </span>
+                </div>
+              </div>
+
+              <div className="confirm-bid-details">
+                <div className="confirm-bid-row">
+                  <span>Giá hiện tại:</span>
+                  <strong>{pendingBidModal.currentPrice}</strong>
+                </div>
+                <div className="confirm-bid-row">
+                  <span>Giá bạn muốn đặt:</span>
+                  <strong style={{ color: "#e8c468", fontSize: "18px" }}>{pendingBidModal.formattedAmount}</strong>
+                </div>
+                <div className="confirm-bid-row">
+                  <span>Mức tăng so với giá hiện tại:</span>
+                  <strong style={{ color: "#10b981" }}>+{pendingBidModal.diff}</strong>
+                </div>
+              </div>
+
+              <div className="confirm-bid-notice">
+                <p>⚠️ <strong>Cam kết đặt giá:</strong> Lệnh đặt giá có hiệu lực ngay lập tức. Nếu thắng thầu, bạn có nghĩa vụ thanh toán sản phẩm này theo Quy chế Đấu giá của Nexus Platform.</p>
+              </div>
+            </div>
+
+            <div className="auc-modal__footer">
+              <button type="button" className="btn-cancel-modal" onClick={() => setPendingBidModal(null)}>
+                Hủy bỏ
+              </button>
+              <button type="button" className="btn-confirm-bid-modal" onClick={handleExecuteBid}>
+                <FaGavel /> Xác Nhận Đặt Giá Ngay
               </button>
             </div>
           </div>

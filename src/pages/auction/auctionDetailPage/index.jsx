@@ -138,6 +138,9 @@ export default function AuctionDetailPage() {
   const [isPaymentExpired, setIsPaymentExpired] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
 
+  // Bid confirmation modal state
+  const [showBidConfirmModal, setShowBidConfirmModal] = useState(false);
+
   // Checkout & Address Selection Modal state
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [addressTab, setAddressTab] = useState("default"); // 'default' | 'new'
@@ -334,6 +337,11 @@ export default function AuctionDetailPage() {
       return;
     }
 
+    setShowBidConfirmModal(true);
+  };
+
+  const confirmAndSubmitBid = () => {
+    const amount = Number(String(bidAmount).replace(/[^0-9]/g, ""));
     const userName = user.name || user.fullName || user.email || "Bạn";
     const userAvatar = user.avatar || user.avatarUrl || product.leaderAvatar;
     const formattedAmount = isUsd
@@ -365,6 +373,7 @@ export default function AuctionDetailPage() {
       `🎉 Đặt giá ${formattedAmount} thành công! Bạn đang là người dẫn đầu.`
     );
     setBidAmount("");
+    setShowBidConfirmModal(false);
   };
 
   // Winner checkout submit handler
@@ -1033,6 +1042,65 @@ export default function AuctionDetailPage() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modal Xác Nhận Đặt Giá (Detail Page) ─── */}
+      {showBidConfirmModal && (
+        <div className="auc-modal-overlay" onClick={() => setShowBidConfirmModal(false)}>
+          <div className="auc-modal auc-modal--confirm-bid" onClick={(e) => e.stopPropagation()}>
+            <div className="auc-modal__header">
+              <h3>
+                <FaGavel style={{ color: "#e8c468" }} />
+                Xác Nhận Đặt Giá Thầu
+              </h3>
+              <button type="button" onClick={() => setShowBidConfirmModal(false)}><FaTimes /></button>
+            </div>
+
+            <div className="auc-modal__body">
+              <div className="won-detail-product-card">
+                <AuctionImage src={images[0]} alt={product.title} />
+                <div>
+                  <strong>{product.title}</strong>
+                  <span style={{ color: "#8f7fbf", fontSize: "13px", display: "block", marginTop: "4px" }}>
+                    {product.breadcrumbs?.[1] || "Sản phẩm đấu giá"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="confirm-bid-details">
+                <div className="confirm-bid-row">
+                  <span>Giá hiện tại:</span>
+                  <strong>{currentPrice}</strong>
+                </div>
+                <div className="confirm-bid-row">
+                  <span>Mức giá bạn đặt:</span>
+                  <strong style={{ color: "#e8c468", fontSize: "18px" }}>
+                    {isUsd ? `$${Number(String(bidAmount).replace(/[^0-9]/g, "")).toLocaleString("en-US")}` : `${Number(String(bidAmount).replace(/[^0-9]/g, "")).toLocaleString("vi-VN")} ₫`}
+                  </strong>
+                </div>
+                <div className="confirm-bid-row">
+                  <span>Mức tăng so với hiện tại:</span>
+                  <strong style={{ color: "#10b981" }}>
+                    +{isUsd ? `$${(Number(String(bidAmount).replace(/[^0-9]/g, "")) - currentPriceNum).toLocaleString("en-US")}` : `${(Number(String(bidAmount).replace(/[^0-9]/g, "")) - currentPriceNum).toLocaleString("vi-VN")} ₫`}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="confirm-bid-notice">
+                <p>⚠️ <strong>Cam kết đấu giá:</strong> Lệnh đặt giá có hiệu lực ngay lập tức. Nếu thắng thầu, bạn có nghĩa vụ thanh toán sản phẩm này theo Quy chế Đấu giá của Nexus Platform.</p>
+              </div>
+            </div>
+
+            <div className="auc-modal__footer">
+              <button type="button" className="btn-cancel-modal" onClick={() => setShowBidConfirmModal(false)}>
+                Hủy bỏ
+              </button>
+              <button type="button" className="btn-confirm-bid-modal" onClick={confirmAndSubmitBid}>
+                <FaGavel /> Xác Nhận Đặt Giá Ngay
+              </button>
             </div>
           </div>
         </div>

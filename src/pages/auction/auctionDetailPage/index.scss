@@ -1118,3 +1118,127 @@
   }
 }
 
+/* ─── Bid Confirm Modal (shared with MyBidsPage) ─── */
+.auc-modal--confirm-bid {
+  max-width: 520px;
+
+  .won-detail-product-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+
+    img, .auction-image {
+      width: 72px;
+      height: 72px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    strong {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ede7f6;
+      display: block;
+    }
+  }
+
+  .confirm-bid-details {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px;
+
+    .confirm-bid-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+      &:last-child { border-bottom: none; }
+
+      span { font-size: 13px; color: #b9b4c7; }
+      strong { font-size: 14px; color: #ede7f6; }
+    }
+  }
+
+  .confirm-bid-notice {
+    background: rgba(232, 196, 104, 0.08);
+    border: 1px solid rgba(232, 196, 104, 0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+
+    p {
+      margin: 0;
+      font-size: 12px;
+      color: #e8c468;
+      line-height: 1.5;
+    }
+  }
+
+  .auc-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding-top: 16px;
+    margin-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+    .btn-cancel-modal {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      color: #b9b4c7;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ede7f6;
+      }
+    }
+
+    .btn-confirm-bid-modal {
+      padding: 10px 24px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #e8c468, #c29921);
+      color: #120b22;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+
+      &:hover {
+        box-shadow: 0 4px 18px rgba(232, 196, 104, 0.4);
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+/* ─── Live countdown in bid-card ─── */
+.bid-card__timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #b9b4c7;
+
+  .auction-countdown {
+    font-weight: 700;
+  }
+}
+

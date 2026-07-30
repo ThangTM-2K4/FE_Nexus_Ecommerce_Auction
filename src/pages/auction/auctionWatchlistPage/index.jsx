@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHeart, FaGavel, FaTrash, FaClock, FaTh, FaList } from "react-icons/fa";
+import { FaHeart, FaGavel, FaTrash, FaClock, FaTh, FaList, FaSearch, FaSort, FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
@@ -19,6 +19,8 @@ export default function AuctionWatchlistPage() {
   const navigate = useNavigate();
   const [watchlist, setWatchlist] = useState([]);
   const [view, setView] = useState("grid");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("newest"); // 'newest' | 'price-high' | 'price-low'
 
   const loadWatchlist = useCallback(() => {
     try {
@@ -52,6 +54,30 @@ export default function AuctionWatchlistPage() {
     setWatchlist([]);
     toast.success("Đã xoá toàn bộ danh sách theo dõi!");
   };
+
+  const filteredAndSortedWatchlist = watchlist
+    .filter((item) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      return (
+        item.title?.toLowerCase().includes(q) ||
+        item.categoryLabel?.toLowerCase().includes(q) ||
+        item.description?.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === "price-high") {
+        const pA = Number(String(a.currentPrice || a.currentBid).replace(/[^0-9]/g, "")) || 0;
+        const pB = Number(String(b.currentPrice || b.currentBid).replace(/[^0-9]/g, "")) || 0;
+        return pB - pA;
+      }
+      if (sortBy === "price-low") {
+        const pA = Number(String(a.currentPrice || a.currentBid).replace(/[^0-9]/g, "")) || 0;
+        const pB = Number(String(b.currentPrice || b.currentBid).replace(/[^0-9]/g, "")) || 0;
+        return pA - pB;
+      }
+      return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
+    });
 
   return (
     <AuctionSidebarLayout sidebarActive="watchlist">
@@ -94,6 +120,36 @@ export default function AuctionWatchlistPage() {
           </div>
         </div>
 
+        {/* Toolbar: Search & Sort */}
+        {watchlist.length > 0 && (
+          <div className="auc-watchlist-toolbar">
+            <div className="watchlist-search">
+              <FaSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder="Tìm sản phẩm theo dõi..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button type="button" className="btn-clear-search" onClick={() => setSearchQuery("")}>
+                  <FaTimes />
+                </button>
+              )}
+            </div>
+
+            <div className="watchlist-sort">
+              <FaSort className="sort-icon" />
+              <span>Sắp xếp:</span>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="newest">Vừa thêm gần đây</option>
+                <option value="price-high">Giá cao → thấp</option>
+                <option value="price-low">Giá thấp → cao</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         {/* Empty state */}
         {watchlist.length === 0 ? (
           <div className="auc-watchlist-page__empty">
@@ -114,9 +170,15 @@ export default function AuctionWatchlistPage() {
               <FaGavel /> Khám phá các phiên đấu giá
             </button>
           </div>
+        ) : filteredAndSortedWatchlist.length === 0 ? (
+          <div className="auc-watchlist-page__empty">
+            <FaSearch className="empty-icon" style={{ fontSize: "36px", color: "#8f7fbf" }} />
+            <h3>Không tìm thấy sản phẩm phù hợp</h3>
+            <p>Thử tìm kiếm với từ khóa khác.</p>
+          </div>
         ) : (
           <div className={`auc-watchlist-page__grid ${view}`}>
-            {watchlist.map((item) => (
+            {filteredAndSortedWatchlist.map((item) => (
               <div key={item.id} className="watchlist-card">
                 {/* Image area */}
                 <div className="watchlist-card__image">
