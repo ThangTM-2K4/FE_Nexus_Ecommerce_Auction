@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaHeart, FaCheckCircle, FaClock, FaGavel, FaArrowLeft, FaShieldAlt, FaExclamationTriangle, FaTimes, FaTrophy, FaMapMarkerAlt, FaTruck, FaMoneyBillWave, FaBuilding, FaWallet,
 } from "react-icons/fa";
@@ -7,7 +7,9 @@ import { toast } from "react-toastify";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { getAuctionDetail } from "../../../data/auctionMockData";
 import { useAuth } from "../../../context/AuthContext";
+import { useProvinces, useWards } from "../../../services/locationService";
 import "./index.scss";
+
 
 const BID_HISTORY_KEY = "auc_bid_history";
 
@@ -147,13 +149,23 @@ export default function AuctionDetailPage() {
   const [customAddress, setCustomAddress] = useState({
     fullName: "",
     phone: "",
-    province: "",
-    district: "",
+    provinceCode: "",
+    provinceName: "",
+    wardCode: "",
+    wardName: "",
     streetAddress: "",
   });
   const [addressErrors, setAddressErrors] = useState({});
   const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState("wallet");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  // Location API for checkout form
+  const { provinces, loading: loadingProvinces } = useProvinces();
+  const { wards, loading: loadingWards } = useWards(customAddress.provinceCode);
+
+  // Detect if navigated from admin
+  const [searchParams] = useSearchParams();
+  const fromAdmin = searchParams.get('from') === 'admin';
 
   const [showRegModal, setShowRegModal] = useState(false);
   const [regStep, setRegStep] = useState(1);
@@ -409,7 +421,7 @@ export default function AuctionDetailPage() {
           : {
               recipient: customAddress.fullName,
               phone: customAddress.phone,
-              fullAddress: `${customAddress.streetAddress}${customAddress.district ? `, ${customAddress.district}` : ""}${customAddress.province ? `, ${customAddress.province}` : ""}`,
+              fullAddress: `${customAddress.streetAddress}${customAddress.wardName ? `, ${customAddress.wardName}` : ""}${customAddress.provinceName ? `, ${customAddress.provinceName}` : ""}`,
               isDefault: false,
             };
 
@@ -444,8 +456,8 @@ export default function AuctionDetailPage() {
   return (
     <div className="auc-detail">
       <nav className="auc-detail__breadcrumbs">
-        <button type="button" className="auc-detail__back" onClick={() => navigate(-1)}>
-          <FaArrowLeft /> Quay lại
+        <button type="button" className="auc-detail__back" onClick={() => fromAdmin ? navigate('/admin') : navigate(-1)}>
+          <FaArrowLeft /> {fromAdmin ? 'Quay lại Quản lý' : 'Quay lại'}
         </button>
         {breadcrumbs.map((crumb, i) => (
           <span key={crumb}>{i > 0 && " / "}{crumb}</span>
@@ -865,18 +877,44 @@ export default function AuctionDetailPage() {
                       />
                     </div>
                     <div className="form-row">
-                      <input
-                        type="text"
-                        placeholder="Tỉnh / Thành phố"
-                        value={customAddress.province}
-                        onChange={(e) => setCustomAddress({ ...customAddress, province: e.target.value })}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Quận / Huyện"
-                        value={customAddress.district}
-                        onChange={(e) => setCustomAddress({ ...customAddress, district: e.target.value })}
-                      />
+                      {/* Province dropdown */}
+                      <div className="addr-select-wrap">
+                        <select
+                          value={customAddress.provinceCode}
+                          className={`addr-select ${!customAddress.provinceCode && addressErrors.province ? 'input-error' : ''}`}
+                          disabled={loadingProvinces}
+                          onChange={(e) => {
+                            const code = e.target.value;
+                            const name = provinces.find((p) => p.value === code)?.label || '';
+                            setCustomAddress((prev) => ({ ...prev, provinceCode: code, provinceName: name, wardCode: '', wardName: '' }));
+                          }}
+                        >
+                          <option value="">{loadingProvinces ? 'Đang tải...' : 'Tỉnh / Thành phố'}</option>
+                          {provinces.map((p) => (
+                            <option key={p.value} value={p.value}>{p.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      {/* Ward dropdown */}
+                      <div className="addr-select-wrap">
+                        <select
+                          value={customAddress.wardCode}
+                          className="addr-select"
+                          disabled={!customAddress.provinceCode || loadingWards}
+                          onChange={(e) => {
+                            const code = e.target.value;
+                            const name = wards.find((w) => w.value === code)?.label || '';
+                            setCustomAddress((prev) => ({ ...prev, wardCode: code, wardName: name }));
+                          }}
+                        >
+                          <option value="">
+                            {!customAddress.provinceCode ? 'Chọn Tỉnh/Thành phố trước' : loadingWards ? 'Đang tải...' : 'Phường / Xã'}
+                          </option>
+                          {wards.map((w) => (
+                            <option key={w.value} value={w.value}>{w.label}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                     <input
                       type="text"
