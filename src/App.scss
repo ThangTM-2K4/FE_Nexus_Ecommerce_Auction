@@ -82,3 +82,33 @@ select {
     display: none;
   }
 }
+
+/* =====================================================
+   Custom Sleek Scrollbar (Matching Auction Dark Theme)
+   ===================================================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(18, 9, 32, 0.4);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7c5576;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #e8c468;
+  }
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #7c5576 rgba(18, 9, 32, 0.4);
+}
+
