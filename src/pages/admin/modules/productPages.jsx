@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../../components/admin/adminPageHeader";
 import AdminTabs from "../../../components/admin/adminTabs";
@@ -164,29 +165,56 @@ export const AdminProducts = () => {
 };
 
 export const AdminAuctionProducts = () => {
+  const navigate = useNavigate();
   const list = useAdminList(mockAuctions, ["title", "seller", "id"]);
+  const [activeTab, setActiveTab] = useState("all");
   const [detail, setDetail] = useState(null);
+
+  const tabs = [
+    { id: "all", label: "Tất cả", count: list.items.length },
+    { id: "live", label: "Đang diễn ra", count: list.items.filter((a) => a.status === "Đang diễn ra").length },
+    { id: "upcoming", label: "Sắp kết thúc", count: list.items.filter((a) => a.status === "Sắp kết thúc").length },
+    { id: "completed", label: "Hoàn thành", count: list.items.filter((a) => a.status === "Hoàn thành").length },
+    { id: "cancelled", label: "Đã hủy / Dừng", count: list.items.filter((a) => a.status === "Đã hủy" || a.status === "Đã dừng").length },
+  ];
+
+  const displayedList = useMemo(() => {
+    return list.filtered.filter((a) => {
+      if (activeTab === "live") return a.status === "Đang diễn ra";
+      if (activeTab === "upcoming") return a.status === "Sắp kết thúc";
+      if (activeTab === "completed") return a.status === "Hoàn thành";
+      if (activeTab === "cancelled") return a.status === "Đã hủy" || a.status === "Đã dừng";
+      return true;
+    });
+  }, [list.filtered, activeTab]);
 
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Đấu giá" title="Quản lý phiên đấu giá" subtitle="Giám sát, dừng, gia hạn hoặc hủy phiên đấu giá." />
+      <AdminTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
       <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm phiên, seller..." />
       <div className="adm-auction-grid">
-        {list.filtered.map((a) => (
-          <AuctionCard
-            key={a.id}
-            auction={a}
-            actions={[
-              { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
-              { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
-              ...(a.status === "Đang diễn ra" || a.status === "Sắp kết thúc" ? [
-                { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
-                { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
-                { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
-              ] : []),
-            ]}
-          />
-        ))}
+        {displayedList.map((a) => {
+          const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
+          return (
+            <AuctionCard
+              key={a.id}
+              auction={a}
+              actions={[
+                { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
+                ...(isLive ? [
+                  { label: "👁️ Xem phiên live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
+                ] : []),
+                { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
+                ...(isLive ? [
+                  { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
+                  { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
+                  { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
+                ] : []),
+              ]}
+            />
+          );
+        })}
       </div>
       <AdminModal open={!!detail} title="Chi tiết phiên đấu giá" onClose={() => setDetail(null)} wide>
         {detail && <dl className="adm-detail-grid">{Object.entries(detail).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{String(v)}</dd></div>)}</dl>}
