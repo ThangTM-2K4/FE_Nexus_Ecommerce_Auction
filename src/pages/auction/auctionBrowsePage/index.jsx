@@ -112,6 +112,23 @@ export default function AuctionBrowsePage() {
     return sortListings(filtered, sortBy);
   }, [searchQuery, sortBy, filters, activeTab]);
 
+  const hasActiveFilters = searchQuery.trim() !== '' ||
+    Object.values(filters).some((v) => v !== '');
+
+  const handleClearAll = () => {
+    setFilters(EMPTY_FILTERS);
+    setSearchQuery('');
+    setSearchParams((prev) => { prev.delete('category'); return prev; });
+  };
+
+  // Build readable active filter chips
+  const filterChips = [];
+  if (searchQuery.trim()) filterChips.push({ key: 'search', label: `Từ khóa: "${searchQuery}"`, onRemove: () => setSearchQuery('') });
+  if (filters.category) filterChips.push({ key: 'category', label: `Danh mục: ${filters.category}`, onRemove: () => setFilters((p) => ({ ...p, category: '' })) });
+  if (filters.location) filterChips.push({ key: 'location', label: `Vị trí: ${filters.location}`, onRemove: () => setFilters((p) => ({ ...p, location: '' })) });
+  if (filters.priceRange) filterChips.push({ key: 'price', label: `Giá: ${filters.priceRange}`, onRemove: () => setFilters((p) => ({ ...p, priceRange: '' })) });
+  if (filters.endingWithin) filterChips.push({ key: 'ending', label: `Kết thúc: ${filters.endingWithin}`, onRemove: () => setFilters((p) => ({ ...p, endingWithin: '' })) });
+
   return (
     <div className="auction-browse-page">
       <AuctionIntroBanner />
@@ -153,6 +170,24 @@ export default function AuctionBrowsePage() {
         onFiltersChange={setFilters}
       />
 
+      {/* Active Filter Bar */}
+      {hasActiveFilters && (
+        <div className="auction-browse-page__active-filters">
+          {filterChips.map((chip) => (
+            <span key={chip.key} className="filter-chip">
+              {chip.label}
+              <button type="button" onClick={chip.onRemove} title="Xóa lọc này">✕</button>
+            </span>
+          ))}
+          <button
+            type="button"
+            className="filter-chip filter-chip--clear-all"
+            onClick={handleClearAll}
+          >
+            ✕ Xóa tất cả bộ lọc
+          </button>
+        </div>
+      )}
       <div className="auction-browse-page__grid" role="list">
         {filteredListings.length === 0 ? (
           <div className="auction-browse-page__empty" role="status">

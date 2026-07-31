@@ -151,6 +151,7 @@ export default function AuctionDetailPage() {
     district: "",
     streetAddress: "",
   });
+  const [addressErrors, setAddressErrors] = useState({});
   const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState("wallet");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
@@ -379,14 +380,16 @@ export default function AuctionDetailPage() {
   // Winner checkout submit handler
   const handleConfirmCheckout = async () => {
     if (addressTab === "new") {
-      if (
-        !customAddress.fullName ||
-        !customAddress.phone ||
-        !customAddress.streetAddress
-      ) {
-        toast.error("Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận!");
+      const errors = {};
+      if (!customAddress.fullName) errors.fullName = true;
+      if (!customAddress.phone) errors.phone = true;
+      if (!customAddress.streetAddress) errors.streetAddress = true;
+      if (Object.keys(errors).length > 0) {
+        setAddressErrors(errors);
+        toast.error("Vui lòng nhập đầy đủ thông tin!");
         return;
       }
+      setAddressErrors({});
     }
 
     try {
@@ -687,6 +690,16 @@ export default function AuctionDetailPage() {
                       setBidAmount(rawVal ? numVal.toLocaleString(isUsd ? "en-US" : "vi-VN") : "");
                     }}
                   />
+                  {bidAmount ? (
+                    <button
+                      type="button"
+                      className="bid-input__clear"
+                      onClick={() => setBidAmount("")}
+                      title="Xóa giá"
+                    >
+                      ✕
+                    </button>
+                  ) : null}
                 </div>
                 <div className="increments">
                   {increments.map((inc) => (
@@ -782,11 +795,15 @@ export default function AuctionDetailPage() {
                 </div>
                 <div className="summary-row" style={{ color: '#10b981' }}>
                   <span>Tiền cọc đã cọc (Khấu trừ):</span>
-                  <strong>- 5.000.000 ₫</strong>
+                  <strong>- 6.000.000 ₫</strong>
                 </div>
-                <div className="summary-row divider">
+                <div className="summary-row">
                   <span>Phí vận chuyển:</span>
                   <strong style={{ color: '#10b981' }}>Miễn phí (Giao hàng tận nhà)</strong>
+                </div>
+                <div className="summary-row summary-row--total">
+                  <span>Tổng tiền cần thanh toán:</span>
+                  <strong className="total-amount">{currentPrice}</strong>
                 </div>
               </div>
 
@@ -829,14 +846,22 @@ export default function AuctionDetailPage() {
                       <input
                         type="text"
                         placeholder="Họ và tên người nhận (*)"
+                        className={addressErrors.fullName ? 'input-error' : ''}
                         value={customAddress.fullName}
-                        onChange={(e) => setCustomAddress({ ...customAddress, fullName: e.target.value })}
+                        onChange={(e) => {
+                          setCustomAddress({ ...customAddress, fullName: e.target.value });
+                          if (e.target.value) setAddressErrors((prev) => ({ ...prev, fullName: false }));
+                        }}
                       />
                       <input
                         type="text"
                         placeholder="Số điện thoại (*)"
+                        className={addressErrors.phone ? 'input-error' : ''}
                         value={customAddress.phone}
-                        onChange={(e) => setCustomAddress({ ...customAddress, phone: e.target.value })}
+                        onChange={(e) => {
+                          setCustomAddress({ ...customAddress, phone: e.target.value });
+                          if (e.target.value) setAddressErrors((prev) => ({ ...prev, phone: false }));
+                        }}
                       />
                     </div>
                     <div className="form-row">
@@ -856,8 +881,12 @@ export default function AuctionDetailPage() {
                     <input
                       type="text"
                       placeholder="Địa chỉ chi tiết (Số nhà, tên đường...) (*)"
+                      className={addressErrors.streetAddress ? 'input-error' : ''}
                       value={customAddress.streetAddress}
-                      onChange={(e) => setCustomAddress({ ...customAddress, streetAddress: e.target.value })}
+                      onChange={(e) => {
+                        setCustomAddress({ ...customAddress, streetAddress: e.target.value });
+                        if (e.target.value) setAddressErrors((prev) => ({ ...prev, streetAddress: false }));
+                      }}
                     />
                   </div>
                 )}
