@@ -289,6 +289,27 @@
           &::placeholder { color: $color-text-muted; font-size: 13px; font-weight: 400; }
           &:focus { outline: none; }
         }
+
+        &__clear {
+          background: none;
+          border: none;
+          color: #8f7fbf;
+          cursor: pointer;
+          font-size: 15px;
+          padding: 4px 6px;
+          line-height: 1;
+          border-radius: 50%;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+
+          &:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+          }
+        }
       }
 
       .increments {
@@ -531,13 +552,19 @@
   border: 1px solid rgba(232, 196, 104, 0.25);
   border-radius: 16px;
   width: 100%;
-  max-width: 520px;
+  max-width: 480px;
   padding: 24px;
   color: #ede7f6;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
   position: relative;
-  max-height: 90vh;
+  max-height: 88vh;
   overflow-y: auto;
+
+  // Pretty scrollbar
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(232,196,104,0.25); border-radius: 4px; }
+  &::-webkit-scrollbar-thumb:hover { background: rgba(232,196,104,0.45); }
 
   &__header {
     display: flex;
@@ -984,7 +1011,7 @@
     align-items: center;
     font-size: 13px;
     color: #b9b4c7;
-    padding: 4px 0;
+    padding: 5px 0;
 
     strong { color: #ede7f6; font-weight: 700; }
 
@@ -992,6 +1019,21 @@
       border-top: 1px dashed rgba(255, 255, 255, 0.1);
       margin-top: 6px;
       padding-top: 8px;
+    }
+
+    &--total {
+      border-top: 1px solid rgba(232, 196, 104, 0.25);
+      margin-top: 8px;
+      padding-top: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #ede7f6;
+
+      .total-amount {
+        color: #e8c468;
+        font-size: 17px;
+        font-weight: 800;
+      }
     }
   }
 }
@@ -1071,11 +1113,24 @@
       background: rgba(255, 255, 255, 0.05);
       color: #ede7f6;
       font-size: 13px;
+      transition: border-color 0.2s, box-shadow 0.2s;
 
       &::placeholder { color: #8f7fbf; font-size: 12px; }
       &:focus { outline: none; border-color: #e8c468; }
+      &.input-error {
+        border-color: #ef4444 !important;
+        background: rgba(239, 68, 68, 0.06);
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18);
+        animation: shakeError 0.3s ease;
+      }
     }
   }
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 .auc-wallet-balance-box {
