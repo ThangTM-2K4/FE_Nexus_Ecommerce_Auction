@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiMenu, FiSearch, FiX } from 'react-icons/fi';
 import { FaWallet, FaUser, FaTrophy, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../../../context/AuthContext';
@@ -21,6 +21,8 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const profileRef = useRef(null);
+  const [searchParams] = useSearchParams();
+  const fromAdmin = searchParams.get('from') === 'admin';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -86,7 +88,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
         </form>
 
         <nav className="auction-header__nav" aria-label="Điều hướng đấu giá">
-          {isBuyerMode &&
+          {!fromAdmin && isBuyerMode &&
             NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.label}
@@ -100,9 +102,15 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
         </nav>
 
         <div className="auction-header__actions">
-          <Link to="/" className="auction-header__home-link">
-            Về cửa hàng
-          </Link>
+          {fromAdmin ? (
+            <Link to="/admin/auction-products" className="auction-header__home-link">
+              Về quản lý phiên đấu giá
+            </Link>
+          ) : (
+            <Link to="/" className="auction-header__home-link">
+              Về cửa hàng
+            </Link>
+          )}
 
           {isSellerMode && (
             <>
@@ -127,7 +135,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
             </>
           )}
 
-          {/* ─── Profile Circle & Wallet Balance Dropdown ─── */}
+          {/* ─── Profile Avatar Button ─── */}
           <div className="auction-header__profile-container" ref={profileRef}>
             <button
               type="button"
@@ -136,12 +144,6 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
               title="Hồ sơ tài khoản & Ví tiền"
             >
               <img src={avatarUrl} alt={userName} className="profile-avatar-circle" />
-              <div className="profile-info-pill">
-                <span className="user-name">{userName}</span>
-                <span className="wallet-balance">
-                  <FaWallet className="wallet-icon" /> 50.000.000 ₫
-                </span>
-              </div>
             </button>
 
             {showProfileMenu && (
@@ -228,7 +230,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
               aria-label="Tìm kiếm đấu giá"
             />
           </form>
-          {isBuyerMode &&
+          {!fromAdmin && isBuyerMode &&
             NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.label}

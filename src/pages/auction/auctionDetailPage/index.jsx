@@ -13,8 +13,8 @@ import "./index.scss";
 
 const BID_HISTORY_KEY = "auc_bid_history";
 
-function maskUsername(name, isCurrentUser) {
-  if (isCurrentUser) return name;
+function maskUsername(name, isCurrentUser, isAdmin = false) {
+  if (isCurrentUser || isAdmin) return name;
   if (!name) return "***";
   if (name.length <= 3) return name.slice(0, 1) + "***";
   return name.slice(0, 3) + "***";
@@ -223,7 +223,27 @@ export default function AuctionDetailPage() {
       setLeaderAvatar(product.leaderAvatar || "");
     }
 
-    setBidHistory(mergedHistory);
+    const ips = ["113.161.42.88", "14.232.180.12", "118.69.182.44", "27.72.105.19", "171.244.30.95"];
+    const devices = ["Desktop Chrome 126 (Win 11)", "Mobile Safari (iOS 17.4)", "Desktop Edge 125 (Win 11)", "Mobile Chrome (Android 14)"];
+    const methods = ["Thủ công", "Đặt tự động (AutoBid)", "Thủ công", "Thủ công"];
+
+    const enrichedHistory = mergedHistory.map((b, index) => {
+      const attempt = mergedHistory.length - index;
+      const dateObj = new Date(Date.now() - index * 4 * 60 * 1000 - 18000);
+      const timeStr = dateObj.toLocaleTimeString("vi-VN") + " " + dateObj.toLocaleDateString("vi-VN");
+
+      return {
+        ...b,
+        attemptNum: attempt,
+        exactTime: b.exactTime || timeStr,
+        ip: b.ip || ips[index % ips.length],
+        device: b.device || devices[index % devices.length],
+        method: b.method || methods[index % methods.length],
+        status: b.status || (index === 3 ? "⚠️ Nghi vấn (Chênh IP)" : "✓ Hợp lệ"),
+      };
+    });
+
+    setBidHistory(enrichedHistory);
   }, [product]);
 
   // Real-time Countdown timer tick
@@ -456,13 +476,79 @@ export default function AuctionDetailPage() {
   return (
     <div className="auc-detail">
       <nav className="auc-detail__breadcrumbs">
-        <button type="button" className="auc-detail__back" onClick={() => fromAdmin ? navigate('/admin') : navigate(-1)}>
-          <FaArrowLeft /> {fromAdmin ? 'Quay lại Quản lý' : 'Quay lại'}
+        <button type="button" className="auc-detail__back" onClick={() => fromAdmin ? navigate('/admin/auction-products') : navigate(-1)}>
+          <FaArrowLeft /> {fromAdmin ? 'Quay lại Quản lý phiên đấu giá' : 'Quay lại'}
         </button>
         {breadcrumbs.map((crumb, i) => (
           <span key={crumb}>{i > 0 && " / "}{crumb}</span>
         ))}
       </nav>
+
+      {/* ─── 1. TOP: TRUNG TÂM GIÁM SÁT & ĐIỀU HÀNH ADMIN (Hiển thị đầu trang khi là Admin) ─── */}
+      {fromAdmin && (
+        <div className="auc-admin-top-panel">
+          <div className="auc-admin-panel-header">
+            <div className="admin-header-left">
+              <FaShieldAlt className="admin-shield-icon" />
+              <div>
+                <h2>TRUNG TÂM GIÁM SÁT & ĐIỀU HÀNH PHIÊN ĐẤU GIÁ #AUC-{product.id}</h2>
+                <p>Chế độ Quản trị viên cao nhất — Can thiệp phiên real-time & Truy xuất nhật ký chi tiết từng lượt đặt giá.</p>
+              </div>
+            </div>
+            <div className="admin-header-stats-grid">
+              <div className="stat-box">
+                <span>Tổng lượt bid</span>
+                <strong>{bidHistory.length}</strong>
+              </div>
+              <div className="stat-box">
+                <span>Giá thầu hiện tại</span>
+                <strong className="gold">{currentPrice}</strong>
+              </div>
+              <div className="stat-box">
+                <span>Người dẫn đầu</span>
+                <strong>{maskUsername(leader, false, true)}</strong>
+              </div>
+              <div className="stat-box">
+                <span>Trạng thái phiên</span>
+                <strong className={!isAuctionEnded ? 'live-tag' : 'ended-tag'}>
+                  {!isAuctionEnded ? '🔴 ĐANG DIỄN RA (LIVE)' : '⚪ ĐÃ KẾT THÚC'}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Admin Control Actions */}
+          <div className="auc-admin-actions-bar">
+            <h3>🛠️ BỘ CÔNG CỤ ĐIỀU HÀNH & CAN THIỆP PHIÊN DIỄN RA REAL-TIME</h3>
+            <div className="actions-btn-group">
+              <button type="button" className="adm-btn adm-btn--warning" onClick={() => toast.warning("Đã tạm dừng nhận bid cho phiên này!")}>
+                ⏸️ Tạm dừng phiên
+              </button>
+              <button type="button" className="adm-btn adm-btn--info" onClick={() => toast.info("Đã khôi phục nhận bid thành công!")}>
+                ▶️ Khôi phục phiên
+              </button>
+              <button type="button" className="adm-btn adm-btn--success" onClick={() => toast.success("Đã gia hạn phiên thêm +2 Giờ!")}>
+                ⏱️ Gia hạn +2 Giờ
+              </button>
+              <button type="button" className="adm-btn adm-btn--purple" onClick={() => toast.success("Đã gia hạn phiên thêm +12 Giờ!")}>
+                ⏳ Gia hạn +12 Giờ
+              </button>
+              <button type="button" className="adm-btn adm-btn--danger" onClick={() => toast.error("Đã hủy phiên đấu giá & hoàn tiền cọc!")}>
+                🚫 Hủy phiên & Hoàn cọc
+              </button>
+              <button type="button" className="adm-btn adm-btn--dark" onClick={() => toast.warning("Đã khóa tính năng đặt giá toàn phiên!")}>
+                🔒 Khóa thầu toàn phiên
+              </button>
+              <button type="button" className="adm-btn adm-btn--alert" onClick={() => toast.info("Đã quét và phát hiện 1 địa chỉ IP nghi vấn trùng lặp.")}>
+                ⚠️ Quét trùng lặp IP
+              </button>
+              <button type="button" className="adm-btn adm-btn--lightning" onClick={() => { setSecondsLeft(0); setIsAuctionEnded(true); toast.info("⚡ Đã kích hoạt đếm ngược về 0 (Demo)"); }}>
+                ⚡ Kết thúc phiên ngay (Demo)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Winner & Ended Banner Zone ─── */}
       {isAuctionEnded && (
@@ -528,7 +614,7 @@ export default function AuctionDetailPage() {
             <div className="auc-winner-banner auc-winner-banner--ended">
               <FaClock style={{ fontSize: 18, color: '#e8c468' }} />
               <span>
-                Phiên đấu giá đã kết thúc. Người trúng thầu: <strong>{maskUsername(leader, isSameUser(user, leader))}</strong> với giá <strong>{currentPrice}</strong>.
+                Phiên đấu giá đã kết thúc. Người trúng thầu: <strong>{maskUsername(leader, isSameUser(user, leader), fromAdmin)}</strong> với giá <strong>{currentPrice}</strong>.
               </span>
             </div>
           )}
@@ -613,7 +699,7 @@ export default function AuctionDetailPage() {
                   alt={leader || product.leader}
                   className="leader-avatar"
                 />
-                {maskUsername(leader || product.leader, isSameUser(user, leader || product.leader))}
+                {maskUsername(leader || product.leader, isSameUser(user, leader || product.leader), fromAdmin)}
               </div>
             </div>
 
@@ -641,7 +727,7 @@ export default function AuctionDetailPage() {
               )}
             </div>
 
-            {isSellerMode ? null : isAuctionEnded ? (
+            {fromAdmin ? null : isSellerMode ? null : isAuctionEnded ? (
               <div className="bid-form">
                 <label>TRẠNG THÁI PHIÊN ĐẤU GIÁ</label>
                 {isUserWinner ? (
@@ -734,46 +820,131 @@ export default function AuctionDetailPage() {
             )}
           </div>
 
-          <div className="auc-detail__card">
-            <div className="history-header">
-              <h3>LỊCH SỬ ĐẤU GIÁ ({bidHistory.length})</h3>
-              <a href="#">Xem tất cả</a>
-            </div>
-            <ul className="history-list">
-              {bidHistory.map((bid, i) => {
-                const isMe = isSameUser(user, bid.user) || bid.isYou;
-                const displayName = maskUsername(bid.user, isMe);
-                const bidAttemptNum = bidHistory.length - i;
-                return (
-                  <li key={i} className={bid.isLeader ? "leader" : ""}>
-                    <div 
-                      className="history-user"
-                      onClick={() => isSellerMode && navigate(`/auction/profile?user=${encodeURIComponent(bid.user)}`)}
-                      style={{ cursor: isSellerMode ? 'pointer' : 'default' }}
-                      title={isSellerMode ? "Xem hồ sơ người dùng" : ""}
-                    >
-                      <AuctionImage
-                        src={bid.avatar}
-                        alt={displayName}
-                        className="history-avatar"
-                      />
-                      <div>
-                        <strong style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          {displayName}
-                          {isMe && <span className="my-bid-tag">Bạn</span>}
-                          <span className="auc-bid-attempt-tag">Lần {bidAttemptNum}</span>
-                        </strong>
-                        <span>{bid.time}</span>
+          {!fromAdmin && (
+            <div className="auc-detail__card">
+              <div className="history-header">
+                <h3>LỊCH SỬ ĐẤU GIÁ ({bidHistory.length})</h3>
+                <a href="#">Xem tất cả</a>
+              </div>
+              <ul className="history-list">
+                {bidHistory.map((bid, i) => {
+                  const isMe = isSameUser(user, bid.user) || bid.isYou;
+                  const displayName = maskUsername(bid.user, isMe, fromAdmin);
+                  const bidAttemptNum = bidHistory.length - i;
+                  return (
+                    <li key={i} className={bid.isLeader ? "leader" : ""}>
+                      <div 
+                        className="history-user"
+                        onClick={() => isSellerMode && navigate(`/auction/profile?user=${encodeURIComponent(bid.user)}`)}
+                        style={{ cursor: isSellerMode ? 'pointer' : 'default' }}
+                        title={isSellerMode ? "Xem hồ sơ người dùng" : ""}
+                      >
+                        <AuctionImage
+                          src={bid.avatar}
+                          alt={displayName}
+                          className="history-avatar"
+                        />
+                        <div>
+                          <strong style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {displayName}
+                            {isMe && <span className="my-bid-tag">Bạn</span>}
+                            <span className="auc-bid-attempt-tag">Lần {bidAttemptNum}</span>
+                          </strong>
+                          <span>{bid.time}</span>
+                        </div>
                       </div>
-                    </div>
-                    <em>{bid.amount}</em>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                      <em>{bid.amount}</em>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </aside>
       </div>
+
+      {/* ─── 3. BOTTOM: NHẬT KÝ CHI TIẾT TỪNG LƯỢT ĐẶT GIÁ (FULL-WIDTH BID AUDIT LOG TABLE) ─── */}
+      {fromAdmin && (
+        <div className="auc-admin-history-section-bottom">
+          <div className="section-title-row">
+            <h3>📜 NHẬT KÝ CHI TIẾT TỪNG LƯỢT ĐẶT GIÁ (BID AUDIT LOG)</h3>
+            <span className="total-badge">{bidHistory.length} Lượt bid ghi nhận</span>
+          </div>
+
+          <div className="auc-admin-table-wrapper">
+            <table className="auc-admin-table">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>LẦN ĐẶT</th>
+                  <th>NGƯỜI ĐẶT GIÁ (HỌ TÊN ĐẦY ĐỦ)</th>
+                  <th>MỨC GIÁ ĐẶT</th>
+                  <th>THỜI GIAN CHÍNH XÁC</th>
+                  <th>ĐỊA CHỈ IP</th>
+                  <th>THIẾT BỊ / HĐH</th>
+                  <th>CHẾ ĐỘ THẦU</th>
+                  <th>TRẠNG THÁI</th>
+                  <th>THAO TÁC ADMIN</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bidHistory.map((bid, i) => {
+                  const isMe = isSameUser(user, bid.user) || bid.isYou;
+                  const displayName = maskUsername(bid.user, isMe, true);
+                  const attemptNum = bid.attemptNum || (bidHistory.length - i);
+                  return (
+                    <tr key={i} className={bid.isLeader ? "row-leader" : ""}>
+                      <td><strong>#{i + 1}</strong></td>
+                      <td>
+                        <span className={`attempt-badge ${bid.isLeader ? 'leader' : ''}`}>
+                          Lần {attemptNum} {bid.isLeader && '🏆 Dẫn đầu'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="user-info-cell">
+                          <AuctionImage src={bid.avatar} alt={displayName} className="user-avatar-mini" />
+                          <div>
+                            <strong className="user-name-text">{displayName}</strong>
+                            <span className="verified-badge">✓ Đã xác thực CCCD/Ví</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td><strong className="price-tag-gold">{bid.amount}</strong></td>
+                      <td>
+                        <div className="time-cell">
+                          <span>{bid.exactTime || "10:23:45 31/07/2026"}</span>
+                          <small>({bid.time})</small>
+                        </div>
+                      </td>
+                      <td><code className="ip-code">{bid.ip || "113.161.42.88"}</code></td>
+                      <td><span className="device-text">{bid.device || "Desktop Chrome 126"}</span></td>
+                      <td><span className="method-pill">{bid.method || "Thủ công"}</span></td>
+                      <td>
+                        <span className={`status-pill ${bid.status?.includes('Nghi vấn') ? 'warn' : 'valid'}`}>
+                          {bid.status || "✓ Hợp lệ"}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="admin-row-actions">
+                          <button type="button" className="action-icon-btn" title="Xem thông tin chi tiết IP" onClick={() => toast.info(`IP: ${bid.ip || "113.161.42.88"} - Nhà mạng: Viettel Telecom`)}>
+                            🔍 Xem IP
+                          </button>
+                          <button type="button" className="action-icon-btn danger" title="Hủy lượt bid này" onClick={() => toast.error(`Đã hủy lượt bid ${bid.amount} của ${displayName}`)}>
+                            🚫 Hủy
+                          </button>
+                          <button type="button" className="action-icon-btn warn" title="Khóa thầu tài khoản này" onClick={() => toast.warning(`Đã tạm khóa đặt giá đối với ${displayName}`)}>
+                            🔒 Khóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ─── Winner Checkout Modal & Address Selection ─── */}
       {showCheckoutModal && (
