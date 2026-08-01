@@ -70,15 +70,15 @@ export const UserListRow = ({ user, type = "customer", actions = [] }) => (
     </div>
     {type === "customer" ? (
       <>
-        <div className="adm-user-row__cell"><span className="adm-user-row__label">SĐT</span><span>{user.phone}</span></div>
-        <div className="adm-user-row__cell"><span className="adm-user-row__label">CCCD</span><span>{user.identityNumber}</span></div>
-        <div className="adm-user-row__cell"><span className="adm-user-row__label">Giới tính</span><span>{user.gender}</span></div>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">SĐT</span><span>{user.phone || "—"}</span></div>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">CCCD</span><span>{user.identityNumber || "—"}</span></div>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">Giới tính</span><span>{user.gender || "—"}</span></div>
       </>
     ) : type === "admin" ? (
       <>
-        <div className="adm-user-row__cell"><span className="adm-user-row__label">Email</span><span>{user.email}</span></div>
-        <div className="adm-user-row__cell"><span className="adm-user-row__label">SĐT</span><span>{user.phone}</span></div>
-        <div className="adm-user-row__cell adm-user-row__cell--hide-sm"><span className="adm-user-row__label">Vai trò</span><span>{user.roleLabel}</span></div>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">Email</span><span>{user.email || "—"}</span></div>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">SĐT</span><span>{user.phone || "—"}</span></div>
+        <div className="adm-user-row__cell adm-user-row__cell--hide-sm"><span className="adm-user-row__label">Vai trò</span><span>{user.roleLabel || "Admin"}</span></div>
       </>
     ) : (
       <>
@@ -86,7 +86,9 @@ export const UserListRow = ({ user, type = "customer", actions = [] }) => (
         <div className="adm-user-row__cell"><span className="adm-user-row__label">Địa chỉ</span><span>{user.address ?? "—"}</span></div>
       </>
     )}
-    <AdminStatusBadge status={user.status} />
+    <div className="adm-user-row__status">
+      <AdminStatusBadge status={user.status} />
+    </div>
     <div className="adm-user-row__actions">
       {actions.map((a) => (
         <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick} disabled={a.disabled}>{a.label}</button>
@@ -94,6 +96,7 @@ export const UserListRow = ({ user, type = "customer", actions = [] }) => (
     </div>
   </div>
 );
+
 
 export const ProductCard = ({ product, actions = [] }) => (
   <article className="adm-product-card">

@@ -571,13 +571,13 @@
 .adm-user-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   background: $color-bg-card;
   border: 1px solid $color-border-light;
   border-radius: $radius-md;
-  padding: 12px 16px;
-  min-width: 0;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
+  padding: 12px 18px;
+  width: 100%;
+  box-sizing: border-box;
 
   &:hover {
     background: rgba($color-primary, 0.04);
@@ -596,12 +596,14 @@
     justify-content: center;
     font-size: 13px;
     font-weight: 700;
+    flex: 0 0 40px;
     flex-shrink: 0;
   }
 
   &__name {
     min-width: 0;
-    flex: 0 0 200px;
+    flex: 0 0 220px;
+    width: 220px;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -628,7 +630,8 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    flex: 1;
+    flex: 0 0 150px;
+    width: 150px;
     min-width: 0;
 
     &--hide-sm {
@@ -652,11 +655,32 @@
     white-space: nowrap;
   }
 
+  &__status {
+    flex: 0 0 110px;
+    width: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .adm-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      max-width: 100px;
+      text-align: center;
+    }
+  }
+
   &__actions {
     display: flex;
+    align-items: center;
+    justify-content: flex-end;
     gap: 6px;
-    flex-shrink: 0;
-    flex-wrap: wrap;
+    margin-left: auto;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
 
     button {
       height: 30px;
@@ -664,17 +688,29 @@
       border-radius: $radius-sm;
       font-size: 12px;
       font-weight: 600;
-      border: none;
+      border: 1px solid $color-border-light;
+      background: $color-bg;
       cursor: pointer;
-      transition: opacity 0.18s ease, transform 0.15s ease;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
 
-      &:hover { opacity: 0.85; transform: translateY(-1px); }
-      &.primary { background: linear-gradient(135deg, $color-primary-dark, $color-primary); color: #12101A; }
-      &.danger  { background: $color-danger-bg; color: $color-danger; }
-      &.success { background: rgba($color-success, 0.15); color: $color-success; }
+      &.primary {
+        background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+        color: #12101A;
+        border: none;
+      }
+
+      &.danger {
+        color: $color-danger;
+        border-color: rgba($color-danger, 0.4);
+      }
     }
   }
 }
+
 
 // ── Product cards ──
 .adm-product-grid {
@@ -2504,23 +2540,29 @@
 // ==========================================
 // UNIFIED COMPACT LIST ROW SYSTEM (LIST VIEW)
 // ==========================================
+// ==========================================
+// UNIFIED COMPACT LIST ROW SYSTEM (LIST VIEW)
+// ==========================================
 .adm-list-container {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  overflow-x: auto;
+  padding-bottom: 6px;
 }
 
 .adm-list-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   background: $color-bg-card;
   border: 1px solid $color-border-light;
   border-radius: $radius-md;
-  padding: 12px 18px;
-  min-width: 0;
+  padding: 10px 14px;
+  min-width: max-content;
   width: 100%;
+  box-sizing: border-box;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
 
   &:hover {
@@ -2534,28 +2576,77 @@
   }
 
   &__thumb {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: $radius-sm;
     background: $color-bg;
     border: 1px solid $color-border-light;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 18px;
+    flex: 0 0 36px;
     flex-shrink: 0;
   }
 
   &__col {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     min-width: 0;
-    flex: 1 1 120px;
 
     &--main {
-      flex: 0 0 240px;
-      @media (max-width: 1200px) { flex: 0 0 180px; }
+      flex: 0 0 210px;
+      width: 210px;
+      @media (max-width: 1200px) { flex: 0 0 170px; width: 170px; }
+    }
+
+    &--seller {
+      flex: 0 0 130px;
+      width: 130px;
+    }
+
+    &--price {
+      flex: 0 0 140px;
+      width: 140px;
+    }
+
+    &--time {
+      flex: 0 0 130px;
+      width: 130px;
+    }
+
+    &--info {
+      flex: 0 0 180px;
+      width: 180px;
+    }
+
+    &--qty {
+      flex: 0 0 140px;
+      width: 140px;
+    }
+
+    &--threshold {
+      flex: 0 0 140px;
+      width: 140px;
+    }
+
+    &--status {
+      flex: 0 0 105px;
+      width: 105px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      .adm-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        max-width: 95px;
+        text-align: center;
+      }
     }
   }
 
@@ -2605,14 +2696,15 @@
   &__actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: flex-end;
+    gap: 5px;
     margin-left: auto;
-    flex-shrink: 0;
+    flex: 0 0 auto;
     flex-wrap: nowrap;
 
     button {
-      height: 28px;
-      padding: 0 10px;
+      height: 26px;
+      padding: 0 8px;
       border: 1px solid $color-border-light;
       border-radius: $radius-sm;
       background: $color-bg;
@@ -2648,5 +2740,6 @@
     }
   }
 }
+
 
 

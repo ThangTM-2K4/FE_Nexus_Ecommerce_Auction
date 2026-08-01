@@ -663,19 +663,22 @@ export const AdminInventory = () => {
                     <strong className="adm-list-row__title">{item.product}</strong>
                     <small className="adm-list-row__sub">SKU: {item.sku} · Seller: {item.seller}</small>
                   </div>
-                  <div className="adm-list-row__col">
+                  <div className="adm-list-row__col adm-list-row__col--qty">
                     <span className="adm-list-row__label">Số lượng tồn kho</span>
                     <span className="adm-list-row__val highlight">{item.stock} cái</span>
                   </div>
-                  <div className="adm-list-row__col">
+                  <div className="adm-list-row__col adm-list-row__col--threshold">
                     <span className="adm-list-row__label">Đã giữ / Ngưỡng</span>
                     <span className="adm-list-row__val">{item.reserved} / {item.threshold}</span>
                   </div>
-                  <AdminStatusBadge status={item.status} />
+                  <div className="adm-list-row__col adm-list-row__col--status">
+                    <AdminStatusBadge status={item.status} />
+                  </div>
                   <div className="adm-list-row__actions">
                     <button type="button" className="primary" onClick={() => toast.success(`Đã đồng bộ ${item.sku}`)}>Đồng bộ</button>
                   </div>
                 </div>
+
               )
             ))}
           </SellerInventorySection>
