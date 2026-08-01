@@ -59,6 +59,42 @@ export const UserCard = ({ user, type = "customer", onDetail, onAction, actions 
   </article>
 );
 
+export const UserListRow = ({ user, type = "customer", actions = [] }) => (
+  <div className={`adm-user-row adm-user-row--${type}`}>
+    <div className="adm-user-row__avatar">{initials(user.name || user.owner)}</div>
+    <div className="adm-user-row__name">
+      <span className="adm-user-row__fullname" title={user.name}>{user.name}</span>
+      <span className="adm-user-row__sub">
+        {type === "admin" ? (user.roleLabel ?? "Quản trị viên") : (user.email ?? "—")}
+      </span>
+    </div>
+    {type === "customer" ? (
+      <>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">SĐT</span><span>{user.phone}</span></div>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">CCCD</span><span>{user.identityNumber}</span></div>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">Giới tính</span><span>{user.gender}</span></div>
+      </>
+    ) : type === "admin" ? (
+      <>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">Email</span><span>{user.email}</span></div>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">SĐT</span><span>{user.phone}</span></div>
+        <div className="adm-user-row__cell adm-user-row__cell--hide-sm"><span className="adm-user-row__label">Vai trò</span><span>{user.roleLabel}</span></div>
+      </>
+    ) : (
+      <>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">Loại</span><span>{user.sellerTypeLabel ?? "—"}</span></div>
+        <div className="adm-user-row__cell"><span className="adm-user-row__label">Địa chỉ</span><span>{user.address ?? "—"}</span></div>
+      </>
+    )}
+    <AdminStatusBadge status={user.status} />
+    <div className="adm-user-row__actions">
+      {actions.map((a) => (
+        <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick} disabled={a.disabled}>{a.label}</button>
+      ))}
+    </div>
+  </div>
+);
+
 export const ProductCard = ({ product, actions = [] }) => (
   <article className="adm-product-card">
     <div className="adm-product-card__img">
