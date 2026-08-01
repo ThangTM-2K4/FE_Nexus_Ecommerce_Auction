@@ -121,7 +121,7 @@ export const ProductCard = ({ product, actions = [] }) => (
   </article>
 );
 
-export const SellerProductGroup = ({ seller, warehouse, stats, children }) => (
+export const SellerProductGroup = ({ seller, warehouse, stats, viewMode = "grid", children }) => (
   <section className="adm-seller-group">
     <header className="adm-seller-group__head">
       <div className="adm-seller-group__info">
@@ -151,11 +151,13 @@ export const SellerProductGroup = ({ seller, warehouse, stats, children }) => (
         </div>
       </div>
     </header>
-    <div className="adm-product-grid adm-seller-group__grid">{children}</div>
+    <div className={viewMode === "list" ? "adm-list-container" : "adm-product-grid adm-seller-group__grid"}>
+      {children}
+    </div>
   </section>
 );
 
-export const SellerInventorySection = ({ seller, warehouse, stats, children }) => (
+export const SellerInventorySection = ({ seller, warehouse, stats, viewMode = "grid", children }) => (
   <section className="adm-seller-group adm-seller-group--inventory">
     <header className="adm-seller-group__head">
       <div className="adm-seller-group__info">
@@ -187,9 +189,12 @@ export const SellerInventorySection = ({ seller, warehouse, stats, children }) =
         )}
       </div>
     </header>
-    <div className="adm-inventory-grid adm-seller-group__grid">{children}</div>
+    <div className={viewMode === "list" ? "adm-list-container" : "adm-inventory-grid adm-seller-group__grid"}>
+      {children}
+    </div>
   </section>
 );
+
 
 export const AuctionCard = ({ auction, onAction, actions = [] }) => {
   const isLive = auction.status === "Đang diễn ra" || auction.status === "Sắp kết thúc";

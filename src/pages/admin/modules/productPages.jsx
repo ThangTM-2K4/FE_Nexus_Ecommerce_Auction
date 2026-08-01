@@ -6,11 +6,13 @@ import AdminTabs from "../../../components/admin/adminTabs";
 import AdminTabOverview from "../../../components/admin/adminTabOverview";
 import AdminToolbar from "../../../components/admin/adminToolbar";
 import AdminModal from "../../../components/admin/adminModal";
+import AdminStatusBadge from "../../../components/admin/adminStatusBadge";
 import { AdminAnimatedView } from "../../../components/admin/adminPageTransition";
 import {
   ProductCard, AuctionCard, CategoryTreeItem, BrandChip, InventoryGauge,
   SellerProductGroup, SellerInventorySection, ProductListRow, AuctionListRow,
 } from "../../../components/admin/adminViews";
+
 
 import Select from "../../../components/common/select";
 import { useAdminList } from "../../../hooks/useAdminList";
@@ -151,6 +153,7 @@ export const AdminProducts = () => {
               seller={seller}
               warehouse={getWarehouse(seller)}
               stats={calcProductStats(items)}
+              viewMode={viewMode}
             >
               {items.map((p) => (
                 viewMode === "grid" ? (
@@ -161,6 +164,7 @@ export const AdminProducts = () => {
               ))}
             </SellerProductGroup>
           ))}
+
         </div>
       </AdminAnimatedView>
       <AdminModal open={!!detail} title="Chi tiết sản phẩm" onClose={() => setDetail(null)} wide>
@@ -646,8 +650,10 @@ export const AdminInventory = () => {
             seller={seller}
             warehouse={getWarehouse(seller)}
             stats={calcInventoryStats(items, allProducts.filter((p) => p.seller === seller))}
+            viewMode={viewMode}
           >
             {items.map((item) => (
+
               viewMode === "grid" ? (
                 <InventoryGauge key={item.id} item={item} onSync={() => toast.success(`Đã đồng bộ ${item.sku}`)} />
               ) : (
