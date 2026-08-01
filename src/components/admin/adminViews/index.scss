@@ -155,81 +155,418 @@
 }
 
 // ── Universal Grid to List View Converter ──
+// Applies proper compact horizontal row layout to each card type individually
 .adm-view-as-list {
   display: flex !important;
   flex-direction: column !important;
-  gap: 10px !important;
+  gap: 8px !important;
 
-  > article,
-  > div.adm-card,
-  > div.adm-order-timeline__item,
-  > article.adm-product-card,
-  > article.adm-auction-card,
-  > article.adm-wallet-card,
-  > article.adm-withdrawal-card,
-  > article.adm-payment-card,
-  > article.adm-coupon-ticket,
-  > section.adm-seller-group {
-    display: flex !important;
-    flex-direction: row !important;
+  // ── ProductCard in list mode ──
+  > article.adm-product-card {
+    display: grid !important;
+    grid-template-columns: 56px 1fr auto !important;
+    grid-template-rows: auto !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    flex-wrap: wrap !important;
-    gap: 16px !important;
-    padding: 12px 18px !important;
-    border-radius: $radius-md !important;
-    width: 100% !important;
+    padding: 0 14px 0 0 !important;
+    height: 58px !important;
+    overflow: visible !important;
+    transform: none !important;
+    box-shadow: none !important;
 
-    header, .adm-seller-group__head {
-      margin-bottom: 0 !important;
-      padding-bottom: 0 !important;
+    .adm-product-card__img {
+      height: 58px !important;
+      width: 56px !important;
       border-bottom: none !important;
+      border-right: 1px solid $color-border-light !important;
+      border-radius: $radius-lg 0 0 $radius-lg !important;
+    }
+
+    .adm-product-card__body {
       display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
-      gap: 10px !important;
-      min-width: 200px !important;
-      flex: 1 1 auto !important;
+      gap: 12px !important;
+      padding: 0 12px !important;
+      flex: 1 !important;
+      min-width: 0 !important;
+
+      .adm-product-card__head {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+      }
 
       h3 {
         margin: 0 !important;
-        font-size: 14px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 200px !important;
+      }
+
+      .adm-product-card__seller,
+      .adm-product-card__brand { display: none !important; }
+
+      .adm-product-card__price {
+        margin-top: 0 !important;
+        flex-shrink: 0 !important;
       }
     }
 
-    .adm-user-card__body,
-    .adm-product-card__body,
-    .adm-auction-card__prices,
-    .adm-auction-card__meta,
-    .adm-product-card__price,
-    dl,
-    .adm-detail-grid {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 16px !important;
-      margin: 0 !important;
+    footer {
       padding: 0 !important;
-      flex: 1 1 auto !important;
+      border-top: none !important;
+      flex-shrink: 0 !important;
+    }
+  }
 
-      > div {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 2px !important;
+  // ── SellerProductGroup in list mode: collapse the group header, expand children as rows ──
+  > section.adm-seller-group {
+    margin-bottom: 8px !important;
+
+    .adm-seller-group__head {
+      padding: 10px 14px !important;
+      margin-bottom: 8px !important;
+      gap: 10px !important;
+
+      .adm-seller-group__info h3 { font-size: 13px !important; }
+      .adm-seller-group__stats { gap: 6px !important; }
+      .adm-seller-group__stat { min-width: 64px !important; padding: 6px 8px !important; }
+    }
+
+    .adm-product-grid.adm-seller-group__grid {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 6px !important;
+
+      > article.adm-product-card {
+        display: grid !important;
+        grid-template-columns: 56px 1fr auto !important;
+        align-items: center !important;
+        padding: 0 14px 0 0 !important;
+        height: 56px !important;
+        overflow: visible !important;
+        transform: none !important;
+
+        .adm-product-card__img {
+          height: 56px !important;
+          width: 56px !important;
+          border-bottom: none !important;
+          border-right: 1px solid $color-border-light !important;
+          border-radius: $radius-lg 0 0 $radius-lg !important;
+        }
+
+        .adm-product-card__body {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 10px !important;
+          padding: 0 10px !important;
+          min-width: 0 !important;
+
+          .adm-product-card__head {
+            margin-bottom: 0 !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 6px !important;
+            flex-shrink: 0 !important;
+          }
+
+          h3 {
+            margin: 0 !important;
+            font-size: 13px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 180px !important;
+          }
+
+          .adm-product-card__seller,
+          .adm-product-card__brand { display: none !important; }
+
+          .adm-product-card__price {
+            margin-top: 0 !important;
+            margin-left: auto !important;
+          }
+        }
+
+        footer {
+          padding: 0 !important;
+          border-top: none !important;
+        }
+      }
+    }
+  }
+
+  // ── AuctionCard in list mode ──
+  > article.adm-auction-card {
+    flex-direction: row !important;
+    align-items: center !important;
+    height: auto !important;
+    min-height: 60px !important;
+    gap: 14px !important;
+    padding: 12px 16px !important;
+    transform: none !important;
+
+    .adm-auction-card__pulse {
+      position: static !important;
+      flex-shrink: 0 !important;
+    }
+
+    header {
+      margin-bottom: 0 !important;
+      flex: 0 0 200px !important;
+      small { display: none !important; }
+      h3 { font-size: 13px !important; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      p { display: none !important; }
+    }
+
+    .adm-auction-card__prices {
+      display: flex !important;
+      gap: 8px !important;
+      margin-bottom: 0 !important;
+      flex-shrink: 0 !important;
+
+      div {
+        padding: 6px 10px !important;
+        span { font-size: 9px !important; }
+        strong { font-size: 12px !important; }
       }
     }
 
-    footer, .adm-user-card__footer, .adm-product-card__footer {
+    .adm-auction-card__bar { display: none !important; }
+
+    .adm-auction-card__meta {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+      flex-shrink: 0 !important;
+      font-size: 11px !important;
+    }
+
+    .adm-status-badge { flex-shrink: 0 !important; }
+
+    footer {
       margin-top: 0 !important;
       padding-top: 0 !important;
       border-top: none !important;
       flex-shrink: 0 !important;
+    }
+  }
+
+  // ── OrderTimelineItem in list mode ──
+  > div.adm-order-timeline__item {
+    position: static !important;
+    padding: 0 !important;
+
+    .adm-order-timeline__dot { display: none !important; }
+
+    .adm-order-timeline__card {
       display: flex !important;
+      flex-direction: row !important;
       align-items: center !important;
-      gap: 6px !important;
+      gap: 14px !important;
+      padding: 10px 16px !important;
+
+      header {
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+        flex: 0 0 110px !important;
+        strong { font-size: 12px !important; }
+      }
+
+      p { font-size: 12px !important; margin-bottom: 0 !important; flex: 1 !important; min-width: 0 !important; }
+
+      .adm-order-timeline__details {
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+        font-size: 11px !important;
+        strong { font-size: 13px !important; }
+      }
+
+      small { display: none !important; }
+
+      footer {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        border-top: none !important;
+        flex-shrink: 0 !important;
+      }
+    }
+  }
+
+  // ── PaymentCard in list mode ──
+  > article.adm-payment-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 10px 16px !important;
+
+    header {
+      flex: 0 0 130px !important;
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 8px !important;
+      code { font-size: 12px !important; }
+    }
+
+    .adm-payment-card__amount {
+      font-size: 14px !important;
+      flex-shrink: 0 !important;
+      font-weight: 700 !important;
+      color: $color-primary !important;
+    }
+
+    > p { flex: 1 !important; font-size: 12px !important; min-width: 0 !important; }
+
+    .adm-payment-card__meta {
+      font-size: 11px !important;
+      flex-shrink: 0 !important;
+    }
+
+    footer {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+      border-top: none !important;
+      flex-shrink: 0 !important;
+    }
+  }
+
+  // ── WalletCard in list mode ──
+  > article.adm-wallet-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding: 12px 16px !important;
+    transform: none !important;
+
+    header {
+      flex: 0 0 160px !important;
+      h3 { font-size: 13px !important; }
+      span { font-size: 11px !important; }
+    }
+
+    .adm-wallet-card__balance {
+      font-size: 16px !important;
+      margin: 0 !important;
+      flex-shrink: 0 !important;
+    }
+
+    dl {
+      display: flex !important;
+      gap: 12px !important;
+      margin-bottom: 0 !important;
+      flex: 1 !important;
+      dt { font-size: 9px !important; }
+      dd { font-size: 11px !important; }
+    }
+
+    footer {
+      margin-top: 0 !important;
+      flex-shrink: 0 !important;
+    }
+  }
+
+  // ── WithdrawalCard in list mode ──
+  > article.adm-withdrawal-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 10px 16px !important;
+    background: $color-bg-card !important;
+    border: 1px solid $color-border-light !important;
+    border-radius: $radius-md !important;
+
+    .adm-withdrawal-card__amount {
+      font-size: 14px !important;
+      font-weight: 800 !important;
+      flex-shrink: 0 !important;
+      min-width: 120px !important;
+    }
+
+    h3 { font-size: 13px !important; margin: 0 !important; flex: 1 !important; }
+    p, small { font-size: 11px !important; color: $color-text-muted !important; flex-shrink: 0 !important; }
+
+    .adm-status-badge { flex-shrink: 0 !important; }
+
+    footer {
+      flex-shrink: 0 !important;
+      padding-top: 0 !important;
+      border-top: none !important;
+      margin-top: 0 !important;
+    }
+  }
+
+  // ── ShippingPartnerCard in list mode ──
+  > article.adm-shipping-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 10px 16px !important;
+    background: $color-bg-card !important;
+    border: 1px solid $color-border-light !important;
+    border-radius: $radius-md !important;
+
+    .adm-shipping-card__icon { font-size: 22px !important; flex-shrink: 0 !important; }
+    h3 { font-size: 13px !important; margin: 0 !important; flex: 1 !important; }
+    .adm-shipping-card__fee { font-size: 13px !important; font-weight: 700 !important; color: $color-primary !important; flex-shrink: 0 !important; }
+    > p { font-size: 11px !important; color: $color-text-muted !important; flex-shrink: 0 !important; }
+    .adm-status-badge { flex-shrink: 0 !important; }
+    > button { flex-shrink: 0 !important; padding: 4px 12px !important; }
+  }
+
+  // ── CouponTicket in list mode ──
+  > article.adm-coupon-ticket {
+    height: auto !important;
+    min-height: 52px !important;
+
+    .adm-coupon-ticket__left {
+      width: 72px !important;
+      padding: 10px !important;
+      strong { font-size: 14px !important; }
+    }
+
+    .adm-coupon-ticket__right {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 12px !important;
+      padding: 10px 14px !important;
+
+      code { font-size: 13px !important; }
+      p { display: none !important; }
+      .adm-coupon-ticket__usage { display: none !important; }
+      .adm-status-badge { flex-shrink: 0 !important; }
+      .adm-coupon-ticket__actions { margin-top: 0 !important; flex-shrink: 0 !important; }
+    }
+  }
+
+  // ── BidFeedItem in list mode ──
+  > article.adm-bid-feed__item {
+    padding: 8px 14px !important;
+
+    .adm-bid-feed__amount { font-size: 13px !important; min-width: 90px !important; }
+
+    .adm-bid-feed__body {
+      strong { font-size: 12px !important; }
+      > span { display: none !important; }
+
+      .adm-bid-feed__meta {
+        margin-top: 0 !important;
+        gap: 8px !important;
+        span { font-size: 10px !important; }
+      }
     }
   }
 }
+
 
 .adm-user-row {
   display: flex;
