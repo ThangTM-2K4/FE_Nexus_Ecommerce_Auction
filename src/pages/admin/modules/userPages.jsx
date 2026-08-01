@@ -436,12 +436,9 @@ export const AdminUsers = () => {
           ]}
           actions={[
             { label: "Tải lại", variant: "secondary", onClick: loadUsers },
-            {
-              label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
-              variant: "secondary",
-              onClick: toggleViewMode,
-            },
           ]}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       ) : tab === "create" ? null : (
         <AdminToolbar
@@ -457,14 +454,12 @@ export const AdminUsers = () => {
           }]}
           actions={[
             { label: "Tải lại", variant: "secondary", onClick: loadSellers },
-            {
-              label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
-              variant: "secondary",
-              onClick: toggleViewMode,
-            },
           ]}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       )}
+
       <AdminAnimatedView viewKey={tab}>
         {tab === "create" ? (
           <div className="adm-create-account-panel">
@@ -620,11 +615,19 @@ export const AdminUsers = () => {
           <p className="adm-page__empty">Không có seller phù hợp.</p>
         ) : (
           <>
-            <AdminStaggerGrid className={viewMode === "list" ? "adm-user-grid adm-view-as-list" : "adm-user-grid"}>
-              {filteredSellers.map((row) => (
-                <UserCard key={row.id} user={row} type="seller" actions={sellerActions(row)} />
-              ))}
-            </AdminStaggerGrid>
+            {viewMode === "grid" ? (
+              <AdminStaggerGrid className="adm-user-grid">
+                {filteredSellers.map((row) => (
+                  <UserCard key={row.id} user={row} type="seller" actions={sellerActions(row)} />
+                ))}
+              </AdminStaggerGrid>
+            ) : (
+              <div className="adm-list-container">
+                {filteredSellers.map((row) => (
+                  <UserListRow key={row.id} user={row} type="seller" actions={sellerActions(row)} />
+                ))}
+              </div>
+            )}
             {Math.ceil(sellerTotal / PAGE_SIZE) > 1 && (
               <div className="adm-page__pagination">
                 <button type="button" disabled={sellerPage <= 1} onClick={() => setSellerPage((p) => p - 1)}>Trước</button>
@@ -633,6 +636,7 @@ export const AdminUsers = () => {
               </div>
             )}
           </>
+
         )}
       </AdminAnimatedView>
       <AdminModal
@@ -717,12 +721,14 @@ export const AdminSellerVerification = () => {
   const [statusFilter, setStatusFilter] = useState(SELLER_API_STATUS.PENDING);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [viewMode, setViewMode] = useState("grid");
   const [detail, setDetail] = useState(null);
   const [showSensitiveDetail, setShowSensitiveDetail] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+
 
   const renderDetailFields = (fields) => (
     <dl className="adm-detail-grid">
@@ -839,12 +845,14 @@ export const AdminSellerVerification = () => {
           options: SELLER_FILTER_OPTIONS,
         }]}
         actions={[{ label: "Tải lại", variant: "secondary", onClick: loadVerifications }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
       {loading ? (
         <p className="adm-page__empty">Đang tải dữ liệu...</p>
       ) : filtered.length === 0 ? (
         <p className="adm-page__empty">Không có hồ sơ phù hợp.</p>
-      ) : (
+      ) : viewMode === "grid" ? (
         <AdminStaggerGrid className="adm-card-grid">
           {filtered.map((item) => (
             <article key={item.id} className="adm-card">
@@ -885,7 +893,25 @@ export const AdminSellerVerification = () => {
             </article>
           ))}
         </AdminStaggerGrid>
+      ) : (
+        <div className="adm-list-container">
+          {filtered.map((item) => (
+            <UserListRow
+              key={item.id}
+              user={{ name: item.seller, email: item.owner, phone: item.taxCode, address: item.address, status: item.status, sellerTypeLabel: item.sellerTypeLabel }}
+              type="seller"
+              actions={[
+                { label: "Chi tiết", variant: "primary", onClick: () => openDetail(item) },
+                ...(isPending(item) ? [
+                  { label: "Duyệt", variant: "success", onClick: () => handleApprove(item), disabled: processingId === item.id },
+                  { label: "Từ chối", variant: "danger", onClick: () => { setRejectTarget(item); setRejectReason(""); }, disabled: processingId === item.id },
+                ] : [])
+              ]}
+            />
+          ))}
+        </div>
       )}
+
       {Math.ceil(total / PAGE_SIZE) > 1 && (
         <div className="adm-page__pagination">
           <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</button>

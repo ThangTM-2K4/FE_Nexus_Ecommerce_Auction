@@ -9,6 +9,7 @@ import { AdminAnimatedView, AdminStaggerGrid } from "../../../components/admin/a
 import {
   FeeCard, CouponTicket, ReviewCard, FraudAlert,
   KanbanColumn, KanbanCard, ShippingPartnerCard, ShippingZoneItem,
+  CouponListRow, ShippingPartnerListRow, ReviewListRow,
 } from "../../../components/admin/adminViews";
 import Select from "../../../components/common/select";
 import { useAdminList } from "../../../hooks/useAdminList";
@@ -72,23 +73,33 @@ export const AdminCoupons = () => {
         onSearchChange={list.setSearch}
         actions={[
           { label: "+ Tạo coupon", onClick: () => setForm({ code: "", type: "Phần trăm", value: "", status: "Hoạt động" }) },
-          {
-            label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
-            variant: "secondary",
-            onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")),
-          },
         ]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <AdminStaggerGrid className={viewMode === "list" ? "adm-coupon-grid adm-view-as-list" : "adm-coupon-grid"}>
-        {list.filtered.map((c) => (
-          <CouponTicket
-            key={c.id}
-            coupon={c}
-            onEdit={() => setForm({ ...c })}
-            onDelete={() => { list.removeItem(c.id); toast.info("Đã xóa"); }}
-          />
-        ))}
-      </AdminStaggerGrid>
+      {viewMode === "grid" ? (
+        <AdminStaggerGrid className="adm-coupon-grid">
+          {list.filtered.map((c) => (
+            <CouponTicket
+              key={c.id}
+              coupon={c}
+              onEdit={() => setForm({ ...c })}
+              onDelete={() => { list.removeItem(c.id); toast.info("Đã xóa"); }}
+            />
+          ))}
+        </AdminStaggerGrid>
+      ) : (
+        <div className="adm-list-container">
+          {list.filtered.map((c) => (
+            <CouponListRow
+              key={c.id}
+              coupon={c}
+              onEdit={() => setForm({ ...c })}
+              onDelete={() => { list.removeItem(c.id); toast.info("Đã xóa"); }}
+            />
+          ))}
+        </div>
+      )}
       <AdminModal open={!!form} title={form?.id ? "Sửa coupon" : "Tạo coupon"} onClose={() => setForm(null)}>
         {form && (
           <div className="adm-form">
@@ -148,23 +159,32 @@ export const AdminShipping = () => {
         search={tab === "partners" ? partners.search : zones.search}
         onSearchChange={tab === "partners" ? partners.setSearch : zones.setSearch}
         searchPlaceholder={tab === "partners" ? "Tìm đối tác..." : "Tìm khu vực..."}
-        actions={[{
-          label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
-          variant: "secondary",
-          onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")),
-        }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
       <AdminAnimatedView viewKey={tab}>
         {tab === "partners" ? (
-          <AdminStaggerGrid className={viewMode === "list" ? "adm-shipping-grid adm-view-as-list" : "adm-shipping-grid"}>
-            {partners.filtered.map((p) => (
-              <ShippingPartnerCard
-                key={p.id}
-                partner={p}
-                onToggle={() => { partners.updateItem(p.id, { status: p.status === "Hoạt động" ? "Tắt" : "Hoạt động" }); toast.success("Đã cập nhật"); }}
-              />
-            ))}
-          </AdminStaggerGrid>
+          viewMode === "grid" ? (
+            <AdminStaggerGrid className="adm-shipping-grid">
+              {partners.filtered.map((p) => (
+                <ShippingPartnerCard
+                  key={p.id}
+                  partner={p}
+                  onToggle={() => { partners.updateItem(p.id, { status: p.status === "Hoạt động" ? "Tắt" : "Hoạt động" }); toast.success("Đã cập nhật"); }}
+                />
+              ))}
+            </AdminStaggerGrid>
+          ) : (
+            <div className="adm-list-container">
+              {partners.filtered.map((p) => (
+                <ShippingPartnerListRow
+                  key={p.id}
+                  partner={p}
+                  onToggle={() => { partners.updateItem(p.id, { status: p.status === "Hoạt động" ? "Tắt" : "Hoạt động" }); toast.success("Đã cập nhật"); }}
+                />
+              ))}
+            </div>
+          )
         ) : (
           <AdminStaggerGrid className="adm-zone-list">
             {zones.filtered.map((z) => <ShippingZoneItem key={z.id} zone={z} />)}
@@ -177,23 +197,44 @@ export const AdminShipping = () => {
 
 export const AdminReviews = () => {
   const list = useAdminList(mockReviews, ["product", "buyer"]);
+  const [viewMode, setViewMode] = useState("grid");
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Đánh giá" title="Quản lý đánh giá" subtitle="Thẻ đánh giá với sao và bình luận." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm sản phẩm, người mua..." />
-      <AdminStaggerGrid className="adm-review-grid">
-        {list.filtered.map((r) => (
-          <ReviewCard
-            key={r.id}
-            review={r}
-            onHide={() => { list.updateItem(r.id, { status: r.status === "Ẩn" ? "Hiển thị" : "Ẩn" }); toast.success("Đã cập nhật"); }}
-            onDelete={() => { list.removeItem(r.id); toast.info("Đã xóa"); }}
-          />
-        ))}
-      </AdminStaggerGrid>
+      <AdminToolbar
+        search={list.search}
+        onSearchChange={list.setSearch}
+        searchPlaceholder="Tìm sản phẩm, người mua..."
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
+      {viewMode === "grid" ? (
+        <AdminStaggerGrid className="adm-review-grid">
+          {list.filtered.map((r) => (
+            <ReviewCard
+              key={r.id}
+              review={r}
+              onHide={() => { list.updateItem(r.id, { status: r.status === "Ẩn" ? "Hiển thị" : "Ẩn" }); toast.success("Đã cập nhật"); }}
+              onDelete={() => { list.removeItem(r.id); toast.info("Đã xóa"); }}
+            />
+          ))}
+        </AdminStaggerGrid>
+      ) : (
+        <div className="adm-list-container">
+          {list.filtered.map((r) => (
+            <ReviewListRow
+              key={r.id}
+              review={r}
+              onHide={() => { list.updateItem(r.id, { status: r.status === "Ẩn" ? "Hiển thị" : "Ẩn" }); toast.success("Đã cập nhật"); }}
+              onDelete={() => { list.removeItem(r.id); toast.info("Đã xóa"); }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
+
 
 export const AdminReports = () => {
   const list = useAdminList(mockReports, ["target", "reporter"]);

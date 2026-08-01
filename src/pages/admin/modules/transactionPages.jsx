@@ -6,6 +6,7 @@ import { AdminStaggerGrid } from "../../../components/admin/adminPageTransition"
 import {
   OrderTimelineItem, AuctionOrderCard, BidFeedItem,
   PaymentCard, WalletCard, WithdrawalCard,
+  OrderListRow, PaymentListRow, WalletListRow, WithdrawalListRow,
 } from "../../../components/admin/adminViews";
 import { useAdminList } from "../../../hooks/useAdminList";
 import {
@@ -24,22 +25,39 @@ export const AdminOrders = () => {
         filters={[{ key: "status", label: "Trạng thái", value: list.filter.status || "", onChange: (v) => list.setFilterValue("status", v), options: STATUS_OPTIONS.order }]}
         actions={[
           { label: "Xuất Excel", variant: "secondary", onClick: () => toast.info("Đang xuất...") },
-          { label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Dòng thời gian", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) },
         ]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <div className={viewMode === "list" ? "adm-order-timeline adm-view-as-list" : "adm-order-timeline"}>
-        {list.filtered.map((order) => (
-          <OrderTimelineItem
-            key={order.id}
-            order={order}
-            actions={[
-              { label: "Hoàn thành", variant: "success", onClick: () => { list.updateItem(order.id, { status: "Hoàn thành" }); toast.success("Đã hoàn thành"); }},
-              { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(order.id, { status: "Đã hủy" }); toast.warning("Đã hủy"); }},
-              { label: "Hoàn tiền", onClick: () => toast.info(`Hoàn ${order.total}`) },
-            ]}
-          />
-        ))}
-      </div>
+      {viewMode === "grid" ? (
+        <div className="adm-order-timeline">
+          {list.filtered.map((order) => (
+            <OrderTimelineItem
+              key={order.id}
+              order={order}
+              actions={[
+                { label: "Hoàn thành", variant: "success", onClick: () => { list.updateItem(order.id, { status: "Hoàn thành" }); toast.success("Đã hoàn thành"); }},
+                { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(order.id, { status: "Đã hủy" }); toast.warning("Đã hủy"); }},
+                { label: "Hoàn tiền", onClick: () => toast.info(`Hoàn ${order.total}`) },
+              ]}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="adm-list-container">
+          {list.filtered.map((order) => (
+            <OrderListRow
+              key={order.id}
+              order={order}
+              actions={[
+                { label: "Hoàn thành", variant: "success", onClick: () => { list.updateItem(order.id, { status: "Hoàn thành" }); toast.success("Đã hoàn thành"); }},
+                { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(order.id, { status: "Đã hủy" }); toast.warning("Đã hủy"); }},
+                { label: "Hoàn tiền", onClick: () => toast.info(`Hoàn ${order.total}`) },
+              ]}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -52,30 +70,56 @@ export const AdminAuctionOrders = () => {
       <AdminPageHeader kicker="Đấu giá" title="Đơn hàng đấu giá" subtitle="Pipeline thanh toán và giao hàng sau đấu giá." />
       <AdminToolbar
         search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm mã đơn, người thắng..."
-        actions={[{ label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Dòng thời gian", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <div className={viewMode === "list" ? "adm-order-timeline adm-view-as-list" : "adm-order-timeline"}>
-        {list.filtered.map((order) => (
-          <OrderTimelineItem
-            key={order.id}
-            order={{
-              id: order.id,
-              status: order.deliveryStatus !== "—" ? order.deliveryStatus : order.paymentStatus,
-              buyer: order.winner,
-              seller: order.seller,
-              payment: order.paymentStatus,
-              shipping: order.deliveryStatus,
-              total: order.finalPrice,
-              createdAt: order.createdAt
-            }}
-            actions={[
-              { label: "Hoàn thành", variant: "success", onClick: () => { list.updateItem(order.id, { deliveryStatus: "Đã giao" }); toast.success("Đã hoàn thành"); }},
-              { label: "Hoàn tiền", onClick: () => toast.info("Đang hoàn tiền") },
-              { label: "Hủy", variant: "danger", onClick: () => toast.warning("Đã hủy") },
-            ]}
-          />
-        ))}
-      </div>
+      {viewMode === "grid" ? (
+        <div className="adm-order-timeline">
+          {list.filtered.map((order) => (
+            <OrderTimelineItem
+              key={order.id}
+              order={{
+                id: order.id,
+                status: order.deliveryStatus !== "—" ? order.deliveryStatus : order.paymentStatus,
+                buyer: order.winner,
+                seller: order.seller,
+                payment: order.paymentStatus,
+                shipping: order.deliveryStatus,
+                total: order.finalPrice,
+                createdAt: order.createdAt
+              }}
+              actions={[
+                { label: "Hoàn thành", variant: "success", onClick: () => { list.updateItem(order.id, { deliveryStatus: "Đã giao" }); toast.success("Đã hoàn thành"); }},
+                { label: "Hoàn tiền", onClick: () => toast.info("Đang hoàn tiền") },
+                { label: "Hủy", variant: "danger", onClick: () => toast.warning("Đã hủy") },
+              ]}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="adm-list-container">
+          {list.filtered.map((order) => (
+            <OrderListRow
+              key={order.id}
+              order={{
+                id: order.id,
+                status: order.deliveryStatus !== "—" ? order.deliveryStatus : order.paymentStatus,
+                buyer: order.winner,
+                seller: order.seller,
+                payment: order.paymentStatus,
+                shipping: order.deliveryStatus,
+                total: order.finalPrice,
+                createdAt: order.createdAt
+              }}
+              actions={[
+                { label: "Hoàn thành", variant: "success", onClick: () => { list.updateItem(order.id, { deliveryStatus: "Đã giao" }); toast.success("Đã hoàn thành"); }},
+                { label: "Hoàn tiền", onClick: () => toast.info("Đang hoàn tiền") },
+                { label: "Hủy", variant: "danger", onClick: () => toast.warning("Đã hủy") },
+              ]}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -88,7 +132,8 @@ export const AdminBids = () => {
       <AdminPageHeader kicker="Đấu giá" title="Quản lý Bid" subtitle="Luồng bid theo thời gian — phát hiện spam và bid giả." />
       <AdminToolbar
         search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm bidder, phiên..."
-        actions={[{ label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Luồng Bid", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
       <div className={viewMode === "list" ? "adm-bid-feed adm-view-as-list" : "adm-bid-feed"}>
         {list.filtered.map((bid) => (
@@ -117,21 +162,37 @@ export const AdminPayments = () => {
         search={list.search} onSearchChange={list.setSearch}
         actions={[
           { label: "Xuất Excel", variant: "secondary", onClick: () => toast.info("Đang xuất...") },
-          { label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Thẻ Giao dịch", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) },
         ]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <div className={viewMode === "list" ? "adm-payment-list adm-view-as-list" : "adm-payment-list"}>
-        {list.filtered.map((p) => (
-          <PaymentCard
-            key={p.id}
-            payment={p}
-            actions={[
-              { label: "Hoàn tiền", onClick: () => toast.info(`Hoàn ${p.amount}`) },
-              { label: "Thử lại", variant: "primary", onClick: () => toast.success("Đã gửi lại") },
-            ]}
-          />
-        ))}
-      </div>
+      {viewMode === "grid" ? (
+        <div className="adm-payment-list">
+          {list.filtered.map((p) => (
+            <PaymentCard
+              key={p.id}
+              payment={p}
+              actions={[
+                { label: "Hoàn tiền", onClick: () => toast.info(`Hoàn ${p.amount}`) },
+                { label: "Thử lại", variant: "primary", onClick: () => toast.success("Đã gửi lại") },
+              ]}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="adm-list-container">
+          {list.filtered.map((p) => (
+            <PaymentListRow
+              key={p.id}
+              payment={p}
+              actions={[
+                { label: "Hoàn tiền", onClick: () => toast.info(`Hoàn ${p.amount}`) },
+                { label: "Thử lại", variant: "primary", onClick: () => toast.success("Đã gửi lại") },
+              ]}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -144,20 +205,36 @@ export const AdminWallets = () => {
       <AdminPageHeader kicker="Ví" title="Quản lý ví" subtitle="Thẻ số dư ví người dùng và seller." />
       <AdminToolbar
         search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm chủ ví..."
-        actions={[{ label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới Ví", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <AdminStaggerGrid className={viewMode === "list" ? "adm-wallet-grid adm-view-as-list" : "adm-wallet-grid"}>
-        {list.filtered.map((w) => (
-          <WalletCard
-            key={w.id}
-            wallet={w}
-            actions={[
-              { label: "Chi tiết", onClick: () => toast.info(`Xem ví ${w.owner}`) },
-              { label: "Đóng băng", onClick: () => toast.warning("Đã đóng băng") },
-            ]}
-          />
-        ))}
-      </AdminStaggerGrid>
+      {viewMode === "grid" ? (
+        <AdminStaggerGrid className="adm-wallet-grid">
+          {list.filtered.map((w) => (
+            <WalletCard
+              key={w.id}
+              wallet={w}
+              actions={[
+                { label: "Chi tiết", onClick: () => toast.info(`Xem ví ${w.owner}`) },
+                { label: "Đóng băng", onClick: () => toast.warning("Đã đóng băng") },
+              ]}
+            />
+          ))}
+        </AdminStaggerGrid>
+      ) : (
+        <div className="adm-list-container">
+          {list.filtered.map((w) => (
+            <WalletListRow
+              key={w.id}
+              wallet={w}
+              actions={[
+                { label: "Chi tiết", onClick: () => toast.info(`Xem ví ${w.owner}`) },
+                { label: "Đóng băng", onClick: () => toast.warning("Đã đóng băng") },
+              ]}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -171,7 +248,8 @@ export const AdminWithdrawals = () => {
       <AdminPageHeader kicker="Tài chính" title="Quản lý rút tiền" subtitle="Theo dõi các yêu cầu rút tiền tự động của seller." />
       <AdminToolbar
         search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm seller..."
-        actions={[{ label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới Rút tiền", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
       
       <div style={{
@@ -195,17 +273,32 @@ export const AdminWithdrawals = () => {
         </div>
       </div>
 
-      <AdminStaggerGrid className={viewMode === "list" ? "adm-withdrawal-grid adm-view-as-list" : "adm-withdrawal-grid"}>
-        {list.filtered.map((item) => (
-          <WithdrawalCard
-            key={item.id}
-            item={item}
-            actions={item.status === "Chờ duyệt" ? [
-              { label: "Chi tiết", onClick: () => toast.info(`Xem chi tiết yêu cầu của ${item.seller}`) },
-            ] : []}
-          />
-        ))}
-      </AdminStaggerGrid>
+      {viewMode === "grid" ? (
+        <AdminStaggerGrid className="adm-withdrawal-grid">
+          {list.filtered.map((item) => (
+            <WithdrawalCard
+              key={item.id}
+              item={item}
+              actions={item.status === "Chờ duyệt" ? [
+                { label: "Chi tiết", onClick: () => toast.info(`Xem chi tiết yêu cầu của ${item.seller}`) },
+              ] : []}
+            />
+          ))}
+        </AdminStaggerGrid>
+      ) : (
+        <div className="adm-list-container">
+          {list.filtered.map((item) => (
+            <WithdrawalListRow
+              key={item.id}
+              item={item}
+              actions={item.status === "Chờ duyệt" ? [
+                { label: "Chi tiết", onClick: () => toast.info(`Xem chi tiết yêu cầu của ${item.seller}`) },
+              ] : []}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
+

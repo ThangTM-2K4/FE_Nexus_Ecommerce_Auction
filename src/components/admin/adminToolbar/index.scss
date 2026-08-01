@@ -1,4 +1,4 @@
-﻿@use "../../../styles/staff-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
 .adm-toolbar {
   display: flex;
@@ -99,6 +99,10 @@
       background: $color-bg;
       color: $color-text;
       border: 1px solid $color-border-light;
+
+      &:hover {
+        background: rgba($color-primary, 0.08);
+      }
     }
 
     &--danger {
@@ -111,3 +115,46 @@
     }
   }
 }
+
+.adm-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  padding: 3px;
+  gap: 3px;
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border: none;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $color-text-muted;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+      font-size: 12px;
+    }
+
+    &:hover {
+      color: $color-primary;
+      background: rgba($color-primary, 0.06);
+    }
+
+    &.is-active {
+      background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+      color: #12101A;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+  }
+}
+

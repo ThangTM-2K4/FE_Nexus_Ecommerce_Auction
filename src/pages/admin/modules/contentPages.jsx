@@ -71,22 +71,50 @@ export const AdminNotifications = () => {
 
 export const AdminBanners = () => {
   const list = useAdminList(mockBanners, ["title"]);
+  const [viewMode, setViewMode] = useState("grid");
   const [form, setForm] = useState(null);
 
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Marketing" title="Quản lý banner" subtitle="Gallery preview banner theo loại." />
-      <AdminToolbar actions={[{ label: "+ Thêm banner", onClick: () => setForm({ title: "", type: "Trang chủ", position: "Slider chính", status: "Hoạt động" }) }]} />
-      <AdminStaggerGrid className="adm-banner-grid">
-        {list.filtered.map((b) => (
-          <BannerPreview
-            key={b.id}
-            banner={b}
-            onEdit={() => setForm({ ...b })}
-            onDelete={() => { list.removeItem(b.id); toast.info("Đã xóa"); }}
-          />
-        ))}
-      </AdminStaggerGrid>
+      <AdminToolbar
+        actions={[{ label: "+ Thêm banner", onClick: () => setForm({ title: "", type: "Trang chủ", position: "Slider chính", status: "Hoạt động" }) }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
+      {viewMode === "grid" ? (
+        <AdminStaggerGrid className="adm-banner-grid">
+          {list.filtered.map((b) => (
+            <BannerPreview
+              key={b.id}
+              banner={b}
+              onEdit={() => setForm({ ...b })}
+              onDelete={() => { list.removeItem(b.id); toast.info("Đã xóa"); }}
+            />
+          ))}
+        </AdminStaggerGrid>
+      ) : (
+        <div className="adm-list-container">
+          {list.filtered.map((b) => (
+            <div key={b.id} className="adm-list-row">
+              <div className="adm-list-row__thumb">🖼️</div>
+              <div className="adm-list-row__col adm-list-row__col--main">
+                <strong className="adm-list-row__title">{b.title}</strong>
+                <small className="adm-list-row__sub">{b.type} · Vị trí: {b.position}</small>
+              </div>
+              <div className="adm-list-row__col">
+                <span className="adm-list-row__label">Thời gian hiển thị</span>
+                <span className="adm-list-row__val">{b.startDate} → {b.endDate}</span>
+              </div>
+              <AdminStatusBadge status={b.status} />
+              <div className="adm-list-row__actions">
+                <button type="button" onClick={() => setForm({ ...b })}>Sửa</button>
+                <button type="button" className="danger" onClick={() => { list.removeItem(b.id); toast.info("Đã xóa"); }}>Xóa</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <AdminModal open={!!form} title={form?.id ? "Sửa banner" : "Thêm banner"} onClose={() => setForm(null)}>
         {form && (
           <div className="adm-form">
@@ -115,6 +143,7 @@ export const AdminBanners = () => {
 export const AdminContent = () => {
   const list = useAdminList(mockContents, ["title"]);
   const [tab, setTab] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
   const types = ["Blog", "FAQ", "Điều khoản", "Bảo mật", "Giới thiệu"];
   const filtered = tab === "all" ? list.filtered : list.filtered.filter((c) => c.type === tab);
 
@@ -169,22 +198,50 @@ export const AdminContent = () => {
       <AdminPageHeader kicker="Nội dung" title="Quản lý nội dung" subtitle="Danh sách tài liệu theo loại." />
       <AdminTabs active={tab} onChange={setTab} tabs={[{ id: "all", label: "Tất cả" }, ...types.map((t) => ({ id: t, label: t }))]} />
       <AdminTabOverview {...tabOverview} />
-      <AdminToolbar actions={[{ label: "+ Thêm bài viết", onClick: () => toast.info("Mở trình soạn thảo") }]} />
+      <AdminToolbar
+        actions={[{ label: "+ Thêm bài viết", onClick: () => toast.info("Mở trình soạn thảo") }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
       <AdminAnimatedView viewKey={tab}>
-        <div className="adm-content-list">
-          {filtered.map((doc) => (
-            <ContentDoc
-              key={doc.id}
-              doc={doc}
-              onEdit={() => toast.info(`Sửa: ${doc.title}`)}
-              onDelete={() => { list.removeItem(doc.id); toast.info("Đã xóa"); }}
-            />
-          ))}
-        </div>
+        {viewMode === "grid" ? (
+          <div className="adm-content-list">
+            {filtered.map((doc) => (
+              <ContentDoc
+                key={doc.id}
+                doc={doc}
+                onEdit={() => toast.info(`Sửa: ${doc.title}`)}
+                onDelete={() => { list.removeItem(doc.id); toast.info("Đã xóa"); }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="adm-list-container">
+            {filtered.map((doc) => (
+              <div key={doc.id} className="adm-list-row">
+                <div className="adm-list-row__thumb">📝</div>
+                <div className="adm-list-row__col adm-list-row__col--main">
+                  <strong className="adm-list-row__title">{doc.title}</strong>
+                  <small className="adm-list-row__sub">{doc.type} · Tác giả: {doc.author || "Admin"}</small>
+                </div>
+                <div className="adm-list-row__col">
+                  <span className="adm-list-row__label">Cập nhật lần cuối</span>
+                  <span className="adm-list-row__val">{doc.updatedAt || doc.createdAt || "Hôm nay"}</span>
+                </div>
+                <AdminStatusBadge status={doc.status} />
+                <div className="adm-list-row__actions">
+                  <button type="button" onClick={() => toast.info(`Sửa: ${doc.title}`)}>Sửa</button>
+                  <button type="button" className="danger" onClick={() => { list.removeItem(doc.id); toast.info("Đã xóa"); }}>Xóa</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </AdminAnimatedView>
     </div>
   );
 };
+
 
 const TopList = ({ title, items }) => (
   <div className="adm-card">
@@ -306,8 +363,10 @@ export const AdminAuditLogs = () => {
   const [toUtc, setToUtc] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [viewMode, setViewMode] = useState("grid");
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
 
   const loadLogs = useCallback(async () => {
     setLoading(true);
@@ -386,6 +445,8 @@ export const AdminAuditLogs = () => {
           { label: "Xóa bộ lọc", variant: "secondary", onClick: resetFilters },
           { label: "Tải lại", variant: "secondary", onClick: loadLogs },
         ]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
       <div className="adm-form adm-form--inline adm-audit-filters">
         <label>
@@ -421,13 +482,38 @@ export const AdminAuditLogs = () => {
         <p className="adm-page__empty">Không có nhật ký phù hợp.</p>
       ) : (
         <>
-          <div className="adm-audit-timeline">
-            {filtered.map((log) => (
-              <button key={log.id} type="button" className="adm-audit-timeline__item" onClick={() => openDetail(log)}>
-                <AuditTimelineItem log={log} />
-              </button>
-            ))}
-          </div>
+          {viewMode === "grid" ? (
+            <div className="adm-audit-timeline">
+              {filtered.map((log) => (
+                <button key={log.id} type="button" className="adm-audit-timeline__item" onClick={() => openDetail(log)}>
+                  <AuditTimelineItem log={log} />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="adm-list-container">
+              {filtered.map((log) => (
+                <div key={log.id} className="adm-list-row" onClick={() => openDetail(log)} style={{ cursor: "pointer" }}>
+                  <div className="adm-list-row__thumb">📜</div>
+                  <div className="adm-list-row__col adm-list-row__col--main">
+                    <strong className="adm-list-row__title">{log.actor}</strong>
+                    <small className="adm-list-row__sub">{log.time} · IP: {log.ip}</small>
+                  </div>
+                  <div className="adm-list-row__col">
+                    <span className="adm-list-row__label">Hành động → Đối tượng</span>
+                    <span className="adm-list-row__val">{log.action} → {log.target}</span>
+                  </div>
+                  <div className="adm-list-row__col">
+                    <span className="adm-list-row__label">Thay đổi</span>
+                    <span className="adm-list-row__val"><s style={{ color: "#ef4444" }}>{log.oldValue}</s> → <span style={{ color: "#22c55e" }}>{log.newValue}</span></span>
+                  </div>
+                  <div className="adm-list-row__actions">
+                    <button type="button" className="primary" onClick={() => openDetail(log)}>Chi tiết</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {Math.ceil(total / PAGE_SIZE) > 1 && (
             <div className="adm-page__pagination">
               <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</button>
@@ -437,6 +523,7 @@ export const AdminAuditLogs = () => {
           )}
         </>
       )}
+
       <AdminModal open={!!detail} title="Chi tiết nhật ký" onClose={() => setDetail(null)} wide>
         {detail && (
           detailLoading ? <p>Đang tải chi tiết...</p> : (

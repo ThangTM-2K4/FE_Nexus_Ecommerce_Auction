@@ -9,8 +9,9 @@ import AdminModal from "../../../components/admin/adminModal";
 import { AdminAnimatedView } from "../../../components/admin/adminPageTransition";
 import {
   ProductCard, AuctionCard, CategoryTreeItem, BrandChip, InventoryGauge,
-  SellerProductGroup, SellerInventorySection,
+  SellerProductGroup, SellerInventorySection, ProductListRow, AuctionListRow,
 } from "../../../components/admin/adminViews";
+
 import Select from "../../../components/common/select";
 import { useAdminList } from "../../../hooks/useAdminList";
 import {
@@ -139,14 +140,11 @@ export const AdminProducts = () => {
           key: "status", label: "Tất cả trạng thái", value: list.filter.status || "",
           onChange: (v) => list.setFilterValue("status", v), options: STATUS_OPTIONS.general,
         }]}
-        actions={[{
-          label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
-          variant: "secondary",
-          onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")),
-        }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
       <AdminAnimatedView viewKey={sellerTab}>
-        <div className={viewMode === "list" ? "adm-view-as-list" : ""}>
+        <div>
           {sellerGroups.map(({ seller, items }) => (
             <SellerProductGroup
               key={seller}
@@ -155,7 +153,11 @@ export const AdminProducts = () => {
               stats={calcProductStats(items)}
             >
               {items.map((p) => (
-                <ProductCard key={p.id} product={p} actions={productActions(p)} />
+                viewMode === "grid" ? (
+                  <ProductCard key={p.id} product={p} actions={productActions(p)} />
+                ) : (
+                  <ProductListRow key={p.id} product={p} actions={productActions(p)} />
+                )
               ))}
             </SellerProductGroup>
           ))}
@@ -205,35 +207,59 @@ export const AdminAuctionProducts = () => {
         search={list.search}
         onSearchChange={list.setSearch}
         searchPlaceholder="Tìm phiên, seller..."
-        actions={[{
-          label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
-          variant: "secondary",
-          onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")),
-        }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <div className={viewMode === "list" ? "adm-auction-grid adm-view-as-list" : "adm-auction-grid"}>
-        {displayedList.map((a) => {
-          const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
-          return (
-            <AuctionCard
-              key={a.id}
-              auction={a}
-              actions={[
-                { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
-                ...(isLive ? [
-                  { label: "👁️ Xem phiên live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
-                ] : []),
-                { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
-                ...(isLive ? [
-                  { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
-                  { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
-                  { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
-                ] : []),
-              ]}
-            />
-          );
-        })}
-      </div>
+      {viewMode === "grid" ? (
+        <div className="adm-auction-grid">
+          {displayedList.map((a) => {
+            const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
+            return (
+              <AuctionCard
+                key={a.id}
+                auction={a}
+                actions={[
+                  { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
+                  ...(isLive ? [
+                    { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
+                  ] : []),
+                  { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
+                  ...(isLive ? [
+                    { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
+                    { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
+                    { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
+                  ] : []),
+                ]}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <div className="adm-list-container">
+          {displayedList.map((a) => {
+            const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
+            return (
+              <AuctionListRow
+                key={a.id}
+                auction={a}
+                actions={[
+                  { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
+                  ...(isLive ? [
+                    { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
+                  ] : []),
+                  { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
+                  ...(isLive ? [
+                    { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
+                    { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
+                    { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
+                  ] : []),
+                ]}
+              />
+            );
+          })}
+        </div>
+      )}
+
       <AdminModal open={!!detail} title="Chi tiết phiên đấu giá" onClose={() => setDetail(null)} wide>
         {detail && <dl className="adm-detail-grid">{Object.entries(detail).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{String(v)}</dd></div>)}</dl>}
       </AdminModal>
@@ -463,23 +489,56 @@ export const AdminCategories = () => {
 
 export const AdminBrands = () => {
   const list = useAdminList(mockBrands, ["name"]);
+  const [viewMode, setViewMode] = useState("grid");
   const [form, setForm] = useState(null);
 
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Thương hiệu" title="Quản lý thương hiệu" subtitle="CRUD thương hiệu sản phẩm." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} actions={[{ label: "+ Thêm thương hiệu", onClick: () => setForm({ name: "", status: "Hoạt động" }) }]} />
-      <div className="adm-brand-grid">
-        {list.filtered.map((b) => (
-          <BrandChip
-            key={b.id}
-            brand={b}
-            onEdit={() => setForm({ ...b })}
-            onToggle={() => { const n = b.status === "Hoạt động" ? "Tắt" : "Hoạt động"; list.updateItem(b.id, { status: n }); toast.success("Đã cập nhật"); }}
-            onDelete={() => { list.removeItem(b.id); toast.info("Đã xóa"); }}
-          />
-        ))}
-      </div>
+      <AdminToolbar
+        search={list.search}
+        onSearchChange={list.setSearch}
+        actions={[{ label: "+ Thêm thương hiệu", onClick: () => setForm({ name: "", status: "Hoạt động" }) }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
+      {viewMode === "grid" ? (
+        <div className="adm-brand-grid">
+          {list.filtered.map((b) => (
+            <BrandChip
+              key={b.id}
+              brand={b}
+              onEdit={() => setForm({ ...b })}
+              onToggle={() => { const n = b.status === "Hoạt động" ? "Tắt" : "Hoạt động"; list.updateItem(b.id, { status: n }); toast.success("Đã cập nhật"); }}
+              onDelete={() => { list.removeItem(b.id); toast.info("Đã xóa"); }}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="adm-list-container">
+          {list.filtered.map((b) => (
+            <div key={b.id} className="adm-list-row">
+              <div className="adm-list-row__thumb">🏷️</div>
+              <div className="adm-list-row__col adm-list-row__col--main">
+                <strong className="adm-list-row__title">{b.name}</strong>
+                <small className="adm-list-row__sub">Tạo ngày: {b.createdAt || "05/07/2026"}</small>
+              </div>
+              <div className="adm-list-row__col">
+                <span className="adm-list-row__label">Số sản phẩm</span>
+                <span className="adm-list-row__val highlight">{b.productCount || 0} SP</span>
+              </div>
+              <AdminStatusBadge status={b.status} />
+              <div className="adm-list-row__actions">
+                <button type="button" onClick={() => setForm({ ...b })}>Sửa</button>
+                <button type="button" onClick={() => { const n = b.status === "Hoạt động" ? "Tắt" : "Hoạt động"; list.updateItem(b.id, { status: n }); toast.success("Đã cập nhật"); }}>
+                  {b.status === "Hoạt động" ? "Tắt" : "Bật"}
+                </button>
+                <button type="button" className="danger" onClick={() => { list.removeItem(b.id); toast.info("Đã xóa"); }}>Xóa</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <AdminModal open={!!form} title={form?.id ? "Sửa thương hiệu" : "Thêm thương hiệu"} onClose={() => setForm(null)}>
         <div className="adm-form">
           <label>Tên<input value={form?.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
@@ -499,6 +558,7 @@ export const AdminBrands = () => {
 
 export const AdminInventory = () => {
   const [sellerTab, setSellerTab] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
   const list = useAdminList(mockInventory, ["product", "seller", "sku"]);
 
   const sellers = useMemo(
@@ -576,6 +636,8 @@ export const AdminInventory = () => {
         filters={[{ key: "status", label: "Tất cả", value: list.filter.status || "", onChange: (v) => list.setFilterValue("status", v), options: [
           { value: "Đủ hàng", label: "Đủ hàng" }, { value: "Sắp hết", label: "Sắp hết" }, { value: "Hết hàng", label: "Hết hàng" },
         ]}]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
       <AdminAnimatedView viewKey={sellerTab}>
         {sellerGroups.map(({ seller, items }) => (
@@ -586,7 +648,29 @@ export const AdminInventory = () => {
             stats={calcInventoryStats(items, allProducts.filter((p) => p.seller === seller))}
           >
             {items.map((item) => (
-              <InventoryGauge key={item.id} item={item} onSync={() => toast.success(`Đã đồng bộ ${item.sku}`)} />
+              viewMode === "grid" ? (
+                <InventoryGauge key={item.id} item={item} onSync={() => toast.success(`Đã đồng bộ ${item.sku}`)} />
+              ) : (
+                <div key={item.id} className="adm-list-row">
+                  <div className="adm-list-row__thumb">📦</div>
+                  <div className="adm-list-row__col adm-list-row__col--main">
+                    <strong className="adm-list-row__title">{item.product}</strong>
+                    <small className="adm-list-row__sub">SKU: {item.sku} · Seller: {item.seller}</small>
+                  </div>
+                  <div className="adm-list-row__col">
+                    <span className="adm-list-row__label">Số lượng tồn kho</span>
+                    <span className="adm-list-row__val highlight">{item.stock} cái</span>
+                  </div>
+                  <div className="adm-list-row__col">
+                    <span className="adm-list-row__label">Đã giữ / Ngưỡng</span>
+                    <span className="adm-list-row__val">{item.reserved} / {item.threshold}</span>
+                  </div>
+                  <AdminStatusBadge status={item.status} />
+                  <div className="adm-list-row__actions">
+                    <button type="button" className="primary" onClick={() => toast.success(`Đã đồng bộ ${item.sku}`)}>Đồng bộ</button>
+                  </div>
+                </div>
+              )
             ))}
           </SellerInventorySection>
         ))}
@@ -594,3 +678,4 @@ export const AdminInventory = () => {
     </div>
   );
 };
+

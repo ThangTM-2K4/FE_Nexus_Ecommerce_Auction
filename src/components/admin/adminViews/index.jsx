@@ -572,3 +572,223 @@ export const ShippingZoneItem = ({ zone }) => (
     <div><strong>{zone.fee}</strong><span>{zone.estimatedDays}</span></div>
   </article>
 );
+
+// ==========================================
+// UNIFIED DEDICATED LIST ROW COMPONENTS
+// ==========================================
+
+export const ProductListRow = ({ product, actions = [] }) => (
+  <div className="adm-list-row adm-product-row">
+    <div className="adm-list-row__thumb">📦</div>
+    <div className="adm-list-row__col adm-list-row__col--main">
+      <strong className="adm-list-row__title" title={product.name}>{product.name}</strong>
+      <small className="adm-list-row__sub">{product.id} · {product.category} {product.brand ? `· ${product.brand}` : ""}</small>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Seller</span>
+      <span className="adm-list-row__val">{product.seller}</span>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Giá & Tồn kho</span>
+      <span className="adm-list-row__val"><strong className="highlight">{product.price}</strong> · SL: {product.quantity}</span>
+    </div>
+    <AdminStatusBadge status={product.status} />
+    <div className="adm-list-row__actions">
+      {actions.map((a) => (
+        <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
+      ))}
+    </div>
+  </div>
+);
+
+export const AuctionListRow = ({ auction, actions = [] }) => {
+  const isLive = auction.status === "Đang diễn ra" || auction.status === "Sắp kết thúc";
+  return (
+    <div className={`adm-list-row adm-auction-row ${isLive ? "is-live" : ""}`}>
+      <div className="adm-list-row__col adm-list-row__col--main">
+        <strong className="adm-list-row__title" title={auction.title}>{auction.title}</strong>
+        <small className="adm-list-row__sub">{auction.id} · Seller: {auction.seller}</small>
+      </div>
+      <div className="adm-list-row__col">
+        <span className="adm-list-row__label">Khởi điểm</span>
+        <span className="adm-list-row__val">{auction.startPrice}</span>
+      </div>
+      <div className="adm-list-row__col">
+        <span className="adm-list-row__label">Hiện tại</span>
+        <span className="adm-list-row__val highlight">{auction.currentPrice}</span>
+      </div>
+      <div className="adm-list-row__col">
+        <span className="adm-list-row__label">Kết thúc</span>
+        <span className="adm-list-row__val">{auction.endTime}</span>
+      </div>
+      <AdminStatusBadge status={auction.status} />
+      <div className="adm-list-row__actions">
+        {actions.map((a) => (
+          <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export const OrderListRow = ({ order, actions = [] }) => (
+  <div className="adm-list-row adm-order-row">
+    <div className="adm-list-row__col adm-list-row__col--main">
+      <strong className="adm-list-row__title">{order.id}</strong>
+      <small className="adm-list-row__sub">{order.buyer} → {order.seller}</small>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Thanh toán & Giao hàng</span>
+      <span className="adm-list-row__val">{order.payment || "—"} · {order.shipping || "—"}</span>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Tổng tiền</span>
+      <span className="adm-list-row__val highlight">{order.total || order.finalPrice}</span>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Ngày tạo</span>
+      <span className="adm-list-row__val">{order.createdAt || "Hôm nay"}</span>
+    </div>
+    <AdminStatusBadge status={order.status} />
+    <div className="adm-list-row__actions">
+      {actions.map((a) => (
+        <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
+      ))}
+    </div>
+  </div>
+);
+
+export const PaymentListRow = ({ payment, actions = [] }) => (
+  <div className="adm-list-row adm-payment-row">
+    <div className="adm-list-row__col adm-list-row__col--main">
+      <strong className="adm-list-row__title">{payment.transaction || payment.id}</strong>
+      <small className="adm-list-row__sub">{payment.method} · {payment.createdAt || payment.time}</small>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Người gửi → Người nhận</span>
+      <span className="adm-list-row__val">{payment.buyer} → {payment.seller}</span>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Số tiền</span>
+      <span className="adm-list-row__val highlight">{payment.amount}</span>
+    </div>
+    <AdminStatusBadge status={payment.status} />
+    <div className="adm-list-row__actions">
+      {actions.map((a) => (
+        <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
+      ))}
+    </div>
+  </div>
+);
+
+export const WalletListRow = ({ wallet, actions = [] }) => (
+  <div className="adm-list-row adm-wallet-row">
+    <div className="adm-list-row__col adm-list-row__col--main">
+      <strong className="adm-list-row__title">{wallet.owner}</strong>
+      <small className="adm-list-row__sub">{wallet.type} · ID: {wallet.id}</small>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Số dư</span>
+      <span className="adm-list-row__val highlight">{wallet.balance}</span>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Đóng băng</span>
+      <span className="adm-list-row__val">{wallet.frozen}</span>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Tổng nạp / Rút</span>
+      <span className="adm-list-row__val">{wallet.totalDeposit} / {wallet.totalWithdraw}</span>
+    </div>
+    <div className="adm-list-row__actions">
+      {actions.map((a) => (
+        <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
+      ))}
+    </div>
+  </div>
+);
+
+export const WithdrawalListRow = ({ item, actions = [] }) => (
+  <div className="adm-list-row adm-withdrawal-row">
+    <div className="adm-list-row__col adm-list-row__col--main">
+      <strong className="adm-list-row__title">{item.seller}</strong>
+      <small className="adm-list-row__sub">{item.id} · {item.bank}</small>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Số tiền yêu cầu</span>
+      <span className="adm-list-row__val highlight">{item.amount}</span>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Ngày tạo</span>
+      <span className="adm-list-row__val">{item.requestedAt || item.createdAt}</span>
+    </div>
+    <AdminStatusBadge status={item.status} />
+    <div className="adm-list-row__actions">
+      {actions.map((a) => (
+        <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
+      ))}
+    </div>
+  </div>
+);
+
+export const CouponListRow = ({ coupon, onEdit, onDelete }) => (
+  <div className="adm-list-row adm-coupon-row">
+    <div className="adm-list-row__col adm-list-row__col--main">
+      <strong className="adm-list-row__title"><code>{coupon.code}</code></strong>
+      <small className="adm-list-row__sub">Giảm {coupon.value} ({coupon.type})</small>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Đơn tối thiểu</span>
+      <span className="adm-list-row__val">{coupon.minOrder}</span>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Đã dùng</span>
+      <span className="adm-list-row__val">{coupon.used}/{coupon.usageLimit} lượt</span>
+    </div>
+    <AdminStatusBadge status={coupon.status} />
+    <div className="adm-list-row__actions">
+      <button type="button" onClick={onEdit}>Sửa</button>
+      <button type="button" className="danger" onClick={onDelete}>Xóa</button>
+    </div>
+  </div>
+);
+
+export const ShippingPartnerListRow = ({ partner, onToggle }) => (
+  <div className="adm-list-row adm-shipping-row">
+    <div className="adm-list-row__thumb">{partner.icon || "🚚"}</div>
+    <div className="adm-list-row__col adm-list-row__col--main">
+      <strong className="adm-list-row__title">{partner.name}</strong>
+      <small className="adm-list-row__sub">{partner.code || "Nội thành & Toàn quốc"}</small>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Cước phí</span>
+      <span className="adm-list-row__val highlight">{partner.fee || "22.000đ"}</span>
+    </div>
+    <AdminStatusBadge status={partner.status} />
+    <div className="adm-list-row__actions">
+      <button type="button" onClick={onToggle}>{partner.status === "Hoạt động" ? "Tắt" : "Bật"}</button>
+    </div>
+  </div>
+);
+
+export const ReviewListRow = ({ review, onHide, onDelete }) => (
+  <div className="adm-list-row adm-review-row">
+    <div className="adm-list-row__col adm-list-row__col--main">
+      <strong className="adm-list-row__title">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</strong>
+      <small className="adm-list-row__sub">"{review.comment}"</small>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Người đánh giá</span>
+      <span className="adm-list-row__val">{review.buyer}</span>
+    </div>
+    <div className="adm-list-row__col">
+      <span className="adm-list-row__label">Sản phẩm / Seller</span>
+      <span className="adm-list-row__val">{review.product} ({review.seller})</span>
+    </div>
+    <AdminStatusBadge status={review.status} />
+    <div className="adm-list-row__actions">
+      <button type="button" onClick={onHide}>{review.status === "Ẩn" ? "Hiện" : "Ẩn"}</button>
+      <button type="button" className="danger" onClick={onDelete}>Xóa</button>
+    </div>
+  </div>
+);
+
