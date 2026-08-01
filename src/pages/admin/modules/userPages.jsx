@@ -102,18 +102,34 @@ export const AdminUsers = () => {
 
   const validateCreate = () => {
     const errs = {};
-    if (!createForm.fullName.trim()) errs.fullName = "Vui lòng nhập họ tên";
-    if (!createForm.email.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(createForm.email)) errs.email = "Email không hợp lệ";
-    if (createForm.password.length < 6) errs.password = "Mật khẩu tối thiểu 6 ký tự";
-    if (createForm.password !== createForm.confirmPassword) errs.confirmPassword = "Mật khẩu không khớp";
-    if (!createForm.role) errs.role = "Chọn vai trò";
+    if (!createForm.fullName.trim()) errs.fullName = "Vui lòng nhập họ và tên";
+    if (!createForm.email.trim()) {
+      errs.email = "Vui lòng nhập email công việc";
+    } else if (!/^[^@]+@[^@]+\.[^@]+$/.test(createForm.email)) {
+      errs.email = "Email không hợp lệ (ví dụ: staff@nexus.vn)";
+    }
+    if (!createForm.password) {
+      errs.password = "Vui lòng nhập mật khẩu";
+    } else if (createForm.password.length < 6) {
+      errs.password = "Mật khẩu tối thiểu 6 ký tự";
+    }
+    if (!createForm.confirmPassword) {
+      errs.confirmPassword = "Vui lòng nhập xác nhận mật khẩu";
+    } else if (createForm.password !== createForm.confirmPassword) {
+      errs.confirmPassword = "Xác nhận mật khẩu không khớp";
+    }
+    if (!createForm.role) errs.role = "Vui lòng chọn vai trò";
     return errs;
   };
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     const errs = validateCreate();
-    if (Object.keys(errs).length) { setCreateErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setCreateErrors(errs);
+      toast.error("Vui lòng nhập đầy đủ các thông tin bắt buộc (*)");
+      return;
+    }
     setCreateLoading(true);
     setCreateSuccess(null);
     try {
@@ -439,7 +455,14 @@ export const AdminUsers = () => {
             onChange: (v) => { setSellerStatus(v); setSellerPage(1); },
             options: SELLER_FILTER_OPTIONS,
           }]}
-          actions={[{ label: "Tải lại", variant: "secondary", onClick: loadSellers }]}
+          actions={[
+            { label: "Tải lại", variant: "secondary", onClick: loadSellers },
+            {
+              label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
+              variant: "secondary",
+              onClick: toggleViewMode,
+            },
+          ]}
         />
       )}
       <AdminAnimatedView viewKey={tab}>
@@ -455,9 +478,14 @@ export const AdminUsers = () => {
             {createSuccess && (
               <div className="adm-create-account-panel__success">{createSuccess}</div>
             )}
+            {Object.keys(createErrors).length > 0 && (
+              <div className="adm-create-account-panel__error-summary">
+                ⚠️ Vui lòng điền đầy đủ và đúng định dạng các ô thông tin tô đỏ bên dưới (*).
+              </div>
+            )}
             <form className="adm-create-account-form" onSubmit={handleCreateSubmit} noValidate>
               <div className="adm-create-account-form__row">
-                <div className="adm-create-account-form__field">
+                <div className={`adm-create-account-form__field ${createErrors.fullName ? "adm-create-account-form__field--error" : ""}`}>
                   <label htmlFor="ca-fullName">Họ và tên <span>*</span></label>
                   <input
                     id="ca-fullName"
@@ -468,7 +496,7 @@ export const AdminUsers = () => {
                   />
                   {createErrors.fullName && <span className="adm-create-account-form__error">{createErrors.fullName}</span>}
                 </div>
-                <div className="adm-create-account-form__field">
+                <div className={`adm-create-account-form__field ${createErrors.email ? "adm-create-account-form__field--error" : ""}`}>
                   <label htmlFor="ca-email">Email công việc <span>*</span></label>
                   <input
                     id="ca-email"
@@ -491,7 +519,7 @@ export const AdminUsers = () => {
                     placeholder="09xxxxxxxx"
                   />
                 </div>
-                <div className="adm-create-account-form__field">
+                <div className={`adm-create-account-form__field ${createErrors.role ? "adm-create-account-form__field--error" : ""}`}>
                   <label htmlFor="ca-role">Vai trò (cấp bậc) <span>*</span></label>
                   <Select
                     value={createForm.role}
@@ -503,7 +531,7 @@ export const AdminUsers = () => {
                 </div>
               </div>
               <div className="adm-create-account-form__row">
-                <div className="adm-create-account-form__field">
+                <div className={`adm-create-account-form__field ${createErrors.password ? "adm-create-account-form__field--error" : ""}`}>
                   <label htmlFor="ca-password">Mật khẩu <span>*</span></label>
                   <input
                     id="ca-password"
@@ -514,7 +542,7 @@ export const AdminUsers = () => {
                   />
                   {createErrors.password && <span className="adm-create-account-form__error">{createErrors.password}</span>}
                 </div>
-                <div className="adm-create-account-form__field">
+                <div className={`adm-create-account-form__field ${createErrors.confirmPassword ? "adm-create-account-form__field--error" : ""}`}>
                   <label htmlFor="ca-confirm">Xác nhận mật khẩu <span>*</span></label>
                   <input
                     id="ca-confirm"
@@ -592,7 +620,7 @@ export const AdminUsers = () => {
           <p className="adm-page__empty">Không có seller phù hợp.</p>
         ) : (
           <>
-            <AdminStaggerGrid className="adm-user-grid">
+            <AdminStaggerGrid className={viewMode === "list" ? "adm-user-grid adm-view-as-list" : "adm-user-grid"}>
               {filteredSellers.map((row) => (
                 <UserCard key={row.id} user={row} type="seller" actions={sellerActions(row)} />
               ))}

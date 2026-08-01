@@ -154,6 +154,83 @@
   gap: 8px;
 }
 
+// ── Universal Grid to List View Converter ──
+.adm-view-as-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+
+  > article,
+  > div.adm-card,
+  > div.adm-order-timeline__item,
+  > article.adm-product-card,
+  > article.adm-auction-card,
+  > article.adm-wallet-card,
+  > article.adm-withdrawal-card,
+  > article.adm-payment-card,
+  > article.adm-coupon-ticket,
+  > section.adm-seller-group {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+    padding: 12px 18px !important;
+    border-radius: $radius-md !important;
+    width: 100% !important;
+
+    header, .adm-seller-group__head {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+      border-bottom: none !important;
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 10px !important;
+      min-width: 200px !important;
+      flex: 1 1 auto !important;
+
+      h3 {
+        margin: 0 !important;
+        font-size: 14px !important;
+      }
+    }
+
+    .adm-user-card__body,
+    .adm-product-card__body,
+    .adm-auction-card__prices,
+    .adm-auction-card__meta,
+    .adm-product-card__price,
+    dl,
+    .adm-detail-grid {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 16px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      flex: 1 1 auto !important;
+
+      > div {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+      }
+    }
+
+    footer, .adm-user-card__footer, .adm-product-card__footer {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+      border-top: none !important;
+      flex-shrink: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+    }
+  }
+}
+
 .adm-user-row {
   display: flex;
   align-items: center;
@@ -1926,6 +2003,20 @@
     color: $color-success;
     margin-bottom: 20px;
   }
+
+  &__error-summary {
+    background: rgba($color-danger, 0.08);
+    border: 1px solid rgba($color-danger, 0.35);
+    border-radius: $radius-md;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: $color-danger;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 }
 
 .adm-create-account-form {
@@ -1950,6 +2041,18 @@
 
     &--full {
       grid-column: 1 / -1;
+    }
+
+    &--error {
+      input, select, textarea, .common-select__field {
+        border-color: $color-danger !important;
+        background-color: rgba($color-danger, 0.02) !important;
+
+        &:focus, &[data-open='true'] {
+          border-color: $color-danger !important;
+          box-shadow: 0 0 0 3px rgba($color-danger, 0.18) !important;
+        }
+      }
     }
 
     label {

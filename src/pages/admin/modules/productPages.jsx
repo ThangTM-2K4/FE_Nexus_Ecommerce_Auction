@@ -52,6 +52,7 @@ const groupBySeller = (items, sellerKey = "seller") => {
 
 export const AdminProducts = () => {
   const [sellerTab, setSellerTab] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
   const list = useAdminList(mockProducts, ["name", "seller", "id"]);
   const [detail, setDetail] = useState(null);
   const action = (row, status) => { list.updateItem(row.id, { status }); toast.success(`Đã cập nhật: ${status}`); };
@@ -138,20 +139,27 @@ export const AdminProducts = () => {
           key: "status", label: "Tất cả trạng thái", value: list.filter.status || "",
           onChange: (v) => list.setFilterValue("status", v), options: STATUS_OPTIONS.general,
         }]}
+        actions={[{
+          label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
+          variant: "secondary",
+          onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")),
+        }]}
       />
       <AdminAnimatedView viewKey={sellerTab}>
-        {sellerGroups.map(({ seller, items }) => (
-          <SellerProductGroup
-            key={seller}
-            seller={seller}
-            warehouse={getWarehouse(seller)}
-            stats={calcProductStats(items)}
-          >
-            {items.map((p) => (
-              <ProductCard key={p.id} product={p} actions={productActions(p)} />
-            ))}
-          </SellerProductGroup>
-        ))}
+        <div className={viewMode === "list" ? "adm-view-as-list" : ""}>
+          {sellerGroups.map(({ seller, items }) => (
+            <SellerProductGroup
+              key={seller}
+              seller={seller}
+              warehouse={getWarehouse(seller)}
+              stats={calcProductStats(items)}
+            >
+              {items.map((p) => (
+                <ProductCard key={p.id} product={p} actions={productActions(p)} />
+              ))}
+            </SellerProductGroup>
+          ))}
+        </div>
       </AdminAnimatedView>
       <AdminModal open={!!detail} title="Chi tiết sản phẩm" onClose={() => setDetail(null)} wide>
         {detail && (
@@ -168,6 +176,7 @@ export const AdminAuctionProducts = () => {
   const navigate = useNavigate();
   const list = useAdminList(mockAuctions, ["title", "seller", "id"]);
   const [activeTab, setActiveTab] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
   const [detail, setDetail] = useState(null);
 
   const tabs = [
@@ -192,8 +201,17 @@ export const AdminAuctionProducts = () => {
     <div className="adm-page">
       <AdminPageHeader kicker="Đấu giá" title="Quản lý phiên đấu giá" subtitle="Giám sát, dừng, gia hạn hoặc hủy phiên đấu giá." />
       <AdminTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm phiên, seller..." />
-      <div className="adm-auction-grid">
+      <AdminToolbar
+        search={list.search}
+        onSearchChange={list.setSearch}
+        searchPlaceholder="Tìm phiên, seller..."
+        actions={[{
+          label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
+          variant: "secondary",
+          onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")),
+        }]}
+      />
+      <div className={viewMode === "list" ? "adm-auction-grid adm-view-as-list" : "adm-auction-grid"}>
         {displayedList.map((a) => {
           const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
           return (

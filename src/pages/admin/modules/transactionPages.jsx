@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../../components/admin/adminPageHeader";
 import AdminToolbar from "../../../components/admin/adminToolbar";
@@ -14,15 +15,19 @@ import "../../../components/admin/adminViews/index.scss";
 
 export const AdminOrders = () => {
   const list = useAdminList(mockOrders, ["id", "buyer", "seller"]);
+  const [viewMode, setViewMode] = useState("grid");
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Đơn hàng" title="Quản lý đơn hàng" subtitle="Timeline đơn hàng — hủy, hoàn tiền, hoàn thành." />
       <AdminToolbar
         search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm mã đơn, người mua..."
         filters={[{ key: "status", label: "Trạng thái", value: list.filter.status || "", onChange: (v) => list.setFilterValue("status", v), options: STATUS_OPTIONS.order }]}
-        actions={[{ label: "Xuất Excel", variant: "secondary", onClick: () => toast.info("Đang xuất...") }]}
+        actions={[
+          { label: "Xuất Excel", variant: "secondary", onClick: () => toast.info("Đang xuất...") },
+          { label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Dòng thời gian", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) },
+        ]}
       />
-      <div className="adm-order-timeline">
+      <div className={viewMode === "list" ? "adm-order-timeline adm-view-as-list" : "adm-order-timeline"}>
         {list.filtered.map((order) => (
           <OrderTimelineItem
             key={order.id}
@@ -41,11 +46,15 @@ export const AdminOrders = () => {
 
 export const AdminAuctionOrders = () => {
   const list = useAdminList(mockAuctionOrders, ["id", "winner", "auction"]);
+  const [viewMode, setViewMode] = useState("grid");
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Đấu giá" title="Đơn hàng đấu giá" subtitle="Pipeline thanh toán và giao hàng sau đấu giá." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm mã đơn, người thắng..." />
-      <div className="adm-order-timeline">
+      <AdminToolbar
+        search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm mã đơn, người thắng..."
+        actions={[{ label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Dòng thời gian", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) }]}
+      />
+      <div className={viewMode === "list" ? "adm-order-timeline adm-view-as-list" : "adm-order-timeline"}>
         {list.filtered.map((order) => (
           <OrderTimelineItem
             key={order.id}
@@ -73,11 +82,15 @@ export const AdminAuctionOrders = () => {
 
 export const AdminBids = () => {
   const list = useAdminList(mockBids, ["bidder", "auction", "id"]);
+  const [viewMode, setViewMode] = useState("grid");
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Đấu giá" title="Quản lý Bid" subtitle="Luồng bid theo thời gian — phát hiện spam và bid giả." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm bidder, phiên..." />
-      <div className="adm-bid-feed">
+      <AdminToolbar
+        search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm bidder, phiên..."
+        actions={[{ label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Luồng Bid", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) }]}
+      />
+      <div className={viewMode === "list" ? "adm-bid-feed adm-view-as-list" : "adm-bid-feed"}>
         {list.filtered.map((bid) => (
           <BidFeedItem
             key={bid.id}
@@ -96,11 +109,18 @@ export const AdminBids = () => {
 
 export const AdminPayments = () => {
   const list = useAdminList(mockPayments, ["transaction", "buyer", "seller"]);
+  const [viewMode, setViewMode] = useState("grid");
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Tài chính" title="Quản lý thanh toán" subtitle="Luồng giao dịch thanh toán." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} actions={[{ label: "Xuất Excel", variant: "secondary", onClick: () => toast.info("Đang xuất...") }]} />
-      <div className="adm-payment-list">
+      <AdminToolbar
+        search={list.search} onSearchChange={list.setSearch}
+        actions={[
+          { label: "Xuất Excel", variant: "secondary", onClick: () => toast.info("Đang xuất...") },
+          { label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Thẻ Giao dịch", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) },
+        ]}
+      />
+      <div className={viewMode === "list" ? "adm-payment-list adm-view-as-list" : "adm-payment-list"}>
         {list.filtered.map((p) => (
           <PaymentCard
             key={p.id}
@@ -118,11 +138,15 @@ export const AdminPayments = () => {
 
 export const AdminWallets = () => {
   const list = useAdminList(mockWallets, ["owner"]);
+  const [viewMode, setViewMode] = useState("grid");
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Ví" title="Quản lý ví" subtitle="Thẻ số dư ví người dùng và seller." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm chủ ví..." />
-      <AdminStaggerGrid className="adm-wallet-grid">
+      <AdminToolbar
+        search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm chủ ví..."
+        actions={[{ label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới Ví", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) }]}
+      />
+      <AdminStaggerGrid className={viewMode === "list" ? "adm-wallet-grid adm-view-as-list" : "adm-wallet-grid"}>
         {list.filtered.map((w) => (
           <WalletCard
             key={w.id}
@@ -140,11 +164,15 @@ export const AdminWallets = () => {
 
 export const AdminWithdrawals = () => {
   const list = useAdminList(mockWithdrawals, ["seller", "id"]);
+  const [viewMode, setViewMode] = useState("grid");
 
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Tài chính" title="Quản lý rút tiền" subtitle="Theo dõi các yêu cầu rút tiền tự động của seller." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm seller..." />
+      <AdminToolbar
+        search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm seller..."
+        actions={[{ label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới Rút tiền", variant: "secondary", onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")) }]}
+      />
       
       <div style={{
         background: 'rgba(31, 169, 104, 0.1)',
@@ -167,7 +195,7 @@ export const AdminWithdrawals = () => {
         </div>
       </div>
 
-      <AdminStaggerGrid className="adm-withdrawal-grid">
+      <AdminStaggerGrid className={viewMode === "list" ? "adm-withdrawal-grid adm-view-as-list" : "adm-withdrawal-grid"}>
         {list.filtered.map((item) => (
           <WithdrawalCard
             key={item.id}

@@ -61,13 +61,25 @@ export const AdminCommissions = () => {
 
 export const AdminCoupons = () => {
   const list = useAdminList(mockCoupons, ["code"]);
+  const [viewMode, setViewMode] = useState("grid");
   const [form, setForm] = useState(null);
 
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Khuyến mãi" title="Quản lý coupon" subtitle="Vé coupon trực quan với thanh tiến độ sử dụng." />
-      <AdminToolbar search={list.search} onSearchChange={list.setSearch} actions={[{ label: "+ Tạo coupon", onClick: () => setForm({ code: "", type: "Phần trăm", value: "", status: "Hoạt động" }) }]} />
-      <AdminStaggerGrid className="adm-coupon-grid">
+      <AdminToolbar
+        search={list.search}
+        onSearchChange={list.setSearch}
+        actions={[
+          { label: "+ Tạo coupon", onClick: () => setForm({ code: "", type: "Phần trăm", value: "", status: "Hoạt động" }) },
+          {
+            label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
+            variant: "secondary",
+            onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")),
+          },
+        ]}
+      />
+      <AdminStaggerGrid className={viewMode === "list" ? "adm-coupon-grid adm-view-as-list" : "adm-coupon-grid"}>
         {list.filtered.map((c) => (
           <CouponTicket
             key={c.id}
@@ -99,6 +111,7 @@ export const AdminCoupons = () => {
 
 export const AdminShipping = () => {
   const [tab, setTab] = useState("partners");
+  const [viewMode, setViewMode] = useState("grid");
   const partners = useAdminList(mockShippingPartners, ["name"]);
   const zones = useAdminList(mockShippingZones, ["name"]);
 
@@ -131,9 +144,19 @@ export const AdminShipping = () => {
       <AdminPageHeader kicker="Vận chuyển" title="Quản lý vận chuyển" subtitle="Đối tác vận chuyển và khu vực giao hàng." />
       <AdminTabs active={tab} onChange={setTab} tabs={[{ id: "partners", label: "Đối tác" }, { id: "zones", label: "Khu vực" }]} />
       <AdminTabOverview {...tabOverview} />
+      <AdminToolbar
+        search={tab === "partners" ? partners.search : zones.search}
+        onSearchChange={tab === "partners" ? partners.setSearch : zones.setSearch}
+        searchPlaceholder={tab === "partners" ? "Tìm đối tác..." : "Tìm khu vực..."}
+        actions={[{
+          label: viewMode === "grid" ? "📋 Danh sách" : "🗂 Lưới",
+          variant: "secondary",
+          onClick: () => setViewMode((m) => (m === "grid" ? "list" : "grid")),
+        }]}
+      />
       <AdminAnimatedView viewKey={tab}>
         {tab === "partners" ? (
-          <AdminStaggerGrid className="adm-shipping-grid">
+          <AdminStaggerGrid className={viewMode === "list" ? "adm-shipping-grid adm-view-as-list" : "adm-shipping-grid"}>
             {partners.filtered.map((p) => (
               <ShippingPartnerCard
                 key={p.id}
