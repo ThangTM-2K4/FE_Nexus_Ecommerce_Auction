@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { FaTh, FaList, FaUserPlus } from "react-icons/fa";
+import Select from "../../../components/common/select";
 import AdminPageHeader from "../../../components/admin/adminPageHeader";
 import AdminTabs from "../../../components/admin/adminTabs";
 import AdminTabOverview from "../../../components/admin/adminTabOverview";
@@ -120,14 +121,16 @@ export const AdminUsers = () => {
         fullName: createForm.fullName.trim(),
         email: createForm.email.trim(),
         password: createForm.password,
-        role: createForm.role,
+        roleCodes: [createForm.role],
         phoneNumber: createForm.phoneNumber.trim() || undefined,
         note: createForm.note.trim() || undefined,
       });
-      setCreateSuccess(`✅ Tài khoản "${createForm.fullName}" (${ROLE_LABELS[createForm.role] ?? createForm.role}) đã được tạo thành công!`);
+      setCreateSuccess(`✅ Tài khoản "${createForm.fullName}" (${ROLE_LABELS[createForm.role] ?? createForm.role}) đã được cấp thành công trên hệ thống!`);
       toast.success(`Đã cấp tài khoản ${createForm.role} cho ${createForm.fullName}`);
       setCreateForm(INIT_FORM);
       setCreateErrors({});
+      await loadUsers();
+      await refreshTabCounts();
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Không tạo được tài khoản"));
     } finally {
@@ -490,16 +493,13 @@ export const AdminUsers = () => {
                 </div>
                 <div className="adm-create-account-form__field">
                   <label htmlFor="ca-role">Vai trò (cấp bậc) <span>*</span></label>
-                  <select
-                    id="ca-role"
+                  <Select
                     value={createForm.role}
                     onChange={(e) => handleCreateChange("role", e.target.value)}
-                  >
-                    {CREATABLE_ROLES.map((r) => (
-                      <option key={r.value} value={r.value}>{r.label}</option>
-                    ))}
-                  </select>
-                  {createErrors.role && <span className="adm-create-account-form__error">{createErrors.role}</span>}
+                    options={CREATABLE_ROLES}
+                    placeholder="Chọn vai trò..."
+                    error={createErrors.role}
+                  />
                 </div>
               </div>
               <div className="adm-create-account-form__row">
