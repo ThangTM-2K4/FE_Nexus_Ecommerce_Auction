@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaHeart, FaRegHeart, FaBalanceScale } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../../context/AuthContext';
+import RequireAuthModal from '../requireAuthModal';
 import { formatPrice } from '../../../utils/formatPrice';
 import { isItemInCompare, toggleCompareItem } from '../../../utils/compareAuction';
 import AuctionImage from '../auctionImage';
@@ -61,11 +63,13 @@ export function toggleWatchlist(auction) {
 }
 
 export default function AuctionCard({ auction, onClick }) {
-  const [isHearted, setIsHearted] = useState(() => isItemInWatchlist(auction?.id));
+  const { isAuthenticated } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isHearted, setIsHearted] = useState(() => Boolean(isAuthenticated && isItemInWatchlist(auction?.id)));
   const [isCompared, setIsCompared] = useState(() => isItemInCompare(auction?.id));
 
   useEffect(() => {
-    setIsHearted(isItemInWatchlist(auction?.id));
+    setIsHearted(Boolean(isAuthenticated && isItemInWatchlist(auction?.id)));
     setIsCompared(isItemInCompare(auction?.id));
 
     const onStorage = (e) => {
@@ -75,12 +79,16 @@ export default function AuctionCard({ auction, onClick }) {
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [auction?.id]);
+  }, [auction?.id, isAuthenticated]);
 
   const handleClick = () => onClick?.(auction);
 
   const handleHeartClick = (e) => {
     e.stopPropagation();
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
     const isNowAdded = toggleWatchlist(auction);
     setIsHearted(isNowAdded);
     if (isNowAdded) {
@@ -110,61 +118,70 @@ export default function AuctionCard({ auction, onClick }) {
     : auction.currentPrice || auction.currentBid;
 
   return (
-    <motion.article
-      className="auction-card"
-      onClick={handleClick}
-      whileHover={{ y: -5 }}
-      transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          handleClick();
-        }
-      }}
-      aria-label={`${auction.title}, giá hiện tại ${displayPrice}`}
-    >
-      <div className="auction-card__image-wrap">
-        <AuctionImage
-          src={auction.image || auction.images?.[0]}
-          alt={auction.title}
-          categoryLabel={auction.categoryLabel}
-          isLive={auction.isLive && auction.endTime > Date.now()}
-          isUpcoming={auction.isUpcoming}
-        />
-      </div>
+    <>
+      <motion.article
+        className="auction-card"
+        onClick={handleClick}
+        whileHover={{ y: -5 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleClick();
+          }
+        }}
+        aria-label={`${auction.title}, giá hiện tại ${displayPrice}`}
+      >
+        <div className="auction-card__image-wrap">
+          <AuctionImage
+            src={auction.image || auction.images?.[0]}
+            alt={auction.title}
+            categoryLabel={auction.categoryLabel}
+            isLive={auction.isLive && auction.endTime > Date.now()}
+            isUpcoming={auction.isUpcoming}
+          />
+        </div>
 
-      <div className="auction-card__body">
-        <h3 className="auction-card__title">{auction.title}</h3>
-        <p className="auction-card__desc">{auction.description}</p>
+        <div className="auction-card__body">
+          <h3 className="auction-card__title">{auction.title}</h3>
+          <p className="auction-card__desc">{auction.description}</p>
 
-        <div className="auction-card__footer">
-          <div className="auction-card__price">
-            <span>{auction.isUpcoming ? "Giá khởi điểm" : "Giá thầu hiện tại"}</span>
-            <strong>{displayPrice}</strong>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <AuctionCountdown endTime={auction.endTime} isUpcoming={auction.isUpcoming} />
-            <button
-              type="button"
-              className={`auction-card__compare-btn ${isCompared ? 'active' : ''}`}
-              onClick={handleCompareClick}
-              title={isCompared ? "Bỏ so sánh" : "Thêm vào so sánh (tối đa 3 sản phẩm)"}
-            >
-              <FaBalanceScale />
-            </button>
-            <button
-              type="button"
-              className={`auction-card__heart-btn ${isHearted ? 'active' : ''}`}
-              onClick={handleHeartClick}
-              title={isHearted ? "Bỏ theo dõi" : "Thêm vào đang theo dõi"}
-            >
-              {isHearted ? <FaHeart style={{ color: '#ef4444' }} /> : <FaRegHeart />}
-            </button>
+          <div className="auction-card__footer">
+            <div className="auction-card__price">
+              <span>{auction.isUpcoming ? "Giá khởi điểm" : "Giá thầu hiện tại"}</span>
+              <strong>{displayPrice}</strong>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <AuctionCountdown endTime={auction.endTime} isUpcoming={auction.isUpcoming} />
+              <button
+                type="button"
+                className={`auction-card__compare-btn ${isCompared ? 'active' : ''}`}
+                onClick={handleCompareClick}
+                title={isCompared ? "Bỏ so sánh" : "Thêm vào so sánh (tối đa 3 sản phẩm)"}
+              >
+                <FaBalanceScale />
+              </button>
+              <button
+                type="button"
+                className={`auction-card__heart-btn ${isHearted ? 'active' : ''}`}
+                onClick={handleHeartClick}
+                title={isHearted ? "Bỏ theo dõi" : "Thêm vào đang theo dõi"}
+              >
+                {isHearted ? <FaHeart style={{ color: '#ef4444' }} /> : <FaRegHeart />}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </motion.article>
+      </motion.article>
+
+      <RequireAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Cần đăng nhập để theo dõi sản phẩm"
+        subtitle="Vui lòng đăng nhập hoặc đăng ký tài khoản Nexus để lưu sản phẩm vào mục Đang Theo Dõi."
+      />
+    </>
   );
 }

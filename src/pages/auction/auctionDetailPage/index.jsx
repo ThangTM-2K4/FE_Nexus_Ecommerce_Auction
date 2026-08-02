@@ -7,7 +7,9 @@ import { toast } from "react-toastify";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { getAuctionDetail } from "../../../data/auctionMockData";
 import { useAuth } from "../../../context/AuthContext";
+import RequireAuthModal from "../../../components/auction/requireAuthModal";
 import { useProvinces, useWards } from "../../../services/locationService";
+
 import "./index.scss";
 
 
@@ -86,6 +88,7 @@ export default function AuctionDetailPage() {
   const product = getAuctionDetail(id);
   const [selectedImage, setSelectedImage] = useState(0);
   const [liked, setLiked] = useState(() => {
+    if (!isAuthenticated) return false;
     try {
       const list = JSON.parse(localStorage.getItem("auc_watchlist") || "[]");
       return list.some((item) => String(item.id) === String(product?.id));
@@ -94,8 +97,29 @@ export default function AuctionDetailPage() {
     }
   });
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLiked(false);
+      return;
+    }
+    try {
+      const list = JSON.parse(localStorage.getItem("auc_watchlist") || "[]");
+      setLiked(list.some((item) => String(item.id) === String(product?.id)));
+    } catch {
+      setLiked(false);
+    }
+  }, [product?.id, isAuthenticated]);
+
+
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   const handleToggleLike = () => {
     if (!product) return;
+    if (!isAuthenticated || !user) {
+      setShowAuthModal(true);
+      return;
+    }
+
     try {
       const list = JSON.parse(localStorage.getItem("auc_watchlist") || "[]");
       const exists = list.some((item) => String(item.id) === String(product.id));
@@ -284,11 +308,11 @@ export default function AuctionDetailPage() {
   }, [isAuctionEnded, isPaid, isPaymentExpired]);
 
   const handleOpenRegistration = () => {
-    if (!user) {
-      toast.info("Vui lòng đăng nhập để đăng ký tham gia đấu giá!");
-      navigate("/login");
+    if (!isAuthenticated || !user) {
+      setShowAuthModal(true);
       return;
     }
+
     const isEmailOk = user.isEmailVerified ?? true;
     const isPhoneOk = user.isPhoneVerified ?? false;
     const isKycOk = user.isNationalIdVerified ?? false;
@@ -356,11 +380,11 @@ export default function AuctionDetailPage() {
   };
 
   const handleBid = () => {
-    if (!user) {
-      toast.info("Vui lòng đăng nhập để đặt giá!");
-      navigate("/login", { state: { redirectTo: `/auction/detail/${id}` } });
+    if (!isAuthenticated || !user) {
+      setShowAuthModal(true);
       return;
     }
+
     if (isAuctionEnded) {
       toast.error("Phiên đấu giá đã kết thúc, không thể đặt giá nữa!");
       return;
@@ -1348,6 +1372,12 @@ export default function AuctionDetailPage() {
           </div>
         </div>
       )}
+
+      <RequireAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 }
+
