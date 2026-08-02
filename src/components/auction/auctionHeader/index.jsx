@@ -47,12 +47,9 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
     onSearchChange?.(event.target.value);
   };
 
-  const avatarUrl =
-    user?.avatar ||
-    user?.avatarUrl ||
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
-  const userName = user?.name || user?.fullName || 'Nguyễn Minh Đức';
-  const userEmail = user?.email || 'minhduc@nexus.com';
+  const avatarUrl = user?.avatar || user?.avatarUrl;
+  const userName = user?.fullName || user?.name || user?.username || 'Người dùng';
+  const userEmail = user?.email || '';
 
   return (
     <header className="auction-header">
@@ -112,7 +109,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
             </Link>
           )}
 
-          {isSellerMode && (
+          {isAuthenticated && isSellerMode && (
             <>
               <Link
                 to="/auction/profile"
@@ -135,52 +132,113 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
             </>
           )}
 
-          {/* ─── Profile Avatar Button ─── */}
-          <div className="auction-header__profile-container" ref={profileRef}>
-            <button
-              type="button"
-              className="auction-header__profile-trigger"
-              onClick={() => setShowProfileMenu((prev) => !prev)}
-              title="Hồ sơ tài khoản & Ví tiền"
-            >
-              <img src={avatarUrl} alt={userName} className="profile-avatar-circle" />
-            </button>
-
-            {showProfileMenu && (
-              <div className="auction-header__profile-dropdown">
-                <div className="dropdown-user-header">
-                  <img src={avatarUrl} alt={userName} className="dropdown-avatar-large" />
-                  <div>
-                    <strong className="dropdown-name">{userName}</strong>
-                    <span className="dropdown-email">{userEmail}</span>
+          {!isAuthenticated ? (
+            <>
+              <Link
+                to="/login"
+                className="auction-header__home-link"
+                style={{
+                  background: 'linear-gradient(135deg, #7B4CAB, #5C328B)',
+                  color: '#fff',
+                  borderColor: 'transparent',
+                }}
+              >
+                Đăng nhập
+              </Link>
+              <Link to="/register" className="auction-header__home-link">
+                Đăng ký
+              </Link>
+            </>
+          ) : (
+            /* ─── Profile Avatar Button ─── */
+            <div className="auction-header__profile-container" ref={profileRef}>
+              <button
+                type="button"
+                className="auction-header__profile-trigger"
+                onClick={() => setShowProfileMenu((prev) => !prev)}
+                title="Hồ sơ tài khoản & Ví tiền"
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={userName} className="profile-avatar-circle" />
+                ) : (
+                  <div
+                    className="profile-avatar-circle"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #7B4CAB, #5C328B)',
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                    }}
+                  >
+                    {(userName[0] || 'U').toUpperCase()}
                   </div>
-                </div>
+                )}
+              </button>
 
-                <div className="dropdown-wallet-card">
-                  <div className="wallet-row">
-                    <span>
-                      <FaWallet style={{ color: '#e8c468', marginRight: 4 }} /> Ví Nexus Pay:
-                    </span>
-                    <strong className="balance-val">50.000.000 ₫</strong>
+              {showProfileMenu && (
+                <div className="auction-header__profile-dropdown">
+                  <div className="dropdown-user-header">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={userName} className="dropdown-avatar-large" />
+                    ) : (
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #7B4CAB, #5C328B)',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 'bold',
+                          fontSize: '18px',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {(userName[0] || 'U').toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <strong className="dropdown-name">{userName}</strong>
+                      {userEmail && <span className="dropdown-email">{userEmail}</span>}
+                    </div>
                   </div>
-                  <div className="wallet-row sub">
-                    <span>Tiền cọc đóng băng:</span>
-                    <span className="frozen-val">0 ₫</span>
-                  </div>
-                </div>
 
-                <ul className="dropdown-nav-list">
-                  <li>
-                    <Link to="/auction/my-bids" onClick={() => setShowProfileMenu(false)}>
-                      <FaTrophy className="menu-icon" style={{ color: '#e8c468' }} /> Đấu giá của tôi
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/profile/personal-info" onClick={() => setShowProfileMenu(false)}>
-                      <FaUser className="menu-icon" /> Thông tin tài khoản
-                    </Link>
-                  </li>
-                  {isAuthenticated ? (
+                  <div className="dropdown-wallet-card">
+                    <div className="wallet-row">
+                      <span>
+                        <FaWallet style={{ color: '#e8c468', marginRight: 4 }} /> Ví Nexus Pay:
+                      </span>
+                      <strong className="balance-val">
+                        {user?.balance ? `${user.balance.toLocaleString()} ₫` : '0 ₫'}
+                      </strong>
+                    </div>
+                    <div className="wallet-row sub">
+                      <span>Tiền cọc đóng băng:</span>
+                      <span className="frozen-val">
+                        {user?.frozenBalance ? `${user.frozenBalance.toLocaleString()} ₫` : '0 ₫'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <ul className="dropdown-nav-list">
+                    <li>
+                      <Link to="/auction/my-bids" onClick={() => setShowProfileMenu(false)}>
+                        <FaTrophy className="menu-icon" style={{ color: '#e8c468' }} /> Đấu giá của tôi
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/profile/personal-info" onClick={() => setShowProfileMenu(false)}>
+                        <FaUser className="menu-icon" /> Thông tin tài khoản
+                      </Link>
+                    </li>
                     <li>
                       <button
                         type="button"
@@ -194,17 +252,11 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                         <FaSignOutAlt className="menu-icon" /> Đăng xuất
                       </button>
                     </li>
-                  ) : (
-                    <li>
-                      <Link to="/login" onClick={() => setShowProfileMenu(false)}>
-                        🔑 Đăng nhập
-                      </Link>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            )}
-          </div>
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
 
           <button
             type="button"

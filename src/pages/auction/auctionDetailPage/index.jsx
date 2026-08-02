@@ -26,8 +26,9 @@ function isSameUser(currentUser, bidUser) {
   const names = [currentUser.name, currentUser.fullName, currentUser.email, currentUser.username]
     .filter(Boolean)
     .map((s) => String(s).trim().toLowerCase());
-  return names.includes(target) || target === "bạn";
+  return names.includes(target);
 }
+
 
 function saveBidToHistory(user, product, amount) {
   const existing = JSON.parse(localStorage.getItem(BID_HISTORY_KEY) || "[]");
@@ -80,7 +81,8 @@ function parseTimeToSeconds(str) {
 export default function AuctionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isSellerMode } = useAuth();
+  const { user, isSellerMode, isAuthenticated } = useAuth();
+
   const product = getAuctionDetail(id);
   const [selectedImage, setSelectedImage] = useState(0);
   const [liked, setLiked] = useState(() => {
@@ -204,8 +206,9 @@ export default function AuctionDetailPage() {
           rawAmount: b.amount,
           time: "Vừa xong",
           isLeader: false,
-          isYou: true,
+          userId: b.userId,
         };
+
       });
 
       mergedHistory = [...formattedLocal, ...mergedHistory];
@@ -431,7 +434,7 @@ export default function AuctionDetailPage() {
       const finalAddress =
         addressTab === "default"
           ? {
-              recipient: user?.name || user?.fullName || "Nguyễn Minh Đức",
+              recipient: user?.fullName || user?.name || "Người dùng",
               phone: user?.phone || "0912 345 678",
               fullAddress:
                 user?.address ||
@@ -506,7 +509,8 @@ export default function AuctionDetailPage() {
               </div>
               <div className="stat-box">
                 <span>Người dẫn đầu</span>
-                <strong>{maskUsername(leader, false, true)}</strong>
+                <strong>{maskUsername(leader, isAuthenticated && isSameUser(user, leader), fromAdmin)}</strong>
+
               </div>
               <div className="stat-box">
                 <span>Trạng thái phiên</span>
@@ -828,8 +832,9 @@ export default function AuctionDetailPage() {
               </div>
               <ul className="history-list">
                 {bidHistory.map((bid, i) => {
-                  const isMe = isSameUser(user, bid.user) || bid.isYou;
+                  const isMe = isAuthenticated && (isSameUser(user, bid.user) || (bid.userId && user?.id && String(bid.userId) === String(user?.id)));
                   const displayName = maskUsername(bid.user, isMe, fromAdmin);
+
                   const bidAttemptNum = bidHistory.length - i;
                   return (
                     <li key={i} className={bid.isLeader ? "leader" : ""}>
@@ -1015,7 +1020,7 @@ export default function AuctionDetailPage() {
                 {addressTab === "default" ? (
                   <div className="address-card address-card--selected">
                     <div className="address-card__header">
-                      <strong>👤 {user?.name || user?.fullName || "Nguyễn Minh Đức"}</strong>
+                      <strong>👤 {user?.fullName || user?.name || "Người dùng"}</strong>
                       <span className="badge-default">Mặc định</span>
                     </div>
                     <p className="address-card__phone">📞 {user?.phone || "0912 345 678"}</p>

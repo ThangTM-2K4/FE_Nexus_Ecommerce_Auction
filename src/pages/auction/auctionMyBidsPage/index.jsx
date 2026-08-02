@@ -87,8 +87,9 @@ function isSameUser(currentUser, bidUser) {
   const names = [currentUser.name, currentUser.fullName, currentUser.email, currentUser.username]
     .filter(Boolean)
     .map((s) => String(s).trim().toLowerCase());
-  return names.includes(target) || target === "bạn";
+  return names.includes(target);
 }
+
 
 function formatCurrency(amount, currency) {
   if (currency === "USD") {
@@ -192,7 +193,7 @@ export default function AuctionMyBidsPage() {
         estimatedDeliveryDate: "30/07/2026 - 01/08/2026 (2 - 3 ngày làm việc)",
         deliveryTimeSlot: "08:00 - 12:00 hoặc 13:00 - 17:00 (Giờ hành chính)",
         address: item.address || {
-          recipient: user?.name || user?.fullName || "Nguyễn Minh Đức",
+          recipient: user?.fullName || user?.name || "Người dùng",
           phone: user?.phone || "0912 345 678",
           fullAddress: user?.address || "123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
         },
@@ -724,8 +725,9 @@ export default function AuctionMyBidsPage() {
                         <h4>LỊCH SỬ ĐẶT GIÁ</h4>
                         <ul>
                           {auction.bidHistory.map((bid, i) => {
-                            const isMe = isSameUser(user, bid.user) || bid.isYou;
+                            const isMe = isAuthenticated && (isSameUser(user, bid.user) || (bid.userId && user?.id && String(bid.userId) === String(user?.id)));
                             const displayName = maskUsername(bid.user, isMe);
+
                             const attemptNum = auction.bidHistory.length - i;
                             return (
                               <li
