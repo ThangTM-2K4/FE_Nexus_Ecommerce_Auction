@@ -2833,6 +2833,35 @@
     }
   }
 
+  // ── Category Tree & Category Items (Fix nút bị lòi ra ngoài) ──
+  .adm-cat-parent,
+  .adm-cat-child,
+  .adm-category-item {
+    flex-wrap: wrap !important;
+    padding: 10px 10px !important;
+    gap: 6px !important;
+  }
+
+  .adm-cat-parent__actions,
+  .adm-cat-child__actions,
+  .adm-category-item__actions {
+    width: 100% !important;
+    margin-top: 6px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+
+    button {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      height: 26px !important;
+      padding: 0 6px !important;
+      font-size: 11px !important;
+    }
+  }
+
+
   // ── Brand Cards (Screenshot 2) ──
   .adm-brand-card {
     padding: 10px 8px !important;
