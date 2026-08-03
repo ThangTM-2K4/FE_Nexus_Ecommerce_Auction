@@ -81,8 +81,11 @@ export const getShopProfile = async (userId, user) => {
 
   let apiSeller = null;
   try {
-    apiSeller = unwrap(await api.get('sellers/me'));
-  } catch {
+    apiSeller = unwrap(
+      await api.get('sellers/me', { skipErrorRedirect: true })
+    );
+  } catch (err) {
+    console.error('[shopService] sellers/me (optional):', err);
     /* chưa có hồ sơ seller trên API / lỗi mạng → dùng dữ liệu local */
   }
 

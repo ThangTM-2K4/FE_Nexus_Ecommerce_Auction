@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { API_BASE_URL } from './endpoints';
-import { redirectToHttpErrorPage } from '../utils/httpErrorRedirect';
+import {
+  redirectToHttpErrorPage,
+  redirectToLoginWithReturn,
+} from '../utils/httpErrorRedirect';
 
 const clearAuthStorage = () => {
   localStorage.removeItem('user');
@@ -19,6 +22,7 @@ const api = axios.create({
 
 let isRefreshing = false;
 let failedQueue = [];
+let isRedirectingToLogin = false;
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => {
@@ -29,6 +33,19 @@ const processQueue = (error, token = null) => {
     }
   });
   failedQueue = [];
+};
+
+/**
+ * 401 thống nhất → /login?redirect=... (không dùng /401 trong luồng chuẩn).
+ * Route /401 giữ cho trường hợp đặc biệt / truy cập trực tiếp.
+ */
+const handleUnauthorized = () => {
+  if (isRedirectingToLogin || window.location.pathname.startsWith('/login')) {
+    return;
+  }
+  isRedirectingToLogin = true;
+  clearAuthStorage();
+  redirectToLoginWithReturn();
 };
 
 api.interceptors.request.use(
@@ -46,10 +63,13 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const status = error.response?.status;
 
-    if (!originalRequest || error.response?.status !== 401 || originalRequest._retry) {
-      const status = error.response?.status;
-      if (status) {
+    // 403 / 500 / 503 — redirect trừ khi skipErrorRedirect: true (API phụ)
+    if (!originalRequest || status !== 401 || originalRequest._retry) {
+      if (status === 401) {
+        handleUnauthorized();
+      } else if (status) {
         redirectToHttpErrorPage(status, originalRequest);
       }
       return Promise.reject(error);
@@ -64,7 +84,9 @@ api.interceptors.response.use(
       requestUrl.includes('/auth/verify-email') ||
       requestUrl.includes('/auth/exchange-code')
     ) {
-      redirectToHttpErrorPage(401, originalRequest);
+      if (status === 401 && !requestUrl.includes('/auth/login')) {
+        handleUnauthorized();
+      }
       return Promise.reject(error);
     }
 
@@ -121,12 +143,7 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      clearAuthStorage();
-
-      if (!window.location.pathname.includes('/login')) {
-        redirectToHttpErrorPage(401, originalRequest);
-      }
-
+      handleUnauthorized();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

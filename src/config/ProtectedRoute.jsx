@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { sanitizeInternalRedirect } from '../utils/httpErrorRedirect';
 
 // Chuẩn hoá role về mảng token chữ HOA, bỏ tiền tố ROLE_.
 // Chấp nhận: user.role (string | {code,name}), user.roles (mảng string | object).
@@ -26,11 +27,11 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   const location = useLocation();
 
   if (!isAuthenticated) {
+    const returnPath = sanitizeInternalRedirect(location.pathname + location.search) ?? '/';
     return (
       <Navigate
-        to="/401"
+        to={`/login?redirect=${encodeURIComponent(returnPath)}`}
         replace
-        state={{ redirectTo: location.pathname + location.search }}
       />
     );
   }

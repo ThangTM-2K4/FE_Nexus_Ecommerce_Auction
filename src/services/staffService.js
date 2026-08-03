@@ -182,10 +182,22 @@ const enrichApplication = async (item) => {
   const userId = item.userId ?? null;
   const [detail, user] = await Promise.all([
     sellerId
-      ? api.get(`admin/sellers/${sellerId}`).then(unwrapDetail).catch(() => null)
+      ? api
+          .get(`admin/sellers/${sellerId}`, { skipErrorRedirect: true })
+          .then(unwrapDetail)
+          .catch((err) => {
+            console.error('[staffService] enrich seller detail (optional):', err);
+            return null;
+          })
       : null,
     userId
-      ? api.get(`admin/users/${userId}`).then(unwrapDetail).catch(() => null)
+      ? api
+          .get(`admin/users/${userId}`, { skipErrorRedirect: true })
+          .then(unwrapDetail)
+          .catch((err) => {
+            console.error('[staffService] enrich user detail (optional):', err);
+            return null;
+          })
       : null,
   ]);
   return mapApiApplication(item, detail, user);

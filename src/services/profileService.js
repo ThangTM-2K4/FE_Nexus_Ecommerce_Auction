@@ -57,8 +57,11 @@ const pickReputation = (src) => {
 // toàn bộ thông tin CCCD) để hiển thị lại lên giao diện, không chỉ mỗi status.
 const fetchIdentity = async () => {
   try {
-    return unwrap(await api.get('/identity-verifications/me'));
-  } catch {
+    return unwrap(
+      await api.get('/identity-verifications/me', { skipErrorRedirect: true })
+    );
+  } catch (err) {
+    console.error('[profileService] identity-verifications/me (optional):', err);
     return null; // chưa nộp / 404
   }
 };
