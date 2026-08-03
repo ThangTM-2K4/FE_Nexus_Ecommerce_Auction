@@ -1,109 +1,332 @@
 @use "../../../styles/auction/variables" as *;
 
 .auc-how-it-works-page {
-  padding: 40px 0;
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
+  padding: 30px 16px 60px;
+  color: $bone;
+}
 
-  &__header {
-    text-align: center;
-    margin-bottom: 50px;
+/* Hero Banner */
+.auc-how-hero {
+  text-align: center;
+  margin-bottom: 48px;
 
-    h1 {
-      font-size: 32px;
-      color: $bone;
-      margin-bottom: 12px;
-    }
-    p {
-      color: $mist-lavender;
-      font-size: 16px;
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba($auction-gold, 0.12);
+    border: 1px solid rgba($auction-gold, 0.3);
+    color: $auction-gold-bright;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: $bone;
+    margin-bottom: 14px;
+
+    @media (max-width: 576px) {
+      font-size: 24px;
     }
   }
 
-  &__steps {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    padding: 0 24px;
-    position: relative;
+  p {
+    font-size: 16px;
+    color: $mist-lavender;
+    max-width: 680px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+}
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      bottom: 20px;
-      left: 64px;
-      width: 2px;
-      background: rgba($antique-gold, 0.2);
+/* Steps Container with Clean Timeline */
+.auc-steps-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  margin-bottom: 60px;
+
+  .auc-timeline-line {
+    position: absolute;
+    top: 40px;
+    bottom: 40px;
+    left: 35px;
+    width: 3px;
+    background: linear-gradient(180deg, $auction-gold, $auction-cyan, rgba(255, 255, 255, 0.1));
+    z-index: 1;
+
+    @media (max-width: 640px) {
+      display: none;
     }
   }
 }
 
-.step-card {
+.auc-step-row {
   display: flex;
   align-items: flex-start;
-  gap: 32px;
+  gap: 28px;
   position: relative;
-  z-index: 1;
-  background: rgba($midnight-violet, 0.4);
-  border: 1px solid $auction-border-subtle;
-  border-radius: $radius-lg;
-  padding: 32px;
-  transition: all 0.3s ease;
+  z-index: 2;
 
-  &__num {
-    flex-shrink: 0;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, $antique-gold, $gold-bright);
-    color: $obsidian;
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+/* Step Number Indicator Badge Outside the Card */
+.auc-step-indicator {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .num-circle {
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
+    background: linear-gradient(135deg, $auction-gold, $auction-bronze);
+    color: $auction-black-deep;
+    font-size: 22px;
+    font-weight: 900;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    font-weight: 800;
-    box-shadow: 0 4px 16px rgba($antique-gold, 0.4);
-    margin-left: -8px; // Pull left to center over the line
+    box-shadow: 0 0 20px $auction-gold-glow;
+    border: 3px solid $midnight-violet;
   }
 
-  &__content {
-    h3 {
-      font-size: 22px;
-      color: $bone;
-      margin-bottom: 12px;
-    }
-    p {
-      font-size: 15px;
-      color: $mist-lavender;
-      line-height: 1.6;
-    }
+  .icon-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: $auction-cyan;
+    color: $auction-black-deep;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid $midnight-violet;
   }
+}
+
+/* Step Card Design */
+.auc-step-card {
+  flex: 1;
+  background: $midnight-violet;
+  border: 1px solid $auction-border;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  transition: all 0.3s ease;
 
   &:hover {
-    border-color: $gold-bright;
-    transform: translateX(8px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    
-    .step-card__num {
-      transform: scale(1.1);
+    border-color: $auction-gold;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px $auction-gold-glow;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+
+    .step-sub {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: $auction-gold-bright;
+    }
+
+    h2 {
+      margin: 4px 0 0;
+      font-size: 20px;
+      font-weight: 800;
+      color: $bone;
+    }
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba($auction-gold, 0.4);
+    background: rgba($auction-gold, 0.12);
+    color: $auction-gold-bright;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+
+    &:hover {
+      background: $auction-gold;
+      color: $auction-black-deep;
+    }
+  }
+
+  &__desc {
+    font-size: 14.5px;
+    color: $mist-lavender;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .tag-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba($bone, 0.85);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
   }
 }
 
-@media (max-width: 768px) {
-  .auc-how-it-works-page__steps::before {
-    display: none;
-  }
-  
-  .step-card {
-    flex-direction: column;
+/* Guarantees Banner */
+.auc-guarantees {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  background: rgba($midnight-violet, 0.7);
+  border: 1px solid $auction-border;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 60px;
+
+  .guarantee-item {
+    display: flex;
     align-items: center;
+    gap: 16px;
+
+    .g-icon {
+      font-size: 28px;
+      color: $auction-gold-bright;
+      flex-shrink: 0;
+    }
+
+    strong {
+      display: block;
+      font-size: 15px;
+      color: $bone;
+      margin-bottom: 2px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 12.5px;
+      color: $mist-lavender;
+    }
+  }
+}
+
+/* FAQ Section */
+.auc-faq-section {
+  background: $midnight-violet;
+  border: 1px solid $auction-border;
+  border-radius: 16px;
+  padding: 32px;
+
+  .faq-header {
     text-align: center;
-    gap: 20px;
-    
-    &__num {
-      margin-left: 0;
+    margin-bottom: 28px;
+
+    h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: $bone;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      font-size: 14px;
+      color: $mist-lavender;
+    }
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .faq-item {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.25s ease;
+
+    &.is-open {
+      border-color: $auction-gold;
+      background: rgba($auction-gold, 0.04);
+
+      .arrow-icon {
+        transform: rotate(180deg);
+        color: $auction-gold;
+      }
+    }
+
+    .faq-question {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: transparent;
+      border: none;
+      color: $bone;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+
+      .arrow-icon {
+        font-size: 14px;
+        color: $mist-lavender;
+        transition: transform 0.25s ease;
+      }
+    }
+
+    .faq-answer {
+      padding: 0 20px 18px;
+      font-size: 14px;
+      color: $mist-lavender;
+      line-height: 1.6;
+      border-top: 1px dashed rgba(255, 255, 255, 0.06);
+      margin-top: 4px;
+      padding-top: 14px;
     }
   }
 }
