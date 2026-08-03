@@ -191,21 +191,27 @@ function LoginPage() {
     }
   };
 
+  const isProtectedRouteRedirect =
+    redirectTo &&
+    (redirectTo.startsWith("/admin") ||
+      redirectTo.startsWith("/staff") ||
+      redirectTo.startsWith("/seller"));
+
   const handleBackClick = () => {
-    if (redirectTo) {
-      navigate(redirectTo);
-    } else if (window.history.length > 1) {
-      navigate(-1);
+    if (redirectTo && !isProtectedRouteRedirect) {
+      navigate(redirectTo, { replace: true });
     } else {
-      navigate("/");
+      navigate("/", { replace: true });
     }
   };
 
-  const backLabel = redirectTo
-    ? redirectTo.startsWith("/auction")
-      ? "Quay về trang đấu giá"
-      : "Quay về trang trước"
-    : "Quay về trang trước";
+  const backLabel =
+    redirectTo && !isProtectedRouteRedirect
+      ? redirectTo.startsWith("/auction")
+        ? "Quay về trang đấu giá"
+        : "Quay về trang trước"
+      : "Quay về trang chủ";
+
 
   return (
     <div className="login-page">

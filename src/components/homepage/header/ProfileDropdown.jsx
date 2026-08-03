@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../../context/AuthContext';
 import SwitchAccountModal from './SwitchAccountModal';
 import UserAvatar from '../../common/userAvatar';
@@ -27,25 +28,20 @@ export default function ProfileDropdown({ onClose, variant }) {
   }, [onClose]);
 
   const handleLogout = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e?.preventDefault();
+    e?.stopPropagation();
     onClose?.();
 
     try {
       await logout();
       toast.success("Đã đăng xuất tài khoản");
-      const currentPath = window.location.pathname;
-      if (
-        currentPath.startsWith("/profile") ||
-        currentPath.startsWith("/seller") ||
-        currentPath.startsWith("/admin")
-      ) {
-        navigate("/", { replace: true });
-      }
     } catch {
       /* ignore */
+    } finally {
+      navigate("/", { replace: true });
     }
   };
+
 
 
   const handleSwitchMode = async (mode) => {

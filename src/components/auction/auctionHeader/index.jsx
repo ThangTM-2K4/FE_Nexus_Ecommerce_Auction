@@ -257,15 +257,13 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                         className="dropdown-logout-btn"
                         onClick={async () => {
                           setShowProfileMenu(false);
-                          await logout();
-                          toast.success("Đã đăng xuất tài khoản");
-                          const currentPath = window.location.pathname;
-                          if (
-                            currentPath.startsWith("/profile") ||
-                            currentPath.startsWith("/seller") ||
-                            currentPath.startsWith("/admin")
-                          ) {
-                            navigate("/auction");
+                          try {
+                            await logout();
+                            toast.success("Đã đăng xuất tài khoản");
+                          } catch {
+                            /* ignore */
+                          } finally {
+                            navigate("/", { replace: true });
                           }
                         }}
                       >
