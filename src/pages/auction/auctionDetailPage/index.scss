@@ -1,4 +1,5 @@
 @use "../../../styles/_auction-variables" as *;
+@use "../../../styles/auction/variables" as auc;
 
 .auc-detail {
   &--empty {
@@ -198,8 +199,9 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: $color-success-bg;
-        color: $color-success;
+        background: auc.$auction-live-glow;
+        color: auc.$auction-cyan;
+        border: 1px solid rgba(auc.$auction-cyan, 0.38);
         padding: 6px 12px 6px 6px;
         border-radius: 20px;
         font-size: 13px;
@@ -254,6 +256,54 @@
         letter-spacing: 0.5px;
         display: block;
         margin-bottom: 8px;
+      }
+
+      .auc-wallet-balance-box {
+        background: rgba(auc.$auction-cyan, 0.1);
+        border: 1px solid rgba(auc.$auction-cyan, 0.38);
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .wallet-balance-header {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+
+          span {
+            font-size: 11px;
+            color: $color-text-muted;
+            display: flex;
+            align-items: center;
+
+            svg {
+              color: auc.$auction-cyan;
+              margin-right: 4px;
+            }
+          }
+
+          strong {
+            font-size: 15px;
+            font-weight: 800;
+            color: auc.$auction-cyan;
+          }
+        }
+
+        .wallet-status-badge {
+          display: inline-flex;
+          align-items: center;
+          font-size: 10px;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 20px;
+          background: auc.$auction-live-glow;
+          color: auc.$auction-cyan;
+          border: 1px solid rgba(auc.$auction-cyan, 0.38);
+          white-space: nowrap;
+        }
       }
 
       .bid-input {
@@ -1145,46 +1195,6 @@
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
   75% { transform: translateX(4px); }
-}
-
-.auc-wallet-balance-box {
-  background: rgba(36, 27, 62, 0.6);
-  border: 1px solid rgba(232, 196, 104, 0.35);
-  border-radius: 10px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  .wallet-balance-header {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-
-    span {
-      font-size: 11px;
-      color: #8f7fbf;
-      display: flex;
-      align-items: center;
-    }
-
-    strong {
-      font-size: 15px;
-      font-weight: 800;
-      color: #e8c468;
-    }
-  }
-
-  .wallet-status-badge {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
-    background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-  }
 }
 
 /* ─── Bid Confirm Modal (shared with MyBidsPage) ─── */

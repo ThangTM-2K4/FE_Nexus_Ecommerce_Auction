@@ -1,24 +1,54 @@
-// Auction zone — luxurious midnight palette (isolated from HomePage)
-$obsidian: #12101A;
-$midnight-violet: #241B3E;
-$royal-purple: #4B2E83;
-$mist-lavender: #8F7FBF;
-$antique-gold: #C9A227;
-$gold-bright: #E8C468;
-$ember: #8B1E3F;
-$ember-hot: #C4315B;
-$bone: #EDE7F6;
+@use 'sass:color';
 
-// Semantic aliases (derived only from tokens above)
-$auction-bg-page: linear-gradient(160deg, $obsidian 0%, $midnight-violet 55%, $obsidian 100%);
-$auction-bg-surface: $midnight-violet;
-$auction-bg-muted: rgba($midnight-violet, 0.65);
+// Auction zone — palette aligned with official intro video (isolated from HomePage)
+
+// ─── Core palette (7 tokens from intro) ───────────────────────────────────────
+$auction-gold: #C3A05D;
+$auction-cyan: #53ADBE;
+$auction-bronze: #9A7245;
+$auction-gray: #646462;
+$auction-gray-light: #B9B9B8;
+$auction-black: #1A1817;
+$auction-black-deep: #0C0B0A;
+
+// ─── Derived tones (mix only from core — hierarchy + warmth like intro) ───────
+$auction-ivory: color.mix($auction-gray-light, #fff, 32%);       // title / strong text
+$auction-gold-bright: color.mix($auction-gold, #fff, 16%);       // glow, active, CTA hover
+$auction-gold-soft: color.mix($auction-gold, $auction-black, 22%); // subtle gold wash on dark
+$auction-surface: color.mix($auction-black, $auction-bronze, 90%); // cards — warm lift off black
+$auction-surface-deep: color.mix($auction-black-deep, $auction-black, 55%);
+$auction-muted: color.mix($auction-gray, $auction-black, 72%);   // borders, inactive chrome
+$auction-danger: color.mix($auction-bronze, $auction-black, 35%); // warm error (no off-palette red)
+
+// ─── Legacy names (unchanged identifiers — remapped for intro harmony) ────────
+$obsidian: $auction-black-deep;
+$midnight-violet: $auction-surface;
+$royal-purple: $auction-muted;
+$mist-lavender: $auction-gray-light;
+$antique-gold: $auction-gold;
+$gold-bright: $auction-gold-bright;
+$bone: $auction-ivory;
+$ember: color.mix($auction-bronze, $auction-black, 45%);
+$ember-hot: $auction-cyan;
+
+// ─── Semantic aliases ─────────────────────────────────────────────────────────
+$auction-bg-page: linear-gradient(
+  165deg,
+  $auction-black-deep 0%,
+  $auction-surface-deep 38%,
+  color.mix($auction-black, $auction-bronze, 88%) 62%,
+  $auction-black-deep 100%
+);
+$auction-bg-surface: $auction-surface;
+$auction-bg-muted: rgba($auction-surface, 0.72);
 $auction-text: $bone;
 $auction-text-muted: $mist-lavender;
-$auction-border: rgba($royal-purple, 0.28);
-$auction-border-subtle: rgba($royal-purple, 0.2);
-$auction-glow: rgba($royal-purple, 0.22);
-$auction-gold-glow: rgba($antique-gold, 0.18);
+$auction-border: rgba($auction-gold, 0.24);
+$auction-border-subtle: rgba($auction-gray, 0.38);
+$auction-glow: rgba($auction-cyan, 0.14);
+$auction-gold-glow: rgba($auction-gold, 0.22);
+$auction-live: $auction-cyan;
+$auction-live-glow: rgba($auction-cyan, 0.28);
 
 $radius-sm: 8px;
 $radius-md: 12px;

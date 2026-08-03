@@ -75,6 +75,7 @@ import Error403Page from "./pages/errors/403";
 import Error404Page from "./pages/errors/404";
 import Error500Page from "./pages/errors/500";
 import Error503Page from "./pages/errors/503";
+import AuctionIntroTestPage from "./pages/auctionIntroTest";
 import SiteChatWidget from "./chat";
 
 function App() {
@@ -93,6 +94,7 @@ function App() {
   <Route path="/auth/callback" element={<AuthCallback />} />
   <Route path="/register-verify-otp" element={<RegisterVerifyOtpPage />} />
   <Route path="/terms" element={<TermsPage />} />
+  <Route path="/test-intro" element={<AuctionIntroTestPage />} />
 
   {/* ==========================
       Shared layout

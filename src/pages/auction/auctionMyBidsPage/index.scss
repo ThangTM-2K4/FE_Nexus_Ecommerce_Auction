@@ -27,25 +27,25 @@
 
     button {
       padding: 8px 16px;
-      border: 1px solid rgba(75, 46, 131, 0.2); // $auction-border-subtle
-      border-radius: 999px; // $radius-pill
-      background: rgba(36, 27, 62, 0.5); // $midnight-violet
-      color: #8F7FBF; // $mist-lavender
+      border: 1px solid $color-border-light;
+      border-radius: $radius-pill;
+      background: $color-bg;
+      color: $color-text-muted;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
       &:hover {
-        background: rgba(75, 46, 131, 0.5); // $royal-purple
-        color: #EDE7F6; // $bone
+        background: rgba($color-gradient-mid, 0.5);
+        color: $color-primary-dark;
       }
 
       &.active {
-        background: rgba(201, 162, 39, 0.15); // $antique-gold
-        color: #E8C468; // $gold-bright
-        border-color: rgba(232, 196, 104, 0.5);
-        box-shadow: 0 0 12px rgba(201, 162, 39, 0.18);
+        background: $color-gold-bg;
+        color: $color-primary;
+        border-color: rgba($color-accent, 0.5);
+        box-shadow: 0 0 12px $color-gold-bg;
       }
     }
   }

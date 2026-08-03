@@ -1,0 +1,216 @@
+@use '../../styles/auction/variables' as *;
+
+// Chỉnh bằng mắt khi test — đẩy video lên để cắt dải watermark sát mép trên
+$intro-crop-offset-desktop: 70px;
+$intro-crop-offset-mobile: 46px;
+
+.auction-intro {
+  --intro-crop-offset: #{$intro-crop-offset-desktop};
+
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  width: 100vw;
+  height: 100vh;
+  background: $obsidian;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.5s ease-in;
+
+  &.is-exiting {
+    opacity: 0;
+  }
+}
+
+.auction-intro__video-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.auction-intro__video-wrapper.is-mobile {
+  --intro-crop-offset: #{$intro-crop-offset-mobile};
+}
+
+.auction-intro__video {
+  position: absolute;
+  top: calc(-1 * var(--intro-crop-offset));
+  left: 0;
+  width: 100%;
+  height: calc(100% + var(--intro-crop-offset));
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.auction-intro__content {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(72px, 12vh, 120px);
+  z-index: 3;
+  transform: translateX(-50%);
+  width: min(92vw, 720px);
+  text-align: center;
+  pointer-events: none;
+}
+
+.auction-intro__title-stack {
+  position: relative;
+  display: inline-block;
+}
+
+.auction-intro__title {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 700;
+  color: $bone;
+  letter-spacing: 0.15em;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: auction-intro-title 1s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards;
+}
+
+.auction-intro__title-glow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 700;
+  color: transparent;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 24px rgba($gold-bright, 0.55);
+  opacity: 0;
+  filter: blur(2px);
+  animation: auction-intro-glow 1s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards;
+  pointer-events: none;
+}
+
+.auction-intro__tagline {
+  margin: 14px 0 0;
+  font-size: clamp(0.9rem, 2.2vw, 1.15rem);
+  color: $mist-lavender;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: auction-intro-tagline 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+}
+
+.auction-intro__divider {
+  width: min(280px, 60vw);
+  height: 1px;
+  margin: 16px auto 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    $antique-gold 50%,
+    transparent 100%
+  );
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  animation: auction-intro-divider 0.7s cubic-bezier(0.16, 1, 0.3, 1) 2.2s forwards;
+}
+
+.auction-intro__skip {
+  position: absolute;
+  left: clamp(16px, 3vw, 28px);
+  bottom: clamp(16px, 3vw, 28px);
+  z-index: 4;
+  padding: 8px 16px;
+  border: 1px solid rgba($bone, 0.35);
+  border-radius: $radius-pill;
+  background: transparent;
+  color: rgba($bone, 0.85);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  opacity: 0;
+  animation: auction-intro-skip 0.5s ease 0.5s forwards;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+
+  &:hover {
+    color: $gold-bright;
+    border-color: rgba($gold-bright, 0.65);
+    background: rgba($midnight-violet, 0.45);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($gold-bright, 0.5);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes auction-intro-title {
+  from {
+    opacity: 0;
+    letter-spacing: 0.15em;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    letter-spacing: normal;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auction-intro-glow {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.85;
+  }
+}
+
+@keyframes auction-intro-tagline {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auction-intro-divider {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes auction-intro-skip {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .auction-intro {
+    --intro-crop-offset: #{$intro-crop-offset-mobile};
+  }
+
+  .auction-intro__skip {
+    left: auto;
+    right: 16px;
+  }
+}
