@@ -27,6 +27,7 @@ export default function ShopProfilePage() {
   const { handleProductClick } = useProductNavigate();
   const { openChat } = useChat();
   const catalogRef = useRef(null);
+  const tabsRef = useRef(null);
 
   const shop = getShopById(shopId);
   const categories = getShopCategories();
@@ -50,6 +51,10 @@ export default function ShopProfilePage() {
     [filteredProducts, page],
   );
 
+  const scrollToTabs = useCallback(() => {
+    tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   const scrollToCatalog = useCallback(() => {
     catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
@@ -59,13 +64,13 @@ export default function ShopProfilePage() {
       setActiveTab(tabKey);
       if (tabKey === 'browse') {
         setActiveCategory(null);
+        scrollToTabs();
         return;
       }
       setActiveCategory(tabKey === 'all' ? null : tabKey);
       setPage(1);
-      scrollToCatalog();
     },
-    [scrollToCatalog],
+    [scrollToTabs],
   );
 
   const handleCategoryChange = useCallback(
@@ -73,19 +78,24 @@ export default function ShopProfilePage() {
       setActiveCategory(categoryId);
       setActiveTab(categoryId ? categoryId : 'all');
       setPage(1);
-      scrollToCatalog();
     },
-    [scrollToCatalog],
+    [],
   );
 
   const handleViewAllSuggested = useCallback(() => {
-    handleTabChange('all');
-  }, [handleTabChange]);
+    setActiveTab('all');
+    setActiveCategory(null);
+    setPage(1);
+    requestAnimationFrame(() => scrollToCatalog());
+  }, [scrollToCatalog]);
 
   const handleViewAllBestSeller = useCallback(() => {
     setSortBy('bestselling');
-    handleTabChange('all');
-  }, [handleTabChange]);
+    setActiveTab('all');
+    setActiveCategory(null);
+    setPage(1);
+    requestAnimationFrame(() => scrollToCatalog());
+  }, [scrollToCatalog]);
 
   if (!shop) {
     return <Navigate to="/404" replace />;
@@ -101,7 +111,9 @@ export default function ShopProfilePage() {
         <div className="shop-profile-page__shell">
           <ShopHeader shop={shop} onChat={() => openChat(shop.id, shop)} />
 
-          <ShopNavTabs categories={categories} activeTab={activeTab} onChange={handleTabChange} />
+          <div ref={tabsRef} className="shop-profile-page__tabs">
+            <ShopNavTabs categories={categories} activeTab={activeTab} onChange={handleTabChange} />
+          </div>
 
           {showBrowseSections && (
             <>

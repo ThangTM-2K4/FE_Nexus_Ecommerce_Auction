@@ -235,7 +235,7 @@ export const login = async (loginValue, password) => {
 // Gọi /sellers/me để đồng bộ sellerStatus vào session (dùng cho SellerRoute).
 const enrichSellerStatus = async () => {
   try {
-    const { data } = await api.get("/sellers/me");
+    const { data } = await api.get("/sellers/me", { skipErrorRedirect: true });
     const seller = data?.data ?? data;
     const status = seller?.status ?? seller?.sellerStatus;
     if (status) {
@@ -245,7 +245,8 @@ const enrichSellerStatus = async () => {
       if (upper === "APPROVED") updates.currentMode = "SELLER";
       return updateSessionUser(updates);
     }
-  } catch {
+  } catch (err) {
+    console.error('[authService] sellers/me enrich (optional):', err);
     /* 404 = chưa đăng ký seller → giữ nguyên */
   }
   return null;

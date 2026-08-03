@@ -799,7 +799,7 @@ export default function AuctionDetailPage() {
                 <label>ĐẶT GIÁ THẦU CỦA BẠN</label>
                 <div className="auc-wallet-balance-box">
                   <div className="wallet-balance-header">
-                    <span><FaWallet style={{ color: "#e8c468", marginRight: 4 }} /> Số dư ví Nexus Pay khả dụng:</span>
+                    <span><FaWallet /> Số dư ví Nexus Pay khả dụng:</span>
                     <strong>{isUsd ? "$50,000" : "50.000.000 ₫"}</strong>
                   </div>
                   <span className="wallet-status-badge">✓ Đủ điều kiện đặt giá</span>

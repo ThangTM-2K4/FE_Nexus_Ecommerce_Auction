@@ -4,7 +4,7 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(12, 10, 20, 0.82);
+  background: rgba($auction-black-deep, 0.82);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -22,13 +22,13 @@
   position: relative;
   width: 100%;
   max-width: 440px;
-  background: linear-gradient(145deg, #1d152a, #120e1a);
-  border: 1px solid rgba(232, 196, 104, 0.35);
+  background: linear-gradient(145deg, $midnight-violet, $obsidian);
+  border: 1px solid rgba($antique-gold, 0.35);
   border-radius: 20px;
   padding: 2.2rem 2rem 1.8rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(123, 76, 171, 0.2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px $auction-glow;
   text-align: center;
-  color: #fff;
+  color: $bone;
   animation: requireAuthPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -44,9 +44,9 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba($bone, 0.15);
+  background: rgba($bone, 0.05);
+  color: rgba($bone, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,8 +54,8 @@
   transition: all 0.2s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
+    background: rgba($bone, 0.15);
+    color: $bone;
     transform: rotate(90deg);
   }
 }
@@ -64,28 +64,28 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(123, 76, 171, 0.4), rgba(232, 196, 104, 0.25));
-  border: 2px solid #e8c468;
-  color: #e8c468;
+  background: linear-gradient(135deg, rgba($royal-purple, 0.4), rgba($antique-gold, 0.25));
+  border: 2px solid $gold-bright;
+  color: $gold-bright;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 26px;
   margin: 0 auto 1.2rem;
-  box-shadow: 0 0 20px rgba(232, 196, 104, 0.3);
+  box-shadow: 0 0 20px $auction-gold-glow;
 }
 
 .require-auth-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #fff;
+  color: $bone;
   margin-bottom: 0.6rem;
   line-height: 1.3;
 }
 
 .require-auth-subtitle {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba($bone, 0.75);
   line-height: 1.5;
   margin-bottom: 1.8rem;
 }
@@ -116,26 +116,26 @@
   border: none;
 
   &--login {
-    background: linear-gradient(135deg, #7b4cab, #5c328b);
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(123, 76, 171, 0.4);
+    background: linear-gradient(135deg, $royal-purple, $midnight-violet);
+    color: $bone;
+    box-shadow: 0 4px 15px $auction-glow;
 
     &:hover {
-      background: linear-gradient(135deg, #8d5ac3, #6b3ca3);
+      background: linear-gradient(135deg, rgba($royal-purple, 0.85), $royal-purple);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(123, 76, 171, 0.6);
+      box-shadow: 0 6px 20px $auction-glow;
     }
   }
 
   &--register {
-    background: linear-gradient(135deg, #e8c468, #c5a044);
-    color: #120e1a;
-    box-shadow: 0 4px 15px rgba(232, 196, 104, 0.3);
+    background: linear-gradient(135deg, $gold-bright, $auction-bronze);
+    color: $obsidian;
+    box-shadow: 0 4px 15px $auction-gold-glow;
 
     &:hover {
-      background: linear-gradient(135deg, #f0d282, #d6ae4e);
+      background: linear-gradient(135deg, lighten($gold-bright, 6%), $antique-gold);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(232, 196, 104, 0.5);
+      box-shadow: 0 6px 20px rgba($antique-gold, 0.35);
     }
   }
 }
@@ -143,12 +143,12 @@
 .require-auth-btn-cancel {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba($bone, 0.5);
   font-size: 0.85rem;
   cursor: pointer;
   transition: color 0.2s;
 
   &:hover {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba($bone, 0.85);
   }
 }

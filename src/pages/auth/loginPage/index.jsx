@@ -9,6 +9,10 @@ import {
   ACCOUNT_BLOCKED_DETAIL,
 } from "../../../services/authService";
 import { getRoleTokens } from "../../../config/ProtectedRoute";
+import {
+  LOGIN_SESSION_EXPIRED_KEY,
+  sanitizeInternalRedirect,
+} from "../../../utils/httpErrorRedirect";
 import "./index.scss";
 
 function LoginPage() {
@@ -16,9 +20,11 @@ function LoginPage() {
   const location = useLocation();
   const { login } = useAuth();
 
-  const redirectTo = location.state?.redirectTo;
-
   const [searchParams] = useSearchParams();
+
+  const redirectParam = searchParams.get("redirect");
+  const redirectTo =
+    sanitizeInternalRedirect(redirectParam) || location.state?.redirectTo || null;
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -33,6 +39,18 @@ function LoginPage() {
     login: "",
     password: "",
   });
+
+  useEffect(() => {
+    try {
+      const expiredMsg = sessionStorage.getItem(LOGIN_SESSION_EXPIRED_KEY);
+      if (expiredMsg) {
+        toast.error(expiredMsg);
+        sessionStorage.removeItem(LOGIN_SESSION_EXPIRED_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     const errorCode = searchParams.get("error");
