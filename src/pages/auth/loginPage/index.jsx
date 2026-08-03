@@ -13,7 +13,9 @@ import {
   LOGIN_SESSION_EXPIRED_KEY,
   sanitizeInternalRedirect,
 } from "../../../utils/httpErrorRedirect";
+import { toggleWatchlist } from "../../../components/auction/auctionCard";
 import "./index.scss";
+
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -125,10 +127,21 @@ function LoginPage() {
       toast.success("Đăng nhập thành công");
 
       setTimeout(() => {
+        const pendingAction = location.state?.pendingAction;
+        if (pendingAction) {
+          if (pendingAction.type === "TOGGLE_WATCHLIST" && pendingAction.auction) {
+            toggleWatchlist(pendingAction.auction);
+            toast.success(
+              `🎉 Đã lưu "${pendingAction.auction.title || "Sản phẩm"}" vào mục Đang Theo Dõi của bạn!`
+            );
+          }
+        }
+
         if (redirectTo) {
-          navigate(redirectTo, { replace: true });
+          navigate(redirectTo, { replace: true, state: location.state });
           return;
         }
+
 
         const roleTokens = getRoleTokens(user);
 

@@ -116,28 +116,32 @@
   border: none;
 
   &--login {
-    background: linear-gradient(135deg, $royal-purple, $midnight-violet);
-    color: $bone;
-    box-shadow: 0 4px 15px $auction-glow;
+    background: linear-gradient(135deg, $auction-gold 0%, $auction-bronze 100%);
+    color: $auction-black-deep;
+    box-shadow: 0 4px 15px $auction-gold-glow;
 
     &:hover {
-      background: linear-gradient(135deg, rgba($royal-purple, 0.85), $royal-purple);
+      background: linear-gradient(135deg, $auction-gold-bright 0%, $auction-gold 100%);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px $auction-glow;
+      box-shadow: 0 6px 20px rgba($auction-gold, 0.4);
     }
   }
 
   &--register {
-    background: linear-gradient(135deg, $gold-bright, $auction-bronze);
-    color: $obsidian;
-    box-shadow: 0 4px 15px $auction-gold-glow;
+    background: rgba($auction-cyan, 0.12);
+    border: 1px solid rgba($auction-cyan, 0.5);
+    color: $auction-cyan;
+    box-shadow: 0 4px 15px rgba($auction-cyan, 0.15);
 
     &:hover {
-      background: linear-gradient(135deg, lighten($gold-bright, 6%), $antique-gold);
+      background: rgba($auction-cyan, 0.25);
+      border-color: $auction-cyan;
+      color: lighten($auction-cyan, 10%);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba($antique-gold, 0.35);
+      box-shadow: 0 6px 20px $auction-live-glow;
     }
   }
+
 }
 
 .require-auth-btn-cancel {

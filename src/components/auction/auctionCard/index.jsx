@@ -181,7 +181,13 @@ export default function AuctionCard({ auction, onClick }) {
         onClose={() => setShowAuthModal(false)}
         title="Cần đăng nhập để theo dõi sản phẩm"
         subtitle="Vui lòng đăng nhập hoặc đăng ký tài khoản Nexus để lưu sản phẩm vào mục Đang Theo Dõi."
+        redirectTo={`/auction/detail/${auction.id}`}
+        pendingAction={{
+          type: "TOGGLE_WATCHLIST",
+          auction,
+        }}
       />
+
     </>
   );
 }

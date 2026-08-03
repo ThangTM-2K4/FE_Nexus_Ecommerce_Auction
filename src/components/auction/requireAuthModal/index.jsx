@@ -8,20 +8,35 @@ export default function RequireAuthModal({
   onClose,
   title = "Cần đăng nhập để thực hiện chức năng này",
   subtitle = "Vui lòng đăng nhập hoặc đăng ký tài khoản Nexus để theo dõi và tham gia các phiên đấu giá.",
+  redirectTo,
+  pendingAction,
 }) {
   const navigate = useNavigate();
 
   if (!isOpen) return null;
 
+  const targetPath = redirectTo || (typeof window !== "undefined" ? window.location.pathname : "/auction");
+
   const handleLogin = () => {
     onClose?.();
-    navigate("/login");
+    navigate("/login", {
+      state: {
+        redirectTo: targetPath,
+        pendingAction: pendingAction || null,
+      },
+    });
   };
 
   const handleRegister = () => {
     onClose?.();
-    navigate("/register");
+    navigate("/register", {
+      state: {
+        redirectTo: targetPath,
+        pendingAction: pendingAction || null,
+      },
+    });
   };
+
 
   return createPortal(
     <div className="require-auth-overlay" onClick={onClose}>

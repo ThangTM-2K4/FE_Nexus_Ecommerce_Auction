@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
+
 import {
   FaHeart, FaCheckCircle, FaClock, FaGavel, FaArrowLeft, FaShieldAlt, FaExclamationTriangle, FaTimes, FaTrophy, FaMapMarkerAlt, FaTruck, FaMoneyBillWave, FaBuilding, FaWallet,
 } from "react-icons/fa";
@@ -83,7 +84,9 @@ function parseTimeToSeconds(str) {
 export default function AuctionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isSellerMode, isAuthenticated } = useAuth();
+
 
   const product = getAuctionDetail(id);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -110,15 +113,52 @@ export default function AuctionDetailPage() {
     }
   }, [product?.id, isAuthenticated]);
 
+  useEffect(() => {
+    if (isAuthenticated && location.state?.pendingAction) {
+      const { type } = location.state.pendingAction;
+      if (type === "PLACE_BID") {
+        toast.info("💡 Bạn đã đăng nhập thành công! Hãy nhập số tiền thầu và bấm Xác Nhận Đặt Giá.");
+      }
+      try {
+        window.history.replaceState({}, document.title);
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [isAuthenticated, location.state]);
 
-  const [showAuthModal, setShowAuthModal] = useState(false);
+
+
+  const [authModalConfig, setAuthModalConfig] = useState({
+    isOpen: false,
+    title: "Cần đăng nhập để thực hiện chức năng này",
+    subtitle: "Vui lòng đăng nhập hoặc đăng ký tài khoản Nexus để theo dõi và tham gia các phiên đấu giá.",
+    pendingAction: null,
+  });
 
   const handleToggleLike = () => {
     if (!product) return;
     if (!isAuthenticated || !user) {
-      setShowAuthModal(true);
+      setAuthModalConfig({
+        isOpen: true,
+        title: "Cần đăng nhập để theo dõi sản phẩm",
+        subtitle: "Vui lòng đăng nhập hoặc đăng ký tài khoản Nexus để lưu sản phẩm vào mục Đang Theo Dõi.",
+        pendingAction: {
+          type: "TOGGLE_WATCHLIST",
+          auction: {
+            id: product.id,
+            title: product.title,
+            description: product.description || "",
+            image: product.images?.[0] || "",
+            currentPrice: currentPrice || product.currentPrice,
+            categoryLabel: product.breadcrumbs?.[1] || "",
+            timeLeft: product.timeLeft || "24h",
+          },
+        },
+      });
       return;
     }
+
 
     try {
       const list = JSON.parse(localStorage.getItem("auc_watchlist") || "[]");
@@ -309,9 +349,18 @@ export default function AuctionDetailPage() {
 
   const handleOpenRegistration = () => {
     if (!isAuthenticated || !user) {
-      setShowAuthModal(true);
+      setAuthModalConfig({
+        isOpen: true,
+        title: "Cần đăng nhập để đăng ký tham gia đấu giá",
+        subtitle: "Vui lòng đăng nhập hoặc đăng ký tài khoản Nexus để đặt cọc và tham gia phiên đấu giá này.",
+        pendingAction: {
+          type: "REGISTER_AUCTION",
+          auctionId: id,
+        },
+      });
       return;
     }
+
 
     const isEmailOk = user.isEmailVerified ?? true;
     const isPhoneOk = user.isPhoneVerified ?? false;
@@ -381,9 +430,18 @@ export default function AuctionDetailPage() {
 
   const handleBid = () => {
     if (!isAuthenticated || !user) {
-      setShowAuthModal(true);
+      setAuthModalConfig({
+        isOpen: true,
+        title: "Cần đăng nhập để đặt giá đấu",
+        subtitle: "Vui lòng đăng nhập hoặc đăng ký tài khoản Nexus để tham gia đặt giá sản phẩm này.",
+        pendingAction: {
+          type: "PLACE_BID",
+          auctionId: id,
+        },
+      });
       return;
     }
+
 
     if (isAuctionEnded) {
       toast.error("Phiên đấu giá đã kết thúc, không thể đặt giá nữa!");
@@ -1374,10 +1432,15 @@ export default function AuctionDetailPage() {
       )}
 
       <RequireAuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        isOpen={authModalConfig.isOpen}
+        onClose={() => setAuthModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        title={authModalConfig.title}
+        subtitle={authModalConfig.subtitle}
+        redirectTo={`/auction/detail/${id}`}
+        pendingAction={authModalConfig.pendingAction}
       />
     </div>
   );
 }
+
 

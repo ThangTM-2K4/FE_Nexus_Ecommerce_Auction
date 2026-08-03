@@ -122,9 +122,10 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                 to="/auction/create"
                 className="auction-header__home-link"
                 style={{
-                  background: 'rgba(123, 76, 171, 0.45)',
-                  color: '#fff',
+                  background: 'linear-gradient(135deg, #C3A05D, #9A7245)',
+                  color: '#0C0B0A',
                   borderColor: 'transparent',
+                  fontWeight: '700',
                 }}
               >
                 Tạo đấu giá mới
@@ -138,18 +139,28 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                 to="/login"
                 className="auction-header__home-link"
                 style={{
-                  background: 'linear-gradient(135deg, #7B4CAB, #5C328B)',
-                  color: '#fff',
+                  background: 'linear-gradient(135deg, #C3A05D, #9A7245)',
+                  color: '#0C0B0A',
                   borderColor: 'transparent',
+                  fontWeight: '700',
                 }}
               >
                 Đăng nhập
               </Link>
-              <Link to="/register" className="auction-header__home-link">
+              <Link
+                to="/register"
+                className="auction-header__home-link"
+                style={{
+                  background: 'rgba(83, 173, 190, 0.12)',
+                  borderColor: 'rgba(83, 173, 190, 0.5)',
+                  color: '#53ADBE',
+                }}
+              >
                 Đăng ký
               </Link>
             </>
           ) : (
+
             /* ─── Profile Avatar Button ─── */
             <div className="auction-header__profile-container" ref={profileRef}>
               <button
@@ -167,7 +178,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                       width: 36,
                       height: 36,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #7B4CAB, #5C328B)',
+                      background: 'linear-gradient(135deg, #C3A05D, #9A7245)',
                       color: '#fff',
                       display: 'flex',
                       alignItems: 'center',
@@ -192,7 +203,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                           width: 48,
                           height: 48,
                           borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #7B4CAB, #5C328B)',
+                          background: 'linear-gradient(135deg, #C3A05D, #9A7245)',
                           color: '#fff',
                           display: 'flex',
                           alignItems: 'center',
