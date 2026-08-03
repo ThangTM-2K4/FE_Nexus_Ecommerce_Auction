@@ -2742,6 +2742,7 @@
 }
 
 @media (max-width: 768px) {
+  // ── Grid Container Layouts ──
   .adm-user-grid,
   .adm-product-grid,
   .adm-auction-grid,
@@ -2756,50 +2757,224 @@
   .adm-auction-order-grid,
   .adm-shipping-grid {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 6px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
-  .adm-card,
-  .adm-user-card,
-  .adm-product-card,
-  .adm-auction-card,
-  .adm-brand-card,
-  .adm-inventory-card,
-  .adm-coupon-card,
-  .adm-banner-card {
-    padding: 8px 6px !important;
+  // ── Seller Group Container ──
+  .adm-seller-group {
+    padding: 10px 8px !important;
+    margin-bottom: 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
 
-    h3, h4, .adm-card__title, .name {
-      font-size: 11px !important;
+    &__head {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+      margin-bottom: 10px !important;
+      padding-bottom: 8px !important;
+    }
+
+    &__info {
+      width: 100% !important;
+      gap: 8px !important;
+
+      h3 {
+        font-size: 13px !important;
+      }
+      p {
+        font-size: 11px !important;
+      }
+    }
+
+    &__stats {
+      width: 100% !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      gap: 4px !important;
+    }
+
+    &__stat {
+      flex: 1 !important;
+      min-width: 0 !important;
+      padding: 4px 6px !important;
+      text-align: center !important;
+      font-size: 10px !important;
+    }
+  }
+
+  // ── Seller Filter Tabs & Pill Bar (Screenshot 4) ──
+  .adm-seller-tabs,
+  .adm-tabs-row,
+  .adm-filter-pills,
+  .adm-pills-bar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+    scrollbar-width: none !important;
+
+    &::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    button, .adm-tab, .adm-pill {
+      flex: 0 0 auto !important;
+      white-space: nowrap !important;
+      font-size: 12px !important;
+      padding: 6px 12px !important;
+    }
+  }
+
+  // ── Brand Cards (Screenshot 2) ──
+  .adm-brand-card {
+    padding: 10px 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+
+    .adm-brand-card__avatar {
+      width: 42px !important;
+      height: 42px !important;
+      font-size: 16px !important;
+      margin: 0 auto 6px !important;
+    }
+
+    .adm-brand-card__title, h3 {
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      margin: 0 0 2px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      width: 100% !important;
+    }
+
+    .adm-brand-card__count, p {
+      font-size: 10px !important;
+      margin-bottom: 6px !important;
+    }
+
+    .adm-brand-card__actions,
+    .adm-card__actions {
+      width: 100% !important;
+      display: flex !important;
+      gap: 3px !important;
+      justify-content: center !important;
+      margin-top: auto !important;
+
+      button {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        padding: 4px 2px !important;
+        font-size: 10px !important;
+        height: 26px !important;
+      }
+    }
+  }
+
+  // ── Inventory Cards (Screenshot 1) ──
+  .adm-inventory-card {
+    padding: 10px 8px !important;
+
+    h3, .adm-inventory-card__title {
+      font-size: 12px !important;
+      font-weight: 700 !important;
       line-height: 1.25 !important;
+      height: 2.5em !important;
+      overflow: hidden !important;
+    }
+
+    .adm-inventory-card__meta, p {
+      font-size: 10px !important;
       white-space: nowrap !important;
       overflow: hidden !important;
       text-overflow: ellipsis !important;
     }
 
-    p, span, .desc, .sub {
-      font-size: 10px !important;
-      line-height: 1.2 !important;
-    }
-
-    img, .thumb, .avatar, .adm-product-card__image {
-      height: 64px !important;
+    .adm-inventory-card__gauge,
+    .recharts-responsive-container,
+    svg {
+      max-width: 70px !important;
       max-height: 70px !important;
-      object-fit: cover !important;
+      margin: 4px auto !important;
     }
 
-    .badge, .pill, .status-pill, .tag {
-      font-size: 9px !important;
-      padding: 2px 4px !important;
+    .adm-inventory-card__stats {
+      display: flex !important;
+      justify-content: space-around !important;
+      font-size: 10px !important;
+      margin: 4px 0 !important;
+
+      div {
+        text-align: center !important;
+      }
     }
 
     button {
-      padding: 3px 5px !important;
+      width: 100% !important;
+      padding: 5px 4px !important;
       font-size: 10px !important;
+      white-space: nowrap !important;
+    }
+  }
+
+  // ── Product Cards in Admin (Screenshot 3) ──
+  .adm-product-card {
+    padding: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+
+    &__image, img, .thumb {
+      height: 90px !important;
+      width: 100% !important;
+      object-fit: cover !important;
+      border-radius: 6px !important;
+    }
+
+    &__title, h4, h3 {
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      line-height: 1.25 !important;
+      height: 2.5em !important;
+      overflow: hidden !important;
+      margin: 4px 0 2px !important;
+    }
+
+    &__price, .price {
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      color: #e11d48 !important;
+      white-space: nowrap !important;
+      margin: 2px 0 6px !important;
+    }
+
+    &__actions, .adm-product-card__actions {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 3px !important;
+      margin-top: auto !important;
+
+      button {
+        flex: 1 1 calc(50% - 2px) !important;
+        min-width: 0 !important;
+        height: 24px !important;
+        padding: 0 4px !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+      }
     }
   }
 }
+
 
 
 

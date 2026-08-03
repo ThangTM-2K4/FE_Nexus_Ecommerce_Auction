@@ -276,11 +276,17 @@
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
 
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 6px !important;
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
 }
+
 
 
 .adm-card {
