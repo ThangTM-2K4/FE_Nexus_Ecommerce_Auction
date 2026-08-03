@@ -33,11 +33,20 @@ export default function ProfileDropdown({ onClose, variant }) {
 
     try {
       await logout();
-      navigate('/', { replace: true });
+      toast.success("Đã đăng xuất tài khoản");
+      const currentPath = window.location.pathname;
+      if (
+        currentPath.startsWith("/profile") ||
+        currentPath.startsWith("/seller") ||
+        currentPath.startsWith("/admin")
+      ) {
+        navigate("/", { replace: true });
+      }
     } catch {
-      navigate('/', { replace: true });
+      /* ignore */
     }
   };
+
 
   const handleSwitchMode = async (mode) => {
     try {

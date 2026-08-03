@@ -333,10 +333,11 @@ export const logout = async () => {
   }
 
   try {
-    await api.post("/auth/logout", { refreshToken: storedRefreshToken });
+    await api.post("/auth/logout", { refreshToken: storedRefreshToken }, { skipErrorRedirect: true });
   } catch {
     /* session already cleared locally */
   }
+
 };
 
 export const getCurrentUser = () => {

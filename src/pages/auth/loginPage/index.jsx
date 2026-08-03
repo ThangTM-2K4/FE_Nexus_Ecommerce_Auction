@@ -195,16 +195,33 @@ function LoginPage() {
     }
   };
 
+  const handleBackClick = () => {
+    if (redirectTo) {
+      navigate(redirectTo);
+    } else if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
+
+  const backLabel = redirectTo
+    ? redirectTo.startsWith("/auction")
+      ? "Quay về trang đấu giá"
+      : "Quay về trang trước"
+    : "Quay về trang trước";
+
   return (
     <div className="login-page">
       <div className="login-card">
         <button
           type="button"
           className="back-home-btn"
-          onClick={() => navigate("/")}
+          onClick={handleBackClick}
         >
-          ← Quay về trang chủ
+          ← {backLabel}
         </button>
+
 
         <h1>Sàn Đấu Giá Điện Tử</h1>
 

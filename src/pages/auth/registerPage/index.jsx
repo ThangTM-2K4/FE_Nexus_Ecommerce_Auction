@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { register, getGoogleLoginUrl } from "../../../services/authService";
+import { sanitizeInternalRedirect } from "../../../utils/httpErrorRedirect";
 import {
   PASSWORD_RULES,
   getPasswordStrength,
@@ -15,6 +16,28 @@ import "./index.scss";
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const redirectParam = searchParams.get("redirect");
+  const redirectTo = sanitizeInternalRedirect(redirectParam) || location.state?.redirectTo || null;
+
+  const handleBackClick = () => {
+    if (redirectTo) {
+      navigate(redirectTo);
+    } else if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
+
+  const backLabel = redirectTo
+    ? redirectTo.startsWith("/auction")
+      ? "Quay về trang đấu giá"
+      : "Quay về trang trước"
+    : "Quay về trang trước";
+
 
   const [loading, setLoading] = useState(false);
 
@@ -146,7 +169,16 @@ function RegisterPage() {
   return (
     <div className="register-page">
       <div className="register-card">
+        <button
+          type="button"
+          className="back-home-btn"
+          onClick={handleBackClick}
+        >
+          ← {backLabel}
+        </button>
+
         <h1>Tạo Tài Khoản</h1>
+
 
         <p className="subtitle">
           Hệ thống Đấu giá Thương mại Điện tử

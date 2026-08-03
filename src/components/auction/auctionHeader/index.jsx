@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+
 import { FiMenu, FiSearch, FiX } from 'react-icons/fi';
 import { FaWallet, FaUser, FaTrophy, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../../../context/AuthContext';
@@ -15,7 +16,10 @@ const NAV_ITEMS = [
 
 export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentRedirect = encodeURIComponent(location.pathname + location.search);
   const { user, isBuyerMode, isSellerMode, logout, isAuthenticated } = useAuth();
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -127,7 +131,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
           {!isAuthenticated ? (
             <>
               <Link
-                to="/login"
+                to={`/login?redirect=${currentRedirect}`}
                 className="auction-header__home-link"
                 style={{
                   background: 'linear-gradient(135deg, #C3A05D, #9A7245)',
@@ -139,7 +143,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                 Đăng nhập
               </Link>
               <Link
-                to="/register"
+                to={`/register?redirect=${currentRedirect}`}
                 className="auction-header__home-link"
                 style={{
                   background: 'rgba(83, 173, 190, 0.12)',
@@ -151,6 +155,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
               </Link>
             </>
           ) : (
+
 
             /* ─── Profile Avatar Button ─── */
             <div className="auction-header__profile-container" ref={profileRef}>
@@ -245,14 +250,23 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                       <button
                         type="button"
                         className="dropdown-logout-btn"
-                        onClick={() => {
-                          logout();
+                        onClick={async () => {
                           setShowProfileMenu(false);
-                          navigate('/login');
+                          await logout();
+                          toast.success("Đã đăng xuất tài khoản");
+                          const currentPath = window.location.pathname;
+                          if (
+                            currentPath.startsWith("/profile") ||
+                            currentPath.startsWith("/seller") ||
+                            currentPath.startsWith("/admin")
+                          ) {
+                            navigate("/auction");
+                          }
                         }}
                       >
                         <FaSignOutAlt className="menu-icon" /> Đăng xuất
                       </button>
+
                     </li>
                   </ul>
                 </div>

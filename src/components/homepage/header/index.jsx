@@ -1,6 +1,6 @@
 import "./index.scss";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { useCart } from "../../../context/CartContext";
 import * as notificationService from "../../../services/notificationService";
@@ -10,6 +10,9 @@ import UserAvatar from "../../common/userAvatar";
 
 export default function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentRedirect = encodeURIComponent(location.pathname + location.search);
+
   const [language, setLanguage] = useState("vi");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -112,14 +115,15 @@ export default function Header() {
 
             {!isAuthenticated ? (
               <>
-                <Link to="/register" className="header-topbar-cta">
+                <Link to={`/register?redirect=${currentRedirect}`} className="header-topbar-cta">
                   Đăng Ký
                 </Link>
-                <Link to="/login" className="header-topbar-login">
+                <Link to={`/login?redirect=${currentRedirect}`} className="header-topbar-login">
                   Đăng Nhập
                 </Link>
               </>
             ) : (
+
               <div className="header-topbar-auth">
                 <div className="header-notif-wrap">
                   <button

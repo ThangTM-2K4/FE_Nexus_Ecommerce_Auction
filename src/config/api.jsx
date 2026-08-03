@@ -84,11 +84,16 @@ api.interceptors.response.use(
       requestUrl.includes('/auth/verify-email') ||
       requestUrl.includes('/auth/exchange-code')
     ) {
-      if (status === 401 && !requestUrl.includes('/auth/login')) {
+      if (
+        status === 401 &&
+        !requestUrl.includes('/auth/login') &&
+        !requestUrl.includes('/auth/logout')
+      ) {
         handleUnauthorized();
       }
       return Promise.reject(error);
     }
+
 
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
