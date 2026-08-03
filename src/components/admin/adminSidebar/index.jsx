@@ -64,7 +64,7 @@ const icons = {
   history: FaHistory,
 };
 
-const AdminSidebar = ({ activeId }) => {
+const AdminSidebar = ({ activeId, isOpen, onClose }) => {
   const navigate = useNavigate();
   const [sections, setSections] = useState(() => getFilteredMenuSections());
 
@@ -74,40 +74,57 @@ const AdminSidebar = ({ activeId }) => {
     return () => window.removeEventListener("admin-role-change", refresh);
   }, []);
 
-  return (
-    <aside className="adm-sidebar">
-      {sections.map((section) => (
-        <div key={section.title} className="adm-sidebar__section">
-          <h3>{section.title}</h3>
-          <ul className="adm-sidebar__menu">
-            {section.items.map((item) => {
-              const Icon = icons[item.icon];
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className={`adm-sidebar__item ${
-                      activeId === item.id ? "active" : ""
-                    }`}
-                    onClick={() => navigate(item.path)}
-                  >
-                    {Icon && <Icon />}
-                    <span>{item.label}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
+  const handleItemClick = (path) => {
+    navigate(path);
+    onClose?.();
+  };
 
-      <div className="adm-sidebar__footer">
-        <p>34 seller chờ duyệt · 47 khiếu nại đang mở</p>
-        <button type="button" onClick={() => navigate("/admin/seller-verification")}>
-          Xử lý ưu tiên
-        </button>
-      </div>
-    </aside>
+  return (
+    <>
+      {isOpen && (
+        <div
+          className="adm-sidebar-overlay"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={`adm-sidebar ${isOpen ? "is-open" : ""}`}>
+        {sections.map((section) => (
+          <div key={section.title} className="adm-sidebar__section">
+            <h3>{section.title}</h3>
+            <ul className="adm-sidebar__menu">
+              {section.items.map((item) => {
+                const Icon = icons[item.icon];
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className={`adm-sidebar__item ${
+                        activeId === item.id ? "active" : ""
+                      }`}
+                      onClick={() => handleItemClick(item.path)}
+                    >
+                      {Icon && <Icon />}
+                      <span>{item.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+
+        <div className="adm-sidebar__footer">
+          <p>34 seller chờ duyệt · 47 khiếu nại đang mở</p>
+          <button
+            type="button"
+            onClick={() => handleItemClick("/admin/seller-verification")}
+          >
+            Xử lý ưu tiên
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };
 

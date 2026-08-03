@@ -103,3 +103,36 @@
     }
   }
 }
+
+.adm-sidebar-overlay {
+  display: none;
+
+  @media (max-width: 900px) {
+    display: block;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 998;
+  }
+}
+
+@media (max-width: 900px) {
+  .adm-sidebar {
+    position: fixed;
+    top: 64px;
+    left: -280px;
+    height: calc(100vh - 64px);
+    z-index: 999;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+    transition: left 0.25s ease;
+
+    &.is-open {
+      left: 0;
+    }
+  }
+}
+

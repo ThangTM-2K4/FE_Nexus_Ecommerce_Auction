@@ -26,6 +26,23 @@
     flex-shrink: 0;
   }
 
+  &__toggle-btn {
+    display: none;
+    background: rgba(#fff, 0.15);
+    border: 1px solid rgba(#fff, 0.3);
+    border-radius: p.$radius-sm;
+    color: #fff;
+    cursor: pointer;
+    padding: 6px;
+    align-items: center;
+    justify-content: center;
+
+    @media (max-width: 900px) {
+      display: flex;
+    }
+  }
+
+
   &__logo {
     font-size: 18px;
     font-weight: 800;

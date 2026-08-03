@@ -14,5 +14,10 @@
     flex: 1;
     min-width: 0;
     padding: 24px;
+
+    @media (max-width: 768px) {
+      padding: 14px 12px;
+    }
   }
 }
+

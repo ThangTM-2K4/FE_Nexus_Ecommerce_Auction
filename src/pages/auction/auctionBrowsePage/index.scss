@@ -28,8 +28,13 @@
     display: flex;
     gap: 12px;
     margin-top: 24px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
 
     button {
+      white-space: nowrap;
+
       padding: 10px 20px;
       border: 1px solid $auction-border-subtle;
       border-radius: $radius-pill;
