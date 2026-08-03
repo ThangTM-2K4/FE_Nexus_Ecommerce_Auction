@@ -31,6 +31,7 @@
   font-weight: 700;
   color: $bone;
   line-height: 1.35;
+  height: 2.7em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -42,6 +43,7 @@
   font-size: 0.82rem;
   line-height: 1.5;
   color: $mist-lavender;
+  height: 3em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -53,10 +55,8 @@
   padding-top: 0.65rem;
   border-top: 1px solid $auction-border-subtle;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .auction-card__price {
@@ -72,12 +72,26 @@
   }
 
   strong {
-    font-size: 1.08rem;
+    font-size: 1.1rem;
     font-weight: 800;
     color: $antique-gold;
     letter-spacing: 0.01em;
   }
 }
+
+.auction-card__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.auction-card__actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 
 .auction-card__image-wrap {
   padding: 0.65rem 0.65rem 0;

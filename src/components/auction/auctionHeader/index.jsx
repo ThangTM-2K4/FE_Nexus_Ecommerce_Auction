@@ -73,16 +73,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
           </strong>
         </Link>
 
-        <form className="auction-header__search" onSubmit={handleSearchSubmit} role="search">
-          <FiSearch size={16} aria-hidden />
-          <input
-            type="search"
-            placeholder="Tìm phiên đấu giá, sản phẩm..."
-            value={localQuery}
-            onChange={handleInputChange}
-            aria-label="Tìm kiếm đấu giá"
-          />
-        </form>
+
 
         <nav className="auction-header__nav" aria-label="Điều hướng đấu giá">
           {!fromAdmin && isBuyerMode &&
@@ -283,16 +274,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
 
       {mobileOpen && (
         <nav className="auction-header__mobile-nav" aria-label="Menu đấu giá di động">
-          <form className="auction-header__mobile-search" onSubmit={handleSearchSubmit}>
-            <FiSearch size={15} aria-hidden />
-            <input
-              type="search"
-              placeholder="Tìm kiếm..."
-              value={localQuery}
-              onChange={handleInputChange}
-              aria-label="Tìm kiếm đấu giá"
-            />
-          </form>
+
           {!fromAdmin && isBuyerMode &&
             NAV_ITEMS.map((item) => (
               <NavLink

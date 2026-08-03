@@ -4,25 +4,31 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: $mist-lavender;
+  color: $auction-cyan;
 
   svg {
     flex-shrink: 0;
+    color: $auction-cyan;
   }
 
   &--urgent {
-    color: $auction-live;
+    color: #ff4d4f;
     animation: auction-countdown-pulse 2.4s ease-in-out infinite;
+
+    svg {
+      color: #ff4d4f;
+    }
   }
 
   &--ended {
-    color: $mist-lavender;
+    color: rgba($bone, 0.5);
     font-weight: 500;
     opacity: 0.75;
   }
 }
+
 
 @keyframes auction-countdown-pulse {
   0%,

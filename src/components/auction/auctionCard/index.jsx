@@ -153,28 +153,32 @@ export default function AuctionCard({ auction, onClick }) {
               <span>{auction.isUpcoming ? "Giá khởi điểm" : "Giá thầu hiện tại"}</span>
               <strong>{displayPrice}</strong>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+
+            <div className="auction-card__meta-row">
               <AuctionCountdown endTime={auction.endTime} isUpcoming={auction.isUpcoming} />
-              <button
-                type="button"
-                className={`auction-card__compare-btn ${isCompared ? 'active' : ''}`}
-                onClick={handleCompareClick}
-                title={isCompared ? "Bỏ so sánh" : "Thêm vào so sánh (tối đa 3 sản phẩm)"}
-              >
-                <FaBalanceScale />
-              </button>
-              <button
-                type="button"
-                className={`auction-card__heart-btn ${isHearted ? 'active' : ''}`}
-                onClick={handleHeartClick}
-                title={isHearted ? "Bỏ theo dõi" : "Thêm vào đang theo dõi"}
-              >
-                {isHearted ? <FaHeart style={{ color: '#ef4444' }} /> : <FaRegHeart />}
-              </button>
+              <div className="auction-card__actions-group">
+                <button
+                  type="button"
+                  className={`auction-card__compare-btn ${isCompared ? 'active' : ''}`}
+                  onClick={handleCompareClick}
+                  title={isCompared ? "Bỏ so sánh" : "Thêm vào so sánh (tối đa 3 sản phẩm)"}
+                >
+                  <FaBalanceScale />
+                </button>
+                <button
+                  type="button"
+                  className={`auction-card__heart-btn ${isHearted ? 'active' : ''}`}
+                  onClick={handleHeartClick}
+                  title={isHearted ? "Bỏ theo dõi" : "Thêm vào đang theo dõi"}
+                >
+                  {isHearted ? <FaHeart style={{ color: '#ef4444' }} /> : <FaRegHeart />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </motion.article>
+
 
       <RequireAuthModal
         isOpen={showAuthModal}
