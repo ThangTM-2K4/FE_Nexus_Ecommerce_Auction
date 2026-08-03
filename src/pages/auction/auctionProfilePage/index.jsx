@@ -1,303 +1,384 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
-  FaMapMarkerAlt, FaShieldAlt, FaStar,
+  FaMapMarkerAlt, FaShieldAlt, FaStar, FaTrophy, FaGavel, FaHeart, FaWallet,
+  FaCheckCircle, FaChartLine, FaHistory, FaUserEdit, FaClock, FaMedal
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 import * as profileService from "../../../services/profileService";
-import * as shopService from "../../../services/shopService";
 import ProfileInfo from "../../../components/profile/profileInfo";
-import BuyerTrustScore from "../../../components/profile/buyerTrustScore";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
-import { profileData } from "../../../data/auctionMockData";
-import "../../../pages/user/profilePage/index.scss";
+import AuctionCard from "../../../components/auction/auctionCard";
+import { auctionListings } from "../../../data/auctionData";
+import RequireAuthModal from "../../../components/auction/requireAuthModal";
 import "./index.scss";
 
-const mockSellers = {
-  "LUXWATCH_HN": {
-    name: "LUXWATCH_HN",
-    avatar: "/images/avatars/avatar-seller.jpg",
-    badge: "Trusted Seller",
-    bio: "Chuyên cung cấp đồng hồ Rolex, Patek Philippe, Audemars Piguet chính hãng. Cam kết chất lượng, bảo hành dài hạn.",
-    location: "Hà Nội, VN",
-    verified: true,
-    reputation: 4.9,
-    totalReviews: 142,
-    stats: [
-      { label: "Tổng giao dịch", value: "320", trend: "+15%", trendType: "up" },
-      { label: "Bán thành công", value: "150", sub: "Tỉ lệ 99%", subType: "info" },
-      { label: "Thắng đấu giá", value: "45", sub: "Hoạt động tích cực", subType: "info" },
-      { label: "Phản hồi tích cực", value: "99.5%", sub: "✓", subType: "success" },
-    ],
-    reviews: profileData.reviews,
-  },
-  "LUXWATCH_VN": {
-    name: "LUXWATCH_VN",
-    avatar: "/images/avatars/avatar-seller.jpg",
-    badge: "Trusted Seller",
-    bio: "Nhà cung cấp đồng hồ hiệu cao cấp toàn quốc. Chuyên Rolex, Patek, Hublot...",
-    location: "TP. Hồ Chí Minh, VN",
-    verified: true,
-    reputation: 4.9,
-    totalReviews: 120,
-    stats: [
-      { label: "Tổng giao dịch", value: "280", trend: "+10%", trendType: "up" },
-      { label: "Bán thành công", value: "115", sub: "Tỉ lệ 98%", subType: "info" },
-      { label: "Thắng đấu giá", value: "38", sub: "Hoạt động tích cực", subType: "info" },
-      { label: "Phản hồi tích cực", value: "99%", sub: "✓", subType: "success" },
-    ],
-    reviews: profileData.reviews,
-  },
-  "AUTO_LUXURY_VN": {
-    name: "AUTO_LUXURY_VN",
-    avatar: "/images/avatars/avatar-seller.jpg",
-    badge: "Premium Dealer",
-    bio: "Đại lý xe siêu sang và xe thể thao nhập khẩu uy tín hàng đầu Việt Nam. Hỗ trợ trả góp, thủ tục nhanh chóng.",
-    location: "TP. Hồ Chí Minh, VN",
-    verified: true,
-    reputation: 4.8,
-    totalReviews: 98,
-    stats: [
-      { label: "Tổng giao dịch", value: "120", trend: "+8%", trendType: "up" },
-      { label: "Bán thành công", value: "85", sub: "Tỉ lệ 100%", subType: "info" },
-      { label: "Thắng đấu giá", value: "10", sub: "Hoạt động tích cực", subType: "info" },
-      { label: "Phản hồi tích cực", value: "98%", sub: "✓", subType: "success" },
-    ],
-    reviews: profileData.reviews,
-  },
-  "WATCH_MASTER": {
-    name: "WATCH_MASTER",
-    avatar: "/images/avatars/avatar-seller.jpg",
-    badge: "Expert Seller",
-    bio: "Chuyên gia phục chế và giao dịch đồng hồ hiệu cao cấp. Thẩm định đồng hồ miễn phí.",
-    location: "Đà Nẵng, VN",
-    verified: true,
-    reputation: 5.0,
-    totalReviews: 64,
-    stats: [
-      { label: "Tổng giao dịch", value: "95", trend: "+20%", trendType: "up" },
-      { label: "Bán thành công", value: "60", sub: "Tỉ lệ 98.5%", subType: "info" },
-      { label: "Thắng đấu giá", value: "35", sub: "Hoạt động tích cực", subType: "info" },
-      { label: "Phản hồi tích cực", value: "100%", sub: "✓", subType: "success" },
-    ],
-    reviews: profileData.reviews,
-  }
-};
-
 export default function AuctionProfilePage() {
-  const { user, isSellerMode, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
-  const sellerQuery = searchParams.get("seller");
-  const userQuery = searchParams.get("user");
-  const queryName = sellerQuery || userQuery;
-  const isViewingPublic = !!queryName;
-
+  
   const [profile, setProfile] = useState(null);
-  const [shopProfile, setShopProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [reviewTab, setReviewTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "personal" | "watchlist"
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Load watchlist items from localStorage
+  const [watchlistItems, setWatchlistItems] = useState([]);
 
   useEffect(() => {
-    if (isViewingPublic) {
-      setLoading(false);
-      return;
-    }
-    if (!user?.id) {
+    if (!isAuthenticated || !user?.id) {
       setLoading(false);
       return;
     }
     setLoading(true);
-    Promise.all([
-      profileService.getProfile(user.id),
-      shopService.getShopProfile(user.id, user)
-    ])
-      .then(([prof, shop]) => {
+    profileService
+      .getProfile(user.id)
+      .then((prof) => {
         setProfile(prof);
-        setShopProfile(shop);
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error loading profiles:", err);
+        console.error("Error loading profile:", err);
         setLoading(false);
       });
-  }, [user?.id, user, isViewingPublic]);
+
+    // Load local watchlist
+    try {
+      const saved = JSON.parse(localStorage.getItem("auc_watchlist") || "[]");
+      setWatchlistItems(saved);
+    } catch {
+      setWatchlistItems([]);
+    }
+  }, [user?.id, isAuthenticated]);
 
   const handleProfileUpdate = (updated) => {
     setProfile(updated);
     refreshUser();
+    toast.success("Đã cập nhật hồ sơ thành công!");
   };
 
-  if (loading) {
+  if (!isAuthenticated) {
     return (
       <AuctionSidebarLayout sidebarActive="profile">
-        <div style={{ padding: "40px", textAlign: "center", color: "#b9b4c7" }}>
-          Đang tải hồ sơ...
-        </div>
-      </AuctionSidebarLayout>
-    );
-  }
-
-  if (!isViewingPublic && !isSellerMode) {
-    if (!user) {
-      return (
-        <AuctionSidebarLayout sidebarActive="profile">
-          <div style={{ padding: "40px", textAlign: "center", color: "#b9b4c7" }}>
-            Vui lòng đăng nhập để xem thông tin cá nhân.
+        <div className="auc-profile-guest">
+          <div className="auc-profile-guest__card">
+            <FaShieldAlt className="guest-icon" />
+            <h2>Hồ sơ Cá nhân Đấu giá</h2>
+            <p>Vui lòng đăng nhập để xem thông số đấu giá, lịch sử đặt giá và quản lý thông tin cá nhân của bạn.</p>
+            <button
+              type="button"
+              className="auc-profile-guest__btn"
+              onClick={() => setShowAuthModal(true)}
+            >
+              Đăng nhập ngay
+            </button>
           </div>
-        </AuctionSidebarLayout>
-      );
-    }
-    return (
-      <AuctionSidebarLayout sidebarActive="profile">
-        <div className="profile-layout">
-          <ProfileInfo userId={user?.id} profile={profile} onUpdate={handleProfileUpdate} />
-          <BuyerTrustScore profile={profile} />
         </div>
+
+        <RequireAuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          title="Cần đăng nhập để xem hồ sơ"
+          subtitle="Vui lòng đăng nhập hoặc đăng ký tài khoản Nexus để xem bảng thống kê đấu giá cá nhân."
+        />
       </AuctionSidebarLayout>
     );
   }
 
-  const data = isViewingPublic
-    ? (mockSellers[queryName] || {
-        name: queryName,
-        avatar: "/images/avatars/avatar-seller.jpg",
-        badge: userQuery ? "Bidder" : "Trusted Seller",
-        bio: userQuery
-          ? "Thành viên tích cực tham gia đấu giá trên Nexus."
-          : "Chuyên giao dịch các sản phẩm cao cấp, uy tín và minh bạch.",
-        location: "Việt Nam",
-        verified: true,
-        reputation: 4.9,
-        totalReviews: 120,
-        stats: profileData.stats,
-        reviews: profileData.reviews,
-      })
-    : {
-        name: shopProfile?.shopName || profile?.fullName || profileData.name,
-        avatar: shopProfile?.logo || profile?.avatar || profileData.avatar,
-        badge: "Trusted Seller",
-        bio: shopProfile?.description || profileData.bio,
-        location: shopProfile?.businessAddress || profile?.address || profileData.location,
-        verified: profile?.isNationalIdVerified || profileData.verified,
-        reputation: profileData.reputation,
-        totalReviews: profileData.totalReviews,
-        stats: profileData.stats,
-        reviews: profileData.reviews,
-      };
+  // Calculate dynamic stats from profile + user session
+  const reputationScore = profile?.reputation?.score ?? 4.9;
+  const isCccdVerified = profile?.isNationalIdVerified || profile?.identityStatus === "APPROVED";
+  const fullName = profile?.fullName || user?.fullName || "Thành viên Nexus";
+  const email = profile?.email || user?.email || "";
+  const phone = profile?.phone || user?.phone || "";
+  const address = profile?.address || user?.address || "Việt Nam";
+
+  // Mock auction stats for user
+  const auctionStats = [
+    {
+      id: "total_bids",
+      label: "Tổng lượt đặt giá",
+      value: "28",
+      subText: "Trên 12 sản phẩm",
+      icon: <FaGavel style={{ color: "#C3A05D" }} />,
+    },
+    {
+      id: "won_auctions",
+      label: "Số phiên thắng thầu",
+      value: "5",
+      subText: "Tỷ lệ thắng 83.3%",
+      icon: <FaTrophy style={{ color: "#E8C468" }} />,
+    },
+    {
+      id: "active_bids",
+      label: "Phiên đang tham gia",
+      value: "3",
+      subText: "Đang dẫn đầu 2 phiên",
+      icon: <FaClock style={{ color: "#53ADBE" }} />,
+    },
+    {
+      id: "watchlist_count",
+      label: "Sản phẩm theo dõi",
+      value: String(watchlistItems.length || 8),
+      subText: "Đang theo dõi",
+      icon: <FaHeart style={{ color: "#ef4444" }} />,
+    },
+    {
+      id: "deposit_volume",
+      label: "Tổng cọc / giao dịch",
+      value: `${(user?.balance ? (user.balance * 2.5) : 185000000).toLocaleString()} ₫`,
+      subText: "Điểm tín nhiệm cao",
+      icon: <FaWallet style={{ color: "#10b981" }} />,
+    },
+    {
+      id: "trust_score",
+      label: "Điểm uy tín đấu giá",
+      value: `${reputationScore} / 5.0`,
+      subText: "Hạng Vật Thầu Vàng Gold",
+      icon: <FaMedal style={{ color: "#C3A05D" }} />,
+    },
+  ];
+
+  // Recent bid history
+  const recentBids = [
+    {
+      id: "BID_101",
+      title: "Đồng hồ Rolex Submariner Date 41mm (2023)",
+      bidPrice: "330.000.000 ₫",
+      time: "10 phút trước",
+      status: "LEADING",
+      statusLabel: "👑 Đang dẫn đầu",
+      statusClass: "status-leading",
+    },
+    {
+      id: "BID_102",
+      title: "Túi Hermès Birkin 30 Togo Gold Hardware",
+      bidPrice: "412.000.000 ₫",
+      time: "1 giờ trước",
+      status: "OUTBID",
+      statusLabel: "⚠️ Đã bị vượt giá",
+      statusClass: "status-outbid",
+    },
+    {
+      id: "BID_103",
+      title: "MacBook Pro 16 inch M3 Max 36GB / 1TB",
+      bidPrice: "68.900.000 ₫",
+      time: "2 giờ trước",
+      status: "WON",
+      statusLabel: "🏆 Thắng thầu (Đã cọc)",
+      statusClass: "status-won",
+    },
+  ];
 
   return (
     <AuctionSidebarLayout sidebarActive="profile">
-      <div className="auc-profile">
-        <div className="auc-profile__header-row">
-          <div className="auc-profile__card auc-profile__card--info">
-            <AuctionImage src={data.avatar} alt={data.name} className="profile-avatar" />
-            <div>
-              <div className="name-row">
-                <h2>{data.name}</h2>
-                <span className="badge">{data.badge}</span>
+      <div className="auc-profile-page">
+        {/* Header Profile Hero Card */}
+        <div className="auc-profile-hero">
+          <div className="auc-profile-hero__main">
+            <div className="auc-profile-hero__avatar-wrap">
+              <AuctionImage
+                src={profile?.avatar || user?.avatar || "/images/avatars/default.png"}
+                alt={fullName}
+                className="auc-profile-hero__avatar"
+              />
+              <span className="auc-profile-hero__avatar-badge" title="Tài khoản chính thức">
+                ✓
+              </span>
+            </div>
+
+            <div className="auc-profile-hero__details">
+              <div className="name-badge-row">
+                <h2>{fullName}</h2>
+                <span className="user-role-badge">
+                  <FaMedal style={{ color: "#C3A05D" }} /> Premium Bidder
+                </span>
               </div>
-              <p className="bio">{data.bio}</p>
-              <div className="meta">
-                <span><FaMapMarkerAlt /> {data.location}</span>
-                {data.verified && (
-                  <span className="verified">
-                    <FaShieldAlt /> Đã xác minh CMND/CCCD
+              <p className="email-phone-meta">
+                <span>{email}</span> • <span>{phone || "Chưa cập nhật SĐT"}</span>
+              </p>
+
+              <div className="meta-tags">
+                <span className="meta-tag">
+                  <FaMapMarkerAlt /> {address}
+                </span>
+                {isCccdVerified ? (
+                  <span className="meta-tag meta-tag--verified">
+                    <FaCheckCircle /> Đã xác minh CCCD/CMND
+                  </span>
+                ) : (
+                  <span className="meta-tag meta-tag--unverified">
+                    <FaShieldAlt /> Chưa xác minh CCCD
                   </span>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="auc-profile__card auc-profile__card--rep">
-            <span className="rep-label">CHỈ SỐ UY TÍN</span>
-            <div className="rep-score">
-              {data.reputation} <span>/ 5.0</span>
+          <div className="auc-profile-hero__wallet">
+            <div className="wallet-card">
+              <span className="wallet-title">
+                <FaWallet style={{ color: "#E8C468" }} /> SỐ DƯ VÍ NEXUS PAY
+              </span>
+              <strong className="wallet-amount">
+                {user?.balance ? `${user.balance.toLocaleString()} ₫` : "50.000.000 ₫"}
+              </strong>
+              <div className="wallet-frozen">
+                <span>Cọc đang tạm giữ:</span>
+                <strong>{user?.frozenBalance ? `${user.frozenBalance.toLocaleString()} ₫` : "12.500.000 ₫"}</strong>
+              </div>
             </div>
-            <div className="stars">
-              {[...Array(5)].map((_, i) => <FaStar key={i} />)}
-            </div>
-            <p className="rep-sub">
-              Dựa trên {data.totalReviews} lượt đánh giá
-            </p>
           </div>
         </div>
 
-        <div className="auc-profile__stats">
-          {data.stats.map((stat) => (
-            <div key={stat.label} className="stat">
-              <span className="stat-label">{stat.label}</span>
-              <span className="stat-value">{stat.value}</span>
-              {stat.trend && (
-                <span className="stat-trend stat-trend--up">{stat.trend}</span>
-              )}
-              {stat.sub && (
-                <span className={`stat-sub stat-sub--${stat.subType}`}>
-                  {stat.sub}
-                </span>
-              )}
-            </div>
-          ))}
+        {/* Profile Tabs Navigation */}
+        <div className="auc-profile-tabs">
+          <button
+            type="button"
+            className={`auc-tab-btn ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            <FaChartLine /> Thống kê & Hoạt động đấu giá
+          </button>
+          <button
+            type="button"
+            className={`auc-tab-btn ${activeTab === "personal" ? "active" : ""}`}
+            onClick={() => setActiveTab("personal")}
+          >
+            <FaUserEdit /> Hồ sơ cá nhân & CCCD (Đồng bộ API)
+          </button>
+          <button
+            type="button"
+            className={`auc-tab-btn ${activeTab === "watchlist" ? "active" : ""}`}
+            onClick={() => setActiveTab("watchlist")}
+          >
+            <FaHeart /> Sản phẩm đang theo dõi ({watchlistItems.length})
+          </button>
         </div>
 
-        <section className="auc-profile__reviews">
-          <h3>Đánh giá gần đây</h3>
-
-          <div className="tabs">
-            {[
-              { id: "all", label: "Tất cả" },
-              { id: "seller", label: "Người bán" },
-              { id: "buyer", label: "Người mua" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                className={reviewTab === tab.id ? "active" : ""}
-                onClick={() => setReviewTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="auc-profile__review-list">
-            {data.reviews.map((review) => (
-              <div key={review.id} className="review">
-                <AuctionImage src={review.avatar} alt={review.name} className="review-avatar" />
-                <div>
-                  <div className="review-header">
-                    <div>
-                      <strong>{review.name}</strong>
-                      <span className="role">{review.role}</span>
-                    </div>
-                    <span className="time">{review.time}</span>
-                  </div>
-                  <div className="review-stars">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <FaStar key={i} />
-                    ))}
-                  </div>
-                  <p className="comment">{review.comment}</p>
-                  <div className="review-item">
-                    <AuctionImage
-                      src={review.item.image}
-                      alt={review.item.name}
-                      className="review-item__img"
-                    />
-                    <span>{review.item.name}</span>
-                    <em>{review.item.price}</em>
+        {/* Tab 1: Overview & Auction Stats */}
+        {activeTab === "overview" && (
+          <div className="auc-profile-tab-content">
+            {/* Stats Grid */}
+            <div className="auc-stats-grid">
+              {auctionStats.map((stat) => (
+                <div key={stat.id} className="auc-stat-card">
+                  <div className="stat-icon-wrap">{stat.icon}</div>
+                  <div className="stat-info">
+                    <span className="stat-label">{stat.label}</span>
+                    <strong className="stat-value">{stat.value}</strong>
+                    <span className="stat-sub">{stat.subText}</span>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          <button type="button" className="more-btn">
-            Xem tất cả {data.totalReviews} đánh giá
-          </button>
-        </section>
+            {/* Recent Bids Table */}
+            <div className="auc-recent-bids-card">
+              <div className="card-header">
+                <h3><FaHistory /> Lịch sử đặt giá thầu gần đây</h3>
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={() => navigate("/auction/my-bids")}
+                >
+                  Xem tất cả lịch sử thầu →
+                </button>
+              </div>
+
+              <div className="table-responsive">
+                <table className="auc-bids-table">
+                  <thead>
+                    <tr>
+                      <th>Sản Phẩm Đấu Giá</th>
+                      <th>Giá Thầu Của Bạn</th>
+                      <th>Thời Gian</th>
+                      <th>Trạng Thái</th>
+                      <th>Thao Tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentBids.map((bid) => (
+                      <tr key={bid.id}>
+                        <td>
+                          <strong className="item-title">{bid.title}</strong>
+                        </td>
+                        <td>
+                          <span className="price-val">{bid.bidPrice}</span>
+                        </td>
+                        <td>
+                          <span className="time-val">{bid.time}</span>
+                        </td>
+                        <td>
+                          <span className={`bid-badge ${bid.statusClass}`}>
+                            {bid.statusLabel}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="auc-action-btn"
+                            onClick={() => navigate("/auction/detail/1")}
+                          >
+                            Xem phiên
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2: Personal Profile & CCCD Verification Form (Full API Integration) */}
+        {activeTab === "personal" && (
+          <div className="auc-profile-tab-content">
+            <div className="auc-profile-form-wrap">
+              <ProfileInfo
+                userId={user?.id}
+                profile={profile}
+                onUpdate={handleProfileUpdate}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Watchlist Products */}
+        {activeTab === "watchlist" && (
+          <div className="auc-profile-tab-content">
+            <div className="auc-watchlist-grid">
+              {watchlistItems.length > 0 ? (
+                auctionListings
+                  .filter((item) => watchlistItems.some((w) => String(w.id) === String(item.id)))
+                  .map((item) => (
+                    <AuctionCard
+                      key={item.id}
+                      auction={item}
+                      onClick={() => navigate(`/auction/detail/${item.id}`)}
+                    />
+                  ))
+              ) : (
+                <div className="auc-empty-watchlist">
+                  <FaHeart style={{ fontSize: 48, color: "rgba(255,255,255,0.2)" }} />
+                  <p>Bạn chưa lưu sản phẩm nào vào mục Đang Theo Dõi.</p>
+                  <button
+                    type="button"
+                    className="auc-browse-btn"
+                    onClick={() => navigate("/auction/browse")}
+                  >
+                    Khám phá sản phẩm đấu giá ngay
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </AuctionSidebarLayout>
   );
 }
-

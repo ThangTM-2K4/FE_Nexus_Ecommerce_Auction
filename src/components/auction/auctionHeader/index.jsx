@@ -242,10 +242,11 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                       </Link>
                     </li>
                     <li>
-                      <Link to="/profile/personal-info" onClick={() => setShowProfileMenu(false)}>
-                        <FaUser className="menu-icon" /> Thông tin tài khoản
+                      <Link to="/auction/profile" onClick={() => setShowProfileMenu(false)}>
+                        <FaUser className="menu-icon" /> Hồ sơ cá nhân đấu giá
                       </Link>
                     </li>
+
                     <li>
                       <button
                         type="button"
