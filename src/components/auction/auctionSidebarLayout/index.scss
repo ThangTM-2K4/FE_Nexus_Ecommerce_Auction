@@ -8,5 +8,10 @@
   &__content {
     flex: 1;
     min-width: 0;
+
+    &--full {
+      width: 100%;
+    }
   }
 }
+

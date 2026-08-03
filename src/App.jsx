@@ -252,11 +252,26 @@ function App() {
           }
         />
         <Route path="profile" element={<AuctionProfilePage />} />
-        <Route path="seller" element={<AuctionSellerPage />} />
+        <Route
+          path="seller"
+          element={
+            <ProtectedRoute>
+              <AuctionSellerPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="categories" element={<AuctionCategoriesPage />} />
         <Route path="locations" element={<AuctionLocationsPage />} />
         <Route path="how-it-works" element={<AuctionHowItWorksPage />} />
-        <Route path="watchlist" element={<AuctionWatchlistPage />} />
+        <Route
+          path="watchlist"
+          element={
+            <ProtectedRoute>
+              <AuctionWatchlistPage />
+            </ProtectedRoute>
+          }
+        />
+
       </Route>
 
   {/* Seller */}

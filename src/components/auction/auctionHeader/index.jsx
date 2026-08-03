@@ -11,8 +11,9 @@ const NAV_ITEMS = [
   { to: '/auction/categories', label: 'Danh mục' },
   { to: '/auction/locations', label: 'Địa điểm' },
   { to: '/auction/how-it-works', label: 'Cách thức hoạt động' },
-  { to: '/auction/my-bids', label: 'Đấu giá của tôi' },
+  { to: '/auction/my-bids', label: 'Đấu giá của tôi', requiresAuth: true },
 ];
+
 
 export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
   const navigate = useNavigate();
@@ -81,17 +82,20 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
 
         <nav className="auction-header__nav" aria-label="Điều hướng đấu giá">
           {!fromAdmin && isBuyerMode &&
-            NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) => (isActive ? 'is-active' : undefined)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
+            NAV_ITEMS
+              .filter((item) => !item.requiresAuth || isAuthenticated)
+              .map((item) => (
+                <NavLink
+                  key={item.label}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) => (isActive ? 'is-active' : undefined)}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
         </nav>
+
 
         <div className="auction-header__actions">
           {fromAdmin ? (
@@ -291,19 +295,22 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
         <nav className="auction-header__mobile-nav" aria-label="Menu đấu giá di động">
 
           {!fromAdmin && isBuyerMode &&
-            NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) => (isActive ? 'is-active' : undefined)}
-                onClick={() => setMobileOpen(false)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
+            NAV_ITEMS
+              .filter((item) => !item.requiresAuth || isAuthenticated)
+              .map((item) => (
+                <NavLink
+                  key={item.label}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) => (isActive ? 'is-active' : undefined)}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
         </nav>
       )}
     </header>
   );
 }
+
