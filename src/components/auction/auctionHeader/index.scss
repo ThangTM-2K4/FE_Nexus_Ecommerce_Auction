@@ -147,7 +147,13 @@
     border-color: $gold-bright;
     color: $gold-bright;
   }
+
+  @media (max-width: 576px) {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.7rem;
+  }
 }
+
 
 .auction-header__menu-btn {
   display: flex;

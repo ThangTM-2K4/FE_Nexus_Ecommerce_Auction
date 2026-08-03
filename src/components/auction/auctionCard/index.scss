@@ -168,10 +168,9 @@
   }
 
   .auction-card__desc {
-    font-size: 0.75rem;
-    height: 2.7em;
-    line-height: 1.35;
+    display: none !important;
   }
+
 
   .auction-card__price strong {
     font-size: 0.95rem;

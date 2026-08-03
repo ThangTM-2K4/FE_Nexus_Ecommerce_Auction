@@ -218,3 +218,28 @@
     }
   }
 }
+
+@media (max-width: 768px) {
+  .adm-header__inner {
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .adm-header__badge {
+    display: none !important;
+  }
+
+  .adm-header__search {
+    display: none !important;
+  }
+
+  .adm-header__role {
+    display: none !important;
+  }
+
+  .adm-header__actions {
+    margin-left: auto;
+    gap: 6px;
+  }
+}
+
