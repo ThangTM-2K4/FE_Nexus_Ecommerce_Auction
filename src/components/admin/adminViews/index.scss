@@ -2741,5 +2741,66 @@
   }
 }
 
+@media (max-width: 768px) {
+  .adm-user-grid,
+  .adm-product-grid,
+  .adm-auction-grid,
+  .adm-brand-grid,
+  .adm-inventory-grid,
+  .adm-wallet-grid,
+  .adm-fee-grid,
+  .adm-coupon-grid,
+  .adm-banner-grid,
+  .adm-review-grid,
+  .adm-withdrawal-grid,
+  .adm-auction-order-grid,
+  .adm-shipping-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .adm-card,
+  .adm-user-card,
+  .adm-product-card,
+  .adm-auction-card,
+  .adm-brand-card,
+  .adm-inventory-card,
+  .adm-coupon-card,
+  .adm-banner-card {
+    padding: 8px 6px !important;
+
+    h3, h4, .adm-card__title, .name {
+      font-size: 11px !important;
+      line-height: 1.25 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    p, span, .desc, .sub {
+      font-size: 10px !important;
+      line-height: 1.2 !important;
+    }
+
+    img, .thumb, .avatar, .adm-product-card__image {
+      height: 64px !important;
+      max-height: 70px !important;
+      object-fit: cover !important;
+    }
+
+    .badge, .pill, .status-pill, .tag {
+      font-size: 9px !important;
+      padding: 2px 4px !important;
+    }
+
+    button {
+      padding: 3px 5px !important;
+      font-size: 10px !important;
+    }
+  }
+}
+
+
 
 

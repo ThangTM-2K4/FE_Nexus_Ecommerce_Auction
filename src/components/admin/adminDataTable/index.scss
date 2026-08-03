@@ -1,4 +1,4 @@
-﻿@use "../../../styles/staff-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
 .adm-table-wrap {
   overflow-x: auto;
@@ -275,7 +275,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
 }
+
 
 .adm-card {
   background: $color-bg-card;
