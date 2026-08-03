@@ -137,32 +137,28 @@ function LoginPage() {
           }
         }
 
-        if (redirectTo) {
-          navigate(redirectTo, { replace: true, state: location.state });
-          return;
-        }
-
-
         const roleTokens = getRoleTokens(user);
+        const isAdmin =
+          roleTokens.includes("ADMIN") || roleTokens.includes("SUPER_ADMIN");
+        const isStaff =
+          roleTokens.includes("STAFF") || roleTokens.includes("SUPPORT_STAFF");
 
-        if (
-          roleTokens.includes("ADMIN") ||
-          roleTokens.includes("SUPER_ADMIN")
-        ) {
-          navigate("/admin");
-        } else if (
-          roleTokens.includes("STAFF") ||
-          roleTokens.includes("SUPPORT_STAFF")
-        ) {
-          navigate("/staff/overview");
+        if (isAdmin) {
+          navigate("/admin", { replace: true });
+        } else if (isStaff) {
+          navigate("/staff/overview", { replace: true });
+        } else if (redirectTo) {
+          // Khách / người mua hàng -> quay lại trang xuất phát trước đó
+          navigate(redirectTo, { replace: true, state: location.state });
         } else if (
           roleTokens.includes("SELLER") ||
           user.sellerStatus === "APPROVED"
         ) {
-          navigate("/seller");
+          navigate("/seller", { replace: true });
         } else {
-          navigate("/");
+          navigate("/", { replace: true });
         }
+
       }, 1000);
     } catch (err) {
       const detail =
