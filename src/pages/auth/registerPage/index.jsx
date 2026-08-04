@@ -89,6 +89,9 @@ function RegisterPage() {
   if (!formData.phone.trim()) {
     newErrors.phone =
       "Vui lòng nhập số điện thoại";
+  } else if (!isValidVietnamesePhone(formData.phone)) {
+    newErrors.phone =
+      "Số điện thoại không hợp lệ (10 số bắt đầu bằng 0 hoặc 11 số bắt đầu bằng 84)";
   }
 
   if (!formData.password.trim()) {

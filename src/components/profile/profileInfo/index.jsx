@@ -9,8 +9,9 @@ import { useAuth } from '../../../context/AuthContext';
 import UserAvatar from '../../common/userAvatar';
 import Button from '../../common/button';
 import Select from '../../common/select';
-import Modal from '../../common/modal';
+import { isValidVietnamesePhone } from '../../../utils/phoneValidation';
 import './index.scss';
+
 
 const GENDERS = [
   { value: 'male', label: 'Nam' },
@@ -222,9 +223,10 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
   // Mở modal nhập OTP NGAY sau khi số hợp lệ (xem chú thích ở handleSendEmailOtp).
   const handleSendPhoneOtp = async () => {
     const phone = (form.phone || '').trim();
-    if (!/^0\d{9}$/.test(phone)) {
-      return toast.error('Nhập số điện thoại hợp lệ (10 số, bắt đầu bằng 0)');
+    if (!isValidVietnamesePhone(phone)) {
+      return toast.error('Nhập số điện thoại hợp lệ (10 số bắt đầu bằng 0 hoặc 11 số bắt đầu bằng 84)');
     }
+
     setPhoneOtpSent(true);
     await run(
       'phone-send',

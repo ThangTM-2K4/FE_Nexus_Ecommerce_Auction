@@ -426,17 +426,10 @@ export default function BecomeSellerPage() {
                 <strong className="status-pending">Đang chờ xem xét</strong>
               </div>
             </div>
-            <div className="seller-timeline">
-              <h3>Tiến trình</h3>
-              {application.timeline?.map((item) => (
-                <div key={item.step} className={`seller-timeline-item ${item.status}`}>
-                  <span className="seller-timeline-dot" />
-                  <div>
-                    <strong>{item.step}</strong>
-                    {item.date && <small>{new Date(item.date).toLocaleString("vi-VN")}</small>}
-                  </div>
-                </div>
-              ))}
+            <div className="seller-status-notice">
+              <p>
+                💡 <strong>Hồ sơ của bạn đang được nhân viên phê duyệt.</strong> Kết quả phê duyệt sẽ được phản hồi qua Email & Hệ thống trong vòng 24h - 48h làm việc.
+              </p>
             </div>
           </div>
         </main>
@@ -444,6 +437,7 @@ export default function BecomeSellerPage() {
       </div>
     );
   }
+
 
   if (user?.sellerStatus === "REJECTED" && application && !resubmitMode) {
     return (
@@ -497,11 +491,12 @@ export default function BecomeSellerPage() {
               </li>
             </ul>
             <Link
-              to={checks.nationalIdVerified ? "/profile#verification" : "/profile/personal-info"}
+              to="/profile"
               className="seller-submit-btn"
             >
               Hoàn thiện hồ sơ
             </Link>
+
           </div>
         </main>
         <Footer />
