@@ -7,9 +7,11 @@ import {
 import { toast } from "react-toastify";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { getAuctionDetail } from "../../../data/auctionMockData";
+import { placeBid as apiPlaceBid, registerAuction as apiRegisterAuction } from "../../../services/auctionService";
 import { useAuth } from "../../../context/AuthContext";
 import RequireAuthModal from "../../../components/auction/requireAuthModal";
 import { useProvinces, useWards } from "../../../services/locationService";
+
 
 import "./index.scss";
 
@@ -81,14 +83,77 @@ function parseTimeToSeconds(str) {
   return 180;
 }
 
+function loadAuctionDetailData(id) {
+  if (!id) return getAuctionDetail("1");
+
+  try {
+    const publishedList = JSON.parse(localStorage.getItem("auc_published_auctions") || "[]");
+    const foundPublished = publishedList.find((item) => String(item.id) === String(id));
+    if (foundPublished) {
+      return {
+        id: foundPublished.id,
+        title: foundPublished.title,
+        description: foundPublished.description || "Phiên đấu giá vừa được Admin phê duyệt và xuất bản sảnh chính.",
+        currentPrice: foundPublished.currentPrice || "1.000.000đ",
+        startingPrice: foundPublished.startingPrice || 1000000,
+        bidIncrement: foundPublished.bidIncrement || 500000,
+        depositAmount: foundPublished.depositAmount || 1000000,
+        images: foundPublished.images || [foundPublished.image || "/images/auction/default.png"],
+        seller: foundPublished.seller || "Seller (Shop)",
+        sellerAvatar: "/images/avatars/seller.png",
+        sellerBadge: "NGƯỜI BÁN UY TÍN",
+        breadcrumbs: ["TRANG CHỦ", String(foundPublished.category || "ĐỒNG HỒ").toUpperCase(), foundPublished.title],
+        timeLeft: "2d 23h",
+        bidHistory: [],
+        leader: "Chưa có lượt đặt giá",
+        leaderAvatar: "",
+      };
+    }
+  } catch {}
+
+  try {
+    const proposalsList = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
+    const foundProposal = proposalsList.find((item) => String(item.id) === String(id));
+    if (foundProposal) {
+      return {
+        id: foundProposal.id,
+        title: foundProposal.title,
+        description: foundProposal.description || "Đề xuất phiên đấu giá đang được kiểm duyệt.",
+        currentPrice: `${(foundProposal.startingPrice || 0).toLocaleString()}đ`,
+        startingPrice: foundProposal.startingPrice || 0,
+        bidIncrement: foundProposal.bidIncrement || 500000,
+        depositAmount: foundProposal.depositAmount || 1000000,
+        images: [foundProposal.image || "/images/auction/default.png"],
+        seller: "Bạn (Người bán)",
+        sellerAvatar: "/images/avatars/seller.png",
+        sellerBadge: "NGƯỜI BÁN",
+        breadcrumbs: ["TRANG CHỦ", String(foundProposal.categoryName || "ĐỒNG HỒ").toUpperCase(), foundProposal.title],
+        timeLeft: "Đang chờ duyệt",
+        bidHistory: [],
+        leader: "Chưa có lượt đặt giá",
+        leaderAvatar: "",
+      };
+    }
+  } catch {}
+
+  return getAuctionDetail(id);
+}
+
 export default function AuctionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isSellerMode, isAuthenticated } = useAuth();
 
+  const [product, setProduct] = useState(() => loadAuctionDetailData(id));
 
-  const product = getAuctionDetail(id);
+  useEffect(() => {
+    const data = loadAuctionDetailData(id);
+    if (data) {
+      setProduct(data);
+      if (data.currentPrice) setCurrentPrice(data.currentPrice);
+    }
+  }, [id]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [liked, setLiked] = useState(() => {
     if (!isAuthenticated) return false;
@@ -466,7 +531,9 @@ export default function AuctionDetailPage() {
       ? `$${amount.toLocaleString("en-US")}`
       : `${amount.toLocaleString("vi-VN")}đ`;
 
+    apiPlaceBid(id, amount).catch(() => {});
     saveBidToHistory(user, product, amount);
+
 
     const newBidItem = {
       user: userName,
@@ -736,10 +803,10 @@ export default function AuctionDetailPage() {
             <h3>Chi tiết sản phẩm</h3>
             <p>{product.description}</p>
             <div className="auc-detail__specs-grid">
-              <div><span>THƯƠNG HIỆU</span><strong>{specs.brand || "N/A"}</strong></div>
-              <div><span>TÌNH TRẠNG</span><strong>{specs.condition || "N/A"}</strong></div>
-              <div><span>LOẠI MÁY</span><strong>{specs.movement || "N/A"}</strong></div>
-              <div><span>NĂM SẢN XUẤT</span><strong>{specs.year || "N/A"}</strong></div>
+              <div><span>THƯƠNG HIỆU</span><strong>{specs.brand || product.brand || product.category || "Chính hãng"}</strong></div>
+              <div><span>TÌNH TRẠNG</span><strong>{specs.condition || product.condition || "Mới 100% / Like New"}</strong></div>
+              <div><span>LOẠI MÁY</span><strong>{specs.movement || product.movement || "Automatic (Tự động)"}</strong></div>
+              <div><span>NĂM SẢN XUẤT</span><strong>{specs.year || product.year || "2024"}</strong></div>
             </div>
           </section>
         </div>

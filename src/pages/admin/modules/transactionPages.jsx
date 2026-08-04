@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../../components/admin/adminPageHeader";
 import AdminToolbar from "../../../components/admin/adminToolbar";
@@ -12,7 +12,10 @@ import { useAdminList } from "../../../hooks/useAdminList";
 import {
   mockOrders, mockAuctionOrders, mockBids, mockPayments, mockWallets, mockWithdrawals, STATUS_OPTIONS,
 } from "../../../data/adminEntities";
+import { getAdminWithdrawals, approveAdminWithdrawal, rejectAdminWithdrawal, markAdminWithdrawalPaid } from "../../../services/adminWithdrawalService";
 import "../../../components/admin/adminViews/index.scss";
+
+
 
 export const AdminOrders = () => {
   const list = useAdminList(mockOrders, ["id", "buyer", "seller"]);
@@ -240,8 +243,22 @@ export const AdminWallets = () => {
 };
 
 export const AdminWithdrawals = () => {
-  const list = useAdminList(mockWithdrawals, ["seller", "id"]);
+  const list = useAdminList([], ["seller", "id"]);
   const [viewMode, setViewMode] = useState("grid");
+
+  useEffect(() => {
+    async function loadApiWithdrawals() {
+      try {
+        const res = await getAdminWithdrawals();
+        list.setItems(res?.items || []);
+      } catch {
+        list.setItems([]);
+      }
+    }
+    loadApiWithdrawals();
+  }, []);
+
+
 
   return (
     <div className="adm-page">

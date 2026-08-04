@@ -4,8 +4,10 @@ import AuctionIntroBanner from '../../../components/auction/auctionIntroBanner';
 import AuctionFilterBar, { EMPTY_FILTERS } from '../../../components/auction/auctionFilterBar';
 import AuctionCard from '../../../components/auction/auctionCard';
 import { auctionListings, countLiveAuctions } from '../../../data/auctionData';
+import { getAuctions } from '../../../services/auctionService';
 import { useAuth } from '../../../context/AuthContext';
 import './index.scss';
+
 
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
@@ -87,10 +89,31 @@ export default function AuctionBrowsePage() {
     });
   };
 
-  const liveCount = useMemo(() => countLiveAuctions(auctionListings), []);
+  const [rawAuctions, setRawAuctions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadAuctions() {
+      const publishedLocal = JSON.parse(localStorage.getItem("auc_published_auctions") || "[]");
+      try {
+        setIsLoading(true);
+        const res = await getAuctions();
+        const apiItems = (res && Array.isArray(res.items)) ? res.items : [];
+        setRawAuctions([...publishedLocal, ...apiItems]);
+      } catch {
+        setRawAuctions(publishedLocal);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadAuctions();
+  }, []);
+
+
+  const liveCount = useMemo(() => countLiveAuctions(rawAuctions), [rawAuctions]);
 
   const filteredListings = useMemo(() => {
-    const filtered = auctionListings.filter((item) => {
+    const filtered = rawAuctions.filter((item) => {
       if (!matchesSearch(item, searchQuery)) return false;
       if (filters.category && item.category !== filters.category) return false;
       if (filters.location && item.location !== filters.location) return false;
@@ -110,7 +133,8 @@ export default function AuctionBrowsePage() {
     });
 
     return sortListings(filtered, sortBy);
-  }, [searchQuery, sortBy, filters, activeTab]);
+  }, [rawAuctions, searchQuery, sortBy, filters, activeTab]);
+
 
   const hasActiveFilters = searchQuery.trim() !== '' ||
     Object.values(filters).some((v) => v !== '');

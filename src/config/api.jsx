@@ -54,10 +54,19 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
+      if (!config.headers['Idempotency-Key']) {
+        const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `idemp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        config.headers['Idempotency-Key'] = uuid;
+      }
+    }
     return config;
   },
   (error) => Promise.reject(error)
 );
+
 
 api.interceptors.response.use(
   (response) => response,

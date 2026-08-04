@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaPlus, FaTimes } from "react-icons/fa";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
-import { sellerStats, sellerAuctions } from "../../../data/auctionMockData";
+import { getAuctionProposals } from "../../../services/auctionProposalService";
 import "./index.scss";
 
 export default function AuctionSellerPage() {
@@ -18,11 +18,49 @@ export default function AuctionSellerPage() {
     });
   };
   const [selectedUpcoming, setSelectedUpcoming] = useState(null);
+  const [realAuctions, setRealAuctions] = useState([]);
 
-  const filteredAuctions = sellerAuctions.filter((item) => {
+  useEffect(() => {
+    async function loadProposals() {
+      const localItems = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]").map(p => ({
+        id: p.id,
+        title: p.title,
+        image: p.image || "/images/auction/default.png",
+        status: p.status || { label: "Chờ duyệt", type: "upcoming", color: "orange" },
+        bids: 0,
+        price: `${(p.startingPrice || 0).toLocaleString()}đ`,
+        timeLeft: "Đang chờ Admin duyệt",
+      }));
+
+      try {
+        const res = await getAuctionProposals();
+        const apiItems = (res?.items || []).map(p => ({
+          id: p.id,
+          title: p.title,
+          image: p.imageUrl || "/images/auction/default.png",
+          status: { label: p.status || "Chờ duyệt", type: "upcoming", color: "orange" },
+          bids: 0,
+          price: `${(p.startingPrice || 0).toLocaleString()}đ`,
+          timeLeft: "Đang chờ Admin duyệt",
+        }));
+        setRealAuctions([...localItems, ...apiItems]);
+      } catch {
+        setRealAuctions(localItems);
+      }
+    }
+    loadProposals();
+  }, []);
+
+  const filteredAuctions = realAuctions.filter((item) => {
     if (tab === "all") return true;
     return item.status.type === tab;
   });
+
+  const dynamicStats = [
+    { label: "TỔNG ĐỀ XUẤT", value: String(realAuctions.length), sub: "Phiên đã tạo" },
+    { label: "ĐANG CHỜ DUYỆT", value: String(realAuctions.filter(a => a.status?.label === "Chờ duyệt").length), sub: "Chờ Admin phê duyệt" },
+    { label: "ĐANG HOẠT ĐỘNG", value: String(realAuctions.filter(a => a.status?.type === "active").length), sub: "Phiên đang live" },
+  ];
 
   return (
     <AuctionSidebarLayout sidebarActive="auctions">
@@ -42,13 +80,10 @@ export default function AuctionSellerPage() {
         </div>
 
         <div className="auc-seller__stats">
-          {sellerStats.map((stat) => (
+          {dynamicStats.map((stat) => (
             <div key={stat.label} className="stat-card">
               <span className="stat-card__label">{stat.label}</span>
               <span className="stat-card__value">{stat.value}</span>
-              {stat.trend && (
-                <span className="stat-card__trend">{stat.trend}</span>
-              )}
               {stat.sub && (
                 <span className="stat-card__sub">{stat.sub}</span>
               )}

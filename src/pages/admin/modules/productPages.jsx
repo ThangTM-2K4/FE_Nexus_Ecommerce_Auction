@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../../components/admin/adminPageHeader";
@@ -20,7 +21,9 @@ import {
   mockProducts, mockAuctions, mockCategories, mockBrands, mockInventory,
   mockSellerWarehouses, STATUS_OPTIONS,
 } from "../../../data/adminEntities";
+import { getCategories, createCategory, updateCategory, deleteCategory } from "../../../services/adminCategoryService";
 import "../../../components/admin/adminViews/index.scss";
+
 import "../../../components/admin/adminDataTable/index.scss";
 import "../../../components/admin/adminTabOverview/index.scss";
 
@@ -56,13 +59,26 @@ const groupBySeller = (items, sellerKey = "seller") => {
 export const AdminProducts = () => {
   const [sellerTab, setSellerTab] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
-  const list = useAdminList(mockProducts, ["name", "seller", "id"]);
+  const list = useAdminList([], ["name", "seller", "id"]);
   const [detail, setDetail] = useState(null);
+
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const res = await getAdminProducts();
+        list.setItems(res || []);
+      } catch {
+        list.setItems([]);
+      }
+    }
+    loadProducts();
+  }, []);
+
   const action = (row, status) => { list.updateItem(row.id, { status }); toast.success(`Đã cập nhật: ${status}`); };
 
   const sellers = useMemo(
-    () => [...new Set(mockProducts.map((p) => p.seller))],
-    [],
+    () => [...new Set(list.items.map((p) => p.seller))],
+    [list.items],
   );
 
   const visibleProducts = sellerTab === "all"
@@ -180,13 +196,103 @@ export const AdminProducts = () => {
 
 export const AdminAuctionProducts = () => {
   const navigate = useNavigate();
-  const list = useAdminList(mockAuctions, ["title", "seller", "id"]);
+  const list = useAdminList([], ["title", "seller", "id"]);
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
   const [detail, setDetail] = useState(null);
 
+  useEffect(() => {
+    async function loadRealData() {
+      const localProposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]").map(p => ({
+        id: p.id,
+        title: p.title,
+        seller: p.sellerName || "Fashion Elite (Seller)",
+        startPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
+        currentPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
+        highestBid: "—",
+        winner: "—",
+        endTime: "Chờ duyệt",
+        status: "Chờ duyệt đề xuất",
+        bids: 0,
+      }));
+
+      try {
+        const [proposalsRes, auctionsRes] = await Promise.all([
+          getAuctionProposals().catch(() => ({ items: [] })),
+          getAuctions().catch(() => ({ items: [] })),
+        ]);
+        const proposalItems = (proposalsRes?.items || []).map(p => ({
+          id: p.id,
+          title: p.title,
+          seller: p.sellerName || "Seller",
+          startPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
+          currentPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
+          highestBid: "—",
+          winner: "—",
+          endTime: "Chờ duyệt",
+          status: "Chờ duyệt đề xuất",
+          bids: 0,
+        }));
+        const auctionItems = auctionsRes?.items || [];
+        list.setItems([...localProposals, ...proposalItems, ...auctionItems]);
+      } catch {
+        list.setItems(localProposals);
+      }
+    }
+    loadRealData();
+  }, []);
+
+  const handleApproveProposal = async (item) => {
+    try {
+      await approveAuctionProposal(item.id);
+    } catch {}
+    list.updateItem(item.id, { status: "Đang diễn ra" });
+    toast.success(`🎉 Đã duyệt đề xuất phiên đấu giá "${item.title}"!`);
+  };
+
+  const handleRejectProposal = async (item) => {
+    try {
+      await rejectAuctionProposal(item.id, "Từ chối bởi Admin");
+    } catch {}
+    list.updateItem(item.id, { status: "Đã từ chối" });
+    toast.warning(`Đã từ chối đề xuất "${item.title}"`);
+  };
+
+  const handlePublish = async (item) => {
+    try {
+      await publishAuction(item.id);
+    } catch {}
+    list.updateItem(item.id, { status: "Đang diễn ra" });
+
+    const published = JSON.parse(localStorage.getItem("auc_published_auctions") || "[]");
+    const newAuction = {
+      id: item.id || `DG-${Date.now().toString().slice(-4)}`,
+      title: item.title,
+      description: item.description || "Phiên đấu giá vừa được Admin phê duyệt",
+      category: item.categoryName || "Đồng hồ",
+      categoryLabel: item.categoryName || "Đồng hồ",
+      currentBid: Number(String(item.startPrice).replace(/[^0-9]/g, "")) || 10000000,
+      currentPrice: item.startPrice || "10.000.000đ",
+      startingPrice: Number(String(item.startPrice).replace(/[^0-9]/g, "")) || 10000000,
+      bidIncrement: 500000,
+      depositAmount: 1000000,
+      image: item.image || "/images/auction/default.png",
+      images: [item.image || "/images/auction/default.png"],
+      location: "TP.HCM",
+      postedAt: Date.now(),
+      endTime: Date.now() + 86400000 * 3,
+      isUpcoming: false,
+      listingType: "Cá nhân",
+      status: "Đang diễn ra",
+    };
+    localStorage.setItem("auc_published_auctions", JSON.stringify([newAuction, ...published]));
+
+    toast.success(`🚀 Đã xuất bản phiên đấu giá "${item.title}" lên Sảnh Đấu Giá chính!`);
+  };
+
   const tabs = [
     { id: "all", label: "Tất cả", count: list.items.length },
+    { id: "pending_proposal", label: "Chờ duyệt đề xuất", count: list.items.filter((a) => a.status === "Chờ duyệt đề xuất").length },
     { id: "live", label: "Đang diễn ra", count: list.items.filter((a) => a.status === "Đang diễn ra").length },
     { id: "upcoming", label: "Sắp kết thúc", count: list.items.filter((a) => a.status === "Sắp kết thúc").length },
     { id: "completed", label: "Hoàn thành", count: list.items.filter((a) => a.status === "Hoàn thành").length },
@@ -195,6 +301,7 @@ export const AdminAuctionProducts = () => {
 
   const displayedList = useMemo(() => {
     return list.filtered.filter((a) => {
+      if (activeTab === "pending_proposal") return a.status === "Chờ duyệt đề xuất";
       if (activeTab === "live") return a.status === "Đang diễn ra";
       if (activeTab === "upcoming") return a.status === "Sắp kết thúc";
       if (activeTab === "completed") return a.status === "Hoàn thành";
@@ -205,7 +312,7 @@ export const AdminAuctionProducts = () => {
 
   return (
     <div className="adm-page">
-      <AdminPageHeader kicker="Đấu giá" title="Quản lý phiên đấu giá" subtitle="Giám sát, dừng, gia hạn hoặc hủy phiên đấu giá." />
+      <AdminPageHeader kicker="Đấu giá" title="Quản lý phiên đấu giá & Duyệt đề xuất" subtitle="Phê duyệt đề xuất đấu giá của Seller, xuất bản sảnh chính, giám sát hoặc hủy phiên." />
       <AdminTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
       <AdminToolbar
         search={list.search}
@@ -217,23 +324,29 @@ export const AdminAuctionProducts = () => {
       {viewMode === "grid" ? (
         <div className="adm-auction-grid">
           {displayedList.map((a) => {
+            const isPending = a.status === "Chờ duyệt đề xuất";
             const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
+            const actions = [
+              { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
+              ...(isPending ? [
+                { label: "✅ Duyệt đề xuất", variant: "success", onClick: () => handleApproveProposal(a) },
+                { label: "🚀 Xuất bản sảnh", variant: "primary", onClick: () => handlePublish(a) },
+                { label: "❌ Từ chối", variant: "danger", onClick: () => handleRejectProposal(a) },
+              ] : []),
+              ...(isLive ? [
+                { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
+                { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
+                { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
+                { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
+                { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
+              ] : []),
+            ];
+
             return (
               <AuctionCard
                 key={a.id}
                 auction={a}
-                actions={[
-                  { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
-                  ...(isLive ? [
-                    { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
-                  ] : []),
-                  { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
-                  ...(isLive ? [
-                    { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
-                    { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
-                    { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
-                  ] : []),
-                ]}
+                actions={actions}
               />
             );
           })}
@@ -241,23 +354,29 @@ export const AdminAuctionProducts = () => {
       ) : (
         <div className="adm-list-container">
           {displayedList.map((a) => {
+            const isPending = a.status === "Chờ duyệt đề xuất";
             const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
+            const actions = [
+              { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
+              ...(isPending ? [
+                { label: "✅ Duyệt đề xuất", variant: "success", onClick: () => handleApproveProposal(a) },
+                { label: "🚀 Xuất bản sảnh", variant: "primary", onClick: () => handlePublish(a) },
+                { label: "❌ Từ chối", variant: "danger", onClick: () => handleRejectProposal(a) },
+              ] : []),
+              ...(isLive ? [
+                { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
+                { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
+                { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
+                { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
+                { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
+              ] : []),
+            ];
+
             return (
               <AuctionListRow
                 key={a.id}
                 auction={a}
-                actions={[
-                  { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
-                  ...(isLive ? [
-                    { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
-                  ] : []),
-                  { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
-                  ...(isLive ? [
-                    { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
-                    { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
-                    { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
-                  ] : []),
-                ]}
+                actions={actions}
               />
             );
           })}
@@ -272,11 +391,25 @@ export const AdminAuctionProducts = () => {
 };
 
 export const AdminCategories = () => {
-  const list = useAdminList(mockCategories, ["name", "id"]);
+  const list = useAdminList([], ["name", "id"]);
   const [expanded, setExpanded] = useState({});
   const [modal, setModal] = useState(null); // null | "add-parent" | "add-child" | "edit-parent" | "edit-child"
   const [form, setForm] = useState({});
   const [activeParentId, setActiveParentId] = useState(null);
+
+  useEffect(() => {
+    async function loadApiCategories() {
+      try {
+        const res = await getCategories();
+        list.setItems(res || []);
+      } catch {
+        list.setItems([]);
+      }
+    }
+    loadApiCategories();
+  }, []);
+
+
 
   const toggleExpand = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -290,13 +423,16 @@ export const AdminCategories = () => {
   };
   const handleToggleParent = (cat) => {
     const next = cat.status === "Hoạt động" ? "Tắt" : "Hoạt động";
+    updateCategory(cat.id, { status: next }).catch(() => {});
     list.updateItem(cat.id, { status: next });
     toast.success(`Danh mục "${cat.name}" đã ${next === "Tắt" ? "tắt" : "bật"}`);
   };
   const handleDeleteParent = (cat) => {
+    deleteCategory(cat.id).catch(() => {});
     list.removeItem(cat.id);
     toast.info(`Đã xóa "${cat.name}"`);
   };
+
   const handleAddChild = (parentId) => {
     setActiveParentId(parentId);
     setForm({ name: "", status: "Hoạt động" });

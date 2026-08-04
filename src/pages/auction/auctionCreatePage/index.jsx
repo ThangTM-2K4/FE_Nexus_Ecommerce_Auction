@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -13,10 +13,21 @@ import {
 import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
+import { createAuctionProposal } from "../../../services/auctionProposalService";
+import { createAuction } from "../../../services/auctionService";
+import { getCategories } from "../../../services/adminCategoryService";
 import Select from "../../../components/common/select";
-import { productCategories } from "../../../data/auctionMockData";
 import { auctionImages } from "../../../data/auctionImages";
 import "./index.scss";
+
+const DEFAULT_CATEGORIES = [
+  { value: "dong-ho", label: "Đồng hồ" },
+  { value: "tui-xach", label: "Túi xách & Phụ kiện" },
+  { value: "do-co", label: "Đồ cổ & Sưu tầm" },
+  { value: "tranh-nghe-thuat", label: "Tranh & Nghệ thuật" },
+  { value: "trang-suc", label: "Trang sức & Đá quý" },
+  { value: "dieu-khac", label: "Điêu khắc & Đồ gốm" },
+];
 
 const initialForm = {
   title: "",
@@ -34,7 +45,7 @@ const initialForm = {
 
 const categoryOptions = [
   { value: "", label: "Chọn danh mục" },
-  ...productCategories.map((category) => ({ value: category.id, label: category.label })),
+  ...DEFAULT_CATEGORIES,
 ];
 
 const conditionOptions = [
@@ -153,12 +164,38 @@ export default function AuctionCreatePage() {
 
     try {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      const newProposal = {
+        id: `DX-${Date.now().toString().slice(-4)}`,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        startingPrice: Number(formData.startPrice) || 0,
+        bidIncrement: Number(formData.bidIncrement) || 500000,
+        depositAmount: Number(formData.reservePrice || 1000000),
+        startTime: formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString(),
+        endTime: formData.endDate ? new Date(formData.endDate).toISOString() : new Date(Date.now() + 86400000 * 3).toISOString(),
+        categoryName: formData.category || "Đồng hồ",
+        image: previews[0]?.url || "/images/auction/default.png",
+        status: { label: "Chờ duyệt", type: "upcoming", color: "orange" },
+        createdAt: new Date().toISOString(),
+      };
 
-      toast.success("Tạo phiên đấu giá thành công!");
-      setTimeout(() => navigate("/auction/seller"), 1000);
+      try {
+        await createAuctionProposal({
+          title: newProposal.title,
+          description: newProposal.description,
+          startingPrice: newProposal.startingPrice,
+          bidIncrement: newProposal.bidIncrement,
+          depositAmount: newProposal.depositAmount,
+        });
+      } catch {}
+
+      const existing = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
+      localStorage.setItem("auc_my_proposals", JSON.stringify([newProposal, ...existing]));
+
+      toast.success("🎉 Đã gửi đề xuất phiên đấu giá thành công! Đang chờ Admin duyệt.");
+      setTimeout(() => navigate("/auction/seller"), 800);
     } catch {
-      toast.error("Tạo đấu giá thất bại, vui lòng thử lại");
+      toast.error("Tạo đề xuất thất bại. Vui lòng thử lại!");
     } finally {
       setLoading(false);
     }

@@ -7,7 +7,6 @@ import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
 import AuctionCountdown from "../../../components/auction/auctionCountdown";
-import { myBidsAuctions } from "../../../data/auctionMockData";
 import { useAuth } from "../../../context/AuthContext";
 import "./index.scss";
 
@@ -111,7 +110,7 @@ export default function AuctionMyBidsPage() {
   const [bidAmounts, setBidAmounts] = useState({});
   const [bidHistory, setBidHistory] = useState([]);
   const [wonOrders, setWonOrders] = useState([]);
-  const [liveAuctions, setLiveAuctions] = useState(myBidsAuctions);
+  const [liveAuctions, setLiveAuctions] = useState([]);
   const [selectedWonOrder, setSelectedWonOrder] = useState(null);
   
   // Search & Filter state
