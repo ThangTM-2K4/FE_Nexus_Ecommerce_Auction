@@ -35,15 +35,19 @@
 
 .auction-image__category {
   position: absolute;
-  bottom: 0.65rem;
-  left: 0.65rem;
-  padding: 0.2rem 0.55rem;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  padding: 0.2rem 0.6rem;
   border-radius: $radius-pill;
-  background: rgba($royal-purple, 0.42);
-  color: $mist-lavender;
+  background: rgba($obsidian, 0.85);
+  color: #ffffff;
+  border: 1px solid rgba(#ffffff, 0.2);
+  backdrop-filter: blur(4px);
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
+
 
 .auction-image__live,
 .auction-image__upcoming {

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { useAuth } from "../../../context/AuthContext";
-import * as productService from "../../../services/productService";
+import { getMyEcommerceProducts } from "../../../services/ecommerceProductService";
 import { productCategories } from "../../../data/auctionMockData";
 import { productStats, topProducts, productList } from "../../../data/sellerMockData";
 
@@ -20,7 +20,9 @@ export default function ProductsPage() {
 
   useEffect(() => {
     if (!user?.id) return;
-    productService.getMyProducts(user.id).then(setMyProducts);
+    getMyEcommerceProducts()
+      .then((res) => setMyProducts(res.items || []))
+      .catch(() => setMyProducts([]));
   }, [user?.id]);
 
   const pendingCount = myProducts.filter((p) => p.status === "PENDING").length;

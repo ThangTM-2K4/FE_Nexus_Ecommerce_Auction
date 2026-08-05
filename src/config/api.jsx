@@ -1,5 +1,9 @@
 import axios from 'axios';
 import { API_BASE_URL } from './endpoints';
+import {
+  redirectToHttpErrorPage,
+  redirectToLoginWithReturn,
+} from '../utils/httpErrorRedirect';
 
 const clearAuthStorage = () => {
   localStorage.removeItem('user');
@@ -8,7 +12,10 @@ const clearAuthStorage = () => {
   localStorage.removeItem('expiresAt');
 };
 
-export const BACKEND_BASE_URL = API_BASE_URL;
+export const BACKEND_BASE_URL = (import.meta.env.DEV && !import.meta.env.VITE_DISABLE_PROXY)
+  ? '/api/v1'
+  : (API_BASE_URL || '/api/v1');
+
 const api = axios.create({
   baseURL: BACKEND_BASE_URL,
   headers: {
@@ -18,6 +25,7 @@ const api = axios.create({
 
 let isRefreshing = false;
 let failedQueue = [];
+let isRedirectingToLogin = false;
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => {
@@ -30,23 +38,53 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+/**
+ * 401 thống nhất → /login?redirect=... (không dùng /401 trong luồng chuẩn).
+ * Route /401 giữ cho trường hợp đặc biệt / truy cập trực tiếp.
+ */
+const handleUnauthorized = () => {
+  if (isRedirectingToLogin || window.location.pathname.startsWith('/login')) {
+    return;
+  }
+  isRedirectingToLogin = true;
+  clearAuthStorage();
+  redirectToLoginWithReturn();
+};
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    const isAuthPath = config.url?.includes('/auth/');
+    if (!isAuthPath && ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
+      if (!config.headers['Idempotency-Key']) {
+        const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `idemp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        config.headers['Idempotency-Key'] = uuid;
+      }
+    }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const status = error.response?.status;
 
-    if (!originalRequest || error.response?.status !== 401 || originalRequest._retry) {
+    // 403 / 500 / 503 — redirect trừ khi skipErrorRedirect: true (API phụ)
+    if (!originalRequest || status !== 401 || originalRequest._retry) {
+      if (status === 401) {
+        handleUnauthorized();
+      } else if (status) {
+        redirectToHttpErrorPage(status, originalRequest);
+      }
       return Promise.reject(error);
     }
 
@@ -59,8 +97,16 @@ api.interceptors.response.use(
       requestUrl.includes('/auth/verify-email') ||
       requestUrl.includes('/auth/exchange-code')
     ) {
+      if (
+        status === 401 &&
+        !requestUrl.includes('/auth/login') &&
+        !requestUrl.includes('/auth/logout')
+      ) {
+        handleUnauthorized();
+      }
       return Promise.reject(error);
     }
+
 
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
@@ -115,12 +161,7 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      clearAuthStorage();
-
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
-
+      handleUnauthorized();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

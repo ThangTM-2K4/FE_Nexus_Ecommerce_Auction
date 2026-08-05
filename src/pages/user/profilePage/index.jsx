@@ -6,6 +6,7 @@ import Footer from '../../../components/homepage/footer';
 import AccountLayout from '../../../components/profile/accountLayout';
 import ProfileInfo from '../../../components/profile/profileInfo';
 import BuyerTrustScore from '../../../components/profile/buyerTrustScore';
+import ErrorBoundary from '../../../components/common/errorBoundary';
 import '../ordersPage/index.scss';
 import './index.scss';
 
@@ -53,10 +54,12 @@ export default function ProfilePage() {
       <Header />
       <main className="account-page__main">
         <AccountLayout title="Hồ Sơ" description="Quản lý thông tin tài khoản của bạn">
-          <div className="profile-layout">
-            <ProfileInfo userId={user.id} profile={profile} onUpdate={handleProfileUpdate} />
-            <BuyerTrustScore />
-          </div>
+          <ErrorBoundary message="Không thể tải phần hồ sơ. Vui lòng thử lại.">
+            <div className="profile-layout">
+              <ProfileInfo userId={user.id} profile={profile} onUpdate={handleProfileUpdate} />
+              <BuyerTrustScore profile={profile} />
+            </div>
+          </ErrorBoundary>
         </AccountLayout>
       </main>
       <Footer />

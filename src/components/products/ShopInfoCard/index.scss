@@ -19,6 +19,30 @@
   min-width: 240px;
 }
 
+.shop-info-card__avatar-btn {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform $transition-fast, box-shadow $transition-fast;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.04);
+    box-shadow: $shadow-sm;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($raspberry, 0.45);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
 .shop-info-card__avatar {
   width: 64px;
   height: 64px;

@@ -28,6 +28,9 @@ const translateApiError = (msg) => {
   if (m.includes("verified email")) {
     return "Bạn cần xác thực email trước khi đăng ký người bán.";
   }
+  if (m.includes("identity verification") || (m.includes("identity") && m.includes("verif"))) {
+    return "Bạn cần hoàn tất xác minh danh tính (CCCD) trước khi đăng ký người bán. Vào Hồ sơ → Thông tin cá nhân để xác minh CCCD.";
+  }
   if (m.includes("already") && m.includes("seller")) {
     return "Tài khoản này đã đăng ký người bán rồi.";
   }
@@ -393,7 +396,17 @@ export default function BecomeSellerPage() {
         <Header />
         <main className="become-seller-main">
           <div className="seller-card seller-status-card pending">
-            <img src="/images/seller/status/pending.svg" alt="" className="seller-status-illustration" />
+            <div className="seller-status-waiting" role="img" aria-label="Đang chờ duyệt">
+              <span className="seller-status-waiting__pulse" />
+              <span className="seller-status-waiting__pulse seller-status-waiting__pulse--delay" />
+              <svg viewBox="0 0 64 64" className="seller-status-waiting__clock" aria-hidden="true">
+                <circle cx="32" cy="32" r="26" className="seller-status-waiting__face" />
+                <circle cx="32" cy="32" r="26" className="seller-status-waiting__ring" />
+                <line x1="32" y1="32" x2="32" y2="16" className="seller-status-waiting__hand seller-status-waiting__hand--min" />
+                <line x1="32" y1="32" x2="44" y2="32" className="seller-status-waiting__hand seller-status-waiting__hand--hour" />
+                <circle cx="32" cy="32" r="2.6" className="seller-status-waiting__pin" />
+              </svg>
+            </div>
             <h1>Đơn đang chờ duyệt</h1>
             <div className="seller-status-meta">
               <div>
@@ -413,17 +426,10 @@ export default function BecomeSellerPage() {
                 <strong className="status-pending">Đang chờ xem xét</strong>
               </div>
             </div>
-            <div className="seller-timeline">
-              <h3>Tiến trình</h3>
-              {application.timeline?.map((item) => (
-                <div key={item.step} className={`seller-timeline-item ${item.status}`}>
-                  <span className="seller-timeline-dot" />
-                  <div>
-                    <strong>{item.step}</strong>
-                    {item.date && <small>{new Date(item.date).toLocaleString("vi-VN")}</small>}
-                  </div>
-                </div>
-              ))}
+            <div className="seller-status-notice">
+              <p>
+                💡 <strong>Hồ sơ của bạn đang được nhân viên phê duyệt.</strong> Kết quả phê duyệt sẽ được phản hồi qua Email & Hệ thống trong vòng 24h - 48h làm việc.
+              </p>
             </div>
           </div>
         </main>
@@ -431,6 +437,7 @@ export default function BecomeSellerPage() {
       </div>
     );
   }
+
 
   if (user?.sellerStatus === "REJECTED" && application && !resubmitMode) {
     return (
@@ -478,10 +485,18 @@ export default function BecomeSellerPage() {
                 {checks.phoneVerified ? "✓" : "○"} Xác thực số điện thoại
                 <small>Nhập SĐT và xác thực tại mục Xác minh tài khoản</small>
               </li>
+              <li className={checks.nationalIdVerified ? "done" : "pending"}>
+                {checks.nationalIdVerified ? "✓" : "○"} Xác minh danh tính (CCCD)
+                <small>Bắt buộc để đăng ký người bán — xác minh tại Thông tin cá nhân</small>
+              </li>
             </ul>
-            <Link to="/profile#verification" className="seller-submit-btn">
+            <Link
+              to="/profile"
+              className="seller-submit-btn"
+            >
               Hoàn thiện hồ sơ
             </Link>
+
           </div>
         </main>
         <Footer />

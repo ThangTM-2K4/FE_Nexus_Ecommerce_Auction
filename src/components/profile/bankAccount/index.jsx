@@ -100,7 +100,7 @@ export default function BankAccountPage() {
   const modalFooter = (
     <>
       <button type="button" className="bank-page__back-link" onClick={() => setModalOpen(false)}>
-        TRỞ LẠI
+       
       </button>
       <Button
         variant="accent"
@@ -187,8 +187,6 @@ export default function BankAccountPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editTarget ? 'Sửa Tài Khoản Ngân Hàng' : 'Thêm Tài Khoản Ngân Hàng'}
-        showBack
-        onBack={() => setModalOpen(false)}
         footer={modalFooter}
       >
         <BankAccountForm initial={editTarget} onSubmit={handleSubmit} />

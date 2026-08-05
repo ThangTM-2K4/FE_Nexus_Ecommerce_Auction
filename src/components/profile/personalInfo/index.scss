@@ -48,11 +48,71 @@
   margin: 1.25rem 0 1.5rem;
 }
 
+// Bảng hiển thị thông tin CCCD dạng Bảng (Table Card) đẹp mắt
+.personal-info-cccd__table-card {
+  width: 100%;
+  border: 1px solid $border-soft;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  background: $surface;
+}
+
+.personal-info-cccd__table {
+  width: 100%;
+  border-collapse: collapse;
+
+  tr {
+    border-bottom: 1px solid $border-soft;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  td {
+    padding: 13px 18px;
+    vertical-align: top;
+    border-right: 1px solid $border-soft;
+
+    &:last-child {
+      border-right: 0;
+    }
+
+    &.col-half {
+      width: 50%;
+    }
+
+    &.col-full {
+      width: 100%;
+    }
+  }
+
+  .tb-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: $ink-muted;
+    margin-bottom: 4px;
+  }
+
+  .tb-value {
+    display: block;
+    font-size: 0.93rem;
+    font-weight: 600;
+    color: $ink;
+    word-break: break-word;
+    line-height: 1.45;
+  }
+}
+
 .personal-info-cccd__fields {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  max-width: 560px;
+  width: 100%;
 
   // Cho ô Giới tính (Select) cao bằng các ô Input 42px để hàng 2 cột thẳng
   .common-select__field {

@@ -114,6 +114,7 @@ export const formatSellerDetail = (seller, { includeIds = false } = {}) => {
   const detail = {
     "Loại seller": SELLER_TYPE_LABELS[seller.sellerType] ?? displayValue(seller.sellerType),
     "Tên doanh nghiệp / Shop": displayValue(seller.businessName),
+    "Số CCCD / CMND": displayValue(seller.identityNumber || seller.nationalId || seller.cccd),
     "Mã số thuế": displayValue(seller.taxCode),
     "Giấy phép KD": displayValue(seller.businessLicenseUrl),
     "Địa chỉ": displayValue(seller.address),
@@ -145,8 +146,9 @@ const SELLER_DETAIL_PUBLIC_KEYS = [
 ];
 
 const SELLER_DETAIL_SENSITIVE_KEYS = [
-  "Mã số thuế", "Giấy phép KD", "Địa chỉ", "Số tài khoản", "Ngân hàng", "Chủ tài khoản", "Lý do từ chối",
+  "Số CCCD / CMND", "Mã số thuế", "Giấy phép KD", "Địa chỉ", "Số tài khoản", "Ngân hàng", "Chủ tài khoản", "Lý do từ chối",
 ];
+
 
 export const splitSellerDetailFields = (seller) => {
   const detail = formatSellerDetail(seller);

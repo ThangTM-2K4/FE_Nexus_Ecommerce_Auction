@@ -3,7 +3,10 @@
 .slr-layout {
   min-height: 100vh;
   max-width: 100vw;
-  overflow-x: hidden;
+  // `clip` chặn tràn ngang GIỐNG `hidden` nhưng KHÔNG tạo scroll-container, nhờ đó
+  // header `position: sticky` bên trong vẫn dính đúng khi cuộn (hidden làm hỏng sticky
+  // → header bị "kéo đẩy" trôi theo nội dung khi kéo xuống).
+  overflow-x: clip;
   background: $color-bg;
 
   &__body {
@@ -14,7 +17,7 @@
     margin-left: 250px;
     padding: 24px;
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 }
 

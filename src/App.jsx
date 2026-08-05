@@ -13,10 +13,12 @@ import TermsPage from "./pages/auth/termsPage";
 
 import HomePage from "./pages/homepage/homePage";
 import ProductDetailPage from "./pages/productDetailPage";
+import ShopProfilePage from "./pages/shop/shopProfilePage";
 import CartPage from "./pages/cartPage";
 import CheckoutPage from "./pages/checkoutPage";
 
 import ProfilePage from "./pages/user/profilePage";
+import BuyerWalletPage from "./pages/user/buyerWalletPage";
 import NotificationsPage from "./pages/user/notificationsPage";
 import OrdersPage from "./pages/user/ordersPage";
 import BankAccountRoutePage from "./pages/user/bankAccountPage";
@@ -64,12 +66,23 @@ import AuctionSellerPage from "./pages/auction/auctionSellerPage";
 import AuctionCategoriesPage from "./pages/auction/auctionCategoriesPage";
 import AuctionLocationsPage from "./pages/auction/auctionLocationsPage";
 import AuctionHowItWorksPage from "./pages/auction/auctionHowItWorksPage";
+import AuctionWatchlistPage from "./pages/auction/auctionWatchlistPage";
 
 import ProtectedRoute from "./config/ProtectedRoute";
 import SellerRoute from "./config/SellerRoute";
+import NonAdminRoute from "./config/NonAdminRoute";
+
+import Error401Page from "./pages/errors/401";
+import Error403Page from "./pages/errors/403";
+import Error404Page from "./pages/errors/404";
+import Error500Page from "./pages/errors/500";
+import Error503Page from "./pages/errors/503";
+import AuctionIntroTestPage from "./pages/auctionIntroTest";
+import SiteChatWidget from "./chat";
 
 function App() {
   return (
+    <>
     <Routes>
   {/* ==========================
       Auth Pages
@@ -83,26 +96,21 @@ function App() {
   <Route path="/auth/callback" element={<AuthCallback />} />
   <Route path="/register-verify-otp" element={<RegisterVerifyOtpPage />} />
   <Route path="/terms" element={<TermsPage />} />
+  <Route path="/test-intro" element={<AuctionIntroTestPage />} />
 
   {/* ==========================
       Shared layout
   ========================== */}
 
-  <Route element={<Layout />}>
+  <Route element={<NonAdminRoute><Layout /></NonAdminRoute>}>
 
     {/* Home */}
     <Route path="/" element={<HomePage />} />
     <Route path="/home" element={<HomePage />} />
     <Route path="/product/:id" element={<ProductDetailPage />} />
+    <Route path="/shop/:shopId" element={<ShopProfilePage />} />
 
-    <Route
-      path="/cart"
-      element={
-        <ProtectedRoute>
-          <CartPage />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/cart" element={<CartPage />} />
 
     <Route
       path="/checkout"
@@ -119,6 +127,15 @@ function App() {
       element={
         <ProtectedRoute>
           <ProfilePage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/wallet"
+      element={
+        <ProtectedRoute>
+          <BuyerWalletPage />
         </ProtectedRoute>
       }
     />
@@ -225,17 +242,47 @@ function App() {
       </Route>
 
       {/* Auction zone — separate header/footer layout */}
-      <Route path="/auction" element={<AuctionLayout />}>
+      <Route path="/auction" element={<NonAdminRoute><AuctionLayout /></NonAdminRoute>}>
         <Route index element={<AuctionBrowsePage />} />
         <Route path="browse" element={<AuctionBrowsePage />} />
         <Route path="detail/:id" element={<AuctionDetailPage />} />
-        <Route path="create" element={<AuctionCreatePage />} />
-        <Route path="my-bids" element={<AuctionMyBidsPage />} />
+        <Route
+          path="create"
+          element={
+            <SellerRoute>
+              <AuctionCreatePage />
+            </SellerRoute>
+          }
+        />
+        <Route
+          path="my-bids"
+          element={
+            <ProtectedRoute>
+              <AuctionMyBidsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="profile" element={<AuctionProfilePage />} />
-        <Route path="seller" element={<AuctionSellerPage />} />
+        <Route
+          path="seller"
+          element={
+            <ProtectedRoute>
+              <AuctionSellerPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="categories" element={<AuctionCategoriesPage />} />
         <Route path="locations" element={<AuctionLocationsPage />} />
         <Route path="how-it-works" element={<AuctionHowItWorksPage />} />
+        <Route
+          path="watchlist"
+          element={
+            <ProtectedRoute>
+              <AuctionWatchlistPage />
+            </ProtectedRoute>
+          }
+        />
+
       </Route>
 
   {/* Seller */}
@@ -298,7 +345,17 @@ function App() {
     <Route path="activity" element={<StaffActivity />} />
     <Route path="notifications" element={<StaffNotifications />} />
   </Route>
+
+  {/* Error pages */}
+  <Route path="/401" element={<Error401Page />} />
+  <Route path="/403" element={<Error403Page />} />
+  <Route path="/404" element={<Error404Page />} />
+  <Route path="/500" element={<Error500Page />} />
+  <Route path="/503" element={<Error503Page />} />
+  <Route path="*" element={<Error404Page />} />
 </Routes>
+    <SiteChatWidget />
+    </>
   );
 }
 

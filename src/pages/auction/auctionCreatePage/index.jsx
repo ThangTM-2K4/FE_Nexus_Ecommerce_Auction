@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
   FaCloudUploadAlt,
+  FaFileAlt,
   FaTimes,
   FaCrown,
   FaShieldAlt,
@@ -12,9 +13,21 @@ import {
 import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
-import { productCategories } from "../../../data/auctionMockData";
+import { createAuctionProposal } from "../../../services/auctionProposalService";
+import { createAuction } from "../../../services/auctionService";
+import { getCategories } from "../../../services/adminCategoryService";
+import Select from "../../../components/common/select";
 import { auctionImages } from "../../../data/auctionImages";
 import "./index.scss";
+
+const DEFAULT_CATEGORIES = [
+  { value: "dong-ho", label: "Đồng hồ" },
+  { value: "tui-xach", label: "Túi xách & Phụ kiện" },
+  { value: "do-co", label: "Đồ cổ & Sưu tầm" },
+  { value: "tranh-nghe-thuat", label: "Tranh & Nghệ thuật" },
+  { value: "trang-suc", label: "Trang sức & Đá quý" },
+  { value: "dieu-khac", label: "Điêu khắc & Đồ gốm" },
+];
 
 const initialForm = {
   title: "",
@@ -30,12 +43,26 @@ const initialForm = {
   agreeRules: false,
 };
 
+const categoryOptions = [
+  { value: "", label: "Chọn danh mục" },
+  ...DEFAULT_CATEGORIES,
+];
+
+const conditionOptions = [
+  { value: "", label: "Chọn tình trạng" },
+  { value: "new", label: "Mới 100%" },
+  { value: "likenew", label: "Like New 95–99%" },
+  { value: "good", label: "Tốt 85–94%" },
+  { value: "used", label: "Đã qua sử dụng" },
+];
+
 export default function AuctionCreatePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState(initialForm);
   const [previews, setPreviews] = useState([]);
+  const [documents, setDocuments] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,6 +92,28 @@ export default function AuctionCreatePage() {
       if (target) URL.revokeObjectURL(target.url);
       return prev.filter((p) => p.id !== id);
     });
+  };
+
+  const handleDocumentChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    const availableSlots = 3 - documents.length;
+
+    if (files.length > availableSlots) {
+      toast.error("Tối đa 3 giấy tờ liên quan");
+    }
+
+    setDocuments((prev) => [
+      ...prev,
+      ...files.slice(0, Math.max(0, availableSlots)).map((file) => ({
+        id: [file.name, Date.now(), Math.random().toString(16).slice(2)].join("-"),
+        name: file.name,
+      })),
+    ]);
+    e.target.value = "";
+  };
+
+  const removeDocument = (id) => {
+    setDocuments((prev) => prev.filter((document) => document.id !== id));
   };
 
   const validateForm = () => {
@@ -115,12 +164,38 @@ export default function AuctionCreatePage() {
 
     try {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      const newProposal = {
+        id: `DX-${Date.now().toString().slice(-4)}`,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        startingPrice: Number(formData.startPrice) || 0,
+        bidIncrement: Number(formData.bidIncrement) || 500000,
+        depositAmount: Number(formData.reservePrice || 1000000),
+        startTime: formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString(),
+        endTime: formData.endDate ? new Date(formData.endDate).toISOString() : new Date(Date.now() + 86400000 * 3).toISOString(),
+        categoryName: formData.category || "Đồng hồ",
+        image: previews[0]?.url || "/images/auction/default.png",
+        status: { label: "Chờ duyệt", type: "upcoming", color: "orange" },
+        createdAt: new Date().toISOString(),
+      };
 
-      toast.success("Tạo phiên đấu giá thành công!");
-      setTimeout(() => navigate("/auction/seller"), 1000);
+      try {
+        await createAuctionProposal({
+          title: newProposal.title,
+          description: newProposal.description,
+          startingPrice: newProposal.startingPrice,
+          bidIncrement: newProposal.bidIncrement,
+          depositAmount: newProposal.depositAmount,
+        });
+      } catch {}
+
+      const existing = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
+      localStorage.setItem("auc_my_proposals", JSON.stringify([newProposal, ...existing]));
+
+      toast.success("🎉 Đã gửi đề xuất phiên đấu giá thành công! Đang chờ Admin duyệt.");
+      setTimeout(() => navigate("/auction/seller"), 800);
     } catch {
-      toast.error("Tạo đấu giá thất bại, vui lòng thử lại");
+      toast.error("Tạo đề xuất thất bại. Vui lòng thử lại!");
     } finally {
       setLoading(false);
     }
@@ -246,25 +321,15 @@ export default function AuctionCreatePage() {
 
             <div className="field-row">
               <div className="field">
-                <label htmlFor="category">Danh mục <span className="required-star">*</span></label>
-                <select
-                  id="category"
+                <Select
+                  label={<><span>Danh mục</span> <span className="required-star">*</span></>}
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className={errors.category ? "error" : ""}
-                  required
-                >
-                  <option value="">Chọn danh mục</option>
-                  {productCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.category && (
-                  <span className="field-error">{errors.category}</span>
-                )}
+                  options={categoryOptions}
+                  theme="dark"
+                  error={errors.category}
+                />
               </div>
 
               <div className="field">
@@ -285,24 +350,15 @@ export default function AuctionCreatePage() {
             </div>
 
             <div className="field">
-              <label htmlFor="condition">Tình trạng <span className="required-star">*</span></label>
-              <select
-                id="condition"
+              <Select
+                label={<><span>Tình trạng</span> <span className="required-star">*</span></>}
                 name="condition"
                 value={formData.condition}
                 onChange={handleChange}
-                className={errors.condition ? "error" : ""}
-                required
-              >
-                <option value="">Chọn tình trạng</option>
-                <option value="new">Mới 100%</option>
-                <option value="likenew">Like New 95–99%</option>
-                <option value="good">Tốt 85–94%</option>
-                <option value="used">Đã qua sử dụng</option>
-              </select>
-              {errors.condition && (
-                <span className="field-error">{errors.condition}</span>
-              )}
+                options={conditionOptions}
+                theme="dark"
+                error={errors.condition}
+              />
             </div>
 
             <div className="field">
@@ -369,6 +425,42 @@ export default function AuctionCreatePage() {
                 <span>Chưa có ảnh — hãy tải lên ít nhất 1 ảnh</span>
               </div>
             )}
+
+          </section>
+
+          <section className="auc-create__card">
+            <h2>Giấy tờ & Chứng nhận sản phẩm</h2>
+            <p className="hint">
+              Tải lên chứng từ nguồn gốc, hóa đơn chính hãng, giấy bảo hành hoặc giấy kiểm định (PDF / PNG / JPG).
+            </p>
+
+            <div className="document-upload">
+              <div className="document-upload__info">
+                <FaFileAlt />
+                <div>
+                  <strong>Chứng từ & Hóa đơn xác thực</strong>
+                  <span>Hóa đơn mua hàng, giấy kiểm định, thẻ bảo hành (Tối đa 3 tệp)</span>
+                </div>
+              </div>
+              <label className="document-upload__button">
+                Tải chứng nhận
+                <input type="file" accept="image/*,application/pdf" multiple onChange={handleDocumentChange} />
+              </label>
+            </div>
+
+            {documents.length > 0 && (
+              <ul className="document-list">
+                {documents.map((document) => (
+                  <li key={document.id}>
+                    <FaFileAlt />
+                    <span>{document.name}</span>
+                    <button type="button" onClick={() => removeDocument(document.id)} aria-label={"Xóa " + document.name}>
+                      <FaTimes />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           <section className="auc-create__card">
@@ -376,7 +468,7 @@ export default function AuctionCreatePage() {
 
             <div className="field-row field-row--3">
               <div className="field">
-                <label htmlFor="startPrice">Giá khởi điểm (VNĐ) <span className="required-star">*</span></label>
+                <label htmlFor="startPrice">Giá khởi điểm  <span className="required-star">*</span></label>
                 <input
                   id="startPrice"
                   name="startPrice"
@@ -394,7 +486,7 @@ export default function AuctionCreatePage() {
               </div>
 
               <div className="field">
-                <label htmlFor="reservePrice">Giá dự trữ (VNĐ)</label>
+                <label htmlFor="reservePrice">Giá dự trữ </label>
                 <input
                   id="reservePrice"
                   name="reservePrice"
@@ -407,7 +499,7 @@ export default function AuctionCreatePage() {
               </div>
 
               <div className="field">
-                <label htmlFor="bidIncrement">Bước giá (VNĐ) <span className="required-star">*</span></label>
+                <label htmlFor="bidIncrement">Bước giá  <span className="required-star">*</span></label>
                 <input
                   id="bidIncrement"
                   name="bidIncrement"

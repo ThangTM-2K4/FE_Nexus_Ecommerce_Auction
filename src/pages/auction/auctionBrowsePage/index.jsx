@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuctionIntroBanner from '../../../components/auction/auctionIntroBanner';
 import AuctionFilterBar, { EMPTY_FILTERS } from '../../../components/auction/auctionFilterBar';
 import AuctionCard from '../../../components/auction/auctionCard';
 import { auctionListings, countLiveAuctions } from '../../../data/auctionData';
+import { getAuctions } from '../../../services/auctionService';
 import { useAuth } from '../../../context/AuthContext';
 import './index.scss';
+
 
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
@@ -68,6 +70,13 @@ export default function AuctionBrowsePage() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'live';
+  const categoryParam = searchParams.get('category');
+
+  useEffect(() => {
+    if (categoryParam) {
+      setFilters((prev) => ({ ...prev, category: categoryParam }));
+    }
+  }, [categoryParam]);
   
   const setActiveTab = (tab) => {
     setSearchParams((prev) => {
@@ -80,10 +89,31 @@ export default function AuctionBrowsePage() {
     });
   };
 
-  const liveCount = useMemo(() => countLiveAuctions(auctionListings), []);
+  const [rawAuctions, setRawAuctions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadAuctions() {
+      const publishedLocal = JSON.parse(localStorage.getItem("auc_published_auctions") || "[]");
+      try {
+        setIsLoading(true);
+        const res = await getAuctions();
+        const apiItems = (res && Array.isArray(res.items)) ? res.items : [];
+        setRawAuctions([...publishedLocal, ...apiItems]);
+      } catch {
+        setRawAuctions(publishedLocal);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadAuctions();
+  }, []);
+
+
+  const liveCount = useMemo(() => countLiveAuctions(rawAuctions), [rawAuctions]);
 
   const filteredListings = useMemo(() => {
-    const filtered = auctionListings.filter((item) => {
+    const filtered = rawAuctions.filter((item) => {
       if (!matchesSearch(item, searchQuery)) return false;
       if (filters.category && item.category !== filters.category) return false;
       if (filters.location && item.location !== filters.location) return false;
@@ -103,7 +133,25 @@ export default function AuctionBrowsePage() {
     });
 
     return sortListings(filtered, sortBy);
-  }, [searchQuery, sortBy, filters, activeTab]);
+  }, [rawAuctions, searchQuery, sortBy, filters, activeTab]);
+
+
+  const hasActiveFilters = searchQuery.trim() !== '' ||
+    Object.values(filters).some((v) => v !== '');
+
+  const handleClearAll = () => {
+    setFilters(EMPTY_FILTERS);
+    setSearchQuery('');
+    setSearchParams((prev) => { prev.delete('category'); return prev; });
+  };
+
+  // Build readable active filter chips
+  const filterChips = [];
+  if (searchQuery.trim()) filterChips.push({ key: 'search', label: `Từ khóa: "${searchQuery}"`, onRemove: () => setSearchQuery('') });
+  if (filters.category) filterChips.push({ key: 'category', label: `Danh mục: ${filters.category}`, onRemove: () => setFilters((p) => ({ ...p, category: '' })) });
+  if (filters.location) filterChips.push({ key: 'location', label: `Vị trí: ${filters.location}`, onRemove: () => setFilters((p) => ({ ...p, location: '' })) });
+  if (filters.priceRange) filterChips.push({ key: 'price', label: `Giá: ${filters.priceRange}`, onRemove: () => setFilters((p) => ({ ...p, priceRange: '' })) });
+  if (filters.endingWithin) filterChips.push({ key: 'ending', label: `Kết thúc: ${filters.endingWithin}`, onRemove: () => setFilters((p) => ({ ...p, endingWithin: '' })) });
 
   return (
     <div className="auction-browse-page">
@@ -146,10 +194,38 @@ export default function AuctionBrowsePage() {
         onFiltersChange={setFilters}
       />
 
+      {/* Active Filter Bar */}
+      {hasActiveFilters && (
+        <div className="auction-browse-page__active-filters">
+          {filterChips.map((chip) => (
+            <span key={chip.key} className="filter-chip">
+              {chip.label}
+              <button type="button" onClick={chip.onRemove} title="Xóa lọc này">✕</button>
+            </span>
+          ))}
+          <button
+            type="button"
+            className="filter-chip filter-chip--clear-all"
+            onClick={handleClearAll}
+          >
+            ✕ Xóa tất cả bộ lọc
+          </button>
+        </div>
+      )}
       <div className="auction-browse-page__grid" role="list">
         {filteredListings.length === 0 ? (
           <div className="auction-browse-page__empty" role="status">
             <p>Không tìm thấy phiên đấu giá phù hợp. Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm.</p>
+            <button
+              type="button"
+              className="auction-browse-page__reset-btn"
+              onClick={() => {
+                setFilters(EMPTY_FILTERS);
+                setSearchQuery('');
+              }}
+            >
+              Xóa tất cả bộ lọc
+            </button>
           </div>
         ) : (
           filteredListings.map((auction) => (

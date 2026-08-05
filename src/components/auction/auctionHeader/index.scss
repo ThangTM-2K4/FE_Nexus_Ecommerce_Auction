@@ -147,7 +147,13 @@
     border-color: $gold-bright;
     color: $gold-bright;
   }
+
+  @media (max-width: 576px) {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.7rem;
+  }
 }
+
 
 .auction-header__menu-btn {
   display: flex;
@@ -221,3 +227,157 @@
     }
   }
 }
+
+/* ==========================================================================
+   Profile Avatar Circle & Wallet Dropdown SCSS
+   ========================================================================== */
+.auction-header__profile-container {
+  position: relative;
+}
+
+.auction-header__profile-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: rgba($midnight-violet, 0.85);
+  border: 1px solid rgba($royal-purple, 0.5);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba($gold-bright, 0.6);
+    background: rgba($royal-purple, 0.3);
+    box-shadow: 0 0 12px rgba(232, 196, 104, 0.3);
+    transform: scale(1.05);
+  }
+
+  .profile-avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid $gold-bright;
+    flex-shrink: 0;
+  }
+}
+
+.auction-header__profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 270px;
+  background: #180e2b;
+  border: 1px solid rgba(232, 196, 104, 0.35);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+
+  .dropdown-user-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 12px;
+
+    .dropdown-avatar-large {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid $gold-bright;
+    }
+
+    .dropdown-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #ede7f6;
+      display: block;
+    }
+
+    .dropdown-email {
+      font-size: 0.75rem;
+      color: #8f7fbf;
+      display: block;
+    }
+  }
+
+  .dropdown-wallet-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(232, 196, 104, 0.2);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+
+    .wallet-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #b9b4c7;
+
+      .balance-val {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #e8c468;
+      }
+
+      &.sub {
+        margin-top: 4px;
+        font-size: 0.75rem;
+        color: #8f7fbf;
+
+        .frozen-val {
+          color: #ede7f6;
+        }
+      }
+    }
+  }
+
+  .dropdown-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    li {
+      a, .dropdown-logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        color: #ede7f6;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        background: transparent;
+        border: none;
+        width: 100%;
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: #e8c468;
+        }
+      }
+
+      .dropdown-logout-btn {
+        color: #f87171;
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.15);
+          color: #f87171;
+        }
+      }
+    }
+  }
+}
+

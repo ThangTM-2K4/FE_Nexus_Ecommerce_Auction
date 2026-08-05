@@ -11,6 +11,7 @@ export default function ProductCard({
   price,
   discountPercent,
   soldCount,
+  rating,
   tags = [],
   onClick,
 }) {
@@ -66,7 +67,15 @@ export default function ProductCard({
 
         <div className={styles.footer}>
           <span className={styles.price}>{formatPrice(price)}</span>
-          <span className={styles.sold}>{soldCount} đã bán</span>
+          {rating != null ? (
+            <span className={styles.rating}>
+              <span className={styles.ratingStar} aria-hidden="true">★</span>
+              {rating}
+              {soldCount && <span className={styles.soldInline}> | {soldCount} đã bán</span>}
+            </span>
+          ) : (
+            <span className={styles.sold}>{soldCount} đã bán</span>
+          )}
         </div>
       </div>
     </article>

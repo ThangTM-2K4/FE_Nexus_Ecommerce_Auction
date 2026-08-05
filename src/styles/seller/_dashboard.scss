@@ -219,18 +219,30 @@
   }
 
   &__link {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     margin-top: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
-    color: $color-accent;
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-      text-decoration: underline;
+      background: #ffffff !important;
+      color: $color-primary-dark !important;
+      border-color: #ffffff !important;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+      transform: translateY(-1px);
     }
   }
 }
+
 
 .slr-overview-toolbar {
   display: flex;
@@ -2479,8 +2491,102 @@
     flex-shrink: 0;
   }
 
+  &__action svg {
+    transition: transform $transition-fast;
+  }
+
+  &:hover &__action svg {
+    transform: translateX(3px);
+  }
+
   @media (max-width: 520px) {
     flex-wrap: wrap;
     .slr-btn { width: 100%; }
   }
+}
+
+// Modal xem trước báo cáo
+.slr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  animation: slrFadeIn 0.15s ease;
+}
+
+.slr-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+  animation: slrModalPop 0.18s ease;
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid $color-border-light;
+
+    h4 { font-size: 16px; font-weight: 700; color: $color-primary-dark; margin-bottom: 4px; }
+    p { font-size: 12px; color: $color-text-muted; line-height: 1.5; }
+  }
+
+  &__close {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-sm;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $color-text-muted;
+    background: $color-bg;
+    transition: background $transition-fast, color $transition-fast;
+
+    &:hover { background: rgba($color-accent, 0.14); color: $color-primary; }
+  }
+
+  &__body {
+    padding: 18px 20px;
+    overflow-y: auto;
+  }
+
+  &__note {
+    font-size: 12px;
+    color: $color-text-secondary;
+    margin-bottom: 12px;
+  }
+
+  &__foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid $color-border-light;
+  }
+}
+
+@keyframes slrFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slrModalPop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }

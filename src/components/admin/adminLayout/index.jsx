@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import AdminHeader from "../adminHeader";
 import AdminSidebar from "../adminSidebar";
@@ -8,12 +9,17 @@ const AdminLayout = () => {
   const location = useLocation();
   const segments = location.pathname.split("/").filter(Boolean);
   const activeId = segments[1] || "dashboard";
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="adm-layout">
-      <AdminHeader />
+      <AdminHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
       <div className="adm-layout__body">
-        <AdminSidebar activeId={activeId} />
+        <AdminSidebar
+          activeId={activeId}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
         <main className="adm-layout__content">
           <AdminPageTransition>
             <Outlet />
@@ -25,3 +31,4 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+

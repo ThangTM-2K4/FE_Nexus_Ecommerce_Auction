@@ -2,7 +2,16 @@ import { formatPrice } from '@/utils/formatPrice';
 import Button from '@/components/common/button';
 import './index.scss';
 
-export default function CheckoutOrderSummary({ subtotal, shippingFee, total, onPlaceOrder, placing }) {
+export default function CheckoutOrderSummary({
+  subtotal,
+  shippingFee,
+  total,
+  onPlaceOrder,
+  placing,
+  disabled = false,
+}) {
+  const isDisabled = placing || disabled;
+
   return (
     <>
       <section className="checkout-order-summary">
@@ -30,7 +39,7 @@ export default function CheckoutOrderSummary({ subtotal, shippingFee, total, onP
           <Button
             variant="accent"
             onClick={onPlaceOrder}
-            disabled={placing}
+            disabled={isDisabled}
             className="checkout-summary-bar__btn"
           >
             {placing ? 'Đang xử lý...' : 'Đặt Hàng'}

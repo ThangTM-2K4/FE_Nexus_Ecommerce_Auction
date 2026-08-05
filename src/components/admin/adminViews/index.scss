@@ -1,4 +1,4 @@
-@use "../../../styles/auction-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
 // ── User cards ──
 .adm-user-card {
@@ -23,7 +23,7 @@
     height: 48px;
     border-radius: 50%;
     background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
-    color: #fff;
+    color: #12101A;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -147,6 +147,571 @@
   align-items: stretch;
 }
 
+// ── User list (list-view mode) ──
+.adm-user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// ── Universal Grid to List View Converter ──
+// Applies proper compact horizontal row layout to each card type individually
+.adm-view-as-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+
+  // ── ProductCard in list mode ──
+  > article.adm-product-card {
+    display: grid !important;
+    grid-template-columns: 56px 1fr auto !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    padding: 0 14px 0 0 !important;
+    height: 58px !important;
+    overflow: visible !important;
+    transform: none !important;
+    box-shadow: none !important;
+
+    .adm-product-card__img {
+      height: 58px !important;
+      width: 56px !important;
+      border-bottom: none !important;
+      border-right: 1px solid $color-border-light !important;
+      border-radius: $radius-lg 0 0 $radius-lg !important;
+    }
+
+    .adm-product-card__body {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 12px !important;
+      padding: 0 12px !important;
+      flex: 1 !important;
+      min-width: 0 !important;
+
+      .adm-product-card__head {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+      }
+
+      h3 {
+        margin: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 200px !important;
+      }
+
+      .adm-product-card__seller,
+      .adm-product-card__brand { display: none !important; }
+
+      .adm-product-card__price {
+        margin-top: 0 !important;
+        flex-shrink: 0 !important;
+      }
+    }
+
+    footer {
+      padding: 0 !important;
+      border-top: none !important;
+      flex-shrink: 0 !important;
+    }
+  }
+
+  // ── SellerProductGroup in list mode: collapse the group header, expand children as rows ──
+  > section.adm-seller-group {
+    margin-bottom: 8px !important;
+
+    .adm-seller-group__head {
+      padding: 10px 14px !important;
+      margin-bottom: 8px !important;
+      gap: 10px !important;
+
+      .adm-seller-group__info h3 { font-size: 13px !important; }
+      .adm-seller-group__stats { gap: 6px !important; }
+      .adm-seller-group__stat { min-width: 64px !important; padding: 6px 8px !important; }
+    }
+
+    .adm-product-grid.adm-seller-group__grid {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 6px !important;
+
+      > article.adm-product-card {
+        display: grid !important;
+        grid-template-columns: 56px 1fr auto !important;
+        align-items: center !important;
+        padding: 0 14px 0 0 !important;
+        height: 56px !important;
+        overflow: visible !important;
+        transform: none !important;
+
+        .adm-product-card__img {
+          height: 56px !important;
+          width: 56px !important;
+          border-bottom: none !important;
+          border-right: 1px solid $color-border-light !important;
+          border-radius: $radius-lg 0 0 $radius-lg !important;
+        }
+
+        .adm-product-card__body {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 10px !important;
+          padding: 0 10px !important;
+          min-width: 0 !important;
+
+          .adm-product-card__head {
+            margin-bottom: 0 !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 6px !important;
+            flex-shrink: 0 !important;
+          }
+
+          h3 {
+            margin: 0 !important;
+            font-size: 13px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 180px !important;
+          }
+
+          .adm-product-card__seller,
+          .adm-product-card__brand { display: none !important; }
+
+          .adm-product-card__price {
+            margin-top: 0 !important;
+            margin-left: auto !important;
+          }
+        }
+
+        footer {
+          padding: 0 !important;
+          border-top: none !important;
+        }
+      }
+    }
+  }
+
+  // ── AuctionCard in list mode ──
+  > article.adm-auction-card {
+    flex-direction: row !important;
+    align-items: center !important;
+    height: auto !important;
+    min-height: 60px !important;
+    gap: 14px !important;
+    padding: 12px 16px !important;
+    transform: none !important;
+
+    .adm-auction-card__pulse {
+      position: static !important;
+      flex-shrink: 0 !important;
+    }
+
+    header {
+      margin-bottom: 0 !important;
+      flex: 0 0 200px !important;
+      small { display: none !important; }
+      h3 { font-size: 13px !important; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      p { display: none !important; }
+    }
+
+    .adm-auction-card__prices {
+      display: flex !important;
+      gap: 8px !important;
+      margin-bottom: 0 !important;
+      flex-shrink: 0 !important;
+
+      div {
+        padding: 6px 10px !important;
+        span { font-size: 9px !important; }
+        strong { font-size: 12px !important; }
+      }
+    }
+
+    .adm-auction-card__bar { display: none !important; }
+
+    .adm-auction-card__meta {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+      flex-shrink: 0 !important;
+      font-size: 11px !important;
+    }
+
+    .adm-status-badge { flex-shrink: 0 !important; }
+
+    footer {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+      border-top: none !important;
+      flex-shrink: 0 !important;
+    }
+  }
+
+  // ── OrderTimelineItem in list mode ──
+  > div.adm-order-timeline__item {
+    position: static !important;
+    padding: 0 !important;
+
+    .adm-order-timeline__dot { display: none !important; }
+
+    .adm-order-timeline__card {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 14px !important;
+      padding: 10px 16px !important;
+
+      header {
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+        flex: 0 0 110px !important;
+        strong { font-size: 12px !important; }
+      }
+
+      p { font-size: 12px !important; margin-bottom: 0 !important; flex: 1 !important; min-width: 0 !important; }
+
+      .adm-order-timeline__details {
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+        font-size: 11px !important;
+        strong { font-size: 13px !important; }
+      }
+
+      small { display: none !important; }
+
+      footer {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        border-top: none !important;
+        flex-shrink: 0 !important;
+      }
+    }
+  }
+
+  // ── PaymentCard in list mode ──
+  > article.adm-payment-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 10px 16px !important;
+
+    header {
+      flex: 0 0 130px !important;
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 8px !important;
+      code { font-size: 12px !important; }
+    }
+
+    .adm-payment-card__amount {
+      font-size: 14px !important;
+      flex-shrink: 0 !important;
+      font-weight: 700 !important;
+      color: $color-primary !important;
+    }
+
+    > p { flex: 1 !important; font-size: 12px !important; min-width: 0 !important; }
+
+    .adm-payment-card__meta {
+      font-size: 11px !important;
+      flex-shrink: 0 !important;
+    }
+
+    footer {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+      border-top: none !important;
+      flex-shrink: 0 !important;
+    }
+  }
+
+  // ── WalletCard in list mode ──
+  > article.adm-wallet-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding: 12px 16px !important;
+    transform: none !important;
+
+    header {
+      flex: 0 0 160px !important;
+      h3 { font-size: 13px !important; }
+      span { font-size: 11px !important; }
+    }
+
+    .adm-wallet-card__balance {
+      font-size: 16px !important;
+      margin: 0 !important;
+      flex-shrink: 0 !important;
+    }
+
+    dl {
+      display: flex !important;
+      gap: 12px !important;
+      margin-bottom: 0 !important;
+      flex: 1 !important;
+      dt { font-size: 9px !important; }
+      dd { font-size: 11px !important; }
+    }
+
+    footer {
+      margin-top: 0 !important;
+      flex-shrink: 0 !important;
+    }
+  }
+
+  // ── WithdrawalCard in list mode ──
+  > article.adm-withdrawal-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 10px 16px !important;
+    background: $color-bg-card !important;
+    border: 1px solid $color-border-light !important;
+    border-radius: $radius-md !important;
+
+    .adm-withdrawal-card__amount {
+      font-size: 14px !important;
+      font-weight: 800 !important;
+      flex-shrink: 0 !important;
+      min-width: 120px !important;
+    }
+
+    h3 { font-size: 13px !important; margin: 0 !important; flex: 1 !important; }
+    p, small { font-size: 11px !important; color: $color-text-muted !important; flex-shrink: 0 !important; }
+
+    .adm-status-badge { flex-shrink: 0 !important; }
+
+    footer {
+      flex-shrink: 0 !important;
+      padding-top: 0 !important;
+      border-top: none !important;
+      margin-top: 0 !important;
+    }
+  }
+
+  // ── ShippingPartnerCard in list mode ──
+  > article.adm-shipping-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 10px 16px !important;
+    background: $color-bg-card !important;
+    border: 1px solid $color-border-light !important;
+    border-radius: $radius-md !important;
+
+    .adm-shipping-card__icon { font-size: 22px !important; flex-shrink: 0 !important; }
+    h3 { font-size: 13px !important; margin: 0 !important; flex: 1 !important; }
+    .adm-shipping-card__fee { font-size: 13px !important; font-weight: 700 !important; color: $color-primary !important; flex-shrink: 0 !important; }
+    > p { font-size: 11px !important; color: $color-text-muted !important; flex-shrink: 0 !important; }
+    .adm-status-badge { flex-shrink: 0 !important; }
+    > button { flex-shrink: 0 !important; padding: 4px 12px !important; }
+  }
+
+  // ── CouponTicket in list mode ──
+  > article.adm-coupon-ticket {
+    height: auto !important;
+    min-height: 52px !important;
+
+    .adm-coupon-ticket__left {
+      width: 72px !important;
+      padding: 10px !important;
+      strong { font-size: 14px !important; }
+    }
+
+    .adm-coupon-ticket__right {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 12px !important;
+      padding: 10px 14px !important;
+
+      code { font-size: 13px !important; }
+      p { display: none !important; }
+      .adm-coupon-ticket__usage { display: none !important; }
+      .adm-status-badge { flex-shrink: 0 !important; }
+      .adm-coupon-ticket__actions { margin-top: 0 !important; flex-shrink: 0 !important; }
+    }
+  }
+
+  // ── BidFeedItem in list mode ──
+  > article.adm-bid-feed__item {
+    padding: 8px 14px !important;
+
+    .adm-bid-feed__amount { font-size: 13px !important; min-width: 90px !important; }
+
+    .adm-bid-feed__body {
+      strong { font-size: 12px !important; }
+      > span { display: none !important; }
+
+      .adm-bid-feed__meta {
+        margin-top: 0 !important;
+        gap: 8px !important;
+        span { font-size: 10px !important; }
+      }
+    }
+  }
+}
+
+
+.adm-user-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  padding: 12px 18px;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:hover {
+    background: rgba($color-primary, 0.04);
+    border-color: rgba($color-primary, 0.2);
+    transform: translateX(3px);
+  }
+
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    color: #12101A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex: 0 0 40px;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    min-width: 0;
+    flex: 0 0 220px;
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__fullname {
+    font-size: 14px;
+    font-weight: 700;
+    color: $color-primary-dark;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__sub {
+    font-size: 11px;
+    color: $color-text-muted;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 0 0 150px;
+    width: 150px;
+    min-width: 0;
+
+    &--hide-sm {
+      @media (max-width: 900px) { display: none; }
+    }
+  }
+
+  &__label {
+    font-size: 10px;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  span:last-child {
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__status {
+    flex: 0 0 110px;
+    width: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .adm-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      max-width: 100px;
+      text-align: center;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-left: auto;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+
+    button {
+      height: 30px;
+      padding: 0 12px;
+      border-radius: $radius-sm;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid $color-border-light;
+      background: $color-bg;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      &.primary {
+        background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+        color: #12101A;
+        border: none;
+      }
+
+      &.danger {
+        color: $color-danger;
+        border-color: rgba($color-danger, 0.4);
+      }
+    }
+  }
+}
+
+
 // ── Product cards ──
 .adm-product-grid {
   display: grid;
@@ -201,7 +766,7 @@
     height: 40px;
     border-radius: $radius-md;
     background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
-    color: #fff;
+    color: #12101A;
     font-size: 13px;
     font-weight: 700;
     display: flex;
@@ -352,6 +917,7 @@
 .adm-auction-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-auto-rows: 1fr;
   gap: 14px;
 }
 
@@ -362,6 +928,9 @@
   padding: 18px;
   position: relative;
   transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 
   &.live {
     border-color: rgba($color-danger, 0.35);
@@ -424,13 +993,14 @@
     font-size: 11px;
     color: $color-text-muted;
     margin-bottom: 10px;
+    padding-bottom: 2px;
   }
 
   footer {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
-    margin-top: 12px;
+    margin-top: auto;
     padding-top: 12px;
     border-top: 1px solid $color-border-light;
 
@@ -595,18 +1165,19 @@
   background: linear-gradient(135deg, $color-primary-dark, $color-primary);
   border-radius: $radius-lg;
   padding: 20px;
-  color: #fff;
+  color: #12101A;
   transition: transform 0.25s ease;
 
   &:hover { transform: scale(1.02); }
 
-  header h3 { font-size: 16px; font-weight: 700; }
-  header span { font-size: 11px; opacity: 0.8; }
+  header h3 { font-size: 16px; font-weight: 700; color: #12101A; }
+  header span { font-size: 11px; opacity: 0.9; color: rgba(18, 16, 26, 0.8); }
 
   &__balance {
     font-size: 28px;
     font-weight: 800;
     margin: 16px 0;
+    color: #12101A;
   }
 
   dl {
@@ -614,8 +1185,8 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     margin-bottom: 14px;
-    dt { font-size: 10px; opacity: 0.7; }
-    dd { font-size: 12px; font-weight: 600; }
+    dt { font-size: 10px; opacity: 0.8; color: rgba(18, 16, 26, 0.7); }
+    dd { font-size: 12px; font-weight: 600; color: #12101A; }
   }
 
   footer {
@@ -623,14 +1194,14 @@
     gap: 8px;
     button {
       padding: 6px 14px;
-      border: 1px solid rgba(255,255,255,0.3);
+      border: 1px solid rgba(18, 16, 26, 0.2);
       border-radius: $radius-sm;
-      background: rgba(255,255,255,0.1);
-      color: #fff;
+      background: rgba(18, 16, 26, 0.08);
+      color: #12101A;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
-      &:hover { background: rgba(255,255,255,0.2); }
+      &:hover { background: rgba(18, 16, 26, 0.15); }
     }
   }
 }
@@ -693,7 +1264,7 @@
   &__left {
     width: 100px;
     background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
-    color: #fff;
+    color: #12101A;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1378,7 +1949,7 @@
     justify-content: center;
     font-size: 13px;
     font-weight: 700;
-    color: #fff;
+    color: #12101A;
     background: linear-gradient(135deg, $color-primary-dark, $color-primary);
   }
 
@@ -1661,3 +2232,779 @@
   h4 { font-size: 14px; font-weight: 600; color: $color-primary-dark; margin-bottom: 6px; }
   div { display: flex; justify-content: space-between; strong { color: $color-primary; } span { font-size: 12px; color: $color-text-muted; } }
 }
+
+// ==========================================
+// UNIFIED ADMIN BUTTON STYLING SYSTEM
+// ==========================================
+.adm-user-card__footer button,
+.adm-product-card footer button,
+.adm-auction-card footer button,
+.adm-order-timeline__card footer button,
+.adm-bid-feed__actions button,
+.adm-wallet-card footer button,
+.adm-fee-card button,
+.adm-coupon-ticket__actions button,
+.adm-review-card footer button,
+.adm-fraud-alert footer button,
+.adm-kanban__card footer button,
+.adm-payment-card footer button,
+.adm-withdrawal-card footer button,
+.adm-auction-order-card footer button,
+.adm-shipping-card button,
+.adm-category-item__actions button,
+.adm-brand-chip__actions button,
+.adm-content-doc__actions button,
+.adm-banner-preview__body footer button,
+.adm-card footer button,
+.adm-cat-parent__actions button,
+.adm-cat-child__actions button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 5px 12px !important;
+  height: 28px !important;
+  border: 1px solid rgba($color-primary, 0.15) !important;
+  border-radius: $radius-sm !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  color: $color-text-muted !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+  box-shadow: none !important;
+  transform: none !important;
+
+  &:hover {
+    border-color: $color-primary !important;
+    color: $color-primary !important;
+    background: rgba($color-primary, 0.1) !important;
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+  }
+
+  // Variant: primary / edit / action
+  &.primary, &.act-edit, &.edit {
+    color: $color-primary !important;
+    border-color: rgba($color-primary, 0.3) !important;
+    &:hover {
+      border-color: $color-primary !important;
+      background: rgba($color-primary, 0.12) !important;
+    }
+  }
+
+  // Variant: success / approve / active
+  &.success, &.act-add, &.act-toggle, &.approve, &.save:not(.danger) {
+    color: $color-success !important;
+    border-color: rgba($color-success, 0.3) !important;
+    &:hover {
+      border-color: $color-success !important;
+      background: rgba($color-success, 0.12) !important;
+    }
+  }
+
+  // Variant: danger / delete / reject
+  &.danger, &.act-delete, &.delete, &.reject {
+    color: $color-danger !important;
+    border-color: rgba($color-danger, 0.3) !important;
+    &:hover {
+      border-color: $color-danger !important;
+      background: rgba($color-danger, 0.12) !important;
+    }
+  }
+
+  // Variant: secondary / default / cancel
+  &.secondary, &.cancel {
+    color: $color-text-muted !important;
+    border-color: $color-border-light !important;
+    &:hover {
+      border-color: $color-text !important;
+      color: $color-text !important;
+      background: rgba($color-text, 0.08) !important;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+  }
+}
+
+// ── Cấp tài khoản (Create Account) panel ──
+.adm-create-account-panel {
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  padding: 32px;
+  max-width: 860px;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 28px;
+
+    > svg {
+      font-size: 28px;
+      color: $color-primary-dark;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: $color-primary-dark;
+      margin-bottom: 4px;
+    }
+
+    p {
+      font-size: 13px;
+      color: $color-text-muted;
+    }
+  }
+
+  &__success {
+    background: rgba($color-success, 0.1);
+    border: 1px solid rgba($color-success, 0.35);
+    border-radius: $radius-md;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: $color-success;
+    margin-bottom: 20px;
+  }
+
+  &__error-summary {
+    background: rgba($color-danger, 0.08);
+    border: 1px solid rgba($color-danger, 0.35);
+    border-radius: $radius-md;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: $color-danger;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.adm-create-account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+
+    &--error {
+      input, select, textarea, .common-select__field {
+        border-color: $color-danger !important;
+        background-color: rgba($color-danger, 0.02) !important;
+
+        &:focus, &[data-open='true'] {
+          border-color: $color-danger !important;
+          box-shadow: 0 0 0 3px rgba($color-danger, 0.18) !important;
+        }
+      }
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 700;
+      color: $color-text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      span { color: $color-danger; margin-left: 2px; }
+    }
+
+    input, select, textarea {
+      background: $color-bg;
+      border: 1.5px solid $color-border-light;
+      border-radius: $radius-md;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: $color-text;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+      &:focus {
+        border-color: $color-primary-dark;
+        box-shadow: 0 0 0 3px rgba($color-primary, 0.15);
+      }
+
+      &::placeholder { color: $color-text-muted; }
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='%23523F77' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 10px;
+      padding-right: 32px;
+      background-color: #ffffff;
+      color: $color-primary-dark;
+
+      option {
+        background-color: #ffffff;
+        color: $color-primary-dark;
+        padding: 8px 12px;
+      }
+    }
+
+    textarea { resize: vertical; min-height: 70px; }
+  }
+
+  &__error {
+    font-size: 11px;
+    color: $color-danger;
+    font-weight: 600;
+  }
+
+  &__role-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    background: rgba($color-primary, 0.07);
+    border: 1px dashed rgba($color-primary, 0.3);
+    border-radius: $radius-md;
+    flex-wrap: wrap;
+  }
+
+  &__role-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: $color-text-muted;
+
+    svg { color: $color-primary-dark; font-size: 16px; }
+
+    strong {
+      color: $color-primary-dark;
+      font-weight: 800;
+    }
+  }
+
+  &__submit {
+    height: 42px;
+    padding: 0 28px;
+    background: linear-gradient(135deg, $color-primary-dark, $color-accent-mid);
+    color: #12101A;
+    border: none;
+    border-radius: $radius-md;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba($color-primary, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ==========================================
+// UNIFIED COMPACT LIST ROW SYSTEM (LIST VIEW)
+// ==========================================
+// ==========================================
+// UNIFIED COMPACT LIST ROW SYSTEM (LIST VIEW)
+// ==========================================
+.adm-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.adm-list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  padding: 10px 14px;
+  min-width: max-content;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
+
+  &:hover {
+    background: rgba($color-primary, 0.04);
+    border-color: rgba($color-primary, 0.25);
+    transform: translateX(2px);
+  }
+
+  &.is-live {
+    border-left: 4px solid $color-danger;
+  }
+
+  &__thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: $radius-sm;
+    background: $color-bg;
+    border: 1px solid $color-border-light;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex: 0 0 36px;
+    flex-shrink: 0;
+  }
+
+  &__col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    &--main {
+      flex: 0 0 210px;
+      width: 210px;
+      @media (max-width: 1200px) { flex: 0 0 170px; width: 170px; }
+    }
+
+    &--seller {
+      flex: 0 0 130px;
+      width: 130px;
+    }
+
+    &--price {
+      flex: 0 0 140px;
+      width: 140px;
+    }
+
+    &--time {
+      flex: 0 0 130px;
+      width: 130px;
+    }
+
+    &--info {
+      flex: 0 0 180px;
+      width: 180px;
+    }
+
+    &--qty {
+      flex: 0 0 140px;
+      width: 140px;
+    }
+
+    &--threshold {
+      flex: 0 0 140px;
+      width: 140px;
+    }
+
+    &--status {
+      flex: 0 0 105px;
+      width: 105px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      .adm-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        max-width: 95px;
+        text-align: center;
+      }
+    }
+  }
+
+  &__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: $color-primary-dark;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    code {
+      font-size: 13px;
+      color: $color-primary;
+    }
+  }
+
+  &__sub {
+    font-size: 11px;
+    color: $color-text-muted;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__label {
+    font-size: 10px;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  &__val {
+    font-size: 12px;
+    font-weight: 600;
+    color: $color-text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.highlight {
+      color: $color-primary;
+      font-weight: 800;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    margin-left: auto;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+
+    button {
+      height: 26px;
+      padding: 0 8px;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-sm;
+      background: $color-bg;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        border-color: $color-primary;
+        color: $color-primary;
+      }
+
+      &.primary {
+        background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+        color: #12101A;
+        border: none;
+      }
+
+      &.success {
+        color: $color-success;
+        border-color: rgba($color-success, 0.4);
+      }
+
+      &.danger {
+        color: $color-danger;
+        border-color: rgba($color-danger, 0.4);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  // ── Grid Container Layouts ──
+  .adm-user-grid,
+  .adm-product-grid,
+  .adm-auction-grid,
+  .adm-brand-grid,
+  .adm-inventory-grid,
+  .adm-wallet-grid,
+  .adm-fee-grid,
+  .adm-coupon-grid,
+  .adm-banner-grid,
+  .adm-review-grid,
+  .adm-withdrawal-grid,
+  .adm-auction-order-grid,
+  .adm-shipping-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  // ── Seller Group Container ──
+  .adm-seller-group {
+    padding: 10px 8px !important;
+    margin-bottom: 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+
+    &__head {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+      margin-bottom: 10px !important;
+      padding-bottom: 8px !important;
+    }
+
+    &__info {
+      width: 100% !important;
+      gap: 8px !important;
+
+      h3 {
+        font-size: 13px !important;
+      }
+      p {
+        font-size: 11px !important;
+      }
+    }
+
+    &__stats {
+      width: 100% !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      gap: 4px !important;
+    }
+
+    &__stat {
+      flex: 1 !important;
+      min-width: 0 !important;
+      padding: 4px 6px !important;
+      text-align: center !important;
+      font-size: 10px !important;
+    }
+  }
+
+  // ── Seller Filter Tabs & Pill Bar (Screenshot 4) ──
+  .adm-seller-tabs,
+  .adm-tabs-row,
+  .adm-filter-pills,
+  .adm-pills-bar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+    scrollbar-width: none !important;
+
+    &::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    button, .adm-tab, .adm-pill {
+      flex: 0 0 auto !important;
+      white-space: nowrap !important;
+      font-size: 12px !important;
+      padding: 6px 12px !important;
+    }
+  }
+
+  // ── Category Tree & Category Items (Fix nút bị lòi ra ngoài) ──
+  .adm-cat-parent,
+  .adm-cat-child,
+  .adm-category-item {
+    flex-wrap: wrap !important;
+    padding: 10px 10px !important;
+    gap: 6px !important;
+  }
+
+  .adm-cat-parent__actions,
+  .adm-cat-child__actions,
+  .adm-category-item__actions {
+    width: 100% !important;
+    margin-top: 6px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+
+    button {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      height: 26px !important;
+      padding: 0 6px !important;
+      font-size: 11px !important;
+    }
+  }
+
+
+  // ── Brand Cards (Screenshot 2) ──
+  .adm-brand-card {
+    padding: 10px 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+
+    .adm-brand-card__avatar {
+      width: 42px !important;
+      height: 42px !important;
+      font-size: 16px !important;
+      margin: 0 auto 6px !important;
+    }
+
+    .adm-brand-card__title, h3 {
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      margin: 0 0 2px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      width: 100% !important;
+    }
+
+    .adm-brand-card__count, p {
+      font-size: 10px !important;
+      margin-bottom: 6px !important;
+    }
+
+    .adm-brand-card__actions,
+    .adm-card__actions {
+      width: 100% !important;
+      display: flex !important;
+      gap: 3px !important;
+      justify-content: center !important;
+      margin-top: auto !important;
+
+      button {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        padding: 4px 2px !important;
+        font-size: 10px !important;
+        height: 26px !important;
+      }
+    }
+  }
+
+  // ── Inventory Cards (Screenshot 1) ──
+  .adm-inventory-card {
+    padding: 10px 8px !important;
+
+    h3, .adm-inventory-card__title {
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      line-height: 1.25 !important;
+      height: 2.5em !important;
+      overflow: hidden !important;
+    }
+
+    .adm-inventory-card__meta, p {
+      font-size: 10px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .adm-inventory-card__gauge,
+    .recharts-responsive-container,
+    svg {
+      max-width: 70px !important;
+      max-height: 70px !important;
+      margin: 4px auto !important;
+    }
+
+    .adm-inventory-card__stats {
+      display: flex !important;
+      justify-content: space-around !important;
+      font-size: 10px !important;
+      margin: 4px 0 !important;
+
+      div {
+        text-align: center !important;
+      }
+    }
+
+    button {
+      width: 100% !important;
+      padding: 5px 4px !important;
+      font-size: 10px !important;
+      white-space: nowrap !important;
+    }
+  }
+
+  // ── Product Cards in Admin (Screenshot 3) ──
+  .adm-product-card {
+    padding: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+
+    &__image, img, .thumb {
+      height: 90px !important;
+      width: 100% !important;
+      object-fit: cover !important;
+      border-radius: 6px !important;
+    }
+
+    &__title, h4, h3 {
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      line-height: 1.25 !important;
+      height: 2.5em !important;
+      overflow: hidden !important;
+      margin: 4px 0 2px !important;
+    }
+
+    &__price, .price {
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      color: #e11d48 !important;
+      white-space: nowrap !important;
+      margin: 2px 0 6px !important;
+    }
+
+    &__actions, .adm-product-card__actions {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 3px !important;
+      margin-top: auto !important;
+
+      button {
+        flex: 1 1 calc(50% - 2px) !important;
+        min-width: 0 !important;
+        height: 24px !important;
+        padding: 0 4px !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+      }
+    }
+  }
+}
+
+
+
+
+

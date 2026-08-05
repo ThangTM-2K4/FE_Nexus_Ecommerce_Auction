@@ -1,4 +1,4 @@
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaTh, FaList } from "react-icons/fa";
 import Select from "../../common/select";
 import "./index.scss";
 
@@ -12,6 +12,8 @@ const AdminToolbar = ({
   searchPlaceholder = "Tìm kiếm...",
   filters = [],
   actions = [],
+  viewMode,
+  onViewModeChange,
 }) => (
   <div className="adm-toolbar">
     <div className="adm-toolbar__left">
@@ -39,6 +41,26 @@ const AdminToolbar = ({
       ))}
     </div>
     <div className="adm-toolbar__actions">
+      {onViewModeChange && (
+        <div className="adm-view-toggle" role="group" aria-label="Chế độ hiển thị">
+          <button
+            type="button"
+            className={`adm-view-toggle__btn ${viewMode === "grid" ? "is-active" : ""}`}
+            onClick={() => onViewModeChange("grid")}
+            title="Hiển thị dạng Lưới"
+          >
+            <FaTh /> <span>Lưới</span>
+          </button>
+          <button
+            type="button"
+            className={`adm-view-toggle__btn ${viewMode === "list" ? "is-active" : ""}`}
+            onClick={() => onViewModeChange("list")}
+            title="Hiển thị dạng Danh sách"
+          >
+            <FaList /> <span>Danh sách</span>
+          </button>
+        </div>
+      )}
       {actions.map((action) => (
         <button
           key={action.label}
@@ -54,3 +76,4 @@ const AdminToolbar = ({
 );
 
 export default AdminToolbar;
+

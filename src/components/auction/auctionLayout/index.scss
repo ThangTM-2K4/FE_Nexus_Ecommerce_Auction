@@ -6,7 +6,12 @@
   flex-direction: column;
   background: $auction-bg-page;
   color: $auction-text;
+
+  *:not(input):not(textarea):not([contenteditable]) {
+    caret-color: transparent !important;
+  }
 }
+
 
 .auction-layout__main {
   flex: 1;

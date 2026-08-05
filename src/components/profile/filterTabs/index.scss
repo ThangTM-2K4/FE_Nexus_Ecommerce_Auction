@@ -1,24 +1,43 @@
 @use '../../../styles/palette' as *;
 
+.account-filter-tabs-wrap {
+  margin-bottom: 1rem;
+  min-width: 0;
+}
+
 .account-filter-tabs {
   display: flex;
-  gap: 0;
+  flex-wrap: nowrap;
+  gap: 2px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba($ink-faint, 0.45) transparent;
   border-bottom: 1px solid $border-soft;
-  margin-bottom: 1rem;
+  margin: 0 -4px;
+  padding: 0 4px;
 
   &::-webkit-scrollbar {
-    display: none;
+    height: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($ink-faint, 0.35);
+    border-radius: $radius-pill;
   }
 
   &__item {
-    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    min-height: 44px;
     border: 0;
     background: transparent;
-    padding: 12px 16px;
-    font-size: 0.88rem;
+    padding: 10px 14px;
+    font-size: 0.86rem;
     font-weight: 500;
     color: $ink-muted;
     cursor: pointer;
@@ -38,8 +57,8 @@
       &::after {
         content: '';
         position: absolute;
-        left: 16px;
-        right: 16px;
+        left: 10px;
+        right: 10px;
         bottom: 0;
         height: 2px;
         background: $raspberry;
@@ -47,11 +66,35 @@
       }
     }
   }
+
+  &__option-label {
+    min-width: 0;
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: $radius-pill;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    color: $accent-dark;
+    background: rgba($lavender, 0.35);
+  }
+
+  &__item.is-active &__count {
+    color: $surface;
+    background: $raspberry;
+  }
 }
 
 @media (max-width: 1024px) {
   .account-filter-tabs__item {
-    padding: 10px 14px;
+    padding: 10px 12px;
     font-size: 0.82rem;
   }
 }

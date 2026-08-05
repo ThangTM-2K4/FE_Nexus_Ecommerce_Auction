@@ -19,9 +19,15 @@ export default function AddressPage() {
   const load = async () => {
     if (!user?.id) return;
     setLoading(true);
-    const data = await addressService.getAddresses(user.id);
-    setAddresses(data);
-    setLoading(false);
+    try {
+      const data = await addressService.getAddresses();
+      setAddresses(data);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Không tải được danh sách địa chỉ'));
+      setAddresses([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -41,11 +47,11 @@ export default function AddressPage() {
   const handleSubmit = async (formData) => {
     try {
       if (editTarget) {
-        const updated = await addressService.updateAddress(user.id, editTarget.id, formData);
+        const updated = await addressService.updateAddress(editTarget.id, formData);
         setAddresses(updated);
         toast.success('Cập nhật địa chỉ thành công');
       } else {
-        const updated = await addressService.addAddress(user.id, formData);
+        const updated = await addressService.addAddress(formData);
         setAddresses(updated);
         toast.success('Thêm địa chỉ thành công');
       }
@@ -60,7 +66,7 @@ export default function AddressPage() {
   const handleDelete = async (id) => {
     if (!window.confirm('Xóa địa chỉ này?')) return;
     try {
-      const updated = await addressService.deleteAddress(user.id, id);
+      const updated = await addressService.deleteAddress(id);
       setAddresses(updated);
       toast.success('Đã xóa địa chỉ');
     } catch (err) {
@@ -70,7 +76,7 @@ export default function AddressPage() {
 
   const handleSetDefault = async (id) => {
     try {
-      const updated = await addressService.setDefaultAddress(user.id, id);
+      const updated = await addressService.setDefaultAddress(id);
       setAddresses(updated);
       toast.success('Đã đặt làm mặc định');
     } catch (err) {

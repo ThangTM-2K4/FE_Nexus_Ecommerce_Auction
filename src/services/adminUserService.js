@@ -32,6 +32,7 @@ export const USER_ROLE_TABS = [
   { id: "customer", label: "Khách hàng" },
   { id: "admin", label: "Quản trị viên" },
   { id: "seller", label: "Seller" },
+  { id: "create", label: "Cấp tài khoản" },
 ];
 
 export const ADMIN_ACCOUNT_ROLES = ["ADMIN", "SUPER_ADMIN", "MODERATOR", "SUPPORT", "FINANCE", "STAFF"];

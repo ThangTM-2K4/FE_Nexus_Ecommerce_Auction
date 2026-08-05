@@ -1,13 +1,18 @@
 import "./index.scss";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { useCart } from "../../../context/CartContext";
 import * as notificationService from "../../../services/notificationService";
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileDropdown from "./ProfileDropdown";
+import UserAvatar from "../../common/userAvatar";
 
 export default function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentRedirect = encodeURIComponent(location.pathname + location.search);
+
   const [language, setLanguage] = useState("vi");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -20,6 +25,24 @@ export default function Header() {
     isBuyerMode,
     switchAccountMode,
   } = useAuth();
+  const { cartCount } = useCart();
+
+  // Xác định role để ẩn các mục chỉ dành cho người dùng thường
+  const userRoles = (() => {
+    const raw = [];
+    if (user?.role) raw.push(user.role);
+    if (user?.roleName) raw.push(user.roleName);
+    if (user?.roleCode) raw.push(user.roleCode);
+    if (Array.isArray(user?.roles)) raw.push(...user.roles);
+    return raw
+      .map((r) => (typeof r === 'string' ? r : r?.code ?? r?.name ?? ''))
+      .filter(Boolean)
+      .map((s) => String(s).toUpperCase().replace(/^ROLE_/, ''));
+  })();
+  const isAdmin = userRoles.some((r) => r === 'ADMIN' || r === 'SUPER_ADMIN');
+  const isStaffRole = userRoles.some((r) => r === 'STAFF' || r === 'SUPPORT_STAFF');
+  const isAdminOrStaff = isAdmin || isStaffRole;
+  const profileVariant = isAdmin ? 'admin' : isStaffRole ? 'staff' : undefined;
 
   useEffect(() => {
     if (!user?.id) {
@@ -32,15 +55,6 @@ export default function Header() {
   const handleLanguageChange = () => {
     setLanguage(language === "vi" ? "en" : "vi");
   };
-
-  const initials = user?.fullName
-    ? user.fullName
-        .split(" ")
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "?";
 
   const handleGoToSellerHub = async () => {
     if (!isSellerMode) {
@@ -70,7 +84,7 @@ export default function Header() {
             ) : (
               <a href="#seller-center">Kênh Người Bán</a>
             )}
-            {!isApprovedSeller && (
+            {!isApprovedSeller && !isAdminOrStaff && (
               <Link
                 to={isAuthenticated ? "/profile/become-seller" : "/register"}
               >
@@ -101,14 +115,15 @@ export default function Header() {
 
             {!isAuthenticated ? (
               <>
-                <Link to="/register" className="header-topbar-cta">
+                <Link to={`/register?redirect=${currentRedirect}`} className="header-topbar-cta">
                   Đăng Ký
                 </Link>
-                <Link to="/login" className="header-topbar-login">
+                <Link to={`/login?redirect=${currentRedirect}`} className="header-topbar-login">
                   Đăng Nhập
                 </Link>
               </>
             ) : (
+
               <div className="header-topbar-auth">
                 <div className="header-notif-wrap">
                   <button
@@ -163,7 +178,11 @@ export default function Header() {
                       setShowProfile((v) => !v);
                     }}
                   >
-                    <span className="header-profile-avatar">{initials}</span>
+                    <UserAvatar
+                      avatar={user?.avatar}
+                      name={user?.fullName}
+                      className="header-profile-avatar"
+                    />
                     {isApprovedSeller && (
                       <span
                         className="header-profile-seller-dot"
@@ -171,7 +190,7 @@ export default function Header() {
                       />
                     )}
                   </button>
-                  {showProfile && <ProfileDropdown onClose={closeDropdowns} />}
+                  {showProfile && <ProfileDropdown onClose={closeDropdowns} variant={profileVariant} />}
                 </div>
               </div>
             )}
@@ -220,10 +239,10 @@ export default function Header() {
             </form>
 
             <nav className="header-actions" aria-label="Hành động chính">
-              <a
-                href="/cart"
+              <Link
+                to="/cart"
                 className="header-cart"
-                aria-label="Giỏ hàng — 3 sản phẩm"
+                aria-label={`Giỏ hàng — ${cartCount} sản phẩm`}
               >
                 <svg
                   className="header-cart-svg"
@@ -246,8 +265,12 @@ export default function Header() {
                   <circle cx="9" cy="20" r="1.5" fill="currentColor" />
                   <circle cx="18" cy="20" r="1.5" fill="currentColor" />
                 </svg>
-                <span className="header-cart-badge">3</span>
-              </a>
+                {cartCount > 0 && (
+                  <span className="header-cart-badge">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </Link>
 
               <Link
                 to="/auction/browse"

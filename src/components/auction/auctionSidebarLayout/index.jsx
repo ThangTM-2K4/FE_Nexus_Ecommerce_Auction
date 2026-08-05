@@ -4,7 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import "./index.scss";
 
 export default function AuctionSidebarLayout({ children, sidebarActive, showCategories = false }) {
-  const { isBuyerMode, isSellerMode } = useAuth();
+  const { isAuthenticated, isBuyerMode, isSellerMode } = useAuth();
 
   const menuItems = sidebarMenuItems.filter((item) => {
     if (item.section === 'buy') return isBuyerMode;
@@ -14,12 +14,17 @@ export default function AuctionSidebarLayout({ children, sidebarActive, showCate
 
   return (
     <div className="auc-sidebar-layout">
-      <AuctionSidebar
-        activeItem={sidebarActive}
-        menuItems={menuItems}
-        showCategories={showCategories && isBuyerMode}
-      />
-      <div className="auc-sidebar-layout__content">{children}</div>
+      {isAuthenticated && (
+        <AuctionSidebar
+          activeItem={sidebarActive}
+          menuItems={menuItems}
+          showCategories={showCategories && isBuyerMode}
+        />
+      )}
+      <div className={`auc-sidebar-layout__content ${!isAuthenticated ? 'auc-sidebar-layout__content--full' : ''}`}>
+        {children}
+      </div>
     </div>
   );
 }
+

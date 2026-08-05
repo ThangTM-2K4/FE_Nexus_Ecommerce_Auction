@@ -1,25 +1,23 @@
 @use "./auction/variables" as auc;
 
 // ─── Text colours ──────────────────────────────────────────────────────────
-// $color-primary-dark  → used as the primary HEADING / STRONG text on dark bg
-// $color-primary       → used as accent / interactive colour
-$color-primary-dark:    auc.$bone;          // #EDE7F6 – cream: headings, strong text
-$color-primary:         auc.$gold-bright;   // #E8C468 – gold : links, active, accent
+$color-primary-dark:    auc.$bone;
+$color-primary:         auc.$gold-bright;
 
-// ─── Button backgrounds (never use cream as a bg!) ─────────────────────────
-$color-btn-primary-bg:  auc.$royal-purple;  // #4B2E83
-$color-btn-primary-hover: #6a3fa3;
+// ─── Button backgrounds ────────────────────────────────────────────────────
+$color-btn-primary-bg:  auc.$auction-bronze;
+$color-btn-primary-hover: auc.$auction-gold;
 
-// ─── Accent shades ─────────────────────────────────────────────────────────
+// ─── Accent shades (gradients follow intro: black → bronze → gold) ─────────
 $color-accent:          auc.$antique-gold;
 $color-accent-mid:      auc.$gold-bright;
-$color-gradient-light:  auc.$mist-lavender;
-$color-gradient-mid:    auc.$royal-purple;
-$color-gradient-dark:   auc.$midnight-violet;
+$color-gradient-light:  auc.$auction-gold-soft;
+$color-gradient-mid:    auc.$auction-bronze;
+$color-gradient-dark:   auc.$auction-surface-deep;
 
 // ─── Body text ─────────────────────────────────────────────────────────────
-$color-text:            auc.$auction-text;       // #EDE7F6
-$color-text-muted:      auc.$auction-text-muted; // #8F7FBF
+$color-text:            auc.$auction-text;
+$color-text-muted:      auc.$auction-text-muted;
 $color-text-secondary:  auc.$mist-lavender;
 
 // ─── Borders ───────────────────────────────────────────────────────────────
@@ -28,17 +26,17 @@ $color-border-light:    auc.$auction-border-subtle;
 $color-border-lighter:  auc.$auction-border-subtle;
 
 // ─── Surfaces ──────────────────────────────────────────────────────────────
-$color-bg:              rgba(auc.$midnight-violet, 0.4);
-$color-bg-card:         auc.$midnight-violet;
+$color-bg:              rgba(auc.$auction-surface, 0.55);
+$color-bg-card:         auc.$auction-surface;
 $color-bg-sidebar:      transparent;
 
-// ─── Semantic states ───────────────────────────────────────────────────────
-$color-success:         #10b981;
-$color-success-bg:      rgba(16, 185, 129, 0.15);
-$color-warning:         #f59e0b;
-$color-warning-bg:      rgba(245, 158, 11, 0.15);
-$color-danger:          auc.$ember-hot;
-$color-danger-bg:       rgba(196, 49, 91, 0.15);
+// ─── Semantic states (harmonized with intro — cyan positive, bronze caution) ─
+$color-success:         auc.$auction-cyan;
+$color-success-bg:      rgba(auc.$auction-cyan, 0.14);
+$color-warning:         auc.$auction-gold;
+$color-warning-bg:      rgba(auc.$auction-gold, 0.12);
+$color-danger:          auc.$auction-danger;
+$color-danger-bg:       rgba(auc.$auction-bronze, 0.18);
 
 $color-gold:            auc.$gold-bright;
 $color-gold-bg:         auc.$auction-gold-glow;
@@ -49,9 +47,9 @@ $radius-md:   auc.$radius-md;
 $radius-lg:   auc.$radius-lg;
 $radius-pill: auc.$radius-pill;
 
-// ─── Shadows ───────────────────────────────────────────────────────────────
-$shadow-sm:   0 1px 2px rgba(0,0,0,0.5);
-$shadow-md:   0 4px 12px rgba(0,0,0,0.5);
-$shadow-lg:   0 8px 24px rgba(0,0,0,0.5);
+// ─── Shadows (warm gold lift + cool cyan live accent) ───────────────────────
+$shadow-sm:   0 1px 3px rgba(auc.$auction-black-deep, 0.55);
+$shadow-md:   0 4px 16px rgba(auc.$auction-black-deep, 0.45), 0 0 0 1px rgba(auc.$auction-gold, 0.06);
+$shadow-lg:   0 10px 32px rgba(auc.$auction-black-deep, 0.5), 0 0 24px auc.$auction-gold-glow;
 
 $ease: cubic-bezier(0.4, 0, 0.2, 1);

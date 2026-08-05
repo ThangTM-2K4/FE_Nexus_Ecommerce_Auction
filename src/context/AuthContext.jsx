@@ -2,6 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import * as authService from '../services/authService';
+import { clearAuctionIntroSession } from '../utils/auctionIntroSession';
+import {
+  LOGIN_SESSION_EXPIRED_KEY,
+  SESSION_EXPIRED_TOAST,
+  sanitizeInternalRedirect,
+} from '../utils/httpErrorRedirect';
 
 const AuthContext = createContext(null);
 
@@ -18,6 +24,7 @@ export function AuthProvider({ children }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(() => restoreSessionUser());
   const [loading, setLoading] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {
     const sessionExpired = authService.hadStoredSession() && !authService.isSessionValid();
@@ -27,12 +34,21 @@ export function AuthProvider({ children }) {
       setUser(null);
 
       if (!window.location.pathname.includes('/login')) {
-        navigate('/login', { replace: true });
+        const returnPath =
+          sanitizeInternalRedirect(window.location.pathname + window.location.search) ?? '/';
+        try {
+          sessionStorage.setItem(LOGIN_SESSION_EXPIRED_KEY, SESSION_EXPIRED_TOAST);
+        } catch {
+          /* ignore */
+        }
+        navigate(`/login?redirect=${encodeURIComponent(returnPath)}`, { replace: true });
       }
+      setAuthInitialized(true);
       return;
     }
 
     setUser(authService.getCurrentUser());
+    setAuthInitialized(true);
   }, [navigate]);
 
   const login = useCallback(async (loginValue, password) => {
@@ -49,6 +65,10 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     setLoading(true);
     try {
+      const currentUser = authService.getCurrentUser();
+      if (currentUser?.id) {
+        clearAuctionIntroSession(currentUser.id);
+      }
       flushSync(() => setUser(null));
       await authService.logout();
     } finally {
@@ -89,6 +109,7 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       loading,
+      authInitialized,
       isAuthenticated,
       isApprovedSeller,
       currentMode,
@@ -103,6 +124,7 @@ export function AuthProvider({ children }) {
     [
       user,
       loading,
+      authInitialized,
       isAuthenticated,
       isApprovedSeller,
       currentMode,

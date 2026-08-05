@@ -9,16 +9,24 @@ import {
   ACCOUNT_BLOCKED_DETAIL,
 } from "../../../services/authService";
 import { getRoleTokens } from "../../../config/ProtectedRoute";
+import {
+  LOGIN_SESSION_EXPIRED_KEY,
+  sanitizeInternalRedirect,
+} from "../../../utils/httpErrorRedirect";
+import { toggleWatchlist } from "../../../components/auction/auctionCard";
 import "./index.scss";
+
 
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
 
-  const redirectTo = location.state?.redirectTo;
-
   const [searchParams] = useSearchParams();
+
+  const redirectParam = searchParams.get("redirect");
+  const redirectTo =
+    sanitizeInternalRedirect(redirectParam) || location.state?.redirectTo || null;
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -26,10 +34,25 @@ function LoginPage() {
 
   const [errors, setErrors] = useState({});
 
+  // Lỗi chung của cả form (vd sai thông tin đăng nhập) — hiện rõ ngay dưới các ô nhập.
+  const [formError, setFormError] = useState("");
+
   const [formData, setFormData] = useState({
     login: "",
     password: "",
   });
+
+  useEffect(() => {
+    try {
+      const expiredMsg = sessionStorage.getItem(LOGIN_SESSION_EXPIRED_KEY);
+      if (expiredMsg) {
+        toast.error(expiredMsg);
+        sessionStorage.removeItem(LOGIN_SESSION_EXPIRED_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     const errorCode = searchParams.get("error");
@@ -62,6 +85,8 @@ function LoginPage() {
       ...prev,
       [name]: "",
     }));
+
+    setFormError("");
   };
 
   const validateForm = () => {
@@ -102,58 +127,91 @@ function LoginPage() {
       toast.success("Đăng nhập thành công");
 
       setTimeout(() => {
-        if (redirectTo) {
-          navigate(redirectTo, { replace: true });
-          return;
+        const pendingAction = location.state?.pendingAction;
+        if (pendingAction) {
+          if (pendingAction.type === "TOGGLE_WATCHLIST" && pendingAction.auction) {
+            toggleWatchlist(pendingAction.auction);
+            toast.success(
+              `🎉 Đã lưu "${pendingAction.auction.title || "Sản phẩm"}" vào mục Đang Theo Dõi của bạn!`
+            );
+          }
         }
 
         const roleTokens = getRoleTokens(user);
+        const isAdmin =
+          roleTokens.includes("ADMIN") || roleTokens.includes("SUPER_ADMIN");
+        const isStaff =
+          roleTokens.includes("STAFF") || roleTokens.includes("SUPPORT_STAFF");
 
-        if (
-          roleTokens.includes("ADMIN") ||
-          roleTokens.includes("SUPER_ADMIN")
-        ) {
-          navigate("/admin");
-        } else if (
-          roleTokens.includes("STAFF") ||
-          roleTokens.includes("SUPPORT_STAFF")
-        ) {
-          navigate("/staff/overview");
+        if (isAdmin) {
+          navigate("/admin", { replace: true });
+        } else if (isStaff) {
+          navigate("/staff/overview", { replace: true });
+        } else if (redirectTo) {
+          // Khách / người mua hàng -> quay lại trang xuất phát trước đó
+          navigate(redirectTo, { replace: true, state: location.state });
         } else if (
           roleTokens.includes("SELLER") ||
           user.sellerStatus === "APPROVED"
         ) {
-          navigate("/seller");
+          navigate("/seller", { replace: true });
         } else {
-          navigate("/");
+          navigate("/", { replace: true });
         }
+
       }, 1000);
     } catch (err) {
-      const newErrors = {};
       const detail =
         err.response?.data?.detail || err.response?.data?.message || "";
 
       if (err.response?.status === 401) {
         // BE gộp LOCKED/BANNED/BLOCKED/INACTIVE vào chung câu detail này.
         if (detail === ACCOUNT_BLOCKED_DETAIL || /not allowed/i.test(detail)) {
-          toast.error(
-            "Tài khoản của bạn đã bị khóa vì sai thông tin đăng nhập nhiều lần. Vui lòng thử lại sau 15 phút.",
-          );
+          const blockedMsg =
+            "Tài khoản của bạn đã bị khóa vì sai thông tin đăng nhập nhiều lần. Vui lòng thử lại sau 15 phút.";
+          setFormError(blockedMsg);
+          toast.error(blockedMsg);
           return;
         }
 
-        // Còn lại là sai email/số điện thoại hoặc mật khẩu.
-        newErrors.login = "Thông tin đăng nhập không chính xác";
-        setErrors(newErrors);
-        toast.error("Thông tin đăng nhập không chính xác");
+        // Còn lại là sai email/số điện thoại hoặc mật khẩu — tô đỏ cả 2 ô và hiện
+        // rõ thông báo ngay dưới form (không chỉ dòng nhỏ dưới ô email).
+        const credMsg = "Email/số điện thoại hoặc mật khẩu không chính xác";
+        setErrors({ login: " ", password: " " });
+        setFormError(credMsg);
+        toast.error(credMsg);
         return;
       }
 
-      toast.error(err.message || "Đăng nhập thất bại");
+      const genericMsg = err.message || "Đăng nhập thất bại";
+      setFormError(genericMsg);
+      toast.error(genericMsg);
     } finally {
       setLoading(false);
     }
   };
+
+  const isProtectedRouteRedirect =
+    redirectTo &&
+    (redirectTo.startsWith("/admin") ||
+      redirectTo.startsWith("/staff") ||
+      redirectTo.startsWith("/seller"));
+
+  const handleBackClick = () => {
+    if (redirectTo && !isProtectedRouteRedirect) {
+      navigate(redirectTo, { replace: true });
+    } else {
+      navigate("/", { replace: true });
+    }
+  };
+
+  const backLabel =
+    redirectTo && !isProtectedRouteRedirect
+      ? redirectTo.startsWith("/auction")
+        ? "Quay về trang đấu giá"
+        : "Quay về trang trước"
+      : "Quay về trang chủ";
+
 
   return (
     <div className="login-page">
@@ -161,10 +219,11 @@ function LoginPage() {
         <button
           type="button"
           className="back-home-btn"
-          onClick={() => navigate("/")}
+          onClick={handleBackClick}
         >
-          ← Quay về trang chủ
+          ← {backLabel}
         </button>
+
 
         <h1>Sàn Đấu Giá Điện Tử</h1>
 
@@ -210,6 +269,12 @@ function LoginPage() {
 
             <div className="field-error">{errors.password || "\u00A0"}</div>
           </div>
+
+          {formError && (
+            <div className="form-error" role="alert">
+              {formError}
+            </div>
+          )}
 
           <button
             type="button"

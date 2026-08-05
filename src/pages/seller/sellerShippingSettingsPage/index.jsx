@@ -169,9 +169,9 @@ export default function ShippingSettingsPage() {
                                 </button>
                                 <button
                                   type="button"
-                                  className="slr-btn-plain"
+                                  className={`slr-shipping-toggle ${o.enabled ? "is-on" : "is-off"}`}
                                   onClick={() => toggleOption(o.id)}
-                                  title={o.enabled ? "Tắt" : "Bật"}
+                                  title={o.enabled ? "Tắt đơn vị này" : "Bật đơn vị này"}
                                 >
                                   {o.enabled ? "Tắt" : "Bật"}
                                 </button>

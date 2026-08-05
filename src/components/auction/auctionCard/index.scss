@@ -31,6 +31,7 @@
   font-weight: 700;
   color: $bone;
   line-height: 1.35;
+  height: 2.7em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -42,6 +43,7 @@
   font-size: 0.82rem;
   line-height: 1.5;
   color: $mist-lavender;
+  height: 3em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -53,10 +55,8 @@
   padding-top: 0.65rem;
   border-top: 1px solid $auction-border-subtle;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .auction-card__price {
@@ -72,12 +72,26 @@
   }
 
   strong {
-    font-size: 1.08rem;
+    font-size: 1.1rem;
     font-weight: 800;
     color: $antique-gold;
     letter-spacing: 0.01em;
   }
 }
+
+.auction-card__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.auction-card__actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 
 .auction-card__image-wrap {
   padding: 0.65rem 0.65rem 0;
@@ -106,3 +120,71 @@
     color: #ff4d4f;
   }
 }
+
+.auction-card__compare-btn {
+  background: transparent;
+  border: none;
+  color: $mist-lavender;
+  font-size: 1.05rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+
+  &:hover {
+    color: #e8c468;
+    background: rgba(232, 196, 104, 0.12);
+    transform: scale(1.1);
+  }
+
+  &.active {
+    color: #e8c468;
+    background: rgba(232, 196, 104, 0.2);
+  }
+}
+
+@media (max-width: 576px) {
+  .auction-card__image-wrap {
+    padding: 0.4rem 0.4rem 0;
+
+    .auc-image, img {
+      height: 135px !important;
+      object-fit: cover;
+    }
+  }
+
+  .auction-card__body {
+    padding: 0.55rem 0.6rem 0.75rem;
+    gap: 0.35rem;
+  }
+
+  .auction-card__title {
+    font-size: 0.85rem;
+    height: 2.6em;
+    line-height: 1.3;
+  }
+
+  .auction-card__desc {
+    display: none !important;
+  }
+
+
+  .auction-card__price strong {
+    font-size: 0.95rem;
+  }
+
+  .auction-card__footer {
+    padding-top: 0.45rem;
+    gap: 0.45rem;
+  }
+
+  .auction-card__heart-btn,
+  .auction-card__compare-btn {
+    font-size: 1rem;
+    padding: 2px;
+  }
+}
+

@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Navigate, useParams } from 'react-router-dom';
 import Header from '@/components/homepage/header';
 import Footer from '@/components/homepage/footer';
 import ProductGrid from '@/components/homepage/productGrid';
@@ -10,20 +10,51 @@ import ShopInfoCard from '@/components/products/ShopInfoCard';
 import ProductDetailTable from '@/components/products/ProductDetailTable';
 import ReviewList from '@/components/products/ReviewList';
 import {
-  getProductDetail,
   getShopProducts,
   getSimilarProducts,
 } from '@/data/mockProductDetail';
 import { mockReviews } from '@/data/mockReviews';
 import { generateMoreProducts } from '@/data/mockProducts';
+import { mapProductDetailToUi } from '@/services/catalogService';
+import { getProductById } from '@/services/ecommerceProductService';
 import { useProductNavigate } from '@/hooks/useProductNavigate';
 import './index.scss';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
-  const { isAuthenticated, handleProductClick, handleRequireLogin } = useProductNavigate();
+  const { handleProductClick } = useProductNavigate();
 
-  const product = useMemo(() => getProductDetail(id), [id]);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setNotFound(false);
+    setLoadError(null);
+    setProduct(null);
+
+    getProductById(id).then((result) => {
+      if (cancelled) return;
+
+      if (result.ok && result.data) {
+        setProduct(mapProductDetailToUi(result.data));
+      } else if (result.status === 404) {
+        setNotFound(true);
+      } else {
+        setLoadError(result.error || 'Không tải được chi tiết sản phẩm');
+      }
+
+      setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
   const shopProducts = useMemo(() => getShopProducts(id), [id]);
   const similarProducts = useMemo(() => getSimilarProducts(id), [id]);
 
@@ -44,7 +75,41 @@ export default function ProductDetailPage() {
     ]);
   }, [similarProducts.length]);
 
-  const descriptionParagraphs = product.description.split('\n\n').filter(Boolean);
+  if (notFound) {
+    return <Navigate to="/404" replace />;
+  }
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className="product-detail-page">
+          <div className="product-detail-page__shell">
+            <p style={{ textAlign: 'center', padding: '3rem 0' }}>Đang tải chi tiết sản phẩm...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (loadError || !product) {
+    return (
+      <>
+        <Header />
+        <main className="product-detail-page">
+          <div className="product-detail-page__shell">
+            <p style={{ textAlign: 'center', padding: '3rem 0', color: '#666' }}>
+              {loadError || 'Không tải được chi tiết sản phẩm'}. Vui lòng thử lại sau.
+            </p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  const descriptionParagraphs = (product.description || '').split('\n\n').filter(Boolean);
 
   return (
     <>
@@ -54,7 +119,6 @@ export default function ProductDetailPage() {
         <div className="product-detail-page__shell">
           <Breadcrumb items={product.category} />
 
-          {/* Khối chính: gallery + thông tin mua hàng */}
           <section className="product-detail-page__hero">
             <div className="product-detail-page__gallery">
               <ProductGallery gallery={product.gallery} likeCount={product.likeCount} />
@@ -68,7 +132,6 @@ export default function ProductDetailPage() {
 
           <ProductDetailTable attributes={product.attributes} />
 
-          {/* Mô tả sản phẩm */}
           <section className="product-detail-page__description">
             <h2 className="product-detail-page__section-title">MÔ TẢ SẢN PHẨM</h2>
             <div className="product-detail-page__description-body">
@@ -80,30 +143,24 @@ export default function ProductDetailPage() {
 
           <ReviewList reviews={mockReviews} />
 
-          {/* Sản phẩm cùng shop — tái sử dụng ProductGrid */}
           <ProductGrid
             products={shopProducts}
             extraProducts={shopExtra}
             title="CÁC SẢN PHẨM KHÁC CỦA SHOP"
             columns={6}
             rows={8}
-            isLoggedIn={isAuthenticated}
             onLoadMore={handleShopLoadMore}
-            onRequireLogin={handleRequireLogin}
             onProductClick={handleProductClick}
             viewAllLabel="Xem Tất Cả"
           />
 
-          {/* Sản phẩm tương tự */}
           <ProductGrid
             products={similarProducts}
             extraProducts={similarExtra}
             title="CÓ THỂ BẠN CŨNG THÍCH"
             columns={6}
             rows={8}
-            isLoggedIn={isAuthenticated}
             onLoadMore={handleSimilarLoadMore}
-            onRequireLogin={handleRequireLogin}
             onProductClick={handleProductClick}
             viewAllLabel="Xem Tất Cả"
           />

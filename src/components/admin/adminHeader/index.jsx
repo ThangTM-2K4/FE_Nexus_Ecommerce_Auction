@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { FaBell, FaSearch } from "react-icons/fa";
+import { FiMenu } from "react-icons/fi";
+
 import { useAuth } from "../../../context/AuthContext";
 import ProfileDropdown from "../../homepage/header/ProfileDropdown";
 import {
@@ -17,7 +19,7 @@ const ROLE_OPTIONS = Object.values(ADMIN_ROLES).map((value) => ({
   label: ADMIN_ROLE_LABELS[value],
 }));
 
-const AdminHeader = () => {
+const AdminHeader = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
@@ -43,6 +45,14 @@ const AdminHeader = () => {
     <header className="adm-header">
       <div className="adm-header__inner">
         <div className="adm-header__left">
+          <button
+            type="button"
+            className="adm-header__toggle-btn"
+            aria-label="Toggle menu"
+            onClick={onToggleSidebar}
+          >
+            <FiMenu size={20} />
+          </button>
           <h1
             className="adm-header__logo"
             onClick={() => navigate("/admin/dashboard")}
@@ -54,6 +64,7 @@ const AdminHeader = () => {
           </h1>
           <span className="adm-header__badge">Quản trị hệ thống</span>
         </div>
+
 
         <div className="adm-header__search">
           <FaSearch />
@@ -68,9 +79,7 @@ const AdminHeader = () => {
             options={ROLE_OPTIONS}
           />
 
-          <button type="button" className="adm-header__link" onClick={() => navigate("/")}>
-            Trang chủ
-          </button>
+      
           <button
             type="button"
             className="adm-header__bell"
@@ -90,7 +99,7 @@ const AdminHeader = () => {
               <span>{initials}</span>
             </button>
             {showProfile && (
-              <ProfileDropdown onClose={() => setShowProfile(false)} />
+              <ProfileDropdown onClose={() => setShowProfile(false)} variant="admin" />
             )}
           </div>
         </div>

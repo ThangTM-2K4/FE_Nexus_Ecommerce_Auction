@@ -3,6 +3,7 @@ import { useState } from "react";
 import { FaBell, FaSearch } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext";
 import ProfileDropdown from "../../homepage/header/ProfileDropdown";
+import UserAvatar from "../../common/userAvatar";
 import "./index.scss";
 
 const SellerHeader = () => {
@@ -12,15 +13,6 @@ const SellerHeader = () => {
     isApprovedSeller,
   } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
-
-  const initials = user?.fullName
-    ? user.fullName
-        .split(" ")
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "?";
 
   return (
     <header className="slr-header">
@@ -47,9 +39,6 @@ const SellerHeader = () => {
           <button type="button" className="slr-header__link" onClick={() => navigate("/auction/seller")}>
             Đấu giá
           </button>
-          <button type="button" className="slr-header__link" onClick={() => navigate("/")}>
-            Trang chủ
-          </button>
           <button type="button" className="slr-header__bell" aria-label="Thông báo">
             <FaBell />
             <span className="slr-header__bell-dot" />
@@ -61,7 +50,11 @@ const SellerHeader = () => {
               aria-label="Tài khoản"
               onClick={() => setShowProfile((v) => !v)}
             >
-              <span>{initials}</span>
+              <UserAvatar
+                avatar={user?.avatar}
+                name={user?.fullName}
+                className="slr-header__avatar-inner"
+              />
               {isApprovedSeller && (
                 <em className="slr-header__verified" title="Đã xác minh" />
               )}

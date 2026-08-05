@@ -1,20 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { register, getGoogleLoginUrl } from "../../../services/authService";
+import { sanitizeInternalRedirect } from "../../../utils/httpErrorRedirect";
 import {
   PASSWORD_RULES,
   getPasswordStrength,
   getPassedRules,
   isPasswordValid,
 } from "../../../utils/passwordStrength";
+import { isValidVietnamesePhone } from "../../../utils/phoneValidation";
 import "./index.scss";
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const redirectParam = searchParams.get("redirect");
+  const redirectTo = sanitizeInternalRedirect(redirectParam) || location.state?.redirectTo || null;
+
+  const handleBackClick = () => {
+    if (redirectTo) {
+      navigate(redirectTo);
+    } else if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
+
+  const backLabel = redirectTo
+    ? redirectTo.startsWith("/auction")
+      ? "Quay về trang đấu giá"
+      : "Quay về trang trước"
+    : "Quay về trang trước";
+
 
   const [loading, setLoading] = useState(false);
 
@@ -66,6 +90,9 @@ function RegisterPage() {
   if (!formData.phone.trim()) {
     newErrors.phone =
       "Vui lòng nhập số điện thoại";
+  } else if (!isValidVietnamesePhone(formData.phone)) {
+    newErrors.phone =
+      "Số điện thoại không hợp lệ (10 số bắt đầu bằng 0 hoặc 11 số bắt đầu bằng 84)";
   }
 
   if (!formData.password.trim()) {
@@ -146,7 +173,16 @@ function RegisterPage() {
   return (
     <div className="register-page">
       <div className="register-card">
+        <button
+          type="button"
+          className="back-home-btn"
+          onClick={handleBackClick}
+        >
+          ← {backLabel}
+        </button>
+
         <h1>Tạo Tài Khoản</h1>
+
 
         <p className="subtitle">
           Hệ thống Đấu giá Thương mại Điện tử
@@ -321,7 +357,7 @@ function RegisterPage() {
               />
               <span>
                 Tôi đã đọc và đồng ý với{" "}
-                <Link to="/terms" target="_blank" rel="noopener noreferrer">
+                <Link to="/terms" state={{ from: "/register" }}>
                   Điều khoản &amp; Điều kiện sử dụng
                 </Link>
               </span>

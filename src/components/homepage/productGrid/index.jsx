@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { FiChevronRight } from 'react-icons/fi';
 import ProductCard from '../productCard';
 import styles from './index.module.scss';
 
@@ -42,7 +43,8 @@ export default function ProductGrid({
         <h2 className={styles.title}>{title}</h2>
         {viewAllLabel && (
           <button type="button" className={styles.viewAll} onClick={onViewAll}>
-            {viewAllLabel} ›
+            {viewAllLabel}
+            <FiChevronRight className={styles.viewAllIcon} aria-hidden="true" />
           </button>
         )}
       </div>
@@ -54,15 +56,9 @@ export default function ProductGrid({
       </div>
 
       <div className={styles.actions}>
-        {isLoggedIn ? (
-          canLoadMore && (
-            <button type="button" className={styles.btnLoadMore} onClick={handleLoadMore}>
-              Xem thêm
-            </button>
-          )
-        ) : (
-          <button type="button" className={styles.btnLoginMore} onClick={onRequireLogin}>
-            Đăng nhập để xem thêm
+        {canLoadMore && (
+          <button type="button" className={styles.btnLoadMore} onClick={handleLoadMore}>
+            Xem thêm
           </button>
         )}
       </div>

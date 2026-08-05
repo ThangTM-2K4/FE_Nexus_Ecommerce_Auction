@@ -1,6 +1,7 @@
 
 import api from "../config/api";
 import { GOOGLE_LOGIN_URL } from "../config/endpoints";
+import { clearMockAvatarRecord, resolveAvatarForUser } from "./avatarService";
 
 
 const SESSION_KEY = "user";
@@ -15,7 +16,7 @@ const readStoredUser = () => {
   if (!raw) return null;
 
   try {
-    return JSON.parse(raw);
+    return resolveAvatarForUser(JSON.parse(raw));
   } catch {
     return null;
   }
@@ -120,6 +121,7 @@ const normalizeSessionUser = (userSource, previousUser = null) => {
       userSource.email?.split("@")[0] ??
       previousUser?.username ??
       "",
+    avatar: userSource.avatar ?? previousUser?.avatar ?? null,
     role,
     roles: roleCodes.length ? roleCodes : previousUser?.roles,
     sellerStatus: normalizeSellerStatus(
@@ -175,6 +177,7 @@ export const clearSession = () => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(EXPIRES_AT_KEY);
+  clearMockAvatarRecord();
 };
 
 export const isSessionValid = () => {
@@ -232,7 +235,7 @@ export const login = async (loginValue, password) => {
 // Gọi /sellers/me để đồng bộ sellerStatus vào session (dùng cho SellerRoute).
 const enrichSellerStatus = async () => {
   try {
-    const { data } = await api.get("/sellers/me");
+    const { data } = await api.get("/sellers/me", { skipErrorRedirect: true });
     const seller = data?.data ?? data;
     const status = seller?.status ?? seller?.sellerStatus;
     if (status) {
@@ -242,7 +245,8 @@ const enrichSellerStatus = async () => {
       if (upper === "APPROVED") updates.currentMode = "SELLER";
       return updateSessionUser(updates);
     }
-  } catch {
+  } catch (err) {
+    console.error('[authService] sellers/me enrich (optional):', err);
     /* 404 = chưa đăng ký seller → giữ nguyên */
   }
   return null;
@@ -329,10 +333,11 @@ export const logout = async () => {
   }
 
   try {
-    await api.post("/auth/logout", { refreshToken: storedRefreshToken });
+    await api.post("/auth/logout", { refreshToken: storedRefreshToken }, { skipErrorRedirect: true });
   } catch {
     /* session already cleared locally */
   }
+
 };
 
 export const getCurrentUser = () => {

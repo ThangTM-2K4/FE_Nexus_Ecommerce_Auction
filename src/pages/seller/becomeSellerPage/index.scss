@@ -548,6 +548,83 @@
   margin: 0 auto 20px;
 }
 
+// Đồng hồ chờ có hoạt ảnh — thay cho ảnh minh hoạ tĩnh ở trạng thái chờ duyệt
+.seller-status-waiting {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 4px auto 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(#523F77, 0.16);
+    animation: sellerWaitPulse 2.2s ease-out infinite;
+
+    &--delay { animation-delay: 1.1s; }
+  }
+
+  &__clock {
+    position: relative;
+    width: 92px;
+    height: 92px;
+    filter: drop-shadow(0 6px 12px rgba(#523F77, 0.22));
+  }
+
+  &__face {
+    fill: #fff;
+    stroke: #ece7f4;
+    stroke-width: 3;
+  }
+
+  &__ring {
+    fill: none;
+    stroke: #523F77;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 40 200;
+    transform-origin: 32px 32px;
+    animation: sellerWaitSpin 2.6s linear infinite;
+  }
+
+  &__hand {
+    stroke: #523F77;
+    stroke-linecap: round;
+    transform-origin: 32px 32px;
+
+    &--min {
+      stroke-width: 3;
+      animation: sellerWaitSpin 3s linear infinite;
+    }
+
+    &--hour {
+      stroke-width: 3.4;
+      animation: sellerWaitSpin 12s linear infinite;
+    }
+  }
+
+  &__pin { fill: #523F77; }
+}
+
+@keyframes sellerWaitSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sellerWaitPulse {
+  0%   { transform: scale(0.72); opacity: 0.7; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seller-status-waiting__pulse,
+  .seller-status-waiting__ring,
+  .seller-status-waiting__hand { animation: none; }
+}
+
 .seller-status-meta {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

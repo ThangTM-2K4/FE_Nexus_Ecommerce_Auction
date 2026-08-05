@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { FaTh, FaList, FaUserPlus } from "react-icons/fa";
+import Select from "../../../components/common/select";
 import AdminPageHeader from "../../../components/admin/adminPageHeader";
 import AdminTabs from "../../../components/admin/adminTabs";
 import AdminTabOverview from "../../../components/admin/adminTabOverview";
@@ -7,7 +9,7 @@ import AdminToolbar from "../../../components/admin/adminToolbar";
 import AdminModal from "../../../components/admin/adminModal";
 import AdminStatusBadge from "../../../components/admin/adminStatusBadge";
 import { AdminAnimatedView, AdminStaggerGrid } from "../../../components/admin/adminPageTransition";
-import { UserCard } from "../../../components/admin/adminViews";
+import { UserCard, UserListRow } from "../../../components/admin/adminViews";
 import {
   approveAdminSeller,
   enrichSellersWithDetails,
@@ -24,6 +26,7 @@ import {
 } from "../../../services/adminSellerService";
 import {
   classifyUserByRole,
+  createAdminUser,
   deleteAdminUser,
   enrichUsersWithRoles,
   filterUsersByRoleTab,
@@ -31,6 +34,7 @@ import {
   getAdminUserDetail,
   getAdminUsers,
   getApiErrorMessage,
+  ROLE_LABELS,
   splitUserDetailFields,
   USER_ROLE_TABS,
   USER_STATUS_FILTER_OPTIONS,
@@ -39,9 +43,28 @@ import "../../../components/admin/adminViews/index.scss";
 import "../../../components/admin/adminDataTable/index.scss";
 import "../../../components/admin/adminTabOverview/index.scss";
 
+const CREATABLE_ROLES = [
+  { value: "STAFF", label: "Nhân viên (Staff)" },
+  { value: "SUPPORT", label: "Hỗ trợ (Support)" },
+  { value: "MODERATOR", label: "Kiểm duyệt (Moderator)" },
+  { value: "FINANCE", label: "Tài chính (Finance)" },
+  { value: "ADMIN", label: "Quản trị viên (Admin)" },
+];
+
+const INIT_FORM = {
+  fullName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  role: "STAFF",
+  phoneNumber: "",
+  note: "",
+};
+
 export const AdminUsers = () => {
   const PAGE_SIZE = 20;
   const [tab, setTab] = useState("customer");
+  const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
   const [detail, setDetail] = useState(null);
   const [detailType, setDetailType] = useState(null);
   const [showSensitiveDetail, setShowSensitiveDetail] = useState(false);
@@ -65,6 +88,71 @@ export const AdminUsers = () => {
   const [sellerPage, setSellerPage] = useState(1);
   const [sellerTotal, setSellerTotal] = useState(0);
   const [tabCounts, setTabCounts] = useState({ customer: 0, admin: 0, seller: 0 });
+
+  // --- Create account form ---
+  const [createForm, setCreateForm] = useState(INIT_FORM);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createErrors, setCreateErrors] = useState({});
+  const [createSuccess, setCreateSuccess] = useState(null);
+
+  const handleCreateChange = (field, value) => {
+    setCreateForm((prev) => ({ ...prev, [field]: value }));
+    setCreateErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  const validateCreate = () => {
+    const errs = {};
+    if (!createForm.fullName.trim()) errs.fullName = "Vui lòng nhập họ và tên";
+    if (!createForm.email.trim()) {
+      errs.email = "Vui lòng nhập email công việc";
+    } else if (!/^[^@]+@[^@]+\.[^@]+$/.test(createForm.email)) {
+      errs.email = "Email không hợp lệ (ví dụ: staff@nexus.vn)";
+    }
+    if (!createForm.password) {
+      errs.password = "Vui lòng nhập mật khẩu";
+    } else if (createForm.password.length < 6) {
+      errs.password = "Mật khẩu tối thiểu 6 ký tự";
+    }
+    if (!createForm.confirmPassword) {
+      errs.confirmPassword = "Vui lòng nhập xác nhận mật khẩu";
+    } else if (createForm.password !== createForm.confirmPassword) {
+      errs.confirmPassword = "Xác nhận mật khẩu không khớp";
+    }
+    if (!createForm.role) errs.role = "Vui lòng chọn vai trò";
+    return errs;
+  };
+
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    const errs = validateCreate();
+    if (Object.keys(errs).length) {
+      setCreateErrors(errs);
+      toast.error("Vui lòng nhập đầy đủ các thông tin bắt buộc (*)");
+      return;
+    }
+    setCreateLoading(true);
+    setCreateSuccess(null);
+    try {
+      await createAdminUser({
+        fullName: createForm.fullName.trim(),
+        email: createForm.email.trim(),
+        password: createForm.password,
+        roleCodes: [createForm.role],
+        phoneNumber: createForm.phoneNumber.trim() || undefined,
+        note: createForm.note.trim() || undefined,
+      });
+      setCreateSuccess(`✅ Tài khoản "${createForm.fullName}" (${ROLE_LABELS[createForm.role] ?? createForm.role}) đã được cấp thành công trên hệ thống!`);
+      toast.success(`Đã cấp tài khoản ${createForm.role} cho ${createForm.fullName}`);
+      setCreateForm(INIT_FORM);
+      setCreateErrors({});
+      await loadUsers();
+      await refreshTabCounts();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Không tạo được tài khoản"));
+    } finally {
+      setCreateLoading(false);
+    }
+  };
 
   const refreshTabCounts = useCallback(async () => {
     try {
@@ -310,19 +398,21 @@ export const AdminUsers = () => {
 
   const isAccountTab = tab === "customer" || tab === "admin";
 
+  const toggleViewMode = () => setViewMode((m) => m === "grid" ? "list" : "grid");
+
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Người dùng" title="Quản lý người dùng" subtitle="Phân loại theo vai trò: Khách hàng, Quản trị viên, Seller." />
       <AdminTabs
         active={tab}
-        onChange={setTab}
+        onChange={(t) => { setTab(t); }}
         tabs={USER_ROLE_TABS.map((item) => ({
           id: item.id,
           label: item.label,
-          count: tabCounts[item.id] ?? 0,
+          count: item.id === "create" ? undefined : (tabCounts[item.id] ?? 0),
         }))}
       />
-      <AdminTabOverview {...tabOverview} />
+      {tab !== "create" && <AdminTabOverview {...tabOverview} />}
       {isAccountTab ? (
         <AdminToolbar
           search={userSearch}
@@ -344,9 +434,13 @@ export const AdminUsers = () => {
               options: USER_STATUS_FILTER_OPTIONS,
             },
           ]}
-          actions={[{ label: "Tải lại", variant: "secondary", onClick: loadUsers }]}
+          actions={[
+            { label: "Tải lại", variant: "secondary", onClick: loadUsers },
+          ]}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
-      ) : (
+      ) : tab === "create" ? null : (
         <AdminToolbar
           search={sellerSearch}
           onSearchChange={setSellerSearch}
@@ -358,11 +452,125 @@ export const AdminUsers = () => {
             onChange: (v) => { setSellerStatus(v); setSellerPage(1); },
             options: SELLER_FILTER_OPTIONS,
           }]}
-          actions={[{ label: "Tải lại", variant: "secondary", onClick: loadSellers }]}
+          actions={[
+            { label: "Tải lại", variant: "secondary", onClick: loadSellers },
+          ]}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       )}
+
       <AdminAnimatedView viewKey={tab}>
-        {isAccountTab ? usersLoading ? (
+        {tab === "create" ? (
+          <div className="adm-create-account-panel">
+            <div className="adm-create-account-panel__header">
+              <FaUserPlus />
+              <div>
+                <h2>Cấp phát tài khoản nội bộ</h2>
+                <p>Tạo tài khoản Staff, Support, Moderator, Finance, Admin cho nhân viên.</p>
+              </div>
+            </div>
+            {createSuccess && (
+              <div className="adm-create-account-panel__success">{createSuccess}</div>
+            )}
+            {Object.keys(createErrors).length > 0 && (
+              <div className="adm-create-account-panel__error-summary">
+                ⚠️ Vui lòng điền đầy đủ và đúng định dạng các ô thông tin tô đỏ bên dưới (*).
+              </div>
+            )}
+            <form className="adm-create-account-form" onSubmit={handleCreateSubmit} noValidate>
+              <div className="adm-create-account-form__row">
+                <div className={`adm-create-account-form__field ${createErrors.fullName ? "adm-create-account-form__field--error" : ""}`}>
+                  <label htmlFor="ca-fullName">Họ và tên <span>*</span></label>
+                  <input
+                    id="ca-fullName"
+                    type="text"
+                    value={createForm.fullName}
+                    onChange={(e) => handleCreateChange("fullName", e.target.value)}
+                    placeholder="Nguyễn Văn A"
+                  />
+                  {createErrors.fullName && <span className="adm-create-account-form__error">{createErrors.fullName}</span>}
+                </div>
+                <div className={`adm-create-account-form__field ${createErrors.email ? "adm-create-account-form__field--error" : ""}`}>
+                  <label htmlFor="ca-email">Email công việc <span>*</span></label>
+                  <input
+                    id="ca-email"
+                    type="email"
+                    value={createForm.email}
+                    onChange={(e) => handleCreateChange("email", e.target.value)}
+                    placeholder="staff@nexus.vn"
+                  />
+                  {createErrors.email && <span className="adm-create-account-form__error">{createErrors.email}</span>}
+                </div>
+              </div>
+              <div className="adm-create-account-form__row">
+                <div className="adm-create-account-form__field">
+                  <label htmlFor="ca-phone">Số điện thoại</label>
+                  <input
+                    id="ca-phone"
+                    type="tel"
+                    value={createForm.phoneNumber}
+                    onChange={(e) => handleCreateChange("phoneNumber", e.target.value)}
+                    placeholder="09xxxxxxxx"
+                  />
+                </div>
+                <div className={`adm-create-account-form__field ${createErrors.role ? "adm-create-account-form__field--error" : ""}`}>
+                  <label htmlFor="ca-role">Vai trò (cấp bậc) <span>*</span></label>
+                  <Select
+                    value={createForm.role}
+                    onChange={(e) => handleCreateChange("role", e.target.value)}
+                    options={CREATABLE_ROLES}
+                    placeholder="Chọn vai trò..."
+                    error={createErrors.role}
+                  />
+                </div>
+              </div>
+              <div className="adm-create-account-form__row">
+                <div className={`adm-create-account-form__field ${createErrors.password ? "adm-create-account-form__field--error" : ""}`}>
+                  <label htmlFor="ca-password">Mật khẩu <span>*</span></label>
+                  <input
+                    id="ca-password"
+                    type="password"
+                    value={createForm.password}
+                    onChange={(e) => handleCreateChange("password", e.target.value)}
+                    placeholder="Tối thiểu 6 ký tự"
+                  />
+                  {createErrors.password && <span className="adm-create-account-form__error">{createErrors.password}</span>}
+                </div>
+                <div className={`adm-create-account-form__field ${createErrors.confirmPassword ? "adm-create-account-form__field--error" : ""}`}>
+                  <label htmlFor="ca-confirm">Xác nhận mật khẩu <span>*</span></label>
+                  <input
+                    id="ca-confirm"
+                    type="password"
+                    value={createForm.confirmPassword}
+                    onChange={(e) => handleCreateChange("confirmPassword", e.target.value)}
+                    placeholder="Nhập lại mật khẩu"
+                  />
+                  {createErrors.confirmPassword && <span className="adm-create-account-form__error">{createErrors.confirmPassword}</span>}
+                </div>
+              </div>
+              <div className="adm-create-account-form__field adm-create-account-form__field--full">
+                <label htmlFor="ca-note">Ghi chú nội bộ</label>
+                <textarea
+                  id="ca-note"
+                  rows={3}
+                  value={createForm.note}
+                  onChange={(e) => handleCreateChange("note", e.target.value)}
+                  placeholder="Lý do cấp, phòng ban, ..."
+                />
+              </div>
+              <div className="adm-create-account-form__role-info">
+                <div className="adm-create-account-form__role-badge">
+                  <FaUserPlus />
+                  <span>Đang cấp vai trò: <strong>{CREATABLE_ROLES.find((r) => r.value === createForm.role)?.label ?? createForm.role}</strong></span>
+                </div>
+                <button type="submit" className="adm-create-account-form__submit" disabled={createLoading}>
+                  {createLoading ? "⏳ Đang tạo..." : "✨ Tạo tài khoản"}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : isAccountTab ? usersLoading ? (
           <p className="adm-page__empty">Đang tải danh sách người dùng...</p>
         ) : usersByRole.length === 0 ? (
           <p className="adm-page__empty">
@@ -370,19 +578,32 @@ export const AdminUsers = () => {
           </p>
         ) : (
           <>
-            <AdminStaggerGrid className="adm-user-grid">
-              {usersByRole.map((row) => (
-                <UserCard
-                  key={row.id}
-                  user={row}
-                  type={tab === "admin" ? "admin" : "customer"}
-                  actions={accountUserActions(row)}
-                />
-              ))}
-            </AdminStaggerGrid>
+            {viewMode === "grid" ? (
+              <AdminStaggerGrid className="adm-user-grid">
+                {usersByRole.map((row) => (
+                  <UserCard
+                    key={row.id}
+                    user={row}
+                    type={tab === "admin" ? "admin" : "customer"}
+                    actions={accountUserActions(row)}
+                  />
+                ))}
+              </AdminStaggerGrid>
+            ) : (
+              <div className="adm-user-list">
+                {usersByRole.map((row) => (
+                  <UserListRow
+                    key={row.id}
+                    user={row}
+                    type={tab === "admin" ? "admin" : "customer"}
+                    actions={accountUserActions(row)}
+                  />
+                ))}
+              </div>
+            )}
             {Math.ceil(userTotal / PAGE_SIZE) > 1 && (
               <div className="adm-page__pagination">
-                <button type="button" disabled={userPage <= 1} onClick={() => setUserPage((p) => p - 1)}>Trước</button>
+                <button type="button" disabled={userPage <= 1} onClick={() => setUserPage((p) => p - 1)}>Đước</button>
                 <span>Trang {userPage}/{Math.ceil(userTotal / PAGE_SIZE)}</span>
                 <button type="button" disabled={userPage >= Math.ceil(userTotal / PAGE_SIZE)} onClick={() => setUserPage((p) => p + 1)}>Sau</button>
               </div>
@@ -394,11 +615,19 @@ export const AdminUsers = () => {
           <p className="adm-page__empty">Không có seller phù hợp.</p>
         ) : (
           <>
-            <AdminStaggerGrid className="adm-user-grid">
-              {filteredSellers.map((row) => (
-                <UserCard key={row.id} user={row} type="seller" actions={sellerActions(row)} />
-              ))}
-            </AdminStaggerGrid>
+            {viewMode === "grid" ? (
+              <AdminStaggerGrid className="adm-user-grid">
+                {filteredSellers.map((row) => (
+                  <UserCard key={row.id} user={row} type="seller" actions={sellerActions(row)} />
+                ))}
+              </AdminStaggerGrid>
+            ) : (
+              <div className="adm-list-container">
+                {filteredSellers.map((row) => (
+                  <UserListRow key={row.id} user={row} type="seller" actions={sellerActions(row)} />
+                ))}
+              </div>
+            )}
             {Math.ceil(sellerTotal / PAGE_SIZE) > 1 && (
               <div className="adm-page__pagination">
                 <button type="button" disabled={sellerPage <= 1} onClick={() => setSellerPage((p) => p - 1)}>Trước</button>
@@ -407,6 +636,7 @@ export const AdminUsers = () => {
               </div>
             )}
           </>
+
         )}
       </AdminAnimatedView>
       <AdminModal
@@ -491,12 +721,14 @@ export const AdminSellerVerification = () => {
   const [statusFilter, setStatusFilter] = useState(SELLER_API_STATUS.PENDING);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [viewMode, setViewMode] = useState("grid");
   const [detail, setDetail] = useState(null);
   const [showSensitiveDetail, setShowSensitiveDetail] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+
 
   const renderDetailFields = (fields) => (
     <dl className="adm-detail-grid">
@@ -613,12 +845,14 @@ export const AdminSellerVerification = () => {
           options: SELLER_FILTER_OPTIONS,
         }]}
         actions={[{ label: "Tải lại", variant: "secondary", onClick: loadVerifications }]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
       {loading ? (
         <p className="adm-page__empty">Đang tải dữ liệu...</p>
       ) : filtered.length === 0 ? (
         <p className="adm-page__empty">Không có hồ sơ phù hợp.</p>
-      ) : (
+      ) : viewMode === "grid" ? (
         <AdminStaggerGrid className="adm-card-grid">
           {filtered.map((item) => (
             <article key={item.id} className="adm-card">
@@ -634,12 +868,12 @@ export const AdminSellerVerification = () => {
                 <div><dt>Mã số thuế</dt><dd>{item.taxCode ?? "—"}</dd></div>
               </dl>
               <footer>
-                <button type="button" className="adm-toolbar__btn adm-toolbar__btn--secondary" onClick={() => openDetail(item)}>Xem chi tiết</button>
+                <button type="button" className="secondary" onClick={() => openDetail(item)}>Xem chi tiết</button>
                 {isPending(item) && (
                   <>
                     <button
                       type="button"
-                      className="adm-toolbar__btn adm-toolbar__btn--primary"
+                      className="success"
                       onClick={() => handleApprove(item)}
                       disabled={processingId === item.id}
                     >
@@ -647,7 +881,7 @@ export const AdminSellerVerification = () => {
                     </button>
                     <button
                       type="button"
-                      className="adm-toolbar__btn adm-toolbar__btn--danger"
+                      className="danger"
                       onClick={() => { setRejectTarget(item); setRejectReason(""); }}
                       disabled={processingId === item.id}
                     >
@@ -659,7 +893,25 @@ export const AdminSellerVerification = () => {
             </article>
           ))}
         </AdminStaggerGrid>
+      ) : (
+        <div className="adm-list-container">
+          {filtered.map((item) => (
+            <UserListRow
+              key={item.id}
+              user={{ name: item.seller, email: item.owner, phone: item.taxCode, address: item.address, status: item.status, sellerTypeLabel: item.sellerTypeLabel }}
+              type="seller"
+              actions={[
+                { label: "Chi tiết", variant: "primary", onClick: () => openDetail(item) },
+                ...(isPending(item) ? [
+                  { label: "Duyệt", variant: "success", onClick: () => handleApprove(item), disabled: processingId === item.id },
+                  { label: "Từ chối", variant: "danger", onClick: () => { setRejectTarget(item); setRejectReason(""); }, disabled: processingId === item.id },
+                ] : [])
+              ]}
+            />
+          ))}
+        </div>
       )}
+
       {Math.ceil(total / PAGE_SIZE) > 1 && (
         <div className="adm-page__pagination">
           <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</button>

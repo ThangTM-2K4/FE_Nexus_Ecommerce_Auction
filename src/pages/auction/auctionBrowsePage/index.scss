@@ -28,8 +28,13 @@
     display: flex;
     gap: 12px;
     margin-top: 24px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
 
     button {
+      white-space: nowrap;
+
       padding: 10px 20px;
       border: 1px solid $auction-border-subtle;
       border-radius: $radius-pill;
@@ -57,21 +62,19 @@
 
 .auction-browse-page__grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-
-  @media (min-width: 540px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 
   @media (min-width: $breakpoint-tablet) {
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   @media (min-width: $breakpoint-desktop) {
     grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
   }
+
   
   > div {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -98,8 +101,95 @@
     font-size: 1rem;
     color: $mist-lavender;
   }
+
+  .auction-browse-page__reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 10px 22px;
+    border: 1px solid rgba($antique-gold, 0.6);
+    border-radius: $radius-pill;
+    background: rgba($royal-purple, 0.4);
+    color: $gold-bright;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba($royal-purple, 0.8);
+      border-color: $gold-bright;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba($antique-gold, 0.25);
+    }
+  }
 }
 
 .auction-browse-page__locations {
   scroll-margin-top: calc($header-height + 1rem);
 }
+
+/* ── Active filter chips bar ── */
+.auction-browse-page__active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 6px;
+  animation: fadeIn 0.2s ease;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 12px;
+  border-radius: $radius-pill;
+  background: rgba($royal-purple, 0.35);
+  border: 1px solid rgba($antique-gold, 0.3);
+  color: $mist-lavender;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  button {
+    background: none;
+    border: none;
+    color: #8f7fbf;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    justify-content: center;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+  }
+
+  &--clear-all {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    cursor: pointer;
+    padding: 5px 14px;
+    transition: all 0.2s;
+    font-weight: 700;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.5);
+      transform: translateY(-1px);
+    }
+  }
+}
+
