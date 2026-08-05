@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 import {
   createEcommerceProduct,
+  buildCreateProductPayload,
   uploadProductImage,
   attachProductImage,
-  createProductSku,
   submitProductForReview,
   getApiErrorMessage,
 } from "../../../services/ecommerceProductService";
+import { getCategories, toSelectOptions } from "../../../services/categoryService";
 import * as shippingService from "../../../services/shippingService";
-import { productCategories } from "../../../data/auctionMockData";
 import { fileToDataUrl } from "../../../utils/fileToDataUrl";
 import { dataUrlToFile } from "../../../utils/dataUrlToFile";
 import Select from "../../../components/common/select";
@@ -20,11 +20,8 @@ import "./index.scss";
 const SUBMIT_STEP_LABELS = {
   create: "Đang tạo sản phẩm...",
   images: "Đang tải ảnh lên...",
-  sku: "Đang tạo SKU...",
   review: "Đang gửi duyệt...",
 };
-
-const CATEGORY_OPTIONS = productCategories.map((c) => ({ value: c.id, label: c.label }));
 
 const CONDITIONS = [
   { value: "new", label: "Hàng mới" },
@@ -43,7 +40,7 @@ const NAME_MAX = 120;
 
 const initialForm = {
   name: "",
-  category: productCategories[0]?.id ?? "",
+  category: "",
   brand: "",
   description: "",
   price: "",
@@ -67,6 +64,34 @@ export default function CreateProductPage() {
   const [shippingOptions, setShippingOptions] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesLoadFailed, setCategoriesLoadFailed] = useState(false);
+
+  const categoryOptions = useMemo(() => toSelectOptions(categories), [categories]);
+  const canSubmitProduct = !categoriesLoading && !categoriesLoadFailed && categories.length > 0;
+
+  useEffect(() => {
+    let cancelled = false;
+    setCategoriesLoading(true);
+    setCategoriesLoadFailed(false);
+
+    getCategories().then((res) => {
+      if (cancelled) return;
+      if (res.ok && res.items.length > 0) {
+        setCategories(res.items);
+      } else {
+        setCategories([]);
+        setCategoriesLoadFailed(true);
+        toast.error(res.error || "Không tải được danh mục ngành hàng");
+      }
+      setCategoriesLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -144,18 +169,28 @@ export default function CreateProductPage() {
   const validate = () => {
     const next = {};
     if (!form.name.trim()) next.name = "Vui lòng nhập tên sản phẩm";
+    if (!form.category.trim()) next.category = "Vui lòng chọn ngành hàng";
+    if (!form.description.trim()) next.description = "Vui lòng nhập mô tả sản phẩm";
     if (!form.price.trim()) next.price = "Vui lòng nhập giá bán";
     else if (Number.isNaN(Number(form.price))) next.price = "Giá bán phải là số";
     if (!form.stock.trim()) next.stock = "Vui lòng nhập số lượng tồn kho";
     else if (Number.isNaN(Number(form.stock))) next.stock = "Số lượng phải là số";
     setErrors(next);
-    if (next.name) setActiveTab("basic");
+    if (next.name || next.category || next.description) setActiveTab("basic");
     else if (next.price || next.stock) setActiveTab("sales");
     return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (hidden) => {
+    if (!canSubmitProduct) {
+      toast.error("Chưa tải được danh mục ngành hàng — không thể tạo sản phẩm");
+      return;
+    }
     if (!validate()) return;
+    if (!user?.id) {
+      toast.error("Chưa đăng nhập — không thể tạo sản phẩm");
+      return;
+    }
     setSubmitting(true);
 
     let productId = draftProductId;
@@ -163,15 +198,18 @@ export default function CreateProductPage() {
     try {
       if (!productId) {
         setSubmitStep("create");
-        const created = await createEcommerceProduct({
-          name: form.name.trim(),
-          categoryId: form.category,
-          brand: form.brand.trim() || undefined,
-          description: form.description.trim() || undefined,
-          price: Number(form.price),
-          stock: Number(form.stock),
-          condition: form.condition,
-        });
+        const created = await createEcommerceProduct(
+          buildCreateProductPayload({
+            sellerUserId: user.id,
+            name: form.name,
+            description: form.description,
+            categoryId: form.category,
+            brand: form.brand,
+            price: form.price,
+            stock: form.stock,
+            condition: form.condition,
+          }),
+        );
         productId = created.productId ?? created.id;
         if (!productId) {
           throw new Error("Không nhận được productId từ server.");
@@ -194,13 +232,6 @@ export default function CreateProductPage() {
           await attachProductImage(productId, { url, key, isCover });
         }
       }
-
-      setSubmitStep("sku");
-      await createProductSku(productId, {
-        skuCode: "DEFAULT",
-        price: Number(form.price),
-        stock: Number(form.stock),
-      });
 
       if (!hidden) {
         setSubmitStep("review");
@@ -393,15 +424,23 @@ export default function CreateProductPage() {
                 </div>
 
                 <div className="slr-cp__row">
-                  <span className="slr-cp__row-label">Ngành hàng</span>
+                  <span className="slr-cp__row-label">Ngành hàng<span className="required"> *</span></span>
                   <div className="slr-cp__row-body">
                     <div className="slr-cp__inline-field">
                       <Select
                         name="category"
                         value={form.category}
                         onChange={handleChange}
-                        options={CATEGORY_OPTIONS}
-                        placeholder="Chọn ngành hàng"
+                        options={categoryOptions}
+                        placeholder={
+                          categoriesLoading
+                            ? "Đang tải ngành hàng..."
+                            : categoriesLoadFailed
+                              ? "Không tải được ngành hàng"
+                              : "Chọn ngành hàng"
+                        }
+                        disabled={categoriesLoading || categoriesLoadFailed || categoryOptions.length === 0}
+                        className={errors.category ? "input-error" : ""}
                       />
                       <button
                         type="button"
@@ -411,6 +450,12 @@ export default function CreateProductPage() {
                         Sử dụng gần đây
                       </button>
                     </div>
+                    {errors.category && <span className="field-error">{errors.category}</span>}
+                    {categoriesLoadFailed && (
+                      <small className="slr-create-image-hint">
+                        Không thể tải danh mục từ hệ thống. Vui lòng tải lại trang hoặc thử lại sau.
+                      </small>
+                    )}
                   </div>
                 </div>
 
@@ -431,7 +476,7 @@ export default function CreateProductPage() {
 
                 <div className="slr-cp__row">
                   <label className="slr-cp__row-label" htmlFor="description">
-                    Mô tả sản phẩm
+                    Mô tả sản phẩm<span className="required"> *</span>
                   </label>
                   <div className="slr-cp__row-body">
                     <textarea
@@ -441,10 +486,12 @@ export default function CreateProductPage() {
                       value={form.description}
                       onChange={handleChange}
                       placeholder="Mô tả tình trạng, thông số, phụ kiện đi kèm..."
+                      className={errors.description ? "input-error" : ""}
                     />
                     <span className="slr-cp__counter slr-cp__counter--block">
                       {form.description.length} ký tự
                     </span>
+                    {errors.description && <span className="field-error">{errors.description}</span>}
                   </div>
                 </div>
               </div>
@@ -590,12 +637,12 @@ export default function CreateProductPage() {
               <button
                 type="button"
                 className="slr-btn-outline"
-                disabled={submitting}
+                disabled={submitting || !canSubmitProduct}
                 onClick={() => handleSubmit(true)}
               >
                 {submitLabel || "Lưu & Ẩn"}
               </button>
-              <button type="submit" className="slr-btn-create" disabled={submitting}>
+              <button type="submit" className="slr-btn-create" disabled={submitting || !canSubmitProduct}>
                 {submitLabel || "Lưu & Hiển thị"}
               </button>
             </div>

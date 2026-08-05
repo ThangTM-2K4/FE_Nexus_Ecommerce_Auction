@@ -10,13 +10,13 @@ export function ensureCategoryTree(items) {
   if (!Array.isArray(items)) return [];
   if (items.some(i => Array.isArray(i.children))) {
     return items.map((cat, idx) => ({
-      id: cat.id || `cat-${idx}`,
+      id: cat.categoryId ?? cat.id ?? `cat-${idx}`,
       name: cat.name || cat.categoryName || 'Danh mục',
       icon: cat.icon || '📦',
       status: cat.status || 'Hoạt động',
       productCount: cat.productCount ?? 0,
       children: Array.isArray(cat.children) ? cat.children.map((c, cIdx) => ({
-        id: c.id || `cat-${idx}-${cIdx}`,
+        id: c.categoryId ?? c.id ?? `cat-${idx}-${cIdx}`,
         name: c.name || c.categoryName || 'Danh mục con',
         status: c.status || 'Hoạt động',
         productCount: c.productCount ?? 0,
@@ -26,13 +26,13 @@ export function ensureCategoryTree(items) {
   const parents = items.filter(i => !i.parentId);
   if (parents.length > 0) {
     return parents.map(p => ({
-      id: p.id,
+      id: p.categoryId ?? p.id,
       name: p.name,
       icon: p.icon || '📦',
       status: p.status || 'Hoạt động',
       productCount: p.productCount ?? 0,
-      children: items.filter(c => c.parentId === p.id).map(c => ({
-        id: c.id,
+      children: items.filter(c => c.parentId === (p.categoryId ?? p.id)).map(c => ({
+        id: c.categoryId ?? c.id,
         name: c.name,
         status: c.status || 'Hoạt động',
         productCount: c.productCount ?? 0,
@@ -42,13 +42,14 @@ export function ensureCategoryTree(items) {
   return [];
 }
 
-/**
+/** 
  * Lấy danh sách danh mục sản phẩm từ backend /api/v1/categories
  */
 export async function getCategories(params = {}) {
   const { data } = await api.get('/categories', { params });
-  const paged = unwrapPagedList(data);
-  return ensureCategoryTree(paged.items || []);
+  const raw = data?.data ?? data;
+  const nodes = Array.isArray(raw?.tree) ? raw.tree : unwrapPagedList(data).items || [];
+  return ensureCategoryTree(nodes);
 }
 
 /**

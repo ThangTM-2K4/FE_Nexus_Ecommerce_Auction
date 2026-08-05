@@ -1,6 +1,5 @@
-import api from '../config/api';
-import { unwrapPagedList, getApiErrorMessage } from '../utils/apiResponse';
-import { ensureCategoryTree } from './adminCategoryService';
+import { getApiErrorMessage } from '../utils/apiResponse';
+import { getCategories as fetchCategories } from './categoryService';
 import { getProducts, getProductById } from './ecommerceProductService';
 
 export { getApiErrorMessage, getProducts, getProductById };
@@ -15,25 +14,13 @@ const CATEGORY_ICONS = [
 const DEFAULT_PRODUCT_IMAGE = '/images/products/electronics/iphone.jpg';
 
 /**
- * Cây danh mục public — GET /categories
+ * Cây danh mục public — GET /categories (qua categoryService)
  */
 export async function getCategoryTree(params = {}) {
-  const { data } = await api.get('/categories', { params, skipErrorRedirect: true });
-  const paged = unwrapPagedList(data);
-  const tree = ensureCategoryTree(paged.items || []);
-  return flattenCategoryTree(tree);
+  const res = await fetchCategories(params);
+  if (!res.ok) return [];
+  return res.items.map((cat, index) => mapCategoryItem({ id: cat.id, name: cat.name }, index));
 }
-
-const flattenCategoryTree = (tree) => {
-  const result = [];
-  tree.forEach((parent, pIdx) => {
-    result.push(mapCategoryItem(parent, pIdx));
-    (parent.children || []).forEach((child, cIdx) => {
-      result.push(mapCategoryItem(child, pIdx * 10 + cIdx + 1));
-    });
-  });
-  return result;
-};
 
 export function mapCategoryItem(cat, index = 0) {
   return {

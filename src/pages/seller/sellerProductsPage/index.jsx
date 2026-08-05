@@ -4,7 +4,7 @@ import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { useAuth } from "../../../context/AuthContext";
 import { getMyEcommerceProducts } from "../../../services/ecommerceProductService";
-import { productCategories } from "../../../data/auctionMockData";
+import { getCategories, getCategoryLabel } from "../../../services/categoryService";
 import { productStats, topProducts, productList } from "../../../data/sellerMockData";
 
 const STATUS_LABELS = {
@@ -17,6 +17,13 @@ const STATUS_LABELS = {
 export default function ProductsPage() {
   const { user } = useAuth();
   const [myProducts, setMyProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    getCategories().then((res) => {
+      if (res.ok) setCategories(res.items);
+    });
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -24,6 +31,7 @@ export default function ProductsPage() {
       .then((res) => setMyProducts(res.items || []))
       .catch(() => setMyProducts([]));
   }, [user?.id]);
+
 
   const pendingCount = myProducts.filter((p) => p.status === "PENDING").length;
 
@@ -97,26 +105,23 @@ export default function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {myProducts.map((p) => {
-                  const category = productCategories.find((c) => c.id === p.category);
-                  return (
-                    <tr key={p.id}>
-                      <td>
-                        <div className="slr-product-thumb">
-                          {p.images?.[0] ? <img src={p.images[0]} alt="" /> : <span>—</span>}
-                        </div>
-                      </td>
-                      <td>{p.name || category?.label || "Sản phẩm mới"}</td>
-                      <td>{p.id}</td>
-                      <td>{Number(p.price || 0).toLocaleString("vi-VN")}đ</td>
-                      <td className={p.stock === 0 ? "warn" : ""}>{p.stock}</td>
-                      <td>0</td>
-                      <td>0</td>
-                      <td>—</td>
-                      <td>{STATUS_LABELS[p.status] || p.status}</td>
-                    </tr>
-                  );
-                })}
+                {myProducts.map((p) => (
+                  <tr key={p.id}>
+                    <td>
+                      <div className="slr-product-thumb">
+                        {p.images?.[0] ? <img src={p.images[0]} alt="" /> : <span>—</span>}
+                      </div>
+                    </td>
+                    <td>{p.name || getCategoryLabel(categories, p.category) || "Sản phẩm mới"}</td>
+                    <td>{p.id}</td>
+                    <td>{Number(p.price || 0).toLocaleString("vi-VN")}đ</td>
+                    <td className={p.stock === 0 ? "warn" : ""}>{p.stock}</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>—</td>
+                    <td>{STATUS_LABELS[p.status] || p.status}</td>
+                  </tr>
+                ))}
                 {productList.map((p) => (
                   <tr key={p.sku}>
                     <td>

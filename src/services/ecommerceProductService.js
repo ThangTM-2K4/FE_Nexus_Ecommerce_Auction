@@ -135,12 +135,67 @@ const extractUploadUrl = (response) => {
 const extractProductId = (payload) =>
   payload?.id ?? payload?.productId ?? payload?.data?.id ?? payload?.data?.productId;
 
+const DEFAULT_SALES_CHANNEL = 'Ecommerce';
+const DEFAULT_CURRENCY = 'VND';
+const DEFAULT_ORIGIN_COUNTRY = 'VN';
+
+/**
+ * Build payload POST /ecommerce/products theo Swagger CreateProductRequest.
+ */
+export function buildCreateProductPayload({
+  sellerUserId,
+  name,
+  description,
+  categoryId,
+  brand,
+  price,
+  stock,
+  condition,
+  originCountry,
+}) {
+  const trimmedName = String(name || '').trim();
+  const trimmedDesc = String(description || '').trim();
+  const unitPrice = Number(price);
+  const stockQty = Number(stock);
+
+  return {
+    sellerUserId,
+    name: trimmedName,
+    description: trimmedDesc,
+    categoryId,
+    salesChannel: DEFAULT_SALES_CHANNEL,
+    brand: brand?.trim() || undefined,
+    originCountry: originCountry || DEFAULT_ORIGIN_COUNTRY,
+    skus: [
+      {
+        skuCode: 'DEFAULT',
+        skuName: trimmedName || 'Mặc định',
+        unitPrice,
+        currency: DEFAULT_CURRENCY,
+        salesChannel: DEFAULT_SALES_CHANNEL,
+        isDefault: true,
+        attributes: {
+          stock: stockQty,
+          condition: condition || 'new',
+        },
+        barcode: '',
+      },
+    ],
+  };
+}
+
 /**
  * Tạo sản phẩm ecommerce — POST /ecommerce/products
  */
 export async function createEcommerceProduct(payload) {
+  if (isDev) {
+    console.info('[ecommerceProductService] POST /ecommerce/products payload', payload);
+  }
   const { data } = await api.post('/ecommerce/products', payload);
   const result = unwrapData(data);
+  if (isDev) {
+    console.info('[ecommerceProductService] POST /ecommerce/products response', result);
+  }
   const productId = extractProductId(result);
   return { ...result, productId };
 }
