@@ -10,6 +10,7 @@ export const ACCOUNT_MENU = [
     label: 'Tài Khoản Của Tôi',
     children: [
       { key: 'profile', label: 'Hồ Sơ', path: '/profile' },
+      { key: 'wallet', label: 'Ví Nexus Pay', path: '/profile/wallet' },
       { key: 'bank', label: 'Ngân Hàng', path: '/profile/bank' },
       { key: 'address', label: 'Địa Chỉ', path: '/profile/address' },
       { key: 'password', label: 'Đổi Mật Khẩu', path: '/profile/change-password' },

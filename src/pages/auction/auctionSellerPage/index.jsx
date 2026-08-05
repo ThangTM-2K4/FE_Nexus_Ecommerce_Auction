@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FaPlus, FaTimes } from "react-icons/fa";
+import { FaPlus, FaTimes, FaMapMarkerAlt, FaCheckCircle, FaShieldAlt, FaMedal } from "react-icons/fa";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { getAuctionProposals } from "../../../services/auctionProposalService";
+import { useAuth } from "../../../context/AuthContext";
+import * as profileService from "../../../services/profileService";
 import "./index.scss";
 
 export default function AuctionSellerPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab') || 'all';
   const setTab = (t) => {
@@ -19,6 +23,12 @@ export default function AuctionSellerPage() {
   };
   const [selectedUpcoming, setSelectedUpcoming] = useState(null);
   const [realAuctions, setRealAuctions] = useState([]);
+
+  useEffect(() => {
+    if (user?.id) {
+      profileService.getProfile(user.id).then(setProfile).catch(() => {});
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     async function loadProposals() {
@@ -62,9 +72,58 @@ export default function AuctionSellerPage() {
     { label: "ĐANG HOẠT ĐỘNG", value: String(realAuctions.filter(a => a.status?.type === "active").length), sub: "Phiên đang live" },
   ];
 
+  const fullName = profile?.fullName || user?.fullName || user?.name || "Thành viên Nexus";
+  const email = profile?.email || user?.email || "";
+  const phone = profile?.phone || user?.phone || "";
+  const address = profile?.address || user?.address || "Việt Nam";
+  const isCccdVerified = profile?.isNationalIdVerified || profile?.identityStatus === "APPROVED";
+
   return (
     <AuctionSidebarLayout sidebarActive="auctions">
       <div className="auc-seller">
+        {/* User Hero Banner */}
+        <div className="auc-profile-hero" style={{ marginBottom: '24px' }}>
+          <div className="auc-profile-hero__main">
+            <div className="auc-profile-hero__avatar-wrap">
+              <AuctionImage
+                src={profile?.avatar || user?.avatar || "/images/avatars/default.png"}
+                alt={fullName}
+                className="auc-profile-hero__avatar"
+              />
+              <span className="auc-profile-hero__avatar-badge" title="Tài khoản chính thức">
+                ✓
+              </span>
+            </div>
+
+            <div className="auc-profile-hero__details">
+              <div className="name-badge-row">
+                <h2>{fullName}</h2>
+                <span className="user-role-badge">
+                  <FaMedal style={{ color: "#C3A05D" }} /> Seller (Người bán)
+                </span>
+              </div>
+              <p className="email-phone-meta">
+                <span>{email}</span> • <span>{phone || "Chưa cập nhật SĐT"}</span>
+              </p>
+
+              <div className="meta-tags">
+                <span className="meta-tag">
+                  <FaMapMarkerAlt /> {address}
+                </span>
+                {isCccdVerified ? (
+                  <span className="meta-tag meta-tag--verified">
+                    <FaCheckCircle /> Đã xác minh CCCD/CMND
+                  </span>
+                ) : (
+                  <span className="meta-tag meta-tag--unverified">
+                    <FaShieldAlt /> Chưa xác minh CCCD
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="auc-seller__header">
           <div>
             <h1>Tổng quan người bán</h1>

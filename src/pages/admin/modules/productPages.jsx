@@ -467,19 +467,18 @@ export const AdminCategories = () => {
   const [form, setForm] = useState({});
   const [activeParentId, setActiveParentId] = useState(null);
 
-  useEffect(() => {
-    async function loadApiCategories() {
-      try {
-        const res = await getCategories();
-        list.setItems(res || []);
-      } catch {
-        list.setItems([]);
-      }
+  const reloadCategories = async () => {
+    try {
+      const res = await getCategories();
+      list.setItems(res || []);
+    } catch {
+      list.setItems([]);
     }
-    loadApiCategories();
+  };
+
+  useEffect(() => {
+    reloadCategories();
   }, []);
-
-
 
   const toggleExpand = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -488,24 +487,41 @@ export const AdminCategories = () => {
 
   // ── Parent actions ─────────────────────────────────────────────
   const handleEditParent = (cat) => {
-    setForm({ id: cat.id, name: cat.name, icon: cat.icon, status: cat.status });
+    setForm({ id: cat.id, name: cat.name, description: cat.description || "", icon: cat.icon, status: cat.status, rowVersion: cat.rowVersion });
     setModal("edit-parent");
   };
-  const handleToggleParent = (cat) => {
-    const next = cat.status === "Hoạt động" ? "Tắt" : "Hoạt động";
-    updateCategory(cat.id, { status: next }).catch(() => {});
-    list.updateItem(cat.id, { status: next });
-    toast.success(`Danh mục "${cat.name}" đã ${next === "Tắt" ? "tắt" : "bật"}`);
+
+  const handleToggleParent = async (cat) => {
+    const nextStatus = cat.status === "Hoạt động" ? "Tắt" : "Hoạt động";
+    try {
+      await updateCategory(cat.id, {
+        name: cat.name,
+        description: cat.description || "",
+        isActive: nextStatus === "Hoạt động",
+        rowVersion: cat.rowVersion,
+      });
+      list.updateItem(cat.id, { status: nextStatus });
+      toast.success(`Danh mục "${cat.name}" đã ${nextStatus === "Tắt" ? "tắt" : "bật"}`);
+      reloadCategories();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Thao tác thất bại"));
+    }
   };
-  const handleDeleteParent = (cat) => {
-    deleteCategory(cat.id).catch(() => {});
-    list.removeItem(cat.id);
-    toast.info(`Đã xóa "${cat.name}"`);
+
+  const handleDeleteParent = async (cat) => {
+    try {
+      await deleteCategory(cat.id, "Xóa bởi Admin");
+      list.removeItem(cat.id);
+      toast.info(`Đã xóa "${cat.name}"`);
+      reloadCategories();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Xóa danh mục thất bại"));
+    }
   };
 
   const handleAddChild = (parentId) => {
     setActiveParentId(parentId);
-    setForm({ name: "", status: "Hoạt động" });
+    setForm({ name: "", description: "", status: "Hoạt động" });
     setModal("add-child");
   };
 
@@ -515,40 +531,89 @@ export const AdminCategories = () => {
     setForm({ ...child });
     setModal("edit-child");
   };
-  const handleToggleChild = (parentId, child) => {
-    const next = child.status === "Hoạt động" ? "Tắt" : "Hoạt động";
+
+  const handleToggleChild = async (parentId, child) => {
+    const nextStatus = child.status === "Hoạt động" ? "Tắt" : "Hoạt động";
     const parent = list.filtered.find((c) => c.id === parentId);
     if (!parent) return;
-    const newChildren = parent.children.map((c) => c.id === child.id ? { ...c, status: next } : c);
-    list.updateItem(parentId, { children: newChildren });
-    toast.success(`"${child.name}" đã ${next === "Tắt" ? "tắt" : "bật"}`);
+    try {
+      await updateCategory(child.id, {
+        name: child.name,
+        isActive: nextStatus === "Hoạt động",
+        parentCategoryId: parent.categoryId || parent.id,
+        rowVersion: child.rowVersion,
+      });
+      const newChildren = parent.children.map((c) => c.id === child.id ? { ...c, status: nextStatus } : c);
+      list.updateItem(parentId, { children: newChildren });
+      toast.success(`"${child.name}" đã ${nextStatus === "Tắt" ? "tắt" : "bật"}`);
+      reloadCategories();
+    } catch (err) {
+      reloadCategories();
+      toast.error(getApiErrorMessage(err, "Thao tác thất bại"));
+    }
   };
-  const handleDeleteChild = (parentId, child) => {
+
+  const handleDeleteChild = async (parentId, child) => {
     const parent = list.filtered.find((c) => c.id === parentId);
     if (!parent) return;
-    list.updateItem(parentId, { children: parent.children.filter((c) => c.id !== child.id) });
-    toast.info(`Đã xóa "${child.name}"`);
+    try {
+      await deleteCategory(child.id, "Xóa bởi Admin");
+      list.updateItem(parentId, { children: parent.children.filter((c) => c.id !== child.id) });
+      toast.info(`Đã xóa "${child.name}"`);
+      reloadCategories();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Xóa danh mục con thất bại"));
+    }
   };
 
   // ── Save ───────────────────────────────────────────────────────
-  const save = () => {
-    if (modal === "add-parent") {
-      list.addItem({ ...form, id: `cat-${Date.now()}`, status: "Hoạt động", productCount: 0, children: [] });
-    } else if (modal === "edit-parent") {
-      list.updateItem(form.id, { name: form.name, icon: form.icon, status: form.status });
-    } else if (modal === "add-child") {
-      const parent = list.filtered.find((c) => c.id === activeParentId);
-      if (!parent) return;
-      const newChild = { id: `cat-${Date.now()}`, name: form.name, status: "Hoạt động", productCount: 0 };
-      list.updateItem(activeParentId, { children: [...(parent.children ?? []), newChild] });
-    } else if (modal === "edit-child") {
-      const parent = list.filtered.find((c) => c.id === activeParentId);
-      if (!parent) return;
-      const newChildren = parent.children.map((c) => c.id === form.id ? { ...c, name: form.name, status: form.status } : c);
-      list.updateItem(activeParentId, { children: newChildren });
+  const save = async () => {
+    try {
+      if (modal === "add-parent") {
+        await createCategory({
+          name: form.name,
+          description: form.description || "",
+          imageUrl: form.imageUrl || form.image || "",
+          isActive: form.status === "Hoạt động",
+          parentCategoryId: null,
+        });
+      } else if (modal === "edit-parent") {
+        await updateCategory(form.id, {
+          name: form.name,
+          description: form.description || "",
+          imageUrl: form.imageUrl || form.image || "",
+          isActive: form.status === "Hoạt động",
+          parentCategoryId: null,
+          rowVersion: form.rowVersion,
+        });
+      } else if (modal === "add-child") {
+        const parent = list.filtered.find((c) => c.id === activeParentId);
+        if (!parent) return;
+        await createCategory({
+          name: form.name,
+          description: form.description || "",
+          imageUrl: form.imageUrl || form.image || "",
+          isActive: form.status === "Hoạt động",
+          parentCategoryId: parent.categoryId || parent.id,
+        });
+      } else if (modal === "edit-child") {
+        const parent = list.filtered.find((c) => c.id === activeParentId);
+        if (!parent) return;
+        await updateCategory(form.id, {
+          name: form.name,
+          description: form.description || "",
+          imageUrl: form.imageUrl || form.image || "",
+          isActive: form.status === "Hoạt động",
+          parentCategoryId: parent.categoryId || parent.id,
+          rowVersion: form.rowVersion,
+        });
+      }
+      toast.success("Đã lưu danh mục thành công");
+      setModal(null);
+      reloadCategories();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Lưu danh mục thất bại"));
     }
-    toast.success("Đã lưu");
-    setModal(null);
   };
 
   const modalTitle = {
@@ -581,7 +646,7 @@ export const AdminCategories = () => {
         search={list.search}
         onSearchChange={list.setSearch}
         searchPlaceholder="Tìm danh mục..."
-        actions={[{ label: "+ Thêm danh mục cha", onClick: () => { setForm({ name: "", icon: "📦", status: "Hoạt động" }); setModal("add-parent"); } }]}
+        actions={[{ label: "+ Thêm danh mục cha", onClick: () => { setForm({ name: "", description: "", imageUrl: "", status: "Hoạt động" }); setModal("add-parent"); } }]}
       />
 
       <div className="adm-category-tree">
@@ -597,7 +662,15 @@ export const AdminCategories = () => {
               >
                 <span className="adm-cat-parent__chevron">{expanded[cat.id] ? "▾" : "▸"}</span>
               </button>
-              <span className="adm-cat-parent__icon">{cat.icon}</span>
+              {cat.imageUrl || cat.image ? (
+                <img
+                  src={cat.imageUrl || cat.image}
+                  alt={cat.name}
+                  style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)' }}
+                />
+              ) : (
+                <span className="adm-cat-parent__icon">📁</span>
+              )}
               <div className="adm-cat-parent__info">
                 <strong>{cat.name}</strong>
                 <small>{cat.children?.length ?? 0} danh mục con · {cat.productCount} sản phẩm</small>
@@ -624,6 +697,13 @@ export const AdminCategories = () => {
                 {(cat.children ?? []).map((child) => (
                   <div key={child.id} className={`adm-cat-child ${child.status !== "Hoạt động" ? "disabled" : ""}`}>
                     <span className="adm-cat-child__dot">└</span>
+                    {child.imageUrl || child.image ? (
+                      <img
+                        src={child.imageUrl || child.image}
+                        alt={child.name}
+                        style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'cover', flexShrink: 0, marginRight: 8 }}
+                      />
+                    ) : null}
                     <div className="adm-cat-child__info">
                       <span>{child.name}</span>
                       <small>{child.productCount} sản phẩm</small>
@@ -648,25 +728,140 @@ export const AdminCategories = () => {
 
       {/* Modal thêm/sửa */}
       <AdminModal open={!!modal} title={modalTitle} onClose={() => setModal(null)}>
-        <div className="adm-form">
-          {(modal === "add-parent" || modal === "edit-parent") && (
-            <label>
-              Icon (emoji)
+        <div className="adm-form" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+              Hình ảnh danh mục (Image)
+            </span>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <input
-                value={form.icon || ""}
-                onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                placeholder="VD: 💻"
-                maxLength={4}
+                value={form.imageUrl || form.image || ""}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value, image: e.target.value })}
+                placeholder="Nhập URL hình ảnh (https://...) hoặc chọn tệp tải ảnh..."
+                style={{
+                  flex: 1,
+                  padding: '9px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#1f2937',
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'all 0.2s'
+                }}
               />
-            </label>
-          )}
-          <label>
-            Tên danh mục
+              <label
+                style={{
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  padding: '9px 16px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  userSelect: 'none',
+                  boxShadow: '0 2px 6px rgba(139, 92, 246, 0.25)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                📷 Chọn ảnh
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const url = ev.target?.result;
+                        setForm((prev) => ({ ...prev, imageUrl: url, image: url }));
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            {(form.imageUrl || form.image) && (
+              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', background: '#f9fafb', borderRadius: '10px', border: '1px solid #f3f4f6' }}>
+                <img
+                  src={form.imageUrl || form.image}
+                  alt="Preview"
+                  style={{ width: 54, height: 54, borderRadius: 8, objectFit: 'cover', border: '1px solid #e5e7eb', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#059669' }}>✓ Đã chọn hình ảnh</span>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, imageUrl: "", image: "" })}
+                    style={{
+                      background: '#fee2e2',
+                      border: '1px solid #fca5a5',
+                      color: '#dc2626',
+                      borderRadius: 6,
+                      padding: '3px 8px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      width: 'fit-content'
+                    }}
+                  >
+                    ✕ Gỡ bỏ ảnh
+                  </button>
+                </div>
+              </div>
+            )}
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+              Tên danh mục <span style={{ color: '#ef4444' }}>*</span>
+            </span>
             <input
               value={form.name || ""}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Nhập tên danh mục..."
               autoFocus
+              style={{
+                width: '100%',
+                padding: '9px 12px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db',
+                background: '#ffffff',
+                color: '#1f2937',
+                fontSize: '14px',
+                outline: 'none'
+              }}
+            />
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+              Mô tả danh mục (Description)
+            </span>
+            <textarea
+              value={form.description || ""}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Nhập mô tả danh mục..."
+              rows={3}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: "8px",
+                border: "1px solid #d1d5db",
+                background: "#ffffff",
+                color: "#1f2937",
+                fontSize: "14px",
+                fontFamily: "inherit",
+                resize: "vertical",
+                outline: "none",
+                lineHeight: "1.5"
+              }}
             />
           </label>
           {(modal === "add-parent" || modal === "edit-parent") && (

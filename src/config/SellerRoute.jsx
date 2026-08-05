@@ -5,7 +5,7 @@ import SellerWaitingPage from "../pages/seller/sellerWaitingPage";
 import SellerRejectedPage from "../pages/seller/sellerRejectedPage";
 
 export default function SellerRoute({ children }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isSellerMode } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) {
@@ -32,8 +32,11 @@ export default function SellerRoute({ children }) {
     return <SellerRejectedPage />;
   }
 
-  // Đã duyệt: quyền seller do backend cấp qua role → vào thẳng dashboard,
-  // không cần đang ở chế độ Người bán.
+  // Chỉ cho phép truy cập Trang Quản lý Người bán khi tài khoản ĐANG BẬT Chế độ Người bán (SELLER mode)
+  if (!isSellerMode || user?.currentMode !== "SELLER") {
+    return <Navigate to="/auction" replace />;
+  }
+
   if (sellerStatus === "APPROVED") {
     return children;
   }

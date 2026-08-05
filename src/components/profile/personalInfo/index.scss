@@ -48,46 +48,63 @@
   margin: 1.25rem 0 1.5rem;
 }
 
-// Bảng hiển thị thông tin CCCD ở chế độ đọc (khi đã xác minh / chờ duyệt).
-.personal-info-cccd__readonly {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  max-width: 760px;
+// Bảng hiển thị thông tin CCCD dạng Bảng (Table Card) đẹp mắt
+.personal-info-cccd__table-card {
   width: 100%;
-  background: $border-soft;
   border: 1px solid $border-soft;
   border-radius: 12px;
   overflow: hidden;
-
-  @media (max-width: 520px) {
-    grid-template-columns: 1fr;
-  }
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  background: $surface;
 }
 
-.personal-info-cccd__ro-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 16px;
-  background: $surface;
+.personal-info-cccd__table {
+  width: 100%;
+  border-collapse: collapse;
 
-  span {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: $ink-muted;
+  tr {
+    border-bottom: 1px solid $border-soft;
+
+    &:last-child {
+      border-bottom: 0;
+    }
   }
 
-  strong {
-    font-size: 0.92rem;
+  td {
+    padding: 13px 18px;
+    vertical-align: top;
+    border-right: 1px solid $border-soft;
+
+    &:last-child {
+      border-right: 0;
+    }
+
+    &.col-half {
+      width: 50%;
+    }
+
+    &.col-full {
+      width: 100%;
+    }
+  }
+
+  .tb-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: $ink-muted;
+    margin-bottom: 4px;
+  }
+
+  .tb-value {
+    display: block;
+    font-size: 0.93rem;
     font-weight: 600;
     color: $ink;
     word-break: break-word;
-  }
-
-  &--full {
-    grid-column: 1 / -1;
+    line-height: 1.45;
   }
 }
 
@@ -95,9 +112,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  // Rộng hơn (trước 560px) để các ô nhập/địa chỉ không bị bó hẹp, chữ không bị
-  // che, đồng thời tận dụng khoảng trống thừa bên phải của khung hồ sơ.
-  max-width: 760px;
   width: 100%;
 
   // Cho ô Giới tính (Select) cao bằng các ô Input 42px để hàng 2 cột thẳng

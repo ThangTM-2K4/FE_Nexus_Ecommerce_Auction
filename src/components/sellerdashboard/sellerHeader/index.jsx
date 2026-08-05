@@ -39,9 +39,6 @@ const SellerHeader = () => {
           <button type="button" className="slr-header__link" onClick={() => navigate("/auction/seller")}>
             Đấu giá
           </button>
-          <button type="button" className="slr-header__link" onClick={() => navigate("/")}>
-            Trang chủ
-          </button>
           <button type="button" className="slr-header__bell" aria-label="Thông báo">
             <FaBell />
             <span className="slr-header__bell-dot" />
