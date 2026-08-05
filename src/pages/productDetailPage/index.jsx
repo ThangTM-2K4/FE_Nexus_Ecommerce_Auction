@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import Header from '@/components/homepage/header';
 import Footer from '@/components/homepage/footer';
 import ProductGrid from '@/components/homepage/productGrid';
@@ -10,13 +10,13 @@ import ShopInfoCard from '@/components/products/ShopInfoCard';
 import ProductDetailTable from '@/components/products/ProductDetailTable';
 import ReviewList from '@/components/products/ReviewList';
 import {
-  getProductDetail,
   getShopProducts,
   getSimilarProducts,
 } from '@/data/mockProductDetail';
 import { mockReviews } from '@/data/mockReviews';
 import { generateMoreProducts } from '@/data/mockProducts';
-import { getProductDetailById, mapProductDetailToUi } from '@/services/catalogService';
+import { mapProductDetailToUi } from '@/services/catalogService';
+import { getProductById } from '@/services/ecommerceProductService';
 import { useProductNavigate } from '@/hooks/useProductNavigate';
 import './index.scss';
 
@@ -24,30 +24,36 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const { handleProductClick } = useProductNavigate();
 
-  const fallbackProduct = useMemo(() => getProductDetail(id), [id]);
-  const [product, setProduct] = useState(fallbackProduct);
+  const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setNotFound(false);
+    setLoadError(null);
+    setProduct(null);
 
-    getProductDetailById(id)
-      .then((data) => {
-        if (cancelled) return;
-        setProduct(mapProductDetailToUi(data, fallbackProduct));
-      })
-      .catch(() => {
-        if (!cancelled) setProduct(fallbackProduct);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    getProductById(id).then((result) => {
+      if (cancelled) return;
+
+      if (result.ok && result.data) {
+        setProduct(mapProductDetailToUi(result.data));
+      } else if (result.status === 404) {
+        setNotFound(true);
+      } else {
+        setLoadError(result.error || 'Không tải được chi tiết sản phẩm');
+      }
+
+      setLoading(false);
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [id, fallbackProduct]);
+  }, [id]);
 
   const shopProducts = useMemo(() => getShopProducts(id), [id]);
   const similarProducts = useMemo(() => getSimilarProducts(id), [id]);
@@ -69,7 +75,9 @@ export default function ProductDetailPage() {
     ]);
   }, [similarProducts.length]);
 
-  const descriptionParagraphs = (product.description || '').split('\n\n').filter(Boolean);
+  if (notFound) {
+    return <Navigate to="/404" replace />;
+  }
 
   if (loading) {
     return (
@@ -84,6 +92,24 @@ export default function ProductDetailPage() {
       </>
     );
   }
+
+  if (loadError || !product) {
+    return (
+      <>
+        <Header />
+        <main className="product-detail-page">
+          <div className="product-detail-page__shell">
+            <p style={{ textAlign: 'center', padding: '3rem 0', color: '#666' }}>
+              {loadError || 'Không tải được chi tiết sản phẩm'}. Vui lòng thử lại sau.
+            </p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  const descriptionParagraphs = (product.description || '').split('\n\n').filter(Boolean);
 
   return (
     <>

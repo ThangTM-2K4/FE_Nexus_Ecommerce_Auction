@@ -1,8 +1,9 @@
 import api from '../config/api';
-import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiResponse';
+import { unwrapPagedList, getApiErrorMessage } from '../utils/apiResponse';
 import { ensureCategoryTree } from './adminCategoryService';
+import { getProducts, getProductById } from './ecommerceProductService';
 
-export { getApiErrorMessage };
+export { getApiErrorMessage, getProducts, getProductById };
 
 const CATEGORY_ICONS = [
   '/images/categories/cat-fashion.jpg',
@@ -14,30 +15,10 @@ const CATEGORY_ICONS = [
 const DEFAULT_PRODUCT_IMAGE = '/images/products/electronics/iphone.jpg';
 
 /**
- * Discovery sản phẩm cho buyer — GET /ecommerce/products/discovery
- */
-export async function getHomeProductDiscovery(params = {}) {
-  const { data } = await api.get('/ecommerce/products/discovery', { params });
-  const paged = unwrapPagedList(data);
-  return {
-    ...paged,
-    items: (paged.items || []).map(mapDiscoveryProduct).filter(Boolean),
-  };
-}
-
-/**
- * Chi tiết sản phẩm — GET /ecommerce/products/{productId}
- */
-export async function getProductDetailById(productId) {
-  const { data } = await api.get(`/ecommerce/products/${productId}`);
-  return unwrapData(data);
-}
-
-/**
  * Cây danh mục public — GET /categories
  */
 export async function getCategoryTree(params = {}) {
-  const { data } = await api.get('/categories', { params });
+  const { data } = await api.get('/categories', { params, skipErrorRedirect: true });
   const paged = unwrapPagedList(data);
   const tree = ensureCategoryTree(paged.items || []);
   return flattenCategoryTree(tree);
@@ -64,7 +45,8 @@ export function mapCategoryItem(cat, index = 0) {
   };
 }
 
-export function mapDiscoveryProduct(item) {
+/** Map item API → field ProductGrid / ProductCard cần */
+export function mapProductListItem(item) {
   if (!item) return null;
 
   const images = Array.isArray(item.images) ? item.images : [];
@@ -85,6 +67,9 @@ export function mapDiscoveryProduct(item) {
   };
 }
 
+/** @deprecated dùng mapProductListItem */
+export const mapDiscoveryProduct = mapProductListItem;
+
 const formatSoldCount = (value) => {
   if (value == null || value === '') return '';
   if (typeof value === 'string') return value;
@@ -94,6 +79,24 @@ const formatSoldCount = (value) => {
 
 export function mapProductDetailToUi(item, defaults = {}) {
   if (!item) return defaults;
+
+  const base = {
+    gallery: [],
+    variants: [],
+    policies: [],
+    rating: 0,
+    reviewCount: 0,
+    soldCount: '',
+    priceMin: 0,
+    priceMax: 0,
+    originalPrice: 0,
+    discountPercent: 0,
+    stock: 0,
+    likeCount: 0,
+    attributes: {},
+    shop: null,
+    ...defaults,
+  };
 
   const images = Array.isArray(item.images) ? item.images : [];
   const gallery = images.length
@@ -106,14 +109,14 @@ export function mapProductDetailToUi(item, defaults = {}) {
           isVideo: false,
         };
       })
-    : defaults.gallery;
+    : base.gallery;
 
-  const price = item.price ?? item.minPrice ?? item.skus?.[0]?.price ?? defaults.priceMin ?? 0;
+  const price = item.price ?? item.minPrice ?? item.skus?.[0]?.price ?? base.priceMin ?? 0;
   const maxPrice = item.maxPrice ?? item.skus?.[item.skus?.length - 1]?.price ?? price;
   const discount = item.discountPercent ?? item.discount ?? 0;
   const originalPrice = discount
     ? Math.round(price / (1 - discount / 100))
-    : defaults.originalPrice ?? price * 1.2;
+    : base.originalPrice ?? price * 1.2;
 
   const skus = Array.isArray(item.skus) ? item.skus : [];
   const variants = skus.length
@@ -123,54 +126,54 @@ export function mapProductDetailToUi(item, defaults = {}) {
         image: sku.imageUrl ?? gallery[0]?.src ?? DEFAULT_PRODUCT_IMAGE,
         price: sku.price ?? price,
       }))
-    : defaults.variants;
+    : base.variants;
 
   const categoryName = item.categoryName ?? item.category?.name ?? 'Danh mục';
-  const productTitle = item.name ?? item.title ?? defaults.title ?? 'Sản phẩm';
+  const productTitle = item.name ?? item.title ?? base.title ?? 'Sản phẩm';
 
   return {
-    ...defaults,
-    id: item.id ?? item.productId ?? defaults.id,
+    ...base,
+    id: item.id ?? item.productId ?? base.id,
     title: productTitle,
-    badge: item.badge ?? defaults.badge ?? null,
-    rating: item.rating ?? item.averageRating ?? defaults.rating ?? 0,
-    reviewCount: item.reviewCount ?? defaults.reviewCount ?? 0,
-    soldCount: formatSoldCount(item.soldCount ?? item.sold) || defaults.soldCount,
+    badge: item.badge ?? base.badge ?? null,
+    rating: item.rating ?? item.averageRating ?? base.rating ?? 0,
+    reviewCount: item.reviewCount ?? base.reviewCount ?? 0,
+    soldCount: formatSoldCount(item.soldCount ?? item.sold) || base.soldCount,
     priceMin: price,
     priceMax: maxPrice,
     originalPrice,
     discountPercent: discount,
-    shipping: item.shipping ?? defaults.shipping,
-    shippingNote: item.shippingNote ?? defaults.shippingNote,
-    inStock: (item.stock ?? item.totalStock ?? defaults.stock ?? 0) > 0,
-    stock: item.stock ?? item.totalStock ?? defaults.stock ?? 0,
-    likeCount: item.likeCount ?? defaults.likeCount ?? 0,
+    shipping: item.shipping ?? base.shipping,
+    shippingNote: item.shippingNote ?? base.shippingNote,
+    inStock: (item.stock ?? item.totalStock ?? base.stock ?? 0) > 0,
+    stock: item.stock ?? item.totalStock ?? base.stock ?? 0,
+    likeCount: item.likeCount ?? base.likeCount ?? 0,
     category: [
       { label: 'Trang chủ', href: '/' },
       { label: categoryName, href: '#' },
       { label: productTitle, href: null },
     ],
-    policies: defaults.policies,
+    policies: base.policies,
     variants,
     attributes: {
       category: categoryName,
-      stock: String(item.stock ?? item.totalStock ?? defaults.stock ?? '—'),
-      warranty: item.warranty ?? defaults.attributes?.warranty ?? '—',
-      origin: item.origin ?? defaults.attributes?.origin ?? '—',
-      shipFrom: item.shipFrom ?? defaults.attributes?.shipFrom ?? '—',
+      stock: String(item.stock ?? item.totalStock ?? base.stock ?? '—'),
+      warranty: item.warranty ?? base.attributes?.warranty ?? '—',
+      origin: item.origin ?? base.attributes?.origin ?? '—',
+      shipFrom: item.shipFrom ?? base.attributes?.shipFrom ?? '—',
     },
-    description: item.description ?? defaults.description ?? '',
+    description: item.description ?? base.description ?? '',
     gallery,
     shop: item.shop
       ? {
-          id: item.shop.id ?? item.shopId ?? defaults.shop?.id,
-          name: item.shop.name ?? item.shopName ?? defaults.shop?.name,
-          avatar: item.shop.avatar ?? item.shop.avatarUrl ?? defaults.shop?.avatar,
-          isOnline: item.shop.isOnline ?? defaults.shop?.isOnline,
-          lastOnline: item.shop.lastOnline ?? defaults.shop?.lastOnline,
-          badge: item.shop.badge ?? defaults.shop?.badge,
-          stats: item.shop.stats ?? defaults.shop?.stats,
+          id: item.shop.id ?? item.shopId ?? base.shop?.id,
+          name: item.shop.name ?? item.shopName ?? base.shop?.name,
+          avatar: item.shop.avatar ?? item.shop.avatarUrl ?? base.shop?.avatar,
+          isOnline: item.shop.isOnline ?? base.shop?.isOnline,
+          lastOnline: item.shop.lastOnline ?? base.shop?.lastOnline,
+          badge: item.shop.badge ?? base.shop?.badge,
+          stats: item.shop.stats ?? base.shop?.stats,
         }
-      : defaults.shop,
+      : base.shop,
   };
 }

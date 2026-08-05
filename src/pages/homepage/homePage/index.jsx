@@ -6,7 +6,8 @@ import CategoryGrid from '../../../components/homepage/categoryGrid';
 import ProductGrid from '../../../components/homepage/productGrid';
 import { bannerLeftImages, bannerRightImages } from '../../../data/mockBanners';
 import { mockCategories } from '../../../data/mockCategories';
-import { getCategoryTree, getHomeProductDiscovery } from '../../../services/catalogService';
+import { getCategoryTree, mapProductListItem } from '../../../services/catalogService';
+import { getProducts } from '../../../services/ecommerceProductService';
 import { useProductNavigate } from '../../../hooks/useProductNavigate';
 import './index.scss';
 
@@ -18,25 +19,34 @@ export default function HomePage() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [extraProducts, setExtraProducts] = useState([]);
-  const [page, setPage] = useState(1);
+  const [pageNumber, setPageNumber] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadInitial() {
       setLoading(true);
-      try {
-        const [categoryData, productData] = await Promise.all([
-          getCategoryTree().catch(() => mockCategories),
-          getHomeProductDiscovery({ page: 1, pageSize: INITIAL_PAGE_SIZE }).catch(() => ({ items: [] })),
-        ]);
-        if (cancelled) return;
-        setCategories(categoryData.length ? categoryData : mockCategories);
-        setProducts(productData.items || []);
-      } finally {
-        if (!cancelled) setLoading(false);
+      setLoadError(null);
+
+      const [categoryResult, productResult] = await Promise.all([
+        getCategoryTree().catch(() => mockCategories),
+        getProducts({ pageNumber: 1, pageSize: INITIAL_PAGE_SIZE }),
+      ]);
+
+      if (cancelled) return;
+
+      setCategories(Array.isArray(categoryResult) && categoryResult.length ? categoryResult : mockCategories);
+
+      if (productResult.ok) {
+        setProducts((productResult.items || []).map(mapProductListItem).filter(Boolean));
+      } else {
+        setProducts([]);
+        setLoadError(productResult.error || 'Không tải được sản phẩm');
       }
+
+      setLoading(false);
     }
 
     loadInitial();
@@ -46,15 +56,17 @@ export default function HomePage() {
   }, []);
 
   const handleLoadMore = useCallback(async () => {
-    const nextPage = page + 1;
-    try {
-      const res = await getHomeProductDiscovery({ page: nextPage, pageSize: LOAD_MORE_SIZE });
-      setExtraProducts((prev) => [...prev, ...(res.items || [])]);
-      setPage(nextPage);
-    } catch {
-      /* giữ nguyên danh sách hiện có */
+    const nextPage = pageNumber + 1;
+    const res = await getProducts({ pageNumber: nextPage, pageSize: LOAD_MORE_SIZE });
+
+    if (res.ok) {
+      setExtraProducts((prev) => [
+        ...prev,
+        ...(res.items || []).map(mapProductListItem).filter(Boolean),
+      ]);
+      setPageNumber(nextPage);
     }
-  }, [page]);
+  }, [pageNumber]);
 
   return (
     <>
@@ -75,6 +87,10 @@ export default function HomePage() {
 
           {loading ? (
             <p style={{ textAlign: 'center', padding: '2rem 0' }}>Đang tải sản phẩm...</p>
+          ) : loadError && products.length === 0 ? (
+            <p style={{ textAlign: 'center', padding: '2rem 0', color: '#666' }}>
+              {loadError}. Vui lòng thử lại sau.
+            </p>
           ) : (
             <ProductGrid
               products={products}
