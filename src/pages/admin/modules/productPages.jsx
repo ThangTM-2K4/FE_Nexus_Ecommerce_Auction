@@ -467,19 +467,18 @@ export const AdminCategories = () => {
   const [form, setForm] = useState({});
   const [activeParentId, setActiveParentId] = useState(null);
 
-  useEffect(() => {
-    async function loadApiCategories() {
-      try {
-        const res = await getCategories();
-        list.setItems(res || []);
-      } catch {
-        list.setItems([]);
-      }
+  const reloadCategories = async () => {
+    try {
+      const res = await getCategories();
+      list.setItems(res || []);
+    } catch {
+      list.setItems([]);
     }
-    loadApiCategories();
+  };
+
+  useEffect(() => {
+    reloadCategories();
   }, []);
-
-
 
   const toggleExpand = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -488,19 +487,35 @@ export const AdminCategories = () => {
 
   // ── Parent actions ─────────────────────────────────────────────
   const handleEditParent = (cat) => {
-    setForm({ id: cat.id, name: cat.name, icon: cat.icon, status: cat.status });
+    setForm({ id: cat.id, name: cat.name, icon: cat.icon, status: cat.status, rowVersion: cat.rowVersion });
     setModal("edit-parent");
   };
-  const handleToggleParent = (cat) => {
-    const next = cat.status === "Hoạt động" ? "Tắt" : "Hoạt động";
-    updateCategory(cat.id, { status: next }).catch(() => {});
-    list.updateItem(cat.id, { status: next });
-    toast.success(`Danh mục "${cat.name}" đã ${next === "Tắt" ? "tắt" : "bật"}`);
+
+  const handleToggleParent = async (cat) => {
+    const nextStatus = cat.status === "Hoạt động" ? "Tắt" : "Hoạt động";
+    try {
+      await updateCategory(cat.id, {
+        name: cat.name,
+        isActive: nextStatus === "Hoạt động",
+        rowVersion: cat.rowVersion,
+      });
+      list.updateItem(cat.id, { status: nextStatus });
+      toast.success(`Danh mục "${cat.name}" đã ${nextStatus === "Tắt" ? "tắt" : "bật"}`);
+      reloadCategories();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Thao tác thất bại"));
+    }
   };
-  const handleDeleteParent = (cat) => {
-    deleteCategory(cat.id).catch(() => {});
-    list.removeItem(cat.id);
-    toast.info(`Đã xóa "${cat.name}"`);
+
+  const handleDeleteParent = async (cat) => {
+    try {
+      await deleteCategory(cat.id, "Xóa bởi Admin");
+      list.removeItem(cat.id);
+      toast.info(`Đã xóa "${cat.name}"`);
+      reloadCategories();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Xóa danh mục thất bại"));
+    }
   };
 
   const handleAddChild = (parentId) => {
@@ -515,40 +530,82 @@ export const AdminCategories = () => {
     setForm({ ...child });
     setModal("edit-child");
   };
-  const handleToggleChild = (parentId, child) => {
-    const next = child.status === "Hoạt động" ? "Tắt" : "Hoạt động";
+
+  const handleToggleChild = async (parentId, child) => {
+    const nextStatus = child.status === "Hoạt động" ? "Tắt" : "Hoạt động";
     const parent = list.filtered.find((c) => c.id === parentId);
     if (!parent) return;
-    const newChildren = parent.children.map((c) => c.id === child.id ? { ...c, status: next } : c);
-    list.updateItem(parentId, { children: newChildren });
-    toast.success(`"${child.name}" đã ${next === "Tắt" ? "tắt" : "bật"}`);
+    try {
+      await updateCategory(child.id, {
+        name: child.name,
+        isActive: nextStatus === "Hoạt động",
+        parentCategoryId: parent.categoryId || parent.id,
+        rowVersion: child.rowVersion,
+      });
+      const newChildren = parent.children.map((c) => c.id === child.id ? { ...c, status: nextStatus } : c);
+      list.updateItem(parentId, { children: newChildren });
+      toast.success(`"${child.name}" đã ${nextStatus === "Tắt" ? "tắt" : "bật"}`);
+      reloadCategories();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Thao tác thất bại"));
+    }
   };
-  const handleDeleteChild = (parentId, child) => {
+
+  const handleDeleteChild = async (parentId, child) => {
     const parent = list.filtered.find((c) => c.id === parentId);
     if (!parent) return;
-    list.updateItem(parentId, { children: parent.children.filter((c) => c.id !== child.id) });
-    toast.info(`Đã xóa "${child.name}"`);
+    try {
+      await deleteCategory(child.id, "Xóa bởi Admin");
+      list.updateItem(parentId, { children: parent.children.filter((c) => c.id !== child.id) });
+      toast.info(`Đã xóa "${child.name}"`);
+      reloadCategories();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Xóa danh mục con thất bại"));
+    }
   };
 
   // ── Save ───────────────────────────────────────────────────────
-  const save = () => {
-    if (modal === "add-parent") {
-      list.addItem({ ...form, id: `cat-${Date.now()}`, status: "Hoạt động", productCount: 0, children: [] });
-    } else if (modal === "edit-parent") {
-      list.updateItem(form.id, { name: form.name, icon: form.icon, status: form.status });
-    } else if (modal === "add-child") {
-      const parent = list.filtered.find((c) => c.id === activeParentId);
-      if (!parent) return;
-      const newChild = { id: `cat-${Date.now()}`, name: form.name, status: "Hoạt động", productCount: 0 };
-      list.updateItem(activeParentId, { children: [...(parent.children ?? []), newChild] });
-    } else if (modal === "edit-child") {
-      const parent = list.filtered.find((c) => c.id === activeParentId);
-      if (!parent) return;
-      const newChildren = parent.children.map((c) => c.id === form.id ? { ...c, name: form.name, status: form.status } : c);
-      list.updateItem(activeParentId, { children: newChildren });
+  const save = async () => {
+    try {
+      if (modal === "add-parent") {
+        await createCategory({
+          name: form.name,
+          icon: form.icon || "📦",
+          isActive: form.status === "Hoạt động",
+          parentCategoryId: null,
+        });
+      } else if (modal === "edit-parent") {
+        await updateCategory(form.id, {
+          name: form.name,
+          icon: form.icon,
+          isActive: form.status === "Hoạt động",
+          parentCategoryId: null,
+          rowVersion: form.rowVersion,
+        });
+      } else if (modal === "add-child") {
+        const parent = list.filtered.find((c) => c.id === activeParentId);
+        if (!parent) return;
+        await createCategory({
+          name: form.name,
+          isActive: form.status === "Hoạt động",
+          parentCategoryId: parent.categoryId || parent.id,
+        });
+      } else if (modal === "edit-child") {
+        const parent = list.filtered.find((c) => c.id === activeParentId);
+        if (!parent) return;
+        await updateCategory(form.id, {
+          name: form.name,
+          isActive: form.status === "Hoạt động",
+          parentCategoryId: parent.categoryId || parent.id,
+          rowVersion: form.rowVersion,
+        });
+      }
+      toast.success("Đã lưu danh mục thành công");
+      setModal(null);
+      reloadCategories();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Lưu danh mục thất bại"));
     }
-    toast.success("Đã lưu");
-    setModal(null);
   };
 
   const modalTitle = {
