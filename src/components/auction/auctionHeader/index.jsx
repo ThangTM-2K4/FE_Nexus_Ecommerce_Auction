@@ -37,7 +37,11 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
     if (isAuthenticated) {
       getMyWallets().then((res) => {
         if (res?.wallets && res.wallets.length > 0) {
-          const mainWd = res.wallets.find((w) => w.walletType === 'BUYER') || res.wallets[0];
+          const mainWd =
+            res.wallets.find((w) => Number(w.availableBalance) > 0 || Number(w.pendingBalance) > 0) ||
+            res.wallets.find((w) => w.status === 'ACTIVE') ||
+            res.wallets.find((w) => w.walletType === 'BUYER') ||
+            res.wallets[0];
           setLiveWallet({
             available: mainWd.availableBalance ?? 0,
             pending: mainWd.pendingBalance ?? 0,

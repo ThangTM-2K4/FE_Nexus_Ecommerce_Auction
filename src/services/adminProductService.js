@@ -1,49 +1,46 @@
 import api from '../config/api';
 import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiResponse';
-import { mockProducts } from '../data/adminEntities';
 
 export { getApiErrorMessage };
 
 /**
- * Lấy danh sách sản phẩm quản trị /api/v1/admin/products (fallback sang mock)
+ * 1. Lấy danh sách sản phẩm quản trị GET /api/v1/admin/products hoặc GET /api/v1/products?salesChannel=ECOMMERCE
+ * KHÔNG DÙNG MOCK - 100% dữ liệu thực từ Backend Catalog Service API
  */
 export async function getAdminProducts(params = {}) {
   try {
     const { data } = await api.get('/admin/products', { params });
-    const paged = unwrapPagedList(data);
-    return paged;
-  } catch {
-    return { items: mockProducts, total: mockProducts.length };
+    return unwrapPagedList(data);
+  } catch (err) {
+    try {
+      const { data } = await api.get('/products', {
+        params: { salesChannel: 'ECOMMERCE', pageSize: 100, ...params },
+      });
+      return unwrapPagedList(data);
+    } catch {
+      throw err;
+    }
   }
 }
 
 /**
- * Hàng chờ sản phẩm chờ duyệt /api/v1/admin/products/review-queue
+ * 2. Hàng chờ sản phẩm chờ duyệt GET /api/v1/admin/products/review-queue
  */
 export async function getAdminProductReviewQueue(params = {}) {
-  try {
-    const { data } = await api.get('/admin/products/review-queue', { params });
-    return unwrapPagedList(data);
-  } catch {
-    const pending = mockProducts.filter((p) => p.status === 'Chờ duyệt');
-    return { items: pending, total: pending.length };
-  }
+  const { data } = await api.get('/admin/products/review-queue', { params });
+  return unwrapPagedList(data);
 }
 
 /**
- * Chi tiết duyệt sản phẩm /api/v1/admin/products/{productId}/review-detail
+ * 3. Chi tiết duyệt sản phẩm GET /api/v1/admin/products/{productId}/review-detail
  */
 export async function getAdminProductReviewDetail(productId) {
-  try {
-    const { data } = await api.get(`/admin/products/${productId}/review-detail`);
-    return unwrapData(data);
-  } catch {
-    return mockProducts.find((p) => p.id === productId) || null;
-  }
+  const { data } = await api.get(`/admin/products/${productId}/review-detail`);
+  return unwrapData(data);
 }
 
 /**
- * Phê duyệt sản phẩm /api/v1/admin/products/{productId}/approve
+ * 4. Phê duyệt sản phẩm POST /api/v1/admin/products/{productId}/approve
  */
 export async function approveAdminProduct(productId) {
   const { data } = await api.post(`/admin/products/${productId}/approve`);
@@ -51,7 +48,7 @@ export async function approveAdminProduct(productId) {
 }
 
 /**
- * Yêu cầu sửa đổi sản phẩm /api/v1/admin/products/{productId}/request-changes
+ * 5. Yêu cầu sửa đổi sản phẩm POST /api/v1/admin/products/{productId}/request-changes
  */
 export async function requestProductChanges(productId, feedback) {
   const { data } = await api.post(`/admin/products/${productId}/request-changes`, { feedback });
@@ -59,7 +56,7 @@ export async function requestProductChanges(productId, feedback) {
 }
 
 /**
- * Từ chối sản phẩm /api/v1/admin/products/{productId}/reject
+ * 6. Từ chối sản phẩm POST /api/v1/admin/products/{productId}/reject
  */
 export async function rejectAdminProduct(productId, reason) {
   const { data } = await api.post(`/admin/products/${productId}/reject`, { reason });

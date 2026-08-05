@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import StatCard from "../../../components/sellerdashboard/sellerStatCard";
 import AnimatedValue from "../../../components/sellerdashboard/sellerAnimatedValue";
 import SellerRealtimeClock from "../../../components/sellerdashboard/sellerRealtimeClock";
 import SellerStockAlert from "../../../components/sellerdashboard/sellerStockAlert";
+import { getMyWallets } from "../../../services/walletService";
 import {
   overviewStats,
   revenueSummary,
@@ -96,6 +97,27 @@ const COLUMN_CONFIG = [
 
 export default function OverviewPage() {
   const [activeFilter, setActiveFilter] = useState("all");
+  const [sellerBalance, setSellerBalance] = useState(null);
+
+  useEffect(() => {
+    getMyWallets().then((res) => {
+      if (res?.wallets) {
+        const sellerWd = res.wallets.find((w) => w.walletType === 'SELLER');
+        if (sellerWd) {
+          setSellerBalance(sellerWd.availableBalance ?? 0);
+        }
+      }
+    }).catch(() => {});
+  }, []);
+
+  const heroKpisWithRealWallet = useMemo(() => {
+    return HERO_KPIS.map((kpi) => {
+      if (kpi.id === "hero-wallet" && sellerBalance !== null) {
+        return { ...kpi, value: sellerBalance };
+      }
+      return kpi;
+    });
+  }, [sellerBalance]);
 
   const filteredStats = useMemo(() => {
     if (activeFilter === "all") return overviewStats;
@@ -125,7 +147,7 @@ export default function OverviewPage() {
         </div>
 
         <div className="slr-overview-hero__kpis">
-          {HERO_KPIS.map((kpi) => {
+          {heroKpisWithRealWallet.map((kpi) => {
             const content = (
               <>
                 <span className="slr-hero-kpi__icon">{kpi.icon}</span>

@@ -37,19 +37,49 @@ const writeState = (state) => {
 export async function getMyWallets() {
   try {
     const { data } = await api.get("/wallets/me");
-    return unwrapData(data);
+    const result = unwrapData(data);
+
+    // Tự động kích hoạt ví BUYER nếu chưa kích hoạt
+    if (result?.wallets) {
+      const buyerWd = result.wallets.find(w => w.walletType === 'BUYER');
+      if (buyerWd && buyerWd.status !== 'ACTIVE') {
+        try {
+          await activateWallet('BUYER');
+          const { data: freshData } = await api.get("/wallets/me");
+          return unwrapData(freshData);
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+    return result;
   } catch (err) {
-    console.warn("API /wallets/me failed, falling back to mock state:", err);
+    console.warn("API /wallets/me failed:", err);
     return null;
   }
 }
 
 /**
- * 2. Kích hoạt Ví GET /api/v1/wallets/activate
+ * 2. Kích hoạt Ví POST /api/v1/wallets/activate
+ * Thử các định dạng phiên bản điều khoản phổ biến (1.0.0, 1.0, v1.0, v1) để tránh lỗi 400 Bad Request.
  */
-export async function activateWallet(walletType = "BUYER", acceptedTermsVersion = "v1.0") {
-  const { data } = await api.post("/wallets/activate", { walletType, acceptedTermsVersion });
-  return unwrapData(data);
+export async function activateWallet(walletType = "BUYER", acceptedTermsVersion = "1.0.0") {
+  const versions = Array.from(new Set([acceptedTermsVersion, "1.0.0", "1.0", "v1.0", "v1"]));
+  let lastErr = null;
+
+  for (const ver of versions) {
+    try {
+      const { data } = await api.post("/wallets/activate", { walletType, acceptedTermsVersion: ver });
+      return unwrapData(data);
+    } catch (err) {
+      lastErr = err;
+      const detail = err?.response?.data?.detail || err?.response?.data?.title || err?.message || '';
+      if (!detail.toLowerCase().includes('terms version') && !detail.toLowerCase().includes('current')) {
+        throw err;
+      }
+    }
+  }
+  throw lastErr;
 }
 
 /**
@@ -67,15 +97,37 @@ export async function getMyWalletTransactions(params = {}) {
 
 /**
  * 4. Tạo đơn nạp tiền POST /api/v1/wallets/top-ups (cần Idempotency-Key)
+ * Tự động gọi activateWallet nếu nhận phản hồi ví chưa kích hoạt.
  */
 export async function createTopUpCheckout({ amount, provider = "VNPAY", walletType = "BUYER" }) {
   const idempotencyKey = `topup-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-  const { data } = await api.post(
-    "/wallets/top-ups",
-    { amount, provider, walletType },
-    { headers: { "Idempotency-Key": idempotencyKey } }
-  );
-  return unwrapData(data);
+  try {
+    const { data } = await api.post(
+      "/wallets/top-ups",
+      { amount, provider, walletType },
+      { headers: { "Idempotency-Key": idempotencyKey } }
+    );
+    return unwrapData(data);
+  } catch (err) {
+    const errorMsg = err?.response?.data?.detail || err?.response?.data?.title || err?.message || '';
+    
+    // Nếu ví chưa kích hoạt -> Tự động kích hoạt ví và thử nạp tiền lại
+    if (errorMsg.toLowerCase().includes('activated') || errorMsg.toLowerCase().includes('activate')) {
+      try {
+        await activateWallet(walletType, "1.0.0");
+        const retryKey = `topup-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const { data: retryData } = await api.post(
+          "/wallets/top-ups",
+          { amount, provider, walletType },
+          { headers: { "Idempotency-Key": retryKey } }
+        );
+        return unwrapData(retryData);
+      } catch (activateErr) {
+        throw activateErr;
+      }
+    }
+    throw err;
+  }
 }
 
 /**

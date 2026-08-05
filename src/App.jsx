@@ -18,6 +18,7 @@ import CartPage from "./pages/cartPage";
 import CheckoutPage from "./pages/checkoutPage";
 
 import ProfilePage from "./pages/user/profilePage";
+import BuyerWalletPage from "./pages/user/buyerWalletPage";
 import NotificationsPage from "./pages/user/notificationsPage";
 import OrdersPage from "./pages/user/ordersPage";
 import BankAccountRoutePage from "./pages/user/bankAccountPage";
@@ -126,6 +127,15 @@ function App() {
       element={
         <ProtectedRoute>
           <ProfilePage />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/profile/wallet"
+      element={
+        <ProtectedRoute>
+          <BuyerWalletPage />
         </ProtectedRoute>
       }
     />

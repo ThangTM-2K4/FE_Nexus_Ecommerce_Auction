@@ -22,12 +22,11 @@ export default function ProfileDropdown({ onClose, variant }) {
     if (user) {
       getMyWallets().then((res) => {
         if (res?.wallets && res.wallets.length > 0) {
-          const modeType = isBuyerMode ? 'BUYER' : 'SELLER';
-          const mainWd = res.wallets.find((w) => w.walletType === modeType) || res.wallets[0];
+          const buyerWd = res.wallets.find((w) => w.walletType === 'BUYER') || res.wallets[0];
           setLiveWallet({
-            available: mainWd.availableBalance ?? 0,
-            pending: mainWd.pendingBalance ?? 0,
-            walletType: mainWd.walletType,
+            available: buyerWd.availableBalance ?? 0,
+            pending: buyerWd.pendingBalance ?? 0,
+            walletType: 'BUYER',
           });
         }
       });
@@ -103,7 +102,6 @@ export default function ProfileDropdown({ onClose, variant }) {
 
   const menuItems = [
     { to: isAdmin ? '/admin/profile' : isStaff ? '/staff/profile' : '/profile', label: 'Hồ sơ của tôi' },
-    !isStaff && !isAdmin && isBuyerMode ? { action: 'topup', label: '💳 Ví Nexus Pay (Nạp tiền)' } : null,
     becomeSellerItem(),
     !isStaff && !isAdmin && isApprovedSeller ? { action: 'switch', label: 'Chuyển tài khoản' } : null,
   ].filter(Boolean);
@@ -129,8 +127,8 @@ export default function ProfileDropdown({ onClose, variant }) {
           </div>
         </div>
 
-        {/* Ví Nexus Pay Card duy nhất */}
-        {!isStaff && !isAdmin && (
+        {/* Ví Nexus Pay Card - CHỈ HIỂN THỊ Ở CHẾ ĐỘ NGƯỜI MUA (BUYER) */}
+        {!isStaff && !isAdmin && isBuyerMode && (
           <div
             className="header-profile-wallet-card"
             style={{
