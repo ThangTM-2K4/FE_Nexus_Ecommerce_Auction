@@ -1,10 +1,128 @@
-import api from '../config/api';
+import api, { BACKEND_BASE_URL } from '../config/api';
 import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiResponse';
 import { extractUploadKey, normalizeUploadKey } from './uploadResponse';
 
 export { getApiErrorMessage };
 
 const MULTIPART = { headers: { 'Content-Type': undefined } };
+const BUYER_LIST_PATH = '/ecommerce/products';
+const isDev = import.meta.env.DEV;
+
+const ALLOWED_PRODUCT_FILTERS = new Set([
+  'search',
+  'categoryId',
+  'minPrice',
+  'maxPrice',
+  'sortBy',
+  'sortDirection',
+  'pageNumber',
+  'pageSize',
+]);
+
+const cleanQueryParams = (filters = {}) => {
+  const params = {};
+  Object.entries(filters).forEach(([key, value]) => {
+    if (!ALLOWED_PRODUCT_FILTERS.has(key)) return;
+    if (value === undefined || value === null || value === '') return;
+    params[key] = value;
+  });
+  return params;
+};
+
+const normalizeProductFilters = (filters = {}) => {
+  const { page, pageNumber, pageSize, ...rest } = filters;
+  const next = { ...rest };
+
+  if (pageNumber != null) next.pageNumber = pageNumber;
+  else if (page != null) next.pageNumber = page;
+
+  if (pageSize != null) next.pageSize = pageSize;
+
+  return cleanQueryParams(next);
+};
+
+const logDevRequest = (method, path, params) => {
+  if (!isDev) return;
+  const base = (BACKEND_BASE_URL || '').replace(/\/$/, '');
+  const query = params ? new URLSearchParams(
+    Object.entries(params).map(([k, v]) => [k, String(v)]),
+  ).toString() : '';
+  const url = query ? `${base}${path}?${query}` : `${base}${path}`;
+  console.info(`[ecommerceProductService] ${method} ${url}`, params ?? {});
+};
+
+const logDevError = (label, error) => {
+  if (!isDev) return;
+  console.error(`[ecommerceProductService] ${label}`, error?.response?.status, error?.response?.data ?? error);
+};
+
+const buyerRequestConfig = { skipErrorRedirect: true };
+
+/**
+ * Danh sách sản phẩm phía khách mua — GET /ecommerce/products
+ * Query: search, categoryId, minPrice, maxPrice, sortBy, sortDirection, pageNumber, pageSize
+ */
+export async function getProducts(filters = {}) {
+  const params = normalizeProductFilters(filters);
+  logDevRequest('GET', BUYER_LIST_PATH, params);
+
+  try {
+    const { data } = await api.get(BUYER_LIST_PATH, { params, ...buyerRequestConfig });
+    const paged = unwrapPagedList(data);
+    return {
+      ok: true,
+      items: paged.items || [],
+      total: paged.total ?? 0,
+      pageNumber: paged.page ?? params.pageNumber ?? 1,
+      pageSize: paged.pageSize ?? params.pageSize ?? 20,
+    };
+  } catch (error) {
+    logDevError('getProducts failed', error);
+    return {
+      ok: false,
+      error: getApiErrorMessage(error, 'Không tải được danh sách sản phẩm'),
+      items: [],
+      total: 0,
+      pageNumber: params.pageNumber ?? 1,
+      pageSize: params.pageSize ?? 20,
+      status: error?.response?.status ?? 0,
+    };
+  }
+}
+
+/**
+ * Chi tiết sản phẩm phía khách mua — GET /ecommerce/products/{productId}
+ */
+export async function getProductById(productId) {
+  if (!productId) {
+    return {
+      ok: false,
+      data: null,
+      error: 'Thiếu productId',
+      status: 400,
+    };
+  }
+
+  const path = `${BUYER_LIST_PATH}/${productId}`;
+  logDevRequest('GET', path);
+
+  try {
+    const { data } = await api.get(path, buyerRequestConfig);
+    return {
+      ok: true,
+      data: unwrapData(data),
+      status: 200,
+    };
+  } catch (error) {
+    logDevError('getProductById failed', error);
+    return {
+      ok: false,
+      data: null,
+      error: getApiErrorMessage(error, 'Không tải được chi tiết sản phẩm'),
+      status: error?.response?.status ?? 0,
+    };
+  }
+}
 
 const getUploadPayload = (response) => response?.data?.data ?? response?.data ?? {};
 
