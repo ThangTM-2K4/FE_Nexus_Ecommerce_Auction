@@ -29,7 +29,10 @@ const ID_PENDING_LABEL = { PENDING: 'Đang chờ duyệt' };
  * - Chưa xác minh -> nút "Xác minh" bấm được (mở ô OTP hoặc sang trang CCCD)
  */
 function VerifySlot({ verified, pendingLabel, onVerify, to, busy }) {
-  if (verified) return <span className="profile-slot profile-slot--verified">✓ Đã xác minh</span>;
+  if (verified) {
+    if (to) return null;
+    return <span className="profile-slot profile-slot--verified">✓ Đã xác minh</span>;
+  }
   if (pendingLabel) return <span className="profile-slot profile-slot--pending">{pendingLabel}</span>;
 
   if (to) {
@@ -202,6 +205,7 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
     setSaving(true);
     try {
       const updated = await profileService.updateProfile(userId, form);
+      updateUser(updated);
       onUpdate(updated);
       toast.success('Cập nhật hồ sơ thành công');
     } catch (err) {

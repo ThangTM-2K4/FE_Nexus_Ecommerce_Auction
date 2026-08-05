@@ -20,6 +20,25 @@ export default function AccountSidebar() {
   const { pathname } = useLocation();
   const { user } = useAuth();
 
+  const isGoogle = Boolean(
+    user?.isGoogle ||
+    user?.provider === 'google' ||
+    user?.authProvider === 'Google' ||
+    user?.isGoogleAccount ||
+    user?.loginMethod === 'google' ||
+    user?.hasPassword === false
+  );
+
+  const menu = ACCOUNT_MENU.map((item) => {
+    if (item.children) {
+      return {
+        ...item,
+        children: item.children.filter((child) => !(isGoogle && child.key === 'password')),
+      };
+    }
+    return item;
+  });
+
   return (
     <aside className="account-sidebar" aria-label="Menu tài khoản">
       <div className="account-sidebar__user">
@@ -37,7 +56,7 @@ export default function AccountSidebar() {
       </div>
 
       <nav className="account-sidebar__nav">
-        {ACCOUNT_MENU.map((item) => {
+        {menu.map((item) => {
           if (item.children) {
             return (
               <div key={item.key} className="account-sidebar__group">

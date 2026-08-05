@@ -9,6 +9,13 @@ export default defineConfig({
     strictPort: false,
     open: true,
     cors: true,
+    proxy: {
+      '/api': {
+        target: 'https://bitdoubletk.duckdns.org',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   build: {
     outDir: 'dist',

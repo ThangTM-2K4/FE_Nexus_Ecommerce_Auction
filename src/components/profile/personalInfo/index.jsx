@@ -294,39 +294,53 @@ export default function PersonalInfoCccd({ userId, profile, onUpdate }) {
       {locked ? (
         // Đã xác minh / đang chờ duyệt: chỉ hiển thị thông tin (đọc), không cho nhập.
         // Số CCCD che bớt, không hiển thị ảnh CCCD.
-        <div className="personal-info-cccd__readonly">
-          <div className="personal-info-cccd__ro-item">
-            <span>Họ và tên</span>
-            <strong>{form.cccdFullName || '—'}</strong>
-          </div>
-          <div className="personal-info-cccd__ro-item">
-            <span>Số CCCD</span>
-            <strong>{maskCccd(form.cccdNumber) || '—'}</strong>
-          </div>
-          <div className="personal-info-cccd__ro-item">
-            <span>Giới tính</span>
-            <strong>{form.cccdGender || '—'}</strong>
-          </div>
-          <div className="personal-info-cccd__ro-item">
-            <span>Ngày sinh</span>
-            <strong>{formatDate(form.cccdDateOfBirth)}</strong>
-          </div>
-          <div className="personal-info-cccd__ro-item">
-            <span>Ngày cấp</span>
-            <strong>{formatDate(form.cccdIssueDate)}</strong>
-          </div>
-          <div className="personal-info-cccd__ro-item">
-            <span>Ngày hết hạn</span>
-            <strong>{formatDate(form.cccdExpiryDate)}</strong>
-          </div>
-          <div className="personal-info-cccd__ro-item">
-            <span>Nơi cấp</span>
-            <strong>{form.cccdIssuePlace || '—'}</strong>
-          </div>
-          <div className="personal-info-cccd__ro-item personal-info-cccd__ro-item--full">
-            <span>Địa chỉ thường trú</span>
-            <strong>{form.cccdAddress || '—'}</strong>
-          </div>
+        <div className="personal-info-cccd__table-card">
+          <table className="personal-info-cccd__table">
+            <tbody>
+              <tr>
+                <td className="col-half">
+                  <span className="tb-label">Họ và tên</span>
+                  <strong className="tb-value">{form.cccdFullName || '—'}</strong>
+                </td>
+                <td className="col-half">
+                  <span className="tb-label">Số CCCD</span>
+                  <strong className="tb-value">{maskCccd(form.cccdNumber) || '—'}</strong>
+                </td>
+              </tr>
+              <tr>
+                <td className="col-half">
+                  <span className="tb-label">Giới tính</span>
+                  <strong className="tb-value">{form.cccdGender || '—'}</strong>
+                </td>
+                <td className="col-half">
+                  <span className="tb-label">Ngày sinh</span>
+                  <strong className="tb-value">{formatDate(form.cccdDateOfBirth)}</strong>
+                </td>
+              </tr>
+              <tr>
+                <td className="col-half">
+                  <span className="tb-label">Ngày cấp</span>
+                  <strong className="tb-value">{formatDate(form.cccdIssueDate)}</strong>
+                </td>
+                <td className="col-half">
+                  <span className="tb-label">Ngày hết hạn</span>
+                  <strong className="tb-value">{formatDate(form.cccdExpiryDate)}</strong>
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={2} className="col-full">
+                  <span className="tb-label">Nơi cấp</span>
+                  <strong className="tb-value">{form.cccdIssuePlace || '—'}</strong>
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={2} className="col-full">
+                  <span className="tb-label">Địa chỉ thường trú</span>
+                  <strong className="tb-value">{form.cccdAddress || '—'}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       ) : (
       <div className="personal-info-cccd__fields">

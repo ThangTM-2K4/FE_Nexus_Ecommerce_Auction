@@ -12,7 +12,10 @@ const clearAuthStorage = () => {
   localStorage.removeItem('expiresAt');
 };
 
-export const BACKEND_BASE_URL = API_BASE_URL;
+export const BACKEND_BASE_URL = (import.meta.env.DEV && !import.meta.env.VITE_DISABLE_PROXY)
+  ? '/api/v1'
+  : (API_BASE_URL || '/api/v1');
+
 const api = axios.create({
   baseURL: BACKEND_BASE_URL,
   headers: {
@@ -54,7 +57,8 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
+    const isAuthPath = config.url?.includes('/auth/');
+    if (!isAuthPath && ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
       if (!config.headers['Idempotency-Key']) {
         const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
           ? crypto.randomUUID()

@@ -102,6 +102,10 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
             <Link to="/admin/auction-products" className="auction-header__home-link">
               Về quản lý phiên đấu giá
             </Link>
+          ) : isSellerMode ? (
+            <Link to="/auction" className="auction-header__home-link">
+              Sảnh Đấu giá
+            </Link>
           ) : (
             <Link to="/" className="auction-header__home-link">
               Về cửa hàng
@@ -111,11 +115,11 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
           {isAuthenticated && isSellerMode && (
             <>
               <Link
-                to="/auction/profile"
+                to="/auction/seller"
                 className="auction-header__home-link"
                 style={{ borderColor: 'transparent' }}
               >
-                Hồ sơ
+                Hồ sơ Seller
               </Link>
               <Link
                 to="/auction/create"
