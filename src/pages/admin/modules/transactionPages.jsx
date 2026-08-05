@@ -12,7 +12,16 @@ import { useAdminList } from "../../../hooks/useAdminList";
 import {
   mockOrders, mockAuctionOrders, mockBids, mockPayments, mockWallets, mockWithdrawals, STATUS_OPTIONS,
 } from "../../../data/adminEntities";
-import { getAdminWithdrawals, approveAdminWithdrawal, rejectAdminWithdrawal, markAdminWithdrawalPaid } from "../../../services/adminWithdrawalService";
+import {
+  getAdminWithdrawals,
+  approveAdminWithdrawal,
+  rejectAdminWithdrawal,
+  markAdminWithdrawalPaid,
+  getAdminWallets,
+  getAdminSettlements,
+  retryAdminSettlement,
+  getApiErrorMessage,
+} from "../../../services/adminWalletOperationsService";
 import "../../../components/admin/adminViews/index.scss";
 
 
@@ -156,32 +165,52 @@ export const AdminBids = () => {
 };
 
 export const AdminPayments = () => {
-  const list = useAdminList(mockPayments, ["transaction", "buyer", "seller"]);
+  const list = useAdminList([], ["owner", "id", "code"]);
   const [viewMode, setViewMode] = useState("grid");
+
+  useEffect(() => {
+    async function loadTopUps() {
+      try {
+        const res = await getAdminTopUps();
+        const rawItems = res?.items || (Array.isArray(res) ? res : []);
+        const mapped = rawItems.map((t, idx) => ({
+          id: t.topUpId || t.id || `topup-${idx}`,
+          owner: t.userName || t.email || t.userId || "Khách hàng",
+          amount: `${(t.amount || 0).toLocaleString()}đ`,
+          provider: t.provider || "VNPAY",
+          status: t.status === "COMPLETED" || t.status === "Thành công" ? "Thành công" : t.status === "FAILED" ? "Thất bại" : "Đang xử lý",
+          code: t.topUpCode || t.providerOrderCode || `TOP-${idx + 1}`,
+          createdAt: t.createdAtUtc ? new Date(t.createdAtUtc).toLocaleDateString("vi-VN") : "Vừa xong",
+        }));
+        list.setItems(mapped);
+      } catch (err) {
+        console.warn("Failed to load admin top ups:", err);
+        list.setItems([]);
+      }
+    }
+    loadTopUps();
+  }, []);
+
   return (
     <div className="adm-page">
-      <AdminPageHeader kicker="Tài chính" title="Quản lý thanh toán" subtitle="Luồng giao dịch thanh toán." />
+      <AdminPageHeader kicker="Thanh toán" title="Quản lý giao dịch nạp tiền" subtitle="Lịch sử nạp tiền qua cổng thanh toán VNPAY." />
       <AdminToolbar
-        search={list.search} onSearchChange={list.setSearch}
-        actions={[
-          { label: "Xuất Excel", variant: "secondary", onClick: () => toast.info("Đang xuất...") },
-        ]}
+        search={list.search} onSearchChange={list.setSearch} searchPlaceholder="Tìm mã giao dịch, chủ ví..."
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
       {viewMode === "grid" ? (
-        <div className="adm-payment-list">
+        <AdminStaggerGrid className="adm-payment-grid">
           {list.filtered.map((p) => (
             <PaymentCard
               key={p.id}
               payment={p}
               actions={[
-                { label: "Hoàn tiền", onClick: () => toast.info(`Hoàn ${p.amount}`) },
-                { label: "Thử lại", variant: "primary", onClick: () => toast.success("Đã gửi lại") },
+                { label: "Chi tiết", onClick: () => toast.info(`Mã GD: ${p.code}`) },
               ]}
             />
           ))}
-        </div>
+        </AdminStaggerGrid>
       ) : (
         <div className="adm-list-container">
           {list.filtered.map((p) => (
@@ -189,8 +218,7 @@ export const AdminPayments = () => {
               key={p.id}
               payment={p}
               actions={[
-                { label: "Hoàn tiền", onClick: () => toast.info(`Hoàn ${p.amount}`) },
-                { label: "Thử lại", variant: "primary", onClick: () => toast.success("Đã gửi lại") },
+                { label: "Chi tiết", onClick: () => toast.info(`Mã GD: ${p.code}`) },
               ]}
             />
           ))}
@@ -201,8 +229,31 @@ export const AdminPayments = () => {
 };
 
 export const AdminWallets = () => {
-  const list = useAdminList(mockWallets, ["owner"]);
+  const list = useAdminList([], ["owner", "id", "userId"]);
   const [viewMode, setViewMode] = useState("grid");
+
+  useEffect(() => {
+    async function loadWallets() {
+      try {
+        const res = await getAdminWallets();
+        const rawItems = res?.items || (Array.isArray(res) ? res : []);
+        const mapped = rawItems.map((w, idx) => ({
+          id: w.walletId || w.id || `w-${idx}`,
+          owner: w.userName || w.email || w.userId || `Chủ ví ${idx + 1}`,
+          type: w.walletType === "SELLER" ? "Ví Seller" : "Ví Buyer",
+          balance: `${(w.availableBalance ?? w.balance ?? 0).toLocaleString()}đ`,
+          frozen: `${(w.pendingBalance ?? w.frozenBalance ?? 0).toLocaleString()}đ`,
+          status: w.status === "ACTIVE" || w.status === "Hoạt động" ? "Hoạt động" : "Đóng băng",
+        }));
+        list.setItems(mapped);
+      } catch (err) {
+        console.warn("Failed to load admin wallets from API:", err);
+        list.setItems([]);
+      }
+    }
+    loadWallets();
+  }, []);
+
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Ví" title="Quản lý ví" subtitle="Thẻ số dư ví người dùng và seller." />
@@ -211,7 +262,11 @@ export const AdminWallets = () => {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
-      {viewMode === "grid" ? (
+      {list.filtered.length === 0 ? (
+        <div style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>
+          Chưa có dữ liệu ví từ Server Gateway.
+        </div>
+      ) : viewMode === "grid" ? (
         <AdminStaggerGrid className="adm-wallet-grid">
           {list.filtered.map((w) => (
             <WalletCard
@@ -243,22 +298,61 @@ export const AdminWallets = () => {
 };
 
 export const AdminWithdrawals = () => {
-  const list = useAdminList([], ["seller", "id"]);
+  const list = useAdminList([], ["seller", "id", "userId"]);
   const [viewMode, setViewMode] = useState("grid");
 
-  useEffect(() => {
-    async function loadApiWithdrawals() {
-      try {
-        const res = await getAdminWithdrawals();
-        list.setItems(res?.items || []);
-      } catch {
-        list.setItems([]);
-      }
+  const reloadWithdrawals = async () => {
+    try {
+      const res = await getAdminWithdrawals();
+      const rawItems = res?.items || (Array.isArray(res) ? res : []);
+      const mapped = rawItems.map((w, idx) => ({
+        id: w.withdrawalId || w.id || `wd-${idx}`,
+        seller: w.simulatedPayoutAccountName || w.userName || w.userId || "Seller",
+        amount: `${(w.amount || 0).toLocaleString()}đ`,
+        status: w.status === "PENDING" || w.status === "Chờ duyệt" ? "Chờ duyệt" : w.status === "APPROVED" || w.status === "Đã duyệt" ? "Đã duyệt" : w.status === "PAID" || w.status === "Đã thanh toán" ? "Đã thanh toán" : "Đã hủy",
+        bank: `${w.simulatedPayoutProvider || "Ngân hàng"} (${w.simulatedPayoutAccountMasked || w.accountId || "****"})`,
+        createdAt: w.createdAtUtc ? new Date(w.createdAtUtc).toLocaleDateString("vi-VN") : w.date || "Vừa xong",
+      }));
+      list.setItems(mapped);
+    } catch (err) {
+      console.warn("Failed to load admin withdrawals from API:", err);
+      list.setItems([]);
     }
-    loadApiWithdrawals();
+  };
+
+  useEffect(() => {
+    reloadWithdrawals();
   }, []);
 
+  const handleApprove = async (item) => {
+    try {
+      await approveAdminWithdrawal(item.id, "Đã duyệt bởi Admin");
+      toast.success(`Đã duyệt yêu cầu rút tiền của ${item.seller}`);
+      reloadWithdrawals();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Duyệt thất bại"));
+    }
+  };
 
+  const handleReject = async (item) => {
+    try {
+      await rejectAdminWithdrawal(item.id, "Từ chối bởi Admin");
+      toast.info(`Đã từ chối yêu cầu rút tiền của ${item.seller}`);
+      reloadWithdrawals();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Từ chối thất bại"));
+    }
+  };
+
+  const handleMarkPaid = async (item) => {
+    try {
+      await markAdminWithdrawalPaid(item.id, { simulatedPayoutReference: `REF-${Date.now()}` });
+      toast.success(`Đã chuyển khoản thành công cho ${item.seller}`);
+      reloadWithdrawals();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Thao tác thất bại"));
+    }
+  };
 
   return (
     <div className="adm-page">
@@ -297,7 +391,10 @@ export const AdminWithdrawals = () => {
               key={item.id}
               item={item}
               actions={item.status === "Chờ duyệt" ? [
-                { label: "Chi tiết", onClick: () => toast.info(`Xem chi tiết yêu cầu của ${item.seller}`) },
+                { label: "Duyệt", variant: "success", onClick: () => handleApprove(item) },
+                { label: "Từ chối", variant: "danger", onClick: () => handleReject(item) },
+              ] : item.status === "Đã duyệt" ? [
+                { label: "Xác nhận chuyển", variant: "primary", onClick: () => handleMarkPaid(item) },
               ] : []}
             />
           ))}
@@ -309,7 +406,10 @@ export const AdminWithdrawals = () => {
               key={item.id}
               item={item}
               actions={item.status === "Chờ duyệt" ? [
-                { label: "Chi tiết", onClick: () => toast.info(`Xem chi tiết yêu cầu của ${item.seller}`) },
+                { label: "Duyệt", variant: "success", onClick: () => handleApprove(item) },
+                { label: "Từ chối", variant: "danger", onClick: () => handleReject(item) },
+              ] : item.status === "Đã duyệt" ? [
+                { label: "Xác nhận chuyển", variant: "primary", onClick: () => handleMarkPaid(item) },
               ] : []}
             />
           ))}

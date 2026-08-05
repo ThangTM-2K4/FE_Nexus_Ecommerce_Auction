@@ -140,11 +140,7 @@ export default function OverviewPage() {
                       <AnimatedValue value={kpi.value} />
                     )}
                   </strong>
-                  {kpi.link ? (
-                    <Link to={kpi.link} className="slr-hero-kpi__link">{kpi.trend}</Link>
-                  ) : (
-                    <span className="slr-hero-kpi__trend">{kpi.trend}</span>
-                  )}
+                  <span className="slr-hero-kpi__trend">{kpi.trend}</span>
                 </div>
               </>
             );

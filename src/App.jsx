@@ -69,6 +69,7 @@ import AuctionWatchlistPage from "./pages/auction/auctionWatchlistPage";
 
 import ProtectedRoute from "./config/ProtectedRoute";
 import SellerRoute from "./config/SellerRoute";
+import NonAdminRoute from "./config/NonAdminRoute";
 
 import Error401Page from "./pages/errors/401";
 import Error403Page from "./pages/errors/403";
@@ -100,7 +101,7 @@ function App() {
       Shared layout
   ========================== */}
 
-  <Route element={<Layout />}>
+  <Route element={<NonAdminRoute><Layout /></NonAdminRoute>}>
 
     {/* Home */}
     <Route path="/" element={<HomePage />} />
@@ -231,16 +232,16 @@ function App() {
       </Route>
 
       {/* Auction zone — separate header/footer layout */}
-      <Route path="/auction" element={<AuctionLayout />}>
+      <Route path="/auction" element={<NonAdminRoute><AuctionLayout /></NonAdminRoute>}>
         <Route index element={<AuctionBrowsePage />} />
         <Route path="browse" element={<AuctionBrowsePage />} />
         <Route path="detail/:id" element={<AuctionDetailPage />} />
         <Route
           path="create"
           element={
-            <ProtectedRoute>
+            <SellerRoute>
               <AuctionCreatePage />
-            </ProtectedRoute>
+            </SellerRoute>
           }
         />
         <Route

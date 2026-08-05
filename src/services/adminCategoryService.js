@@ -102,20 +102,34 @@ export async function getCategories(params = {}) {
 
 /**
  * Chi tiết danh mục GET /api/v1/categories/{categoryId}
+ * Dùng scope 'admin' hoặc không truyền scope để lấy thông tin danh mục cả khi Tắt (INACTIVE)
  */
-export async function getCategoryById(categoryId, scope = 'public') {
-  const { data } = await api.get(`/categories/${categoryId}`, { params: { scope } });
-  return unwrapData(data);
+export async function getCategoryById(categoryId, scope = 'admin') {
+  try {
+    const params = scope ? { scope } : {};
+    const { data } = await api.get(`/categories/${categoryId}`, { params });
+    return unwrapData(data);
+  } catch {
+    try {
+      const { data } = await api.get(`/categories/${categoryId}`);
+      return unwrapData(data);
+    } catch {
+      return null;
+    }
+  }
 }
 
 /**
  * Tạo danh mục sản phẩm mới POST /api/v1/categories
  */
 export async function createCategory(payload) {
+  const name = payload.name?.trim() || '';
+  const cleanSlug = (payload.slug || name.toLowerCase()).trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
   const body = {
-    name: payload.name,
-    slug: payload.slug || payload.name?.toLowerCase?.().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
+    name,
+    slug: cleanSlug || 'danh-muc',
     description: payload.description || '',
+    imageUrl: payload.imageUrl || payload.image || '',
     parentCategoryId: payload.parentCategoryId || payload.parentId || null,
     sortOrder: payload.sortOrder ?? 0,
     isActive: payload.isActive ?? true,
@@ -129,10 +143,28 @@ export async function createCategory(payload) {
  */
 export async function updateCategory(categoryId, payload) {
   let rowVersion = payload.rowVersion;
+
+  // Lấy rowVersion mới nhất từ Server bằng GET /categories/{id} nếu chưa có
   if (!rowVersion) {
     try {
-      const detail = await getCategoryById(categoryId, 'public');
-      rowVersion = detail?.rowVersion;
+      const detail = await getCategoryById(categoryId, 'admin');
+      if (detail?.rowVersion) {
+        rowVersion = detail.rowVersion;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Nếu vẫn chưa tìm thấy rowVersion, lấy danh mục từ getCategories()
+  if (!rowVersion) {
+    try {
+      const allCats = await getCategories({ includeInactive: true });
+      const found = allCats.find(c => c.id === categoryId || c.categoryId === categoryId)
+        || allCats.flatMap(c => c.children || []).find(c => c.id === categoryId || c.categoryId === categoryId);
+      if (found?.rowVersion) {
+        rowVersion = found.rowVersion;
+      }
     } catch {
       // ignore
     }
@@ -142,10 +174,11 @@ export async function updateCategory(categoryId, payload) {
     name: payload.name,
     slug: payload.slug || payload.name?.toLowerCase?.().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
     description: payload.description || '',
+    imageUrl: payload.imageUrl || payload.image || '',
     parentCategoryId: payload.parentCategoryId || payload.parentId || null,
     sortOrder: payload.sortOrder ?? 0,
     isActive: payload.isActive ?? true,
-    rowVersion: rowVersion || payload.rowVersion || '',
+    ...(rowVersion ? { rowVersion } : {}),
   };
 
   const headers = {};
@@ -163,10 +196,23 @@ export async function updateCategory(categoryId, payload) {
 export async function deleteCategory(categoryId, reason = 'Xóa bởi Admin') {
   let rowVersion;
   try {
-    const detail = await getCategoryById(categoryId, 'public');
+    const detail = await getCategoryById(categoryId, 'admin');
     rowVersion = detail?.rowVersion;
   } catch {
     // ignore
+  }
+
+  if (!rowVersion) {
+    try {
+      const allCats = await getCategories({ includeInactive: true });
+      const found = allCats.find(c => c.id === categoryId || c.categoryId === categoryId)
+        || allCats.flatMap(c => c.children || []).find(c => c.id === categoryId || c.categoryId === categoryId);
+      if (found?.rowVersion) {
+        rowVersion = found.rowVersion;
+      }
+    } catch {
+      // ignore
+    }
   }
 
   const headers = {};

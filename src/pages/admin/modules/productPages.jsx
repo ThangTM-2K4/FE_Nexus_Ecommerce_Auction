@@ -487,7 +487,7 @@ export const AdminCategories = () => {
 
   // ── Parent actions ─────────────────────────────────────────────
   const handleEditParent = (cat) => {
-    setForm({ id: cat.id, name: cat.name, icon: cat.icon, status: cat.status, rowVersion: cat.rowVersion });
+    setForm({ id: cat.id, name: cat.name, description: cat.description || "", icon: cat.icon, status: cat.status, rowVersion: cat.rowVersion });
     setModal("edit-parent");
   };
 
@@ -496,6 +496,7 @@ export const AdminCategories = () => {
     try {
       await updateCategory(cat.id, {
         name: cat.name,
+        description: cat.description || "",
         isActive: nextStatus === "Hoạt động",
         rowVersion: cat.rowVersion,
       });
@@ -520,7 +521,7 @@ export const AdminCategories = () => {
 
   const handleAddChild = (parentId) => {
     setActiveParentId(parentId);
-    setForm({ name: "", status: "Hoạt động" });
+    setForm({ name: "", description: "", status: "Hoạt động" });
     setModal("add-child");
   };
 
@@ -547,6 +548,7 @@ export const AdminCategories = () => {
       toast.success(`"${child.name}" đã ${nextStatus === "Tắt" ? "tắt" : "bật"}`);
       reloadCategories();
     } catch (err) {
+      reloadCategories();
       toast.error(getApiErrorMessage(err, "Thao tác thất bại"));
     }
   };
@@ -570,14 +572,16 @@ export const AdminCategories = () => {
       if (modal === "add-parent") {
         await createCategory({
           name: form.name,
-          icon: form.icon || "📦",
+          description: form.description || "",
+          imageUrl: form.imageUrl || form.image || "",
           isActive: form.status === "Hoạt động",
           parentCategoryId: null,
         });
       } else if (modal === "edit-parent") {
         await updateCategory(form.id, {
           name: form.name,
-          icon: form.icon,
+          description: form.description || "",
+          imageUrl: form.imageUrl || form.image || "",
           isActive: form.status === "Hoạt động",
           parentCategoryId: null,
           rowVersion: form.rowVersion,
@@ -587,6 +591,8 @@ export const AdminCategories = () => {
         if (!parent) return;
         await createCategory({
           name: form.name,
+          description: form.description || "",
+          imageUrl: form.imageUrl || form.image || "",
           isActive: form.status === "Hoạt động",
           parentCategoryId: parent.categoryId || parent.id,
         });
@@ -595,6 +601,8 @@ export const AdminCategories = () => {
         if (!parent) return;
         await updateCategory(form.id, {
           name: form.name,
+          description: form.description || "",
+          imageUrl: form.imageUrl || form.image || "",
           isActive: form.status === "Hoạt động",
           parentCategoryId: parent.categoryId || parent.id,
           rowVersion: form.rowVersion,
@@ -638,7 +646,7 @@ export const AdminCategories = () => {
         search={list.search}
         onSearchChange={list.setSearch}
         searchPlaceholder="Tìm danh mục..."
-        actions={[{ label: "+ Thêm danh mục cha", onClick: () => { setForm({ name: "", icon: "📦", status: "Hoạt động" }); setModal("add-parent"); } }]}
+        actions={[{ label: "+ Thêm danh mục cha", onClick: () => { setForm({ name: "", description: "", imageUrl: "", status: "Hoạt động" }); setModal("add-parent"); } }]}
       />
 
       <div className="adm-category-tree">
@@ -654,7 +662,15 @@ export const AdminCategories = () => {
               >
                 <span className="adm-cat-parent__chevron">{expanded[cat.id] ? "▾" : "▸"}</span>
               </button>
-              <span className="adm-cat-parent__icon">{cat.icon}</span>
+              {cat.imageUrl || cat.image ? (
+                <img
+                  src={cat.imageUrl || cat.image}
+                  alt={cat.name}
+                  style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)' }}
+                />
+              ) : (
+                <span className="adm-cat-parent__icon">📁</span>
+              )}
               <div className="adm-cat-parent__info">
                 <strong>{cat.name}</strong>
                 <small>{cat.children?.length ?? 0} danh mục con · {cat.productCount} sản phẩm</small>
@@ -681,6 +697,13 @@ export const AdminCategories = () => {
                 {(cat.children ?? []).map((child) => (
                   <div key={child.id} className={`adm-cat-child ${child.status !== "Hoạt động" ? "disabled" : ""}`}>
                     <span className="adm-cat-child__dot">└</span>
+                    {child.imageUrl || child.image ? (
+                      <img
+                        src={child.imageUrl || child.image}
+                        alt={child.name}
+                        style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'cover', flexShrink: 0, marginRight: 8 }}
+                      />
+                    ) : null}
                     <div className="adm-cat-child__info">
                       <span>{child.name}</span>
                       <small>{child.productCount} sản phẩm</small>
@@ -706,17 +729,67 @@ export const AdminCategories = () => {
       {/* Modal thêm/sửa */}
       <AdminModal open={!!modal} title={modalTitle} onClose={() => setModal(null)}>
         <div className="adm-form">
-          {(modal === "add-parent" || modal === "edit-parent") && (
-            <label>
-              Icon (emoji)
+          <label>
+            Hình ảnh danh mục (Image)
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: '4px' }}>
               <input
-                value={form.icon || ""}
-                onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                placeholder="VD: 💻"
-                maxLength={4}
+                value={form.imageUrl || form.image || ""}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value, image: e.target.value })}
+                placeholder="Nhập URL hình ảnh (https://...) hoặc chọn tệp tải ảnh lên..."
+                style={{ flex: 1 }}
               />
-            </label>
-          )}
+              <label
+                style={{
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #C3A05D, #9A7245)',
+                  color: '#0c0b0a',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  userSelect: 'none'
+                }}
+              >
+                📷 Chọn ảnh
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const url = ev.target?.result;
+                        setForm((prev) => ({ ...prev, imageUrl: url, image: url }));
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            {(form.imageUrl || form.image) && (
+              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img
+                  src={form.imageUrl || form.image}
+                  alt="Preview"
+                  style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(232, 196, 104, 0.4)' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, imageUrl: "", image: "" })}
+                  style={{ background: 'transparent', border: '1px solid #ff4d4f', color: '#ff4d4f', borderRadius: 6, padding: '4px 8px', fontSize: 12, cursor: 'pointer' }}
+                >
+                  Xóa ảnh
+                </button>
+              </div>
+            )}
+          </label>
           <label>
             Tên danh mục
             <input
@@ -724,6 +797,26 @@ export const AdminCategories = () => {
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Nhập tên danh mục..."
               autoFocus
+            />
+          </label>
+          <label>
+            Mô tả danh mục (Description)
+            <textarea
+              value={form.description || ""}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Nhập mô tả danh mục..."
+              rows={3}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                background: "rgba(255, 255, 255, 0.05)",
+                color: "#fff",
+                fontSize: "14px",
+                marginTop: "4px",
+                resize: "vertical"
+              }}
             />
           </label>
           {(modal === "add-parent" || modal === "edit-parent") && (
