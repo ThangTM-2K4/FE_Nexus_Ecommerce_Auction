@@ -728,30 +728,44 @@ export const AdminCategories = () => {
 
       {/* Modal thêm/sửa */}
       <AdminModal open={!!modal} title={modalTitle} onClose={() => setModal(null)}>
-        <div className="adm-form">
-          <label>
-            Hình ảnh danh mục (Image)
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: '4px' }}>
+        <div className="adm-form" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+              Hình ảnh danh mục (Image)
+            </span>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <input
                 value={form.imageUrl || form.image || ""}
                 onChange={(e) => setForm({ ...form, imageUrl: e.target.value, image: e.target.value })}
-                placeholder="Nhập URL hình ảnh (https://...) hoặc chọn tệp tải ảnh lên..."
-                style={{ flex: 1 }}
+                placeholder="Nhập URL hình ảnh (https://...) hoặc chọn tệp tải ảnh..."
+                style={{
+                  flex: 1,
+                  padding: '9px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#1f2937',
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'all 0.2s'
+                }}
               />
               <label
                 style={{
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
-                  padding: '8px 14px',
+                  padding: '9px 16px',
                   borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #C3A05D, #9A7245)',
-                  color: '#0c0b0a',
-                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                  color: '#ffffff',
+                  fontWeight: 600,
                   fontSize: '13px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  userSelect: 'none'
+                  gap: '6px',
+                  userSelect: 'none',
+                  boxShadow: '0 2px 6px rgba(139, 92, 246, 0.25)',
+                  transition: 'all 0.2s'
                 }}
               >
                 📷 Chọn ảnh
@@ -774,33 +788,62 @@ export const AdminCategories = () => {
               </label>
             </div>
             {(form.imageUrl || form.image) && (
-              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', background: '#f9fafb', borderRadius: '10px', border: '1px solid #f3f4f6' }}>
                 <img
                   src={form.imageUrl || form.image}
                   alt="Preview"
-                  style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(232, 196, 104, 0.4)' }}
+                  style={{ width: 54, height: 54, borderRadius: 8, objectFit: 'cover', border: '1px solid #e5e7eb', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, imageUrl: "", image: "" })}
-                  style={{ background: 'transparent', border: '1px solid #ff4d4f', color: '#ff4d4f', borderRadius: 6, padding: '4px 8px', fontSize: 12, cursor: 'pointer' }}
-                >
-                  Xóa ảnh
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#059669' }}>✓ Đã chọn hình ảnh</span>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, imageUrl: "", image: "" })}
+                    style={{
+                      background: '#fee2e2',
+                      border: '1px solid #fca5a5',
+                      color: '#dc2626',
+                      borderRadius: 6,
+                      padding: '3px 8px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      width: 'fit-content'
+                    }}
+                  >
+                    ✕ Gỡ bỏ ảnh
+                  </button>
+                </div>
               </div>
             )}
           </label>
-          <label>
-            Tên danh mục
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+              Tên danh mục <span style={{ color: '#ef4444' }}>*</span>
+            </span>
             <input
               value={form.name || ""}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Nhập tên danh mục..."
               autoFocus
+              style={{
+                width: '100%',
+                padding: '9px 12px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db',
+                background: '#ffffff',
+                color: '#1f2937',
+                fontSize: '14px',
+                outline: 'none'
+              }}
             />
           </label>
-          <label>
-            Mô tả danh mục (Description)
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+              Mô tả danh mục (Description)
+            </span>
             <textarea
               value={form.description || ""}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -808,14 +851,16 @@ export const AdminCategories = () => {
               rows={3}
               style={{
                 width: "100%",
-                padding: "8px 12px",
+                padding: "10px 12px",
                 borderRadius: "8px",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                background: "rgba(255, 255, 255, 0.05)",
-                color: "#fff",
+                border: "1px solid #d1d5db",
+                background: "#ffffff",
+                color: "#1f2937",
                 fontSize: "14px",
-                marginTop: "4px",
-                resize: "vertical"
+                fontFamily: "inherit",
+                resize: "vertical",
+                outline: "none",
+                lineHeight: "1.5"
               }}
             />
           </label>
