@@ -9,6 +9,7 @@ import { useAuth } from '../../../context/AuthContext';
 import UserAvatar from '../../common/userAvatar';
 import Button from '../../common/button';
 import Select from '../../common/select';
+import Modal from '../../common/modal';
 import { isValidVietnamesePhone } from '../../../utils/phoneValidation';
 import './index.scss';
 

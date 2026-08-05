@@ -203,18 +203,22 @@ export const AdminAuctionProducts = () => {
 
   useEffect(() => {
     async function loadRealData() {
-      const localProposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]").map(p => ({
-        id: p.id,
-        title: p.title,
-        seller: p.sellerName || "Fashion Elite (Seller)",
-        startPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
-        currentPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
-        highestBid: "—",
-        winner: "—",
-        endTime: "Chờ duyệt",
-        status: "Chờ duyệt đề xuất",
-        bids: 0,
-      }));
+      const localProposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]").map(p => {
+        const rawStatus = typeof p.status === "object" ? p.status?.label : p.status;
+        const statusStr = rawStatus || "Chờ duyệt đề xuất";
+        return {
+          id: p.id,
+          title: p.title,
+          seller: p.sellerName || "Fashion Elite (Seller)",
+          startPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
+          currentPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
+          highestBid: "—",
+          winner: "—",
+          endTime: statusStr === "Đang diễn ra" ? "2d 23h" : (statusStr === "Đã duyệt" ? "Chờ xuất bản" : "Chờ duyệt"),
+          status: statusStr,
+          bids: 0,
+        };
+      });
 
       try {
         const [proposalsRes, auctionsRes] = await Promise.all([
@@ -230,7 +234,7 @@ export const AdminAuctionProducts = () => {
           highestBid: "—",
           winner: "—",
           endTime: "Chờ duyệt",
-          status: "Chờ duyệt đề xuất",
+          status: p.status || "Chờ duyệt đề xuất",
           bids: 0,
         }));
         const auctionItems = auctionsRes?.items || [];
@@ -246,7 +250,19 @@ export const AdminAuctionProducts = () => {
     try {
       await approveAuctionProposal(item.id);
     } catch {}
-    list.updateItem(item.id, { status: "Đang diễn ra" });
+    list.updateItem(item.id, { status: "Đã duyệt", endTime: "Chờ xuất bản" });
+
+    try {
+      const proposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
+      const updated = proposals.map((p) => {
+        if (String(p.id) === String(item.id)) {
+          return { ...p, status: { label: "Đã duyệt", type: "approved", color: "green" } };
+        }
+        return p;
+      });
+      localStorage.setItem("auc_my_proposals", JSON.stringify(updated));
+    } catch {}
+
     toast.success(`🎉 Đã duyệt đề xuất phiên đấu giá "${item.title}"!`);
   };
 
@@ -255,6 +271,18 @@ export const AdminAuctionProducts = () => {
       await rejectAuctionProposal(item.id, "Từ chối bởi Admin");
     } catch {}
     list.updateItem(item.id, { status: "Đã từ chối" });
+
+    try {
+      const proposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
+      const updated = proposals.map((p) => {
+        if (String(p.id) === String(item.id)) {
+          return { ...p, status: { label: "Đã từ chối", type: "rejected", color: "red" } };
+        }
+        return p;
+      });
+      localStorage.setItem("auc_my_proposals", JSON.stringify(updated));
+    } catch {}
+
     toast.warning(`Đã từ chối đề xuất "${item.title}"`);
   };
 
@@ -262,7 +290,18 @@ export const AdminAuctionProducts = () => {
     try {
       await publishAuction(item.id);
     } catch {}
-    list.updateItem(item.id, { status: "Đang diễn ra" });
+    list.updateItem(item.id, { status: "Đang diễn ra", endTime: "2d 23h" });
+
+    try {
+      const proposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
+      const updated = proposals.map((p) => {
+        if (String(p.id) === String(item.id)) {
+          return { ...p, status: { label: "Đang diễn ra", type: "active", color: "green" } };
+        }
+        return p;
+      });
+      localStorage.setItem("auc_my_proposals", JSON.stringify(updated));
+    } catch {}
 
     const published = JSON.parse(localStorage.getItem("auc_published_auctions") || "[]");
     const newAuction = {
