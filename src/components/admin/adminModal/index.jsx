@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import "./index.scss";
 
 const AdminModal = ({ open, title, onClose, children, wide }) => {
@@ -11,7 +12,7 @@ const AdminModal = ({ open, title, onClose, children, wide }) => {
 
   if (!open) return null;
 
-  return (
+  const modalContent = (
     <div className="adm-modal__overlay" onClick={onClose} role="presentation">
       <div
         className={`adm-modal ${wide ? "adm-modal--wide" : ""}`}
@@ -29,6 +30,8 @@ const AdminModal = ({ open, title, onClose, children, wide }) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default AdminModal;

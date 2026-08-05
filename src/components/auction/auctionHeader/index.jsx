@@ -19,7 +19,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
   const navigate = useNavigate();
   const location = useLocation();
   const currentRedirect = encodeURIComponent(location.pathname + location.search);
-  const { user, isBuyerMode, isSellerMode, logout, isAuthenticated } = useAuth();
+  const { user, isBuyerMode, isSellerMode, isApprovedSeller, logout, isAuthenticated } = useAuth();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [localQuery, setLocalQuery] = useState(searchQuery);
@@ -103,7 +103,16 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
               Về quản lý phiên đấu giá
             </Link>
           ) : isSellerMode ? (
-            <Link to="/auction" className="auction-header__home-link">
+            <Link
+              to="/auction"
+              className="auction-header__home-link"
+              style={{
+                background: 'rgba(232, 196, 104, 0.12)',
+                borderColor: 'rgba(232, 196, 104, 0.4)',
+                color: '#E8C468',
+                fontWeight: '600',
+              }}
+            >
               Sảnh Đấu giá
             </Link>
           ) : (
@@ -112,22 +121,27 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
             </Link>
           )}
 
-          {isAuthenticated && isSellerMode && (
+          {isAuthenticated && (isSellerMode || isApprovedSeller || user?.sellerStatus === 'APPROVED' || user?.role === 'SELLER') && (
             <>
               <Link
-                to="/auction/seller"
+                to="/seller"
                 className="auction-header__home-link"
-                style={{ borderColor: 'transparent' }}
+                style={{
+                  background: 'rgba(232, 196, 104, 0.12)',
+                  borderColor: 'rgba(232, 196, 104, 0.4)',
+                  color: '#E8C468',
+                  fontWeight: '600',
+                }}
               >
-                Hồ sơ Seller
+                Kênh Quản Lý Seller
               </Link>
               <Link
                 to="/auction/create"
                 className="auction-header__home-link"
                 style={{
                   background: 'linear-gradient(135deg, #C3A05D, #9A7245)',
-                  color: '#0C0B0A',
                   borderColor: 'transparent',
+                  color: '#0C0B0A',
                   fontWeight: '700',
                 }}
               >
@@ -244,6 +258,11 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                   </div>
 
                   <ul className="dropdown-nav-list">
+                    <li>
+                      <Link to="/seller" onClick={() => setShowProfileMenu(false)}>
+                        <FaUser className="menu-icon" style={{ color: '#e8c468' }} /> Kênh Quản Lý Seller
+                      </Link>
+                    </li>
                     <li>
                       <Link to="/auction/my-bids" onClick={() => setShowProfileMenu(false)}>
                         <FaTrophy className="menu-icon" style={{ color: '#e8c468' }} /> Đấu giá của tôi
