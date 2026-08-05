@@ -6,11 +6,20 @@
   box-sizing: border-box;
 }
 
-/* Ẩn con trỏ văn bản nhấp nháy (|) trên các phần tử văn bản tĩnh (trừ ô nhập liệu) */
-*:not(input):not(textarea):not([contenteditable]) {
-  caret-color: transparent !important;
+/* Global cursor & caret styles for text input elements */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input:not([type]),
+textarea,
+[contenteditable="true"] {
+  cursor: text !important;
+  caret-color: #2b2b2b !important;
 }
-
 
 :root {
   --deep: #{$deep};
@@ -39,7 +48,7 @@ body {
     radial-gradient(ellipse 78% 52% at 50% 100%, rgba($lavender, 0.35), transparent 58%),
     $gradient-page;
   color: var(--deep);
-  min-height: 100%;
+  min-height: 100vh;
 }
 
 body {
@@ -121,6 +130,37 @@ select {
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(179, 90, 138, 0.35) transparent;
+}
+
+/* Global cursor styles for interactive elements */
+button,
+a,
+[role="button"],
+[tabindex],
+.clickable,
+select,
+label,
+summary,
+.pointer,
+.icon-btn,
+.action-btn,
+.nav-item,
+.menu-item,
+.list-item,
+.card,
+.card-clickable,
+.modal,
+.overlay {
+  cursor: pointer;
+}
+
+/* Disabled states should not show pointer */
+button:disabled,
+a.disabled,
+[disabled],
+.is-disabled,
+.disabled {
+  cursor: not-allowed;
 }
 
 

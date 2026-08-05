@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import AnimatedValue from "../../../components/sellerdashboard/sellerAnimatedValue";
 import AnimatedBar from "../../../components/sellerdashboard/sellerAnimatedBar";
+import TrustRankBar from "../../../components/profile/trustRankBar";
+import * as reputationService from "../../../services/reputationService";
 import {
   shopRatingSummary,
   reviewSummary,
@@ -28,7 +31,15 @@ const Stars = ({ n }) => (
 );
 
 export default function ShopRatingPage() {
+  const { user } = useAuth();
   const [starFilter, setStarFilter] = useState("all");
+  const [repData, setRepData] = useState(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      reputationService.getUserReputation(user.id, user, "APPROVED").then(setRepData);
+    }
+  }, [user]);
 
   const visibleReviews = useMemo(
     () => (starFilter === "all" ? shopReviews : shopReviews.filter((r) => r.rating === Number(starFilter))),
@@ -41,6 +52,12 @@ export default function ShopRatingPage() {
         title="Đánh Giá Shop"
         subtitle="Chỉ số uy tín, mức độ hài lòng và nhận xét của khách hàng với Shop của bạn"
       />
+
+      {user && (
+        <div style={{ marginBottom: "20px" }}>
+          <TrustRankBar profile={user} sellerStatus="APPROVED" />
+        </div>
+      )}
 
       <section className="slr-section">
         <div className="slr-review-summary">

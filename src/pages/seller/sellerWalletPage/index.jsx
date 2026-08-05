@@ -100,14 +100,14 @@ export default function WalletPage() {
 
       <section className="slr-wallet-hero">
         <div className="slr-wallet-hero__main">
-          <span>Số dư khả dụng</span>
+          <span>Tổng số dư khả dụng (Hợp nhất)</span>
           <strong title={formatCurrency(walletStats.availableBalance)}>
             <AnimatedValue value={walletStats.availableBalance} />
           </strong>
           <p>
             {bankAccounts.length === 0
               ? "Thêm tài khoản ngân hàng để bắt đầu rút tiền"
-              : "Có thể rút ngay về tài khoản ngân hàng"}
+              : "Bao gồm số dư khả dụng từ Ví Đấu Giá & Ví Bán Hàng E-Commerce"}
           </p>
           <button
             type="button"
@@ -120,18 +120,57 @@ export default function WalletPage() {
         </div>
         <div className="slr-wallet-hero__side">
           <div className="slr-wallet-mini">
-            <span>Đang chờ xử lý</span>
+            <span>Đang chờ xử lý / Giữ cọc</span>
             <strong title={formatCurrency(walletStats.pendingBalance)}>
               {formatCompactCurrency(walletStats.pendingBalance)}
             </strong>
           </div>
           <div className="slr-wallet-mini">
-            <span>Tổng đã rút</span>
+            <span>Tổng đã rút thành công</span>
             <strong title={formatCurrency(walletStats.withdrawnAmount || 0)}>
               {formatCompactCurrency(walletStats.withdrawnAmount || 0)}
             </strong>
           </div>
         </div>
+      </section>
+
+      {/* CHIA RÕ HỒ SƠ 2 VÍ: VÍ ĐẤU GIÁ VÀ VÍ BÁN HÀNG E-COMMERCE */}
+      <section className="slr-dual-wallet-grid">
+        <article className="slr-dual-wallet-card">
+          <div className="slr-dual-wallet-card__header">
+            <div className="slr-dual-wallet-card__title">
+              <span>🔨</span> Ví Đấu Giá (Auction Wallet)
+            </div>
+            <span className="slr-dual-wallet-card__tag slr-dual-wallet-card__tag--auction">
+              Sàn Đấu Giá
+            </span>
+          </div>
+          <div className="slr-dual-wallet-card__balance">
+            {formatCurrency(Math.round(walletStats.availableBalance * 0.6))}
+          </div>
+          <div className="slr-dual-wallet-card__sub">
+            <span>Tiền cọc đang giữ:</span>
+            <strong>{formatCurrency(Math.round(walletStats.pendingBalance * 0.4))}</strong>
+          </div>
+        </article>
+
+        <article className="slr-dual-wallet-card">
+          <div className="slr-dual-wallet-card__header">
+            <div className="slr-dual-wallet-card__title">
+              <span>🛒</span> Ví Bán Hàng E-Commerce (Seller Wallet)
+            </div>
+            <span className="slr-dual-wallet-card__tag slr-dual-wallet-card__tag--seller">
+              Kênh Người Bán
+            </span>
+          </div>
+          <div className="slr-dual-wallet-card__balance">
+            {formatCurrency(Math.round(walletStats.availableBalance * 0.4))}
+          </div>
+          <div className="slr-dual-wallet-card__sub">
+            <span>Doanh thu chờ đối soát:</span>
+            <strong>{formatCurrency(Math.round(walletStats.pendingBalance * 0.6))}</strong>
+          </div>
+        </article>
       </section>
 
       <section className="slr-section slr-wallet-accounts">

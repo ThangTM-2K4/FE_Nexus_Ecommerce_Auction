@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import StaffPageHeader from "../../../components/staff/staffPageHeader";
 import StaffKpiCard from "../../../components/staff/staffKpiCard";
-import { getStaffProducts } from "../../../services/staffService";
+import { getProducts } from "../../../services/catalogService";
 import "./index.scss";
 
 const STATUS_CLASS = {
@@ -17,8 +17,11 @@ const StaffProducts = () => {
   const [detail, setDetail] = useState(null);
 
   useEffect(() => {
-    getStaffProducts().then((data) => {
-      setProducts(data);
+    getProducts().then((data) => {
+      setProducts(Array.isArray(data) ? data : (data?.items || []));
+      setLoading(false);
+    }).catch(() => {
+      setProducts([]);
       setLoading(false);
     });
   }, []);
@@ -28,7 +31,7 @@ const StaffProducts = () => {
       total: products.length,
       active: products.filter((p) => p.status === "Hoạt động").length,
       pending: products.filter((p) => p.status === "Chờ duyệt").length,
-      sellers: new Set(products.map((p) => p.seller)).size,
+      sellers: new Set(products.map((p) => p.seller || p.shopName)).size,
     }),
     [products]
   );
@@ -37,7 +40,7 @@ const StaffProducts = () => {
     const q = query.trim().toLowerCase();
     if (!q) return products;
     return products.filter((p) =>
-      [p.id, p.name, p.seller, p.category, p.brand].some((v) => String(v).toLowerCase().includes(q))
+      [p.id, p.name, p.title, p.seller, p.shopName, p.category, p.categoryName].some((v) => String(v || "").toLowerCase().includes(q))
     );
   }, [products, query]);
 
@@ -87,11 +90,11 @@ const StaffProducts = () => {
               {shown.map((p) => (
                 <tr key={p.id}>
                   <td><code>{p.id}</code></td>
-                  <td><strong>{p.name}</strong></td>
-                  <td>{p.seller}</td>
-                  <td>{p.category}</td>
-                  <td>{p.price}</td>
-                  <td>{p.quantity}</td>
+                  <td><strong>{p.name || p.title}</strong></td>
+                  <td>{p.seller || p.shopName || "—"}</td>
+                  <td>{p.category || p.categoryName || "—"}</td>
+                  <td>{p.price ? Number(p.price).toLocaleString("vi-VN") + "đ" : "—"}</td>
+                  <td>{p.stock || p.quantity || 0}</td>
                   <td>
                     <span className={`stf-products__status stf-products__status--${STATUS_CLASS[p.status] || "default"}`}>
                       {p.status}

@@ -20,24 +20,8 @@ export default function AccountSidebar() {
   const { pathname } = useLocation();
   const { user } = useAuth();
 
-  const isGoogle = Boolean(
-    user?.isGoogle ||
-    user?.provider === 'google' ||
-    user?.authProvider === 'Google' ||
-    user?.isGoogleAccount ||
-    user?.loginMethod === 'google' ||
-    user?.hasPassword === false
-  );
-
-  const menu = ACCOUNT_MENU.map((item) => {
-    if (item.children) {
-      return {
-        ...item,
-        children: item.children.filter((child) => !(isGoogle && child.key === 'password')),
-      };
-    }
-    return item;
-  });
+  // Luôn hiển thị menu đổi mật khẩu - cả user thường và user Google đều có thể đặt/đổi mật khẩu
+  const menu = ACCOUNT_MENU;
 
   return (
     <aside className="account-sidebar" aria-label="Menu tài khoản">

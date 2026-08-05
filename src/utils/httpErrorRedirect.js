@@ -50,6 +50,7 @@ export function shouldSkipHttpErrorRedirect(status, config = {}) {
   if (config.skipErrorRedirectStatuses?.includes(status)) return true;
   if (status === 401 && isAuthRequest(config.url)) return true;
   if (status === 404 && !config.redirectOn404) return true;
+  if (status === 403 && !config.redirectOn403) return true;
   return false;
 }
 

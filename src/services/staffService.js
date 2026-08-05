@@ -631,23 +631,15 @@ const localApplicationToSeller = (userId, app) => {
 };
 
 export const getSellerDirectory = async () => {
-  await mockDelay();
-  const sellers = mockSellerDirectory.map((s) => ({ ...s, source: "mock" }));
-  const seenUsers = new Set(sellers.map((s) => s.userId));
-
-  for (let i = 0; i < localStorage.length; i += 1) {
-    const key = localStorage.key(i);
-    if (!key?.startsWith('mockSellerApplication_')) continue;
-    const userId = key.replace('mockSellerApplication_', '');
-    if (seenUsers.has(userId)) continue;
-    const app = readLocalApplication(userId);
-    if (!app) continue;
-    if (normalizeStatus(app.status) !== 'APPROVED') continue; // chỉ seller đã duyệt
-    sellers.push(localApplicationToSeller(userId, app));
-    seenUsers.add(userId);
+  try {
+    const res = await api.get('management/sellers-applications', { params: { page: 1, pageSize: 100 } });
+    const items = extractList(unwrap(res));
+    const list = await Promise.all(items.map(enrichApplication));
+    return list;
+  } catch (err) {
+    console.error('[staffService] getSellerDirectory API error:', err);
+    return [];
   }
-
-  return sellers;
 };
 
 export const getSellerDetail = async (sellerId) => {
@@ -673,25 +665,53 @@ const readUserOverrides = () => {
   }
 };
 
-export const getPlatformUsers = async () => {
-  await mockDelay();
-  const overrides = readUserOverrides();
-  return mockPlatformUsers.map((u) => ({ ...u, status: overrides[u.id] || u.status }));
+export const getPlatformUsers = async ({ page = 1, pageSize = 100 } = {}) => {
+  try {
+    const { data } = await api.get('admin/users', { params: { page, pageSize } });
+    const paged = unwrapPagedList(data);
+    return (paged.items || []).map((user) => ({
+      id: user.id || user.userId,
+      fullName: user.fullName || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || user.email || "—",
+      email: user.email || "—",
+      phone: user.phoneNumber || user.phone || "—",
+      role: user.role || user.roleCode || user.roles?.[0] || "BUYER",
+      status: user.status || user.accountStatus || "ACTIVE",
+      emailVerified: user.emailVerified || user.isEmailVerified || false,
+      phoneVerified: user.phoneVerified || user.isPhoneVerified || false,
+      orders: user.orderCount || user.totalOrders || 0,
+      joinedAt: user.createdAt || user.joinedAt || user.registeredAt || "—",
+      lastActive: user.lastActiveAt || user.lastLoginAt || user.lastSeen || "—",
+      _raw: user,
+    }));
+  } catch (err) {
+    console.error('[staffService] getPlatformUsers API error:', err);
+    return [];
+  }
 };
 
 export const getPlatformUserDetail = async (userId) => {
-  await mockDelay(200);
-  const users = await getPlatformUsers();
-  const user = users.find((u) => u.id === userId);
-  if (!user) return null;
-  return {
-    ...user,
-    address: user.address || "—",
-    reputation: user.reputation ?? 4.2,
-    walletBalance: user.walletBalance ?? 0,
-    auctionWins: user.auctionWins ?? 0,
-    recentOrders: user.recentOrders ?? [],
-  };
+  try {
+    const { data } = await api.get(`admin/users/${userId}`);
+    const raw = unwrapData(data);
+    if (!raw) return null;
+    return {
+      id: raw.id || userId,
+      fullName: raw.fullName || [raw.firstName, raw.lastName].filter(Boolean).join(" ") || raw.username || raw.email || "—",
+      email: raw.email || "—",
+      phone: raw.phoneNumber || raw.phone || "—",
+      role: raw.role || raw.roleCode || raw.roles?.[0] || "BUYER",
+      status: raw.status || raw.accountStatus || "ACTIVE",
+      address: raw.address || "—",
+      reputation: raw.reputation ?? 5.0,
+      walletBalance: raw.walletBalance ?? 0,
+      auctionWins: raw.auctionWins ?? 0,
+      recentOrders: raw.recentOrders ?? [],
+      _raw: raw,
+    };
+  } catch (err) {
+    console.error('[staffService] getPlatformUserDetail API error:', err);
+    return null;
+  }
 };
 
 /* ═══════════ TRA CỨU CHỈ XEM (Privileges A–J) ═══════════ */

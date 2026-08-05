@@ -53,9 +53,7 @@ export default function CreateProductPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("basic");
   const [form, setForm] = useState(initialForm);
-  const [imageRatio, setImageRatio] = useState("1:1");
   const [images, setImages] = useState([]);
-  const [coverImage, setCoverImage] = useState(null);
   const [video, setVideo] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -117,44 +115,61 @@ export default function CreateProductPage() {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
-  const handleImageUpload = async (index, e) => {
-    const file = e.target.files?.[0];
+  const handleSlotImageUpload = async (startIndex, e) => {
+    const files = Array.from(e.target.files || []);
     e.target.value = "";
-    if (!file) return;
+    if (!files.length) return;
     try {
-      const dataUrl = await fileToDataUrl(file);
+      const dataUrls = await Promise.all(files.map(fileToDataUrl));
       setImages((prev) => {
         const next = [...prev];
-        next[index] = dataUrl;
+        let curr = startIndex;
+        for (let i = 0; i < dataUrls.length; i += 1) {
+          while (curr < MAX_IMAGES && next[curr]) {
+            curr += 1;
+          }
+          if (curr < MAX_IMAGES) {
+            next[curr] = dataUrls[i];
+            curr += 1;
+          }
+        }
         return next;
       });
-      toast.success(`Đã tải lên ảnh ${index + 1}`);
+      toast.success(`Đã thêm ${files.length} ảnh sản phẩm`);
     } catch (err) {
       toast.error(err.message || "Tải ảnh lên thất bại");
     }
   };
 
-  const handleCoverUpload = async (e) => {
+  const handleRemoveImage = (index) => {
+    setImages((prev) => {
+      const next = [...prev];
+      next.splice(index, 1);
+      return next;
+    });
+  };
+
+  const handleVideoUpload = (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    try {
-      const dataUrl = await fileToDataUrl(file);
-      setCoverImage(dataUrl);
-      toast.success("Đã tải lên ảnh bìa");
-    } catch (err) {
-      toast.error(err.message || "Tải ảnh lên thất bại");
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Dung lượng video không được vượt quá 50MB");
+      return;
     }
+    const url = URL.createObjectURL(file);
+    setVideo({ file, url, name: file.name });
+    toast.success(`Đã chọn video: ${file.name}`);
   };
 
-  const handleMockVideoUpload = () => {
-    setVideo("product_video_mock.mp4");
-    toast.info("Đã tải lên (mock): video sản phẩm");
+  const handleRemoveVideo = () => {
+    if (video?.url) URL.revokeObjectURL(video.url);
+    setVideo(null);
   };
 
   const tips = [
-    { label: "Thêm ít nhất 3 hình ảnh", done: filledImages.length >= 3 },
-    { label: "Thêm video sản phẩm", done: !!video },
+    { label: "Thêm ít nhất 1-3 hình ảnh", done: filledImages.length >= 1 },
+    { label: "Thêm video sản phẩm (không bắt buộc)", done: !!video },
     {
       label: "Thêm 20-100 ký tự cho tên sản phẩm",
       done: form.name.trim().length >= 20 && form.name.trim().length <= 100,
@@ -218,9 +233,6 @@ export default function CreateProductPage() {
       }
 
       const imagesToUpload = [...filledImages];
-      if (coverImage && !imagesToUpload.includes(coverImage)) {
-        imagesToUpload.unshift(coverImage);
-      }
 
       if (imagesToUpload.length > 0) {
         setSubmitStep("images");
@@ -228,7 +240,7 @@ export default function CreateProductPage() {
           const dataUrl = imagesToUpload[i];
           const file = await dataUrlToFile(dataUrl, `product-${productId}-${i + 1}.jpg`);
           const { url, key } = await uploadProductImage(file);
-          const isCover = coverImage ? dataUrl === coverImage : i === 0;
+          const isCover = i === 0;
           await attachProductImage(productId, { url, key, isCover });
         }
       }
@@ -316,86 +328,76 @@ export default function CreateProductPage() {
                     Hình ảnh sản phẩm<span className="required"> *</span>
                   </label>
                   <div className="slr-cp__row-body">
-                    <div className="slr-cp__ratio-toggle">
-                      <label className={imageRatio === "1:1" ? "selected" : ""}>
-                        <input
-                          type="radio"
-                          name="imageRatio"
-                          checked={imageRatio === "1:1"}
-                          onChange={() => setImageRatio("1:1")}
-                        />
-                        Hình ảnh tỷ lệ 1:1
-                      </label>
-                      <label className={imageRatio === "3:4" ? "selected" : ""}>
-                        <input
-                          type="radio"
-                          name="imageRatio"
-                          checked={imageRatio === "3:4"}
-                          onChange={() => setImageRatio("3:4")}
-                        />
-                        Hình ảnh tỷ lệ 3:4
-                      </label>
-                      <button
-                        type="button"
-                        className="slr-cp__link"
-                        onClick={() => toast.info("Đây là ảnh minh hoạ cho tỷ lệ hình ảnh đã chọn")}
-                      >
-                        Ví dụ
-                      </button>
-                    </div>
-
                     <div className="slr-create-image-grid">
-                      {Array.from({ length: MAX_IMAGES }).map((_, i) => (
-                        <label
-                          key={i}
-                          className={`slr-cp__upload-slot slr-cp__upload-slot--square ${
-                            images[i] ? "filled" : ""
-                          }`}
-                        >
-                          {images[i] ? <img src={images[i]} alt={`Ảnh ${i + 1}`} /> : "+ Thêm ảnh"}
-                          <input type="file" accept="image/*" onChange={(e) => handleImageUpload(i, e)} hidden />
-                        </label>
-                      ))}
+                      {Array.from({ length: MAX_IMAGES }).map((_, i) => {
+                        const dataUrl = images[i];
+                        const isCover = i === 0;
+                        return (
+                          <div key={i} className="slr-cp__upload-slot-wrapper">
+                            {dataUrl ? (
+                              <div className="slr-cp__upload-slot filled">
+                                <img src={dataUrl} alt={`Ảnh ${i + 1}`} />
+                                {isCover && <span className="slr-cp__cover-badge">Ảnh bìa</span>}
+                                <button
+                                  type="button"
+                                  className="slr-cp__img-remove-btn"
+                                  onClick={() => handleRemoveImage(i)}
+                                  title="Xoá ảnh"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <label className="slr-cp__upload-slot">
+                                <span className="slr-cp__upload-icon">+</span>
+                                <span className="slr-cp__upload-text">{isCover ? "Ảnh bìa *" : "Thêm ảnh"}</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  onChange={(e) => handleSlotImageUpload(i, e)}
+                                  hidden
+                                />
+                              </label>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                     <small className="slr-create-image-hint">
-                      Đã thêm {filledImages.length}/{MAX_IMAGES} ảnh — ảnh sẽ được upload lên server khi lưu sản phẩm
+                      Đã chọn {filledImages.length}/{MAX_IMAGES} ảnh (click vào ô bất kỳ để chọn 1 hoặc nhiều ảnh cùng lúc)
                     </small>
                   </div>
                 </div>
 
-                {imageRatio === "3:4" && (
-                  <div className="slr-cp__row">
-                    <label className="slr-cp__row-label">Ảnh bìa</label>
-                    <div className="slr-cp__row-body">
-                      <label
-                        className={`slr-cp__upload-slot slr-cp__upload-slot--cover ${
-                          coverImage ? "filled" : ""
-                        }`}
-                      >
-                        {coverImage ? <img src={coverImage} alt="Ảnh bìa" /> : "+ Thêm ảnh bìa"}
-                        <input type="file" accept="image/*" onChange={handleCoverUpload} hidden />
-                      </label>
-                      <small className="slr-create-image-hint">
-                        Ảnh sẽ được hiển thị nổi bật với tỷ lệ 3:4 trên trang tìm kiếm và gợi ý sản phẩm
-                      </small>
-                    </div>
-                  </div>
-                )}
-
                 <div className="slr-cp__row">
                   <label className="slr-cp__row-label">Video sản phẩm</label>
                   <div className="slr-cp__row-body">
-                    <button
-                      type="button"
-                      className={`slr-cp__upload-slot slr-cp__upload-slot--video ${video ? "filled" : ""}`}
-                      onClick={handleMockVideoUpload}
-                    >
-                      {video ? "✓ Đã tải video" : "+ Thêm video"}
-                    </button>
+                    {video ? (
+                      <div className="slr-cp__video-preview-card">
+                        <video src={video.url} controls />
+                        <div className="slr-cp__video-info">
+                          <span className="slr-cp__video-name">📹 {video.name}</span>
+                          <button
+                            type="button"
+                            className="slr-cp__video-delete-btn"
+                            onClick={handleRemoveVideo}
+                          >
+                            Xoá video
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="slr-cp__upload-slot--video-card">
+                        <div className="slr-cp__video-icon">📹</div>
+                        <div className="slr-cp__video-label">+ Thêm video sản phẩm</div>
+                        <span className="slr-cp__video-sub">(Không bắt buộc)</span>
+                        <input type="file" accept="video/*" onChange={handleVideoUpload} hidden />
+                      </label>
+                    )}
                     <ul className="slr-cp__hint-list">
-                      <li>Kích thước: tối đa 30MB, độ phân giải vượt quá 1200x1200px</li>
-                      <li>Độ dài: 10s - 60s</li>
-                      <li>Định dạng hỗ trợ: .mp4</li>
+                      <li>Kích thước: tối đa 50MB, định dạng: .mp4, .webm, .mov</li>
+                      <li>Video là tùy chọn (không bắt buộc)</li>
                     </ul>
                   </div>
                 </div>
