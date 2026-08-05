@@ -78,94 +78,87 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
 
-    // 403 / 500 / 503 — redirect trừ khi skipErrorRedirect: true (API phụ)
-    if (!originalRequest || status !== 401 || originalRequest._retry) {
-      if (status === 401) {
-        handleUnauthorized();
-      } else if (status) {
-        redirectToHttpErrorPage(status, originalRequest);
-      }
-      return Promise.reject(error);
-    }
-
-    const requestUrl = originalRequest.url || '';
-    if (
+    const requestUrl = originalRequest?.url || '';
+    const isAuthUrl =
       requestUrl.includes('/auth/refresh-token') ||
       requestUrl.includes('/auth/login') ||
       requestUrl.includes('/auth/logout') ||
       requestUrl.includes('/auth/register') ||
       requestUrl.includes('/auth/verify-email') ||
-      requestUrl.includes('/auth/exchange-code')
+      requestUrl.includes('/auth/exchange-code');
+
+    const storedRefreshToken = localStorage.getItem('refreshToken');
+
+    // Cố gắng refresh token khi gặp 401 hoặc 403 (Backend Spring Security thường trả 403 khi token hết hạn)
+    if (
+      originalRequest &&
+      !originalRequest._retry &&
+      (status === 401 || status === 403) &&
+      !isAuthUrl &&
+      storedRefreshToken
     ) {
-      if (
-        status === 401 &&
-        !requestUrl.includes('/auth/login') &&
-        !requestUrl.includes('/auth/logout')
-      ) {
-        handleUnauthorized();
-      }
-      return Promise.reject(error);
-    }
+      originalRequest._retry = true;
 
-
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      })
-        .then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
         })
-        .catch((err) => Promise.reject(err));
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      isRefreshing = true;
+
+      try {
+        const { data } = await axios.post(
+          `${BACKEND_BASE_URL}/auth/refresh-token`,
+          { refreshToken: storedRefreshToken },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        const accessToken = data?.accessToken;
+        if (!accessToken) {
+          throw error;
+        }
+
+        localStorage.setItem('accessToken', accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+        if (data.user) {
+          const prev = JSON.parse(localStorage.getItem('user') || 'null');
+          const merged = {
+            ...prev,
+            ...data.user,
+            id: data.user.id ?? data.user.userId ?? prev?.id,
+            currentMode: data.user.currentMode ?? prev?.currentMode ?? 'BUYER',
+            sellerStatus: data.user.sellerStatus ?? prev?.sellerStatus ?? null,
+          };
+          localStorage.setItem('user', JSON.stringify(merged));
+        }
+        localStorage.setItem('expiresAt', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
+
+        processQueue(null, accessToken);
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        handleUnauthorized();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
 
-    originalRequest._retry = true;
-    isRefreshing = true;
-
-    try {
-      const storedRefreshToken = localStorage.getItem('refreshToken');
-      if (!storedRefreshToken) {
-        throw error;
-      }
-
-      const { data } = await axios.post(
-        `${BACKEND_BASE_URL}/auth/refresh-token`,
-        { refreshToken: storedRefreshToken },
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-
-      const accessToken = data?.accessToken;
-      if (!accessToken) {
-        throw error;
-      }
-
-      localStorage.setItem('accessToken', accessToken);
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken);
-      }
-      if (data.user) {
-        const prev = JSON.parse(localStorage.getItem('user') || 'null');
-        const merged = {
-          ...prev,
-          ...data.user,
-          id: data.user.id ?? data.user.userId ?? prev?.id,
-          currentMode: data.user.currentMode ?? prev?.currentMode ?? 'BUYER',
-          sellerStatus: data.user.sellerStatus ?? prev?.sellerStatus ?? null,
-        };
-        localStorage.setItem('user', JSON.stringify(merged));
-      }
-      localStorage.setItem('expiresAt', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
-
-      processQueue(null, accessToken);
-      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-      return api(originalRequest);
-    } catch (refreshError) {
-      processQueue(refreshError, null);
+    if (status === 401) {
       handleUnauthorized();
-      return Promise.reject(refreshError);
-    } finally {
-      isRefreshing = false;
+    } else if (status && originalRequest) {
+      redirectToHttpErrorPage(status, originalRequest);
     }
+    return Promise.reject(error);
   }
 );
 
