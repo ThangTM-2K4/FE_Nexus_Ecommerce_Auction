@@ -12,6 +12,7 @@ import {
   getPassedRules,
   isPasswordValid,
 } from "../../../utils/passwordStrength";
+import { isValidVietnamesePhone } from "../../../utils/phoneValidation";
 import "./index.scss";
 
 function RegisterPage() {

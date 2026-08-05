@@ -1,6 +1,13 @@
+import api from '../config/api';
 import { mockDelay } from './mockDelay';
 
 const reputationKey = (userId) => `mockReputation_${userId}`;
+
+const unwrap = (res) => {
+  const body = res?.data;
+  if (body && typeof body === 'object' && 'data' in body) return body.data;
+  return body ?? null;
+};
 
 const RANK_THRESHOLDS = {
   Silver: { min: 0, max: 100 },
@@ -61,6 +68,46 @@ export const calculateBuyerRank = (score) => {
   if (score >= 1001) return 'Platinum';
   if (score >= 101) return 'Gold';
   return 'Silver';
+};
+
+/** Chuẩn hoá response GET /reputation/me | /reputation/users/{id} */
+const normalizeApiReputation = (raw) => {
+  if (!raw || typeof raw !== 'object') return null;
+  const score =
+    raw.score ??
+    raw.point ??
+    raw.points ??
+    raw.reputationScore ??
+    raw.buyerScore ??
+    raw.totalScore ??
+    null;
+  const rank =
+    raw.rank ??
+    raw.tier ??
+    raw.level ??
+    raw.buyerRank ??
+    null;
+  if (score == null && !rank) return null;
+  const numericScore = score != null ? Number(score) : 0;
+  return {
+    score: numericScore,
+    rank: rank || calculateBuyerRank(numericScore),
+    totalSpent: raw.totalSpent ?? raw.spent ?? 0,
+    sellerScore: raw.sellerScore ?? raw.seller?.score ?? null,
+    sellerRank: raw.sellerRank ?? raw.seller?.rank ?? null,
+  };
+};
+
+/** GET /reputation/me — điểm uy tín người dùng hiện tại */
+export const fetchMyReputation = async () => {
+  const res = await api.get('/reputation/me', { skipErrorRedirect: true });
+  return normalizeApiReputation(unwrap(res));
+};
+
+/** GET /reputation/users/{userId} — điểm uy tín công khai */
+export const fetchUserReputationById = async (userId) => {
+  const res = await api.get(`/reputation/users/${userId}`, { skipErrorRedirect: true });
+  return normalizeApiReputation(unwrap(res));
 };
 
 export const calculateSellerScore = (sellerActivity = {}) => {
@@ -134,28 +181,45 @@ const saveReputation = (userId, data) => {
 };
 
 export const getUserReputation = async (userId, profile, sellerStatus) => {
-  await mockDelay();
-
   const stored = getStoredReputation(userId);
-  // getMe đã trả điểm uy tín thật -> ưu tiên dùng, chỉ tự tính khi backend chưa có.
-  const backendRep = profile?.reputation;
+
+  // 1) Ưu tiên GET /reputation/me (API thật)
+  let apiRep = null;
+  try {
+    apiRep = await fetchMyReputation();
+  } catch (err) {
+    console.error('[reputationService] GET /reputation/me failed, fallback:', err);
+  }
+
+  // 2) Fallback: điểm kèm theo getMe (profile.reputation)
+  const profileRep = profile?.reputation;
+
   const buyerScore =
-    backendRep?.score != null ? Number(backendRep.score) : calculateBuyerScore(profile, stored.totalSpent);
-  const buyerRank = backendRep?.rank || calculateBuyerRank(buyerScore);
+    apiRep?.score != null
+      ? Number(apiRep.score)
+      : profileRep?.score != null
+        ? Number(profileRep.score)
+        : calculateBuyerScore(profile, stored.totalSpent);
+
+  const buyerRank =
+    apiRep?.rank || profileRep?.rank || calculateBuyerRank(buyerScore);
 
   const buyerProfile = {
     score: buyerScore,
     rank: buyerRank,
-    totalSpent: stored.totalSpent,
+    totalSpent: apiRep?.totalSpent ?? stored.totalSpent,
   };
 
   let sellerProfile = null;
   if (sellerStatus) {
-    const sellerScore = calculateSellerScore(stored.sellerActivity || {});
+    const sellerScore =
+      apiRep?.sellerScore != null
+        ? Number(apiRep.sellerScore)
+        : calculateSellerScore(stored.sellerActivity || {});
     sellerProfile = {
       status: sellerStatus,
       score: sellerScore,
-      rank: calculateSellerRank(sellerScore),
+      rank: apiRep?.sellerRank || calculateSellerRank(sellerScore),
     };
   }
 
@@ -164,6 +228,7 @@ export const getUserReputation = async (userId, profile, sellerStatus) => {
     buyerProfile,
     sellerProfile,
     raw: stored,
+    source: apiRep ? 'api' : profileRep?.score != null ? 'profile' : 'mock',
   };
 };
 

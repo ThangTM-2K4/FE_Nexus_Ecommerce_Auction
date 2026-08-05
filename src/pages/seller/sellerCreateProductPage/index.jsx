@@ -2,12 +2,27 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
-import * as productService from "../../../services/productService";
+import {
+  createEcommerceProduct,
+  uploadProductImage,
+  attachProductImage,
+  createProductSku,
+  submitProductForReview,
+  getApiErrorMessage,
+} from "../../../services/ecommerceProductService";
 import * as shippingService from "../../../services/shippingService";
 import { productCategories } from "../../../data/auctionMockData";
 import { fileToDataUrl } from "../../../utils/fileToDataUrl";
+import { dataUrlToFile } from "../../../utils/dataUrlToFile";
 import Select from "../../../components/common/select";
 import "./index.scss";
+
+const SUBMIT_STEP_LABELS = {
+  create: "Đang tạo sản phẩm...",
+  images: "Đang tải ảnh lên...",
+  sku: "Đang tạo SKU...",
+  review: "Đang gửi duyệt...",
+};
 
 const CATEGORY_OPTIONS = productCategories.map((c) => ({ value: c.id, label: c.label }));
 
@@ -47,6 +62,8 @@ export default function CreateProductPage() {
   const [video, setVideo] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [submitStep, setSubmitStep] = useState("");
+  const [draftProductId, setDraftProductId] = useState(null);
   const [shippingOptions, setShippingOptions] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(true);
@@ -140,26 +157,80 @@ export default function CreateProductPage() {
   const handleSubmit = async (hidden) => {
     if (!validate()) return;
     setSubmitting(true);
+
+    let productId = draftProductId;
+
     try {
-      await productService.createProduct(user.id, {
-        ...form,
+      if (!productId) {
+        setSubmitStep("create");
+        const created = await createEcommerceProduct({
+          name: form.name.trim(),
+          categoryId: form.category,
+          brand: form.brand.trim() || undefined,
+          description: form.description.trim() || undefined,
+          price: Number(form.price),
+          stock: Number(form.stock),
+          condition: form.condition,
+        });
+        productId = created.productId ?? created.id;
+        if (!productId) {
+          throw new Error("Không nhận được productId từ server.");
+        }
+        setDraftProductId(productId);
+      }
+
+      const imagesToUpload = [...filledImages];
+      if (coverImage && !imagesToUpload.includes(coverImage)) {
+        imagesToUpload.unshift(coverImage);
+      }
+
+      if (imagesToUpload.length > 0) {
+        setSubmitStep("images");
+        for (let i = 0; i < imagesToUpload.length; i += 1) {
+          const dataUrl = imagesToUpload[i];
+          const file = await dataUrlToFile(dataUrl, `product-${productId}-${i + 1}.jpg`);
+          const { url, key } = await uploadProductImage(file);
+          const isCover = coverImage ? dataUrl === coverImage : i === 0;
+          await attachProductImage(productId, { url, key, isCover });
+        }
+      }
+
+      setSubmitStep("sku");
+      await createProductSku(productId, {
+        skuCode: "DEFAULT",
         price: Number(form.price),
         stock: Number(form.stock),
-        images: filledImages,
-        imageRatio,
-        coverImage,
-        video,
-        shippingMethods: selectedShipping,
-        hidden,
       });
-      toast.success(hidden ? "Đã lưu sản phẩm ở chế độ ẩn" : "Đã tạo sản phẩm (chờ duyệt)");
+
+      if (!hidden) {
+        setSubmitStep("review");
+        await submitProductForReview(productId);
+      }
+
+      toast.success(
+        hidden
+          ? "Đã lưu sản phẩm ở chế độ ẩn (DRAFT)"
+          : "Đã tạo sản phẩm và gửi duyệt thành công"
+      );
       navigate("/seller-hub/products");
     } catch (err) {
-      toast.error(err.message || "Tạo sản phẩm thất bại");
+      const message = getApiErrorMessage(err, err.message || "Tạo sản phẩm thất bại");
+      if (productId) {
+        toast.error(
+          `Sản phẩm #${productId} đã được tạo nhưng chưa hoàn tất (${SUBMIT_STEP_LABELS[submitStep] || "bước hiện tại"}). ${message} — bạn có thể thử lại mà không tạo trùng.`
+        );
+      } else {
+        toast.error(message);
+      }
     } finally {
       setSubmitting(false);
+      setSubmitStep("");
     }
   };
+
+  const submitLabel = submitting
+    ? SUBMIT_STEP_LABELS[submitStep] || "Đang lưu..."
+    : null;
 
   return (
     <div className="slr-page slr-create-product">
@@ -256,8 +327,7 @@ export default function CreateProductPage() {
                       ))}
                     </div>
                     <small className="slr-create-image-hint">
-                      Đã thêm {filledImages.length}/{MAX_IMAGES} ảnh — ảnh đang lưu tạm trên trình duyệt, cần
-                      tích hợp lưu trữ ảnh trên cloud khi có backend
+                      Đã thêm {filledImages.length}/{MAX_IMAGES} ảnh — ảnh sẽ được upload lên server khi lưu sản phẩm
                     </small>
                   </div>
                 </div>
@@ -523,10 +593,10 @@ export default function CreateProductPage() {
                 disabled={submitting}
                 onClick={() => handleSubmit(true)}
               >
-                {submitting ? "Đang lưu..." : "Lưu & Ẩn"}
+                {submitLabel || "Lưu & Ẩn"}
               </button>
               <button type="submit" className="slr-btn-create" disabled={submitting}>
-                {submitting ? "Đang lưu..." : "Lưu & Hiển thị"}
+                {submitLabel || "Lưu & Hiển thị"}
               </button>
             </div>
           </form>

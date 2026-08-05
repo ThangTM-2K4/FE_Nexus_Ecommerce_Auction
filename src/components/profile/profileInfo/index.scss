@@ -300,6 +300,18 @@
     opacity: 0.65;
     cursor: default;
   }
+
+  &--ghost {
+    border-color: rgba($lavender, 0.55);
+    color: $ink-muted;
+    background: transparent;
+
+    &:hover:not(:disabled) {
+      background: rgba($live-red, 0.06);
+      border-color: rgba($live-red, 0.4);
+      color: $live-red;
+    }
+  }
 }
 
 .profile-info__upload-hint {

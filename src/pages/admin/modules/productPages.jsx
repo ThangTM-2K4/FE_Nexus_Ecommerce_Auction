@@ -22,6 +22,12 @@ import {
   mockSellerWarehouses, STATUS_OPTIONS,
 } from "../../../data/adminEntities";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "../../../services/adminCategoryService";
+import {
+  getAdminProducts,
+  approveAdminProduct,
+  rejectAdminProduct,
+  getApiErrorMessage,
+} from "../../../services/adminProductService";
 import "../../../components/admin/adminViews/index.scss";
 
 import "../../../components/admin/adminDataTable/index.scss";
@@ -66,7 +72,7 @@ export const AdminProducts = () => {
     async function loadProducts() {
       try {
         const res = await getAdminProducts();
-        list.setItems(res || []);
+        list.setItems(res?.items ?? []);
       } catch {
         list.setItems([]);
       }
@@ -75,6 +81,31 @@ export const AdminProducts = () => {
   }, []);
 
   const action = (row, status) => { list.updateItem(row.id, { status }); toast.success(`Đã cập nhật: ${status}`); };
+
+  const isPendingReview = (status) => {
+    const normalized = String(status || "").toLowerCase();
+    return normalized.includes("chờ") || normalized.includes("pending") || normalized.includes("review");
+  };
+
+  const handleApprove = async (row) => {
+    try {
+      await approveAdminProduct(row.id);
+      list.updateItem(row.id, { status: "Hoạt động" });
+      toast.success("Đã duyệt sản phẩm");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Duyệt sản phẩm thất bại"));
+    }
+  };
+
+  const handleReject = async (row) => {
+    try {
+      await rejectAdminProduct(row.id, "Không đạt yêu cầu kiểm duyệt");
+      list.updateItem(row.id, { status: "Từ chối" });
+      toast.success("Đã từ chối sản phẩm");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Từ chối sản phẩm thất bại"));
+    }
+  };
 
   const sellers = useMemo(
     () => [...new Set(list.items.map((p) => p.seller))],
@@ -122,9 +153,9 @@ export const AdminProducts = () => {
 
   const productActions = (p) => [
     { label: "Xem", variant: "primary", onClick: () => setDetail(p) },
-    ...(p.status === "Chờ duyệt" ? [
-      { label: "Duyệt", variant: "success", onClick: () => action(p, "Hoạt động") },
-      { label: "Từ chối", variant: "danger", onClick: () => action(p, "Từ chối") },
+    ...(isPendingReview(p.status) ? [
+      { label: "Duyệt", variant: "success", onClick: () => handleApprove(p) },
+      { label: "Từ chối", variant: "danger", onClick: () => handleReject(p) },
     ] : []),
     { label: p.status === "Ẩn" ? "Hiện" : "Ẩn", onClick: () => action(p, p.status === "Ẩn" ? "Hoạt động" : "Ẩn") },
     { label: "Xóa", variant: "danger", onClick: () => { list.removeItem(p.id); toast.info("Đã xóa"); } },

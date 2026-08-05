@@ -1,0 +1,26 @@
+.error-boundary {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+}
+
+.error-boundary__message {
+  margin: 0 0 1rem;
+  color: #991b1b;
+}
+
+.error-boundary__retry {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #dc2626;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+
+  &:hover {
+    background: #b91c1c;
+  }
+}
