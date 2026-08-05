@@ -1,6 +1,6 @@
 import api from '../config/api';
 import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiResponse';
-import { mockAdminProducts } from '../data/adminEntities';
+import { mockProducts } from '../data/adminEntities';
 
 export { getApiErrorMessage };
 
@@ -11,12 +11,9 @@ export async function getAdminProducts(params = {}) {
   try {
     const { data } = await api.get('/admin/products', { params });
     const paged = unwrapPagedList(data);
-    if (paged.items && paged.items.length > 0) {
-      return paged;
-    }
-    return { items: mockAdminProducts, total: mockAdminProducts.length };
+    return paged;
   } catch {
-    return { items: mockAdminProducts, total: mockAdminProducts.length };
+    return { items: mockProducts, total: mockProducts.length };
   }
 }
 
@@ -28,7 +25,7 @@ export async function getAdminProductReviewQueue(params = {}) {
     const { data } = await api.get('/admin/products/review-queue', { params });
     return unwrapPagedList(data);
   } catch {
-    const pending = mockAdminProducts.filter(p => p.status === 'Chờ duyệt');
+    const pending = mockProducts.filter((p) => p.status === 'Chờ duyệt');
     return { items: pending, total: pending.length };
   }
 }
@@ -41,7 +38,7 @@ export async function getAdminProductReviewDetail(productId) {
     const { data } = await api.get(`/admin/products/${productId}/review-detail`);
     return unwrapData(data);
   } catch {
-    return mockAdminProducts.find(p => p.id === productId) || null;
+    return mockProducts.find((p) => p.id === productId) || null;
   }
 }
 

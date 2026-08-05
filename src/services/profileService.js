@@ -231,8 +231,7 @@ export const markPhoneVerified = async (userId, phoneNumber) => {
 };
 
 // ── UPLOADS ── (ảnh đại diện + ảnh CCCD)
-// Swagger user-service: POST /uploads/avatar và /uploads/identity, multipart field `file`.
-// Base URL nằm trong .env (VITE_API_BASE_URL) — chỉ dùng path tương đối, KHÔNG hardcode host.
+// Avatar: POST/DELETE /users/me/avatar — Identity: POST /uploads/identity
 // Content-Type để undefined -> trình duyệt tự set multipart + boundary.
 const MULTIPART = { headers: { 'Content-Type': undefined } };
 
@@ -240,19 +239,31 @@ const MULTIPART = { headers: { 'Content-Type': undefined } };
 const extractUploadUrl = (res) => {
   const d = res?.data?.data ?? res?.data ?? {};
   if (typeof d === 'string') return d;
-  return d.url || d.fileUrl || d.imageUrl || d.avatarUrl || d.key || d.fileKey || '';
+  return d.url || d.fileUrl || d.imageUrl || d.avatarUrl || d.avatar || d.key || d.fileKey || '';
 };
 
 export const uploadAvatar = async (userId, file) => {
   const fd = new FormData();
   fd.append('file', file);
-  const res = await api.post('/uploads/avatar', fd, MULTIPART);
+  const res = await api.post('/users/me/avatar', fd, {
+    ...MULTIPART,
+    skipErrorRedirect: true,
+  });
   const url = extractUploadUrl(res);
 
   const current = await getProfile(userId);
   const updated = { ...current, avatar: url || current.avatar };
   saveProfile(userId, updated);
   updateSessionUser({ avatar: updated.avatar });
+  return updated;
+};
+
+export const deleteAvatar = async (userId) => {
+  await api.delete('/users/me/avatar', { skipErrorRedirect: true });
+  const current = await getProfile(userId);
+  const updated = { ...current, avatar: null };
+  saveProfile(userId, updated);
+  updateSessionUser({ avatar: null });
   return updated;
 };
 

@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaCamera } from 'react-icons/fa';
 import * as profileService from '../../../services/profileService';
-import { uploadAvatar } from '../../../services/avatarService';
+import { uploadAvatar, deleteAvatar } from '../../../services/avatarService';
 import { getApiErrorMessage } from '../../../utils/apiResponse';
 import { useAuth } from '../../../context/AuthContext';
 import UserAvatar from '../../common/userAvatar';
 import Button from '../../common/button';
 import Select from '../../common/select';
+import Modal from '../../common/modal';
 import { isValidVietnamesePhone } from '../../../utils/phoneValidation';
 import './index.scss';
 
@@ -133,8 +134,7 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
     if (profile) setForm({ ...profile });
   }, [profile]);
 
-  // Ảnh đại diện: chọn file -> upload POST /uploads/avatar -> cập nhật hồ sơ.
-  // Hiện ảnh xem trước ngay bằng data URL trong lúc chờ backend trả về.
+  // Ảnh đại diện: chọn file -> POST /users/me/avatar -> cập nhật hồ sơ.
   const handlePickAvatar = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -155,6 +155,25 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
     } catch (err) {
       const message = err?.message || getApiErrorMessage(err, 'Tải ảnh đại diện thất bại');
       setAvatarUploadError(message);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user?.avatar) return;
+    setAvatarUploadError('');
+    setAvatarUploading(true);
+    try {
+      await deleteAvatar();
+      updateUser({ avatar: null });
+      onUpdate({ ...profile, avatar: null });
+      setForm((prev) => ({ ...prev, avatar: null }));
+      toast.success('Đã xoá ảnh đại diện');
+    } catch (err) {
+      setAvatarUploadError(
+        err?.message || getApiErrorMessage(err, 'Xoá ảnh đại diện thất bại'),
+      );
     } finally {
       setAvatarUploading(false);
     }
@@ -302,6 +321,16 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
           >
             {avatarUploading ? 'Đang tải...' : 'Đổi ảnh đại diện'}
           </button>
+          {user?.avatar ? (
+            <button
+              type="button"
+              className="profile-info__upload-btn profile-info__upload-btn--ghost"
+              onClick={handleRemoveAvatar}
+              disabled={avatarUploading}
+            >
+              Xoá ảnh đại diện
+            </button>
+          ) : null}
           {avatarUploadError ? (
             <p className="profile-info__upload-error" role="alert">
               {avatarUploadError}

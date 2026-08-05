@@ -12,8 +12,30 @@ export const changePassword = async ({ currentPassword, newPassword }) => {
   });
 };
 
+/** Gửi OTP quên mật khẩu — POST /users/forgot-password */
+export const forgotPassword = async (emailOrPhone) => {
+  await api.post('/users/forgot-password', {
+    emailOrPhone: String(emailOrPhone || '').trim(),
+  }, { skipErrorRedirect: true });
+};
+
+/** Đặt lại mật khẩu bằng OTP — POST /users/reset-password */
+export const resetPassword = async ({ emailOrPhone, otpCode, newPassword }) => {
+  await api.post('/users/reset-password', {
+    emailOrPhone: String(emailOrPhone || '').trim(),
+    otpCode: String(otpCode || '').trim(),
+    newPassword,
+  }, { skipErrorRedirect: true });
+};
+
 export const getChangePasswordErrorMessage = (error) =>
   getApiErrorMessage(error, 'Đổi mật khẩu thất bại, vui lòng thử lại');
+
+export const getForgotPasswordErrorMessage = (error) =>
+  getApiErrorMessage(error, 'Không gửi được mã OTP, vui lòng thử lại');
+
+export const getResetPasswordErrorMessage = (error) =>
+  getApiErrorMessage(error, 'Đặt lại mật khẩu thất bại, vui lòng thử lại');
 
 export const validateChangePasswordForm = ({ currentPassword, newPassword, confirmPassword }) => {
   const errors = {};
