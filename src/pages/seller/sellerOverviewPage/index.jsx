@@ -6,7 +6,7 @@ import AnimatedValue from "../../../components/sellerdashboard/sellerAnimatedVal
 import SellerRealtimeClock from "../../../components/sellerdashboard/sellerRealtimeClock";
 import SellerStockAlert from "../../../components/sellerdashboard/sellerStockAlert";
 import { getMyEcommerceProducts } from "../../../services/ecommerceProductService";
-import { getWalletState } from "../../../services/walletService";
+import { getWalletState, getMyWallets } from "../../../services/walletService";
 import {
   overviewStats,
   revenueSummary,
@@ -31,6 +31,7 @@ export default function OverviewPage() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [realProducts, setRealProducts] = useState([]);
   const [walletInfo, setWalletInfo] = useState(null);
+  const [sellerBalance, setSellerBalance] = useState(null);
 
   useEffect(() => {
     getMyEcommerceProducts().then((res) => {
@@ -40,11 +41,20 @@ export default function OverviewPage() {
     getWalletState().then((res) => {
       setWalletInfo(res?.walletStats || null);
     }).catch(() => {});
+
+    getMyWallets().then((res) => {
+      if (res?.wallets) {
+        const sellerWd = res.wallets.find((w) => w.walletType === 'SELLER');
+        if (sellerWd) {
+          setSellerBalance(sellerWd.availableBalance ?? 0);
+        }
+      }
+    }).catch(() => {});
   }, [user]);
 
   const activeProducts = useMemo(() => realProducts.filter((p) => p.status === "ACTIVE" || p.status === "APPROVED").length, [realProducts]);
   const totalProducts = realProducts.length;
-  const availableBalance = walletInfo?.availableBalance ?? 0;
+  const availableBalance = sellerBalance !== null ? sellerBalance : (walletInfo?.availableBalance ?? 0);
   const netRevenue = availableBalance + (walletInfo?.withdrawnAmount ?? 0);
   const totalOrders = realProducts.reduce((sum, p) => sum + (p.soldCount || p.sold || 0), 0);
 
@@ -221,11 +231,7 @@ export default function OverviewPage() {
                       <AnimatedValue value={kpi.value} />
                     )}
                   </strong>
-                  {kpi.link ? (
-                    <Link to={kpi.link} className="slr-hero-kpi__link">{kpi.trend}</Link>
-                  ) : (
-                    <span className="slr-hero-kpi__trend">{kpi.trend}</span>
-                  )}
+                  <span className="slr-hero-kpi__trend">{kpi.trend}</span>
                 </div>
               </>
             );

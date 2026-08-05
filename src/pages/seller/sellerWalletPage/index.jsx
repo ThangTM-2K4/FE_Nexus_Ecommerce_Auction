@@ -71,6 +71,16 @@ export default function WalletPage() {
 
   const { walletStats, transactions, withdrawals } = state;
 
+  // Lọc chỉ giao dịch TIỀN VỀ từ bán hàng / đấu giá của Người bán (Loại bỏ các đơn nạp tiền của Buyer)
+  const sellerIncomingTxns = (transactions || []).filter((t) => {
+    const desc = (t.desc || t.description || '').toLowerCase();
+    const type = (t.type || '').toLowerCase();
+    if (desc.includes('nạp') || type === 'topup' || t.walletType === 'BUYER') {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div className="slr-page slr-wallet-page">
       <PageHeader
@@ -117,8 +127,8 @@ export default function WalletPage() {
           </div>
           <div className="slr-wallet-mini">
             <span>Tổng đã rút thành công</span>
-            <strong title={formatCurrency(walletStats.withdrawnAmount)}>
-              {formatCompactCurrency(walletStats.withdrawnAmount)}
+            <strong title={formatCurrency(walletStats.withdrawnAmount || 0)}>
+              {formatCompactCurrency(walletStats.withdrawnAmount || 0)}
             </strong>
           </div>
         </div>
@@ -238,7 +248,7 @@ export default function WalletPage() {
 
       <div className="slr-page-split">
         <div className="slr-panel-card">
-          <h4>Lịch sử giao dịch</h4>
+          <h4>Lịch sử giao dịch tiền về (Doanh thu)</h4>
           <div className="slr-table-wrap">
             <table className="slr-table slr-table--compact">
               <thead>
@@ -250,17 +260,25 @@ export default function WalletPage() {
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((t) => (
-                  <tr key={t.id}>
-                    <td className="muted">{t.id}</td>
-                    <td>{t.desc}</td>
-                    <td className={t.amount < 0 ? "neg" : "pos"}>
-                      {t.amount > 0 ? "+" : ""}
-                      {formatCurrency(Math.abs(t.amount))}
+                {sellerIncomingTxns.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: "center", color: "#9ca3af", padding: "24px" }}>
+                      Chưa có lịch sử tiền về từ đơn hàng hoặc phiên đấu giá.
                     </td>
-                    <td className="muted">{t.date}</td>
                   </tr>
-                ))}
+                ) : (
+                  sellerIncomingTxns.map((t) => (
+                    <tr key={t.id || t.transactionId}>
+                      <td className="muted">{t.id || t.transactionId}</td>
+                      <td>{t.desc || t.description || "Tiền về từ doanh thu bán hàng"}</td>
+                      <td className={t.amount < 0 ? "neg" : "pos"}>
+                        {t.amount > 0 ? "+" : ""}
+                        {formatCurrency(Math.abs(t.amount))}
+                      </td>
+                      <td className="muted">{t.date || (t.createdAt ? new Date(t.createdAt).toLocaleDateString("vi-VN") : "—")}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

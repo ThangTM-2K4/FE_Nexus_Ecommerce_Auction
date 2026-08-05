@@ -137,7 +137,8 @@ export default function ProfileInfo({ userId, profile, onUpdate }) {
     if (profile) setForm({ ...profile });
   }, [profile]);
 
-  // Ảnh đại diện: chọn file -> POST /users/me/avatar -> cập nhật hồ sơ.
+  // Ảnh đại diện: chọn file -> upload POST /uploads/avatar -> cập nhật hồ sơ.
+  // Hiện ảnh xem trước ngay bằng data URL trong lúc chờ backend trả về.
   const handlePickAvatar = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';

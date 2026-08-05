@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
 import { FiMenu, FiSearch, FiX } from 'react-icons/fi';
-import { FaWallet, FaUser, FaTrophy, FaSignOutAlt } from 'react-icons/fa';
+import { FaWallet, FaUser, FaTrophy, FaSignOutAlt, FaExchangeAlt } from 'react-icons/fa';
 import { useAuth } from '../../../context/AuthContext';
+import { getMyWallets } from '../../../services/walletService';
+import SwitchAccountModal from '../../homepage/header/SwitchAccountModal';
 import './index.scss';
 
 const NAV_ITEMS = [
@@ -19,15 +21,50 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
   const navigate = useNavigate();
   const location = useLocation();
   const currentRedirect = encodeURIComponent(location.pathname + location.search);
-  const { user, isBuyerMode, isSellerMode, logout, isAuthenticated } = useAuth();
+  const { user, isBuyerMode, isSellerMode, isApprovedSeller, logout, isAuthenticated, switchAccountMode } = useAuth();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showSwitchModal, setShowSwitchModal] = useState(false);
 
   const profileRef = useRef(null);
   const [searchParams] = useSearchParams();
   const fromAdmin = searchParams.get('from') === 'admin';
+  const [liveWallet, setLiveWallet] = useState(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      getMyWallets().then((res) => {
+        if (res?.wallets && res.wallets.length > 0) {
+          const mainWd =
+            res.wallets.find((w) => Number(w.availableBalance) > 0 || Number(w.pendingBalance) > 0) ||
+            res.wallets.find((w) => w.status === 'ACTIVE') ||
+            res.wallets.find((w) => w.walletType === 'BUYER') ||
+            res.wallets[0];
+          setLiveWallet({
+            available: mainWd.availableBalance ?? 0,
+            pending: mainWd.pendingBalance ?? 0,
+          });
+        }
+      }).catch(() => {});
+    }
+  }, [isAuthenticated]);
+
+  const handleSwitchMode = async (mode) => {
+    try {
+      await switchAccountMode(mode);
+      setShowSwitchModal(false);
+      setShowProfileMenu(false);
+      if (mode === "SELLER") {
+        navigate("/seller");
+      } else {
+        navigate("/auction");
+      }
+    } catch {
+      /* ignore */
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -103,7 +140,16 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
               Về quản lý phiên đấu giá
             </Link>
           ) : isSellerMode ? (
-            <Link to="/auction" className="auction-header__home-link">
+            <Link
+              to="/auction"
+              className="auction-header__home-link"
+              style={{
+                background: 'rgba(232, 196, 104, 0.12)',
+                borderColor: 'rgba(232, 196, 104, 0.4)',
+                color: '#E8C468',
+                fontWeight: '600',
+              }}
+            >
               Sảnh Đấu giá
             </Link>
           ) : (
@@ -115,19 +161,24 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
           {isAuthenticated && isSellerMode && (
             <>
               <Link
-                to="/auction/seller"
+                to="/seller"
                 className="auction-header__home-link"
-                style={{ borderColor: 'transparent' }}
+                style={{
+                  background: 'rgba(232, 196, 104, 0.12)',
+                  borderColor: 'rgba(232, 196, 104, 0.4)',
+                  color: '#E8C468',
+                  fontWeight: '600',
+                }}
               >
-                Hồ sơ Seller
+                Kênh Quản Lý Seller
               </Link>
               <Link
                 to="/auction/create"
                 className="auction-header__home-link"
                 style={{
                   background: 'linear-gradient(135deg, #C3A05D, #9A7245)',
-                  color: '#0C0B0A',
                   borderColor: 'transparent',
+                  color: '#0C0B0A',
                   fontWeight: '700',
                 }}
               >
@@ -232,18 +283,27 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                         <FaWallet style={{ color: '#e8c468', marginRight: 4 }} /> Ví Nexus Pay:
                       </span>
                       <strong className="balance-val">
-                        {user?.balance ? `${user.balance.toLocaleString()} ₫` : '0 ₫'}
+                        {`${(liveWallet?.available ?? user?.balance ?? 0).toLocaleString()} ₫`}
                       </strong>
                     </div>
                     <div className="wallet-row sub">
                       <span>Tiền cọc đóng băng:</span>
                       <span className="frozen-val">
-                        {user?.frozenBalance ? `${user.frozenBalance.toLocaleString()} ₫` : '0 ₫'}
+                        {`${(liveWallet?.pending ?? user?.frozenBalance ?? 0).toLocaleString()} ₫`}
                       </span>
                     </div>
                   </div>
 
                   <ul className="dropdown-nav-list">
+
+                    {isSellerMode && (
+                      <li>
+                        <Link to="/seller" onClick={() => setShowProfileMenu(false)}>
+                          <FaUser className="menu-icon" style={{ color: '#e8c468' }} /> Kênh Quản Lý Seller
+                        </Link>
+                      </li>
+                    )}
+
                     <li>
                       <Link to="/auction/my-bids" onClick={() => setShowProfileMenu(false)}>
                         <FaTrophy className="menu-icon" style={{ color: '#e8c468' }} /> Đấu giá của tôi
@@ -311,6 +371,13 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
                 </NavLink>
               ))}
         </nav>
+      )}
+
+      {showSwitchModal && (
+        <SwitchAccountModal
+          onClose={() => setShowSwitchModal(false)}
+          onSwitch={handleSwitchMode}
+        />
       )}
     </header>
   );

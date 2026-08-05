@@ -1,0 +1,246 @@
+.topup-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.topup-modal {
+  background: #18181b;
+  color: #f4f4f5;
+  border: 1px solid rgba(232, 196, 104, 0.3);
+  border-radius: 16px;
+  width: min(480px, 100%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  animation: topupFadeIn 0.25s ease-out;
+}
+
+@keyframes topupFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.topup-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #e8c468;
+  }
+
+  .topup-modal-close {
+    background: transparent;
+    border: none;
+    color: #a1a1aa;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+  }
+}
+
+.topup-modal-body {
+  padding: 20px 24px;
+}
+
+.topup-hint {
+  font-size: 0.85rem;
+  color: #a1a1aa;
+  margin-bottom: 16px;
+
+  strong {
+    color: #f4f4f5;
+  }
+}
+
+.topup-section-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #d4d4d8;
+  margin: 14px 0 8px 0;
+}
+
+.topup-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+
+  .topup-preset-btn {
+    padding: 10px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #e4e4e7;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(232, 196, 104, 0.15);
+      border-color: rgba(232, 196, 104, 0.4);
+      color: #e8c468;
+    }
+
+    &.active {
+      background: linear-gradient(135deg, rgba(232, 196, 104, 0.25), rgba(195, 160, 93, 0.15));
+      border-color: #e8c468;
+      color: #e8c468;
+      font-weight: 700;
+    }
+  }
+}
+
+.topup-input-group {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 0.8rem;
+    color: #a1a1aa;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+
+    &:focus {
+      outline: none;
+      border-color: #e8c468;
+    }
+  }
+}
+
+.topup-provider-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .topup-provider-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(232, 196, 104, 0.4);
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+
+    .provider-logo {
+      font-size: 1.5rem;
+    }
+
+    strong {
+      display: block;
+      font-size: 0.9rem;
+      color: #e8c468;
+    }
+
+    small {
+      display: block;
+      font-size: 0.75rem;
+      color: #a1a1aa;
+      margin-top: 2px;
+    }
+  }
+}
+
+.topup-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 14px 16px;
+  background: rgba(232, 196, 104, 0.08);
+  border-radius: 10px;
+
+  span {
+    font-size: 0.9rem;
+    color: #d4d4d8;
+  }
+
+  .topup-total-val {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #4ade80;
+  }
+}
+
+.topup-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  button {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+
+    &.topup-cancel-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #d4d4d8;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.18);
+      }
+    }
+
+    &.topup-submit-btn {
+      background: linear-gradient(135deg, #c3a05d, #9a7245);
+      color: #0c0b0a;
+      font-weight: 700;
+
+      &:hover {
+        filter: brightness(1.1);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
