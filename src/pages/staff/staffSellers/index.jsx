@@ -2,9 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import StaffPageHeader from "../../../components/staff/staffPageHeader";
 import StaffKpiCard from "../../../components/staff/staffKpiCard";
 import ImageLightbox from "../../../components/common/imageLightbox";
-import { getSellerDirectory } from "../../../services/staffService";
-import { sellerStatusLabel } from "../../../data/staffDirectoryData";
-import { formatCurrency } from "../../../data/staffMockData";
+import { getAdminSellers, getAdminSellerDetail, mapSellerToCard } from "../../../services/adminSellerService";
 import "./index.scss";
 
 const STATUS_CLASS = {
@@ -12,6 +10,21 @@ const STATUS_CLASS = {
   PENDING: "pending",
   SUSPENDED: "suspended",
   REJECTED: "rejected",
+  Active: "ok",
+  Pending: "pending",
+  Suspended: "suspended",
+  Rejected: "rejected",
+};
+
+const sellerStatusLabel = {
+  APPROVED: "Đang hoạt động",
+  PENDING: "Chờ duyệt",
+  SUSPENDED: "Tạm khoá",
+  REJECTED: "Đã từ chối",
+  Active: "Đang hoạt động",
+  Pending: "Chờ duyệt",
+  Suspended: "Tạm khoá",
+  Rejected: "Đã từ chối",
 };
 
 const productStatusLabel = {
@@ -28,6 +41,11 @@ const FILTERS = [
   { id: "SUSPENDED", label: "Tạm khoá" },
 ];
 
+const formatCurrency = (amount) => {
+  if (!amount && amount !== 0) return "—";
+  return Number(amount).toLocaleString("vi-VN") + "đ";
+};
+
 const StaffSellers = () => {
   const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,29 +55,67 @@ const StaffSellers = () => {
   const [lightbox, setLightbox] = useState(null);
 
   useEffect(() => {
-    getSellerDirectory().then((data) => {
-      setSellers(data);
-      setLoading(false);
-    });
+    const loadSellers = async () => {
+      setLoading(true);
+      try {
+        // Sử dụng API thật từ adminSellerService
+        const data = await getAdminSellers({ page: 1, pageSize: 100 });
+        const mappedSellers = (data?.items || []).map((seller) => {
+          const rawStatus = seller.apiStatus || seller._raw?.status || seller.status;
+          const isApproved = rawStatus === "APPROVED" || rawStatus === "Approved" || seller.status === "Đã duyệt";
+          return {
+            ...seller,
+            shopName: seller.businessName || seller.name || seller._raw?.businessName || "—",
+            ownerName: seller.owner || seller.bankAccountHolder || seller._raw?.bankAccountHolder || "—",
+            category: seller.sellerTypeLabel || seller.sellerType || "—",
+            businessType: seller.sellerTypeLabel || seller.sellerType || "—",
+            cccdNumber: seller.identityNumber || seller._raw?.identityNumber || "—",
+            cccdVerified: isApproved,
+            rating: seller.rating || 0,
+            reviewCount: seller.reviewCount || 0,
+            totalOrders: seller.totalOrders || 0,
+            revenue: seller.revenue || 0,
+            products: seller.products || [],
+            status: rawStatus || "PENDING",
+          };
+        });
+        setSellers(mappedSellers);
+      } catch (err) {
+        console.error("Error loading sellers:", err);
+        setSellers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSellers();
   }, []);
 
   const stats = useMemo(
     () => ({
       total: sellers.length,
-      active: sellers.filter((s) => s.status === "APPROVED").length,
-      suspended: sellers.filter((s) => s.status === "SUSPENDED").length,
+      active: sellers.filter((s) => s.status === "APPROVED" || s.status === "Approved").length,
+      suspended: sellers.filter((s) => s.status === "SUSPENDED" || s.status === "Suspended").length,
       revenue: sellers.reduce((sum, s) => sum + (s.revenue || 0), 0),
     }),
     [sellers]
   );
 
+  const normalizeStatus = (s) => {
+    if (!s) return "PENDING";
+    const upper = String(s).toUpperCase();
+    if (["APPROVED", "ACTIVE"].includes(upper)) return "APPROVED";
+    if (["REJECTED", "DECLINED"].includes(upper)) return "REJECTED";
+    if (["SUSPENDED", "BANNED"].includes(upper)) return "SUSPENDED";
+    return "PENDING";
+  };
+
   const shown = useMemo(() => {
     let list = sellers;
-    if (filter !== "all") list = list.filter((s) => s.status === filter);
+    if (filter !== "all") list = list.filter((s) => normalizeStatus(s.status) === filter);
     const q = query.trim().toLowerCase();
     if (q) {
       list = list.filter((s) =>
-        [s.shopName, s.ownerName, s.email, s.phone].some((v) => String(v).toLowerCase().includes(q))
+        [s.shopName, s.ownerName, s.email, s.phone].some((v) => String(v || "").toLowerCase().includes(q))
       );
     }
     return list;
@@ -67,9 +123,32 @@ const StaffSellers = () => {
 
   const openCccd = (seller) => {
     const images = [];
-    if (seller.frontImageUrl) images.push({ src: seller.frontImageUrl, caption: "CCCD mặt trước" });
-    if (seller.backImageUrl) images.push({ src: seller.backImageUrl, caption: "CCCD mặt sau" });
+    if (seller.identityFrontImageUrl || seller.frontImageUrl) {
+      images.push({ src: seller.identityFrontImageUrl || seller.frontImageUrl, caption: "CCCD mặt trước" });
+    }
+    if (seller.identityBackImageUrl || seller.backImageUrl) {
+      images.push({ src: seller.identityBackImageUrl || seller.backImageUrl, caption: "CCCD mặt sau" });
+    }
     if (images.length) setLightbox(images);
+  };
+
+  const openDetail = async (seller) => {
+    try {
+      const fullDetail = await getAdminSellerDetail(seller.id);
+      const target = fullDetail || seller;
+      setDetail({
+        ...seller,
+        ...target,
+        shopName: target.businessName || target.shopName || target.name || seller.shopName || "—",
+        ownerName: target.owner || target.ownerName || target.bankAccountHolder || seller.ownerName || "—",
+        products: target.products || seller.products || [],
+      });
+    } catch {
+      setDetail({
+        ...seller,
+        products: seller.products || [],
+      });
+    }
   };
 
   return (
@@ -109,16 +188,18 @@ const StaffSellers = () => {
         <p className="stf-sellers__empty">Không có người bán nào khớp bộ lọc.</p>
       ) : (
         <div className="stf-sellers__grid">
-          {shown.map((seller) => (
-            <article key={seller.id} className="stf-sellers__card" onClick={() => setDetail(seller)}>
+          {shown.map((seller) => {
+            const status = normalizeStatus(seller.status);
+            return (
+            <article key={seller.id} className="stf-sellers__card" onClick={() => openDetail(seller)}>
               <div className="stf-sellers__card-top">
-                <div className="stf-sellers__avatar">{seller.shopName.charAt(0)}</div>
+                <div className="stf-sellers__avatar">{(seller.shopName || seller.businessName || "S").charAt(0)}</div>
                 <div className="stf-sellers__card-head">
-                  <h3>{seller.shopName}</h3>
-                  <p>{seller.ownerName}</p>
+                  <h3>{seller.shopName || seller.businessName}</h3>
+                  <p>{seller.ownerName || seller.owner || "—"}</p>
                 </div>
-                <span className={`stf-sellers__status stf-sellers__status--${STATUS_CLASS[seller.status]}`}>
-                  {sellerStatusLabel[seller.status] || seller.status}
+                <span className={`stf-sellers__status stf-sellers__status--${STATUS_CLASS[status]}`}>
+                  {sellerStatusLabel[status] || seller.status}
                 </span>
               </div>
 
@@ -133,7 +214,7 @@ const StaffSellers = () => {
                   <small>⭐ {seller.reviewCount} đánh giá</small>
                 </div>
                 <div>
-                  <strong>{seller.products.length}</strong>
+                  <strong>{(seller.products || []).length}</strong>
                   <small>Sản phẩm</small>
                 </div>
                 <div>
@@ -146,9 +227,19 @@ const StaffSellers = () => {
                 Doanh thu: <strong>{formatCurrency(seller.revenue)}</strong>
               </div>
 
-              <button type="button" className="stf-sellers__view">Xem chi tiết →</button>
+              <button
+                type="button"
+                className="stf-sellers__view"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDetail(seller);
+                }}
+              >
+                Xem chi tiết →
+              </button>
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -157,15 +248,15 @@ const StaffSellers = () => {
           <div className="stf-sellers__modal" onClick={(e) => e.stopPropagation()}>
             <header className="stf-sellers__modal-head">
               <div>
-                <h2>{detail.shopName}</h2>
-                <p>{detail.ownerName} · {detail.category}</p>
+                <h2>{detail.shopName || detail.businessName}</h2>
+                <p>{detail.ownerName || detail.owner || detail.bankAccountHolder || "—"} · {detail.sellerTypeLabel || detail.sellerType || detail.category || "—"}</p>
               </div>
               <button type="button" onClick={() => setDetail(null)} aria-label="Đóng">✕</button>
             </header>
 
             <div className="stf-sellers__modal-body">
-              <span className={`stf-sellers__status stf-sellers__status--${STATUS_CLASS[detail.status]}`}>
-                {sellerStatusLabel[detail.status] || detail.status}
+              <span className={`stf-sellers__status stf-sellers__status--${STATUS_CLASS[normalizeStatus(detail.status)]}`}>
+                {sellerStatusLabel[normalizeStatus(detail.status)] || detail.status}
               </span>
               {detail.status === "SUSPENDED" && detail.suspendReason && (
                 <p className="stf-sellers__suspend">{detail.suspendReason}</p>
@@ -175,12 +266,13 @@ const StaffSellers = () => {
                 <div>
                   <h4>Hồ sơ &amp; liên hệ</h4>
                   <dl>
-                    <div><dt>Email</dt><dd>{detail.email}</dd></div>
-                    <div><dt>Số điện thoại</dt><dd>{detail.phone}</dd></div>
-                    <div><dt>Loại hình</dt><dd>{detail.businessType}</dd></div>
-                    <div><dt>Mã số thuế</dt><dd>{detail.taxCode}</dd></div>
-                    <div><dt>Địa chỉ</dt><dd>{detail.address}</dd></div>
-                    <div><dt>Tham gia</dt><dd>{detail.joinedAt}</dd></div>
+                    <div><dt>Email</dt><dd>{detail.email || "—"}</dd></div>
+                    <div><dt>Số điện thoại</dt><dd>{detail.phone || detail.phoneNumber || "—"}</dd></div>
+                    <div><dt>Loại hình</dt><dd>{detail.sellerTypeLabel || detail.sellerType || "—"}</dd></div>
+                    <div><dt>Mã số thuế</dt><dd>{detail.taxCode || "—"}</dd></div>
+                    <div><dt>Địa chỉ</dt><dd>{detail.address || "—"}</dd></div>
+                    <div><dt>Ngày nộp</dt><dd>{detail.submittedAt || detail.joinedAt || "—"}</dd></div>
+                    <div><dt>Ngày duyệt</dt><dd>{detail.reviewedAt || "—"}</dd></div>
                   </dl>
                 </div>
                 <div>
@@ -189,17 +281,17 @@ const StaffSellers = () => {
                     <div>
                       <dt>Số CCCD</dt>
                       <dd>
-                        {detail.cccdNumber}{" "}
+                        {detail.identityNumber || detail.cccdNumber || "—"}{" "}
                         <span className={`stf-sellers__idtag ${detail.cccdVerified ? "ok" : "no"}`}>
                           {detail.cccdVerified ? "đã xác minh" : "chưa xác minh"}
                         </span>
                       </dd>
                     </div>
-                    <div><dt>Ngân hàng</dt><dd>{detail.bankName}</dd></div>
-                    <div><dt>Số tài khoản</dt><dd>{detail.accountNumber}</dd></div>
-                    <div><dt>Chủ tài khoản</dt><dd>{detail.accountHolder}</dd></div>
+                    <div><dt>Ngân hàng</dt><dd>{detail.bankName || "—"}</dd></div>
+                    <div><dt>Số tài khoản</dt><dd>{detail.bankAccountNumber || detail.accountNumber || "—"}</dd></div>
+                    <div><dt>Chủ tài khoản</dt><dd>{detail.bankAccountHolder || detail.accountHolder || "—"}</dd></div>
                   </dl>
-                  {(detail.frontImageUrl || detail.backImageUrl) && (
+                  {(detail.identityFrontImageUrl || detail.frontImageUrl || detail.identityBackImageUrl || detail.backImageUrl) && (
                     <button type="button" className="stf-sellers__view-cccd" onClick={() => openCccd(detail)}>
                       🔍 Xem ảnh CCCD
                     </button>

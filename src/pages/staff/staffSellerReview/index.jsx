@@ -7,22 +7,28 @@ import ImageLightbox from "../../../components/common/imageLightbox";
 import { sellerRejectReasons } from "../../../data/staffMockData";
 import { getApiErrorMessage } from "../../../utils/apiResponse";
 import {
-  getPendingSellerApplications,
-  approveSellerApplication,
-  rejectSellerApplication,
-} from "../../../services/staffService";
+  getAdminSellers,
+  approveAdminSeller,
+  rejectAdminSeller,
+} from "../../../services/adminSellerService";
 import "./index.scss";
 
 const STATUS_LABEL = {
   PENDING: "Chờ duyệt",
   APPROVED: "Đã duyệt",
   REJECTED: "Đã từ chối",
+  Pending: "Chờ duyệt",
+  Approved: "Đã duyệt",
+  Rejected: "Đã từ chối",
 };
 
 const STATUS_CLASS = {
   PENDING: "status-pending",
   APPROVED: "status-approved",
   REJECTED: "status-rejected",
+  Pending: "status-pending",
+  Approved: "status-approved",
+  Rejected: "status-rejected",
 };
 
 const TABS = [
@@ -43,8 +49,12 @@ const StaffSellerReview = () => {
   const loadApplications = async () => {
     setLoading(true);
     try {
-      const data = await getPendingSellerApplications();
-      setApplications(data);
+      // Sử dụng API thật từ adminSellerService - cùng API với admin
+      const data = await getAdminSellers({ page: 1, pageSize: 100 });
+      setApplications(data?.items || []);
+    } catch (err) {
+      console.error("Error loading seller applications:", err);
+      setApplications([]);
     } finally {
       setLoading(false);
     }
@@ -54,25 +64,36 @@ const StaffSellerReview = () => {
     loadApplications();
   }, []);
 
+  const normalizeStatus = (s) => {
+    if (!s) return "PENDING";
+    const upper = String(s).toUpperCase();
+    if (["APPROVED", "ACTIVE"].includes(upper)) return "APPROVED";
+    if (["REJECTED", "DECLINED"].includes(upper)) return "REJECTED";
+    return "PENDING";
+  };
+
   const counts = useMemo(
     () => ({
-      PENDING: applications.filter((a) => a.status === "PENDING").length,
-      APPROVED: applications.filter((a) => a.status === "APPROVED").length,
-      REJECTED: applications.filter((a) => a.status === "REJECTED").length,
+      PENDING: applications.filter((a) => normalizeStatus(a.apiStatus || a.status) === "PENDING").length,
+      APPROVED: applications.filter((a) => normalizeStatus(a.apiStatus || a.status) === "APPROVED").length,
+      REJECTED: applications.filter((a) => normalizeStatus(a.apiStatus || a.status) === "REJECTED").length,
       ALL: applications.length,
     }),
     [applications]
   );
 
   const shown = useMemo(
-    () => (tab === "ALL" ? applications : applications.filter((a) => a.status === tab)),
+    () => {
+      if (tab === "ALL") return applications;
+      return applications.filter((a) => normalizeStatus(a.apiStatus || a.status) === tab);
+    },
     [applications, tab]
   );
 
   const handleApprove = async (app) => {
-    setProcessingId(app.applicationId);
+    setProcessingId(app.id);
     try {
-      await approveSellerApplication(app);
+      await approveAdminSeller(app.id);
       toast.success("Đã duyệt đơn — người bán & CCCD được xác minh");
       await loadApplications();
     } catch (err) {
@@ -84,9 +105,10 @@ const StaffSellerReview = () => {
 
   const handleConfirmReject = async (reason, note) => {
     if (!rejectTarget) return;
-    setProcessingId(rejectTarget.applicationId);
+    const fullReason = note ? `${reason} — ${note}` : reason;
+    setProcessingId(rejectTarget.id);
     try {
-      await rejectSellerApplication(rejectTarget, reason, note);
+      await rejectAdminSeller(rejectTarget.id, fullReason);
       toast.info("Đã từ chối đơn đăng ký người bán");
       setRejectTarget(null);
       await loadApplications();
@@ -122,7 +144,9 @@ const StaffSellerReview = () => {
     }
   };
 
-  const hasImages = (app) => Boolean(app.frontImageUrl || app.backImageUrl);
+  const hasImages = (app) => Boolean(app.identityFrontImageUrl || app.frontImageUrl || app.identityBackImageUrl || app.backImageUrl);
+
+  const getStatus = (app) => normalizeStatus(app.apiStatus || app.status);
 
   return (
     <div className="stf-seller-review">
@@ -159,16 +183,17 @@ const StaffSellerReview = () => {
       ) : (
         <div className="stf-seller-review__list">
           {shown.map((app) => {
-            const cccdVerified = app.status === "APPROVED";
+            const status = getStatus(app);
+            const cccdVerified = status === "APPROVED";
             return (
-              <article key={app.applicationId} className="stf-seller-review__card">
+              <article key={app.id} className="stf-seller-review__card">
                 <header>
                   <div>
-                    <h3>{app.fullName}</h3>
-                    <p>{app.shopName} · {app.category}</p>
+                    <h3>{app.businessName || app.owner || app.fullName || "Người bán"}</h3>
+                    <p>{app.sellerTypeLabel || app.sellerType || app.category || "—"} · {app.subtitle || app.name || "—"}</p>
                   </div>
-                  <span className={`stf-seller-review__status ${STATUS_CLASS[app.status] || ""}`}>
-                    {STATUS_LABEL[app.status] || app.status}
+                  <span className={`stf-seller-review__status ${STATUS_CLASS[status] || ""}`}>
+                    {STATUS_LABEL[status] || app.status}
                   </span>
                 </header>
 
@@ -177,18 +202,18 @@ const StaffSellerReview = () => {
                   <section className="stf-seller-review__col">
                     <h4>Thông tin cửa hàng</h4>
                     <dl>
-                      <div><dt>Email</dt><dd>{app.email}</dd></div>
-                      <div><dt>Số điện thoại</dt><dd>{app.phone}</dd></div>
-                      <div><dt>Loại hình</dt><dd>{app.category}</dd></div>
-                      <div><dt>Mã số thuế</dt><dd>{app.taxCode}</dd></div>
-                      <div><dt>Địa chỉ lấy hàng</dt><dd>{app.pickupAddress}</dd></div>
-                      <div><dt>Ngân hàng</dt><dd>{app.bankName} · {app.accountNumber}<br/>{app.accountHolder}</dd></div>
-                      <div><dt>Ngày nộp</dt><dd>{app.submittedAt}</dd></div>
-                      <div><dt>Mã đơn</dt><dd>{app.applicationId}</dd></div>
+                      <div><dt>Email</dt><dd>{app.email || "—"}</dd></div>
+                      <div><dt>Số điện thoại</dt><dd>{app.phone || app.phoneNumber || "—"}</dd></div>
+                      <div><dt>Loại hình</dt><dd>{app.sellerTypeLabel || app.sellerType || "—"}</dd></div>
+                      <div><dt>Mã số thuế</dt><dd>{app.taxCode || "—"}</dd></div>
+                      <div><dt>Địa chỉ lấy hàng</dt><dd>{app.address || app.pickupAddress || "—"}</dd></div>
+                      <div><dt>Ngân hàng</dt><dd>{app.bankName || "—"} {app.bankAccountNumber ? `· ${app.bankAccountNumber}` : ""}<br/>{app.bankAccountHolder || app.accountHolder || ""}</dd></div>
+                      <div><dt>Ngày nộp</dt><dd>{app.submittedAt || "—"}</dd></div>
+                      <div><dt>Mã đơn</dt><dd>{app.id}</dd></div>
                     </dl>
                   </section>
 
-                  {/* Cột phải: XÁC MINH CCCD (gộp từ trang xác minh cũ) */}
+                  {/* Cột phải: XÁC MINH CCCD */}
                   <section className="stf-seller-review__col stf-seller-review__identity">
                     <h4>
                       Xác minh CCCD
@@ -197,76 +222,65 @@ const StaffSellerReview = () => {
                       </span>
                     </h4>
                     <dl>
-                      <div><dt>Họ tên trên CCCD</dt><dd>{app.fullName}</dd></div>
-                      <div><dt>Số CCCD</dt><dd>{app.cccdNumber}</dd></div>
-                      <div><dt>Địa chỉ thường trú</dt><dd>{app.cccdAddress}</dd></div>
+                      <div><dt>Số CCCD</dt><dd>{app.identityNumber || app.cccd || "—"}</dd></div>
+                      <div><dt>Địa chỉ</dt><dd>{app.cccdAddress || "—"}</dd></div>
                     </dl>
 
                     {hasImages(app) ? (
                       <div className="stf-seller-review__imgs">
-                        {app.frontImageUrl && (
+                        {(app.identityFrontImageUrl || app.frontImageUrl) && (
                           <button type="button" onClick={() => openImages(app, 0)}>
-                            <img src={app.frontImageUrl} alt="CCCD mặt trước" />
+                            <img src={app.identityFrontImageUrl || app.frontImageUrl} alt="CCCD mặt trước" />
                             <span>CCCD mặt trước 🔍</span>
                           </button>
                         )}
-                        {app.backImageUrl && (
-                          <button type="button" onClick={() => openImages(app, app.frontImageUrl ? 1 : 0)}>
-                            <img src={app.backImageUrl} alt="CCCD mặt sau" />
+                        {(app.identityBackImageUrl || app.backImageUrl) && (
+                          <button type="button" onClick={() => openImages(app, 1)}>
+                            <img src={app.identityBackImageUrl || app.backImageUrl} alt="CCCD mặt sau" />
                             <span>CCCD mặt sau 🔍</span>
                           </button>
                         )}
                       </div>
                     ) : (
-                      <p className="stf-seller-review__no-img">Chưa có ảnh CCCD đính kèm (hồ sơ nộp qua API).</p>
+                      <p className="stf-seller-review__no-img">Chưa có ảnh CCCD đính kèm.</p>
                     )}
 
                     <div className="stf-seller-review__license">
                       <strong>Giấy phép kinh doanh:</strong>
-                      {isLicenseAttached(app) ? (
+                      {app.businessLicenseUrl || app.businessLicense ? (
                         <button
                           type="button"
                           className="stf-seller-review__license-btn"
-                          onClick={() => openLicense(app)}
+                          onClick={() => {
+                            const url = app.businessLicenseUrl || app.businessLicense;
+                            window.open(url, "_blank", "noopener,noreferrer");
+                          }}
                         >
-                          {isViewableImage(app.businessLicense) ? (
-                            <img src={app.businessLicense} alt="Giấy phép kinh doanh" />
-                          ) : (
-                            <span className="stf-seller-review__license-file">📄</span>
-                          )}
+                          <span className="stf-seller-review__license-file">📄</span>
                           <span>Xem giấy phép kinh doanh 🔍</span>
                         </button>
                       ) : (
                         <span className="stf-seller-review__no-img">
-                          Chưa có tệp đính kèm (hồ sơ nộp qua API).
+                          Chưa có tệp đính kèm.
                         </span>
                       )}
-                    </div>
-
-                    <div className="stf-seller-review__docs">
-                      <strong>Tài liệu:</strong>
-                      <ul>
-                        {app.documents.map((doc) => (
-                          <li key={doc}>{doc}</li>
-                        ))}
-                      </ul>
                     </div>
                   </section>
                 </div>
 
-                {(app.status === "REJECTED" && (app.rejectionReason || app.adminNote)) && (
+                {(status === "REJECTED" && (app.rejectReason || app.rejectionReason)) && (
                   <div className="stf-seller-review__reject-box">
+                    {app.rejectReason && <p><strong>Lý do từ chối:</strong> {app.rejectReason}</p>}
                     {app.rejectionReason && <p><strong>Lý do từ chối:</strong> {app.rejectionReason}</p>}
-                    {app.adminNote && <p><strong>Ghi chú:</strong> {app.adminNote}</p>}
                   </div>
                 )}
 
-                {app.status === "PENDING" && (
+                {status === "PENDING" && (
                   <footer>
                     <button
                       type="button"
                       className="reject"
-                      disabled={processingId === app.applicationId}
+                      disabled={processingId === app.id}
                       onClick={() => setRejectTarget(app)}
                     >
                       Từ chối
@@ -274,10 +288,10 @@ const StaffSellerReview = () => {
                     <button
                       type="button"
                       className="approve"
-                      disabled={processingId === app.applicationId}
+                      disabled={processingId === app.id}
                       onClick={() => handleApprove(app)}
                     >
-                      {processingId === app.applicationId ? "Đang xử lý..." : "Phê duyệt & xác minh CCCD"}
+                      {processingId === app.id ? "Đang xử lý..." : "Phê duyệt & xác minh CCCD"}
                     </button>
                   </footer>
                 )}
@@ -291,9 +305,9 @@ const StaffSellerReview = () => {
         open={Boolean(rejectTarget)}
         title="Từ chối đơn đăng ký người bán"
         subtitle="Chọn lý do từ chối. Người dùng sẽ thấy lý do này và có thể nộp lại hồ sơ."
-        targetLabel={rejectTarget ? `${rejectTarget.fullName} · ${rejectTarget.shopName}` : ""}
+        targetLabel={rejectTarget ? `${rejectTarget.businessName || rejectTarget.owner || "Người bán"}` : ""}
         reasons={sellerRejectReasons}
-        processing={processingId === rejectTarget?.applicationId}
+        processing={processingId === rejectTarget?.id}
         onClose={() => setRejectTarget(null)}
         onConfirm={handleConfirmReject}
       />

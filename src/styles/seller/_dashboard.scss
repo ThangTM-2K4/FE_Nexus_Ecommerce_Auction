@@ -918,20 +918,30 @@
   background: $color-bg;
   border: 1px solid $color-border-light;
   border-radius: $radius-md;
-  padding: 12px 18px;
+  padding: 14px 16px;
   min-width: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 
   span {
     display: block;
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: 500;
     color: $color-text-muted;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   strong {
-    font-size: 20px;
+    font-size: 22px;
+    font-weight: 700;
     color: $color-primary-dark;
+    line-height: 1.2;
   }
 
   &.warn strong {
@@ -1411,6 +1421,79 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+.slr-dual-wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.slr-dual-wallet-card {
+  background: #fff;
+  border: 1px solid #e5dcf5;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(107, 59, 167, 0.04);
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #b894e6;
+    box-shadow: 0 4px 12px rgba(107, 59, 167, 0.08);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #2b2b2b;
+  }
+
+  &__tag {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+
+    &--auction {
+      background: #eef2ff;
+      color: #4f46e5;
+    }
+
+    &--seller {
+      background: #fdf2f8;
+      color: #db2777;
+    }
+  }
+
+  &__balance {
+    font-size: 24px;
+    font-weight: 800;
+    color: #6b3ba7;
+    margin-bottom: 8px;
+  }
+
+  &__sub {
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+
+    strong {
+      color: #2b2b2b;
+      font-weight: 600;
+    }
   }
 }
 

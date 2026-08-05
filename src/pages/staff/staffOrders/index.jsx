@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import StaffPageHeader from "../../../components/staff/staffPageHeader";
 import StaffKpiCard from "../../../components/staff/staffKpiCard";
-import { getStaffOrders, getStaffOrderDetail } from "../../../services/staffService";
+import api from "../../../config/api";
+import { unwrapPagedList } from "../../../utils/apiResponse";
 import "./index.scss";
 
 const STATUS_CLASS = {
@@ -9,14 +10,34 @@ const STATUS_CLASS = {
   "Đang giao": "shipping",
   "Hoàn thành": "done",
   "Đã hủy": "cancelled",
+  PENDING: "processing",
+  CONFIRMED: "processing",
+  PROCESSING: "processing",
+  SHIPPING: "shipping",
+  DELIVERED: "done",
+  COMPLETED: "done",
+  CANCELLED: "cancelled",
+  CANCEL: "cancelled",
+};
+
+const STATUS_LABELS = {
+  PENDING: "Chờ xử lý",
+  CONFIRMED: "Đang xử lý",
+  PROCESSING: "Đang xử lý",
+  SHIPPING: "Đang giao",
+  DELIVERED: "Hoàn thành",
+  COMPLETED: "Hoàn thành",
+  CANCELLED: "Đã hủy",
+  CANCEL: "Đã hủy",
 };
 
 const FILTERS = [
   { id: "all", label: "Tất cả" },
-  { id: "Đang xử lý", label: "Đang xử lý" },
-  { id: "Đang giao", label: "Đang giao" },
-  { id: "Hoàn thành", label: "Hoàn thành" },
-  { id: "Đã hủy", label: "Đã hủy" },
+  { id: "PENDING", label: "Chờ xử lý" },
+  { id: "PROCESSING", label: "Đang xử lý" },
+  { id: "SHIPPING", label: "Đang giao" },
+  { id: "COMPLETED", label: "Hoàn thành" },
+  { id: "CANCELLED", label: "Đã hủy" },
 ];
 
 const StaffOrders = () => {
@@ -27,16 +48,37 @@ const StaffOrders = () => {
   const [detail, setDetail] = useState(null);
 
   useEffect(() => {
-    getStaffOrders().then((data) => {
-      setOrders(data);
-      setLoading(false);
-    });
+    const loadOrders = async () => {
+      setLoading(true);
+      try {
+        const { data } = await api.get("/orders", { params: { page: 1, pageSize: 100 } });
+        const paged = unwrapPagedList(data);
+        const mapped = (paged.items || []).map(order => ({
+          ...order,
+          id: order.id || order.orderId,
+          buyer: order.buyerName || order.customerName || order.userFullName || "—",
+          seller: order.sellerName || order.shopName || "—",
+          payment: order.paymentMethod || order.paymentType || order.payment || "—",
+          shipping: order.shippingMethod || order.shippingType || order.shipping || "—",
+          total: order.totalAmount || order.totalPrice || order.total,
+          status: STATUS_LABELS[order.status] || order.status,
+          createdAt: order.createdAt || order.createdDate || order.orderDate,
+        }));
+        setOrders(mapped);
+      } catch (err) {
+        console.error("Error loading orders:", err);
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadOrders();
   }, []);
 
   const stats = useMemo(
     () => ({
       total: orders.length,
-      processing: orders.filter((o) => o.status === "Đang xử lý").length,
+      processing: orders.filter((o) => o.status === "Đang xử lý" || o.status === "Chờ xử lý").length,
       shipping: orders.filter((o) => o.status === "Đang giao").length,
       done: orders.filter((o) => o.status === "Hoàn thành").length,
     }),
@@ -49,15 +91,20 @@ const StaffOrders = () => {
     const q = query.trim().toLowerCase();
     if (q) {
       list = list.filter((o) =>
-        [o.id, o.buyer, o.seller, o.payment, o.shipping].some((v) => String(v).toLowerCase().includes(q))
+        [o.id, o.buyer, o.seller, o.payment, o.shipping].some((v) => String(v || "").toLowerCase().includes(q))
       );
     }
     return list;
   }, [orders, filter, query]);
 
   const openDetail = async (order) => {
-    const full = await getStaffOrderDetail(order.id);
-    setDetail(full || order);
+    try {
+      const { data } = await api.get(`/orders/${order.id}`);
+      const detailData = data?.data || data;
+      setDetail(detailData || order);
+    } catch {
+      setDetail(order);
+    }
   };
 
   return (
@@ -119,7 +166,7 @@ const StaffOrders = () => {
                   <td>{order.seller}</td>
                   <td>{order.payment}</td>
                   <td>{order.shipping}</td>
-                  <td className="stf-orders__amount">{order.total}</td>
+                  <td className="stf-orders__amount">{order.total ? Number(order.total).toLocaleString("vi-VN") + "đ" : "—"}</td>
                   <td>
                     <span className={`stf-orders__status stf-orders__status--${STATUS_CLASS[order.status] || "default"}`}>
                       {order.status}

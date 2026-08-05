@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import StaffPageHeader from "../../../components/staff/staffPageHeader";
 import StaffKpiCard from "../../../components/staff/staffKpiCard";
-import { getStaffCategories } from "../../../services/staffService";
+import { getCategoryTree } from "../../../services/catalogService";
 import "./index.scss";
 
 const StaffCategories = () => {
@@ -10,8 +10,11 @@ const StaffCategories = () => {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    getStaffCategories().then((data) => {
-      setCategories(data);
+    getCategoryTree().then((data) => {
+      setCategories(data || []);
+      setLoading(false);
+    }).catch(() => {
+      setCategories([]);
       setLoading(false);
     });
   }, []);
@@ -19,9 +22,9 @@ const StaffCategories = () => {
   const stats = useMemo(
     () => ({
       total: categories.length,
-      active: categories.filter((c) => c.status === "Hoạt động").length,
-      products: categories.reduce((s, c) => s + (c.productCount || 0), 0),
-      roots: categories.filter((c) => c.parent === "—").length,
+      active: categories.filter((c) => c.isActive !== false).length,
+      products: categories.reduce((s, c) => s + (c.productCount || c.count || 0), 0),
+      roots: categories.filter((c) => !c.parentId && !c.parent).length,
     }),
     [categories]
   );
@@ -30,7 +33,7 @@ const StaffCategories = () => {
     const q = query.trim().toLowerCase();
     if (!q) return categories;
     return categories.filter((c) =>
-      [c.id, c.name, c.parent].some((v) => String(v).toLowerCase().includes(q))
+      [c.id, c.name, c.categoryName].some((v) => String(v || "").toLowerCase().includes(q))
     );
   }, [categories, query]);
 
@@ -77,13 +80,13 @@ const StaffCategories = () => {
               {shown.map((c) => (
                 <tr key={c.id}>
                   <td><code>{c.id}</code></td>
-                  <td><strong>{c.name}</strong></td>
-                  <td>{c.parent}</td>
-                  <td>{c.sortOrder}</td>
-                  <td>{c.productCount?.toLocaleString("vi-VN")}</td>
+                  <td><strong>{c.name || c.categoryName}</strong></td>
+                  <td>{c.parentId ? "—": "Danh mục gốc"}</td>
+                  <td>{c.sortOrder || c.order || "—"}</td>
+                  <td>{c.productCount?.toLocaleString("vi-VN") || c.count?.toLocaleString("vi-VN") || 0}</td>
                   <td>
-                    <span className={`stf-categories__status ${c.status === "Hoạt động" ? "ok" : "off"}`}>
-                      {c.status}
+                    <span className={`stf-categories__status ${c.isActive !== false ? "ok" : "off"}`}>
+                      {c.isActive !== false ? "Hoạt động" : "Tắt"}
                     </span>
                   </td>
                 </tr>

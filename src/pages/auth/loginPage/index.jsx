@@ -101,30 +101,30 @@ function LoginPage() {
     }
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
+
   if (import.meta.env.VITE_ENV) {
     console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
     console.log("Google URL:", import.meta.env.VITE_GOOGLE_LOGIN_URL);
   }
+
   const handleGoogleLogin = () => {
     window.location.href = getGoogleLoginUrl();
   };
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Vui lòng nhập đầy đủ thông tin");
       return;
     }
 
     try {
       setLoading(true);
-
       const user = await login(formData.login, formData.password);
 
-      toast.success("Đăng nhập thành công");
+      toast.success("Đăng nhập thành công!");
 
       setTimeout(() => {
         const pendingAction = location.state?.pendingAction;
@@ -142,49 +142,45 @@ function LoginPage() {
           roleTokens.includes("ADMIN") || roleTokens.includes("SUPER_ADMIN");
         const isStaff =
           roleTokens.includes("STAFF") || roleTokens.includes("SUPPORT_STAFF");
+        const isSeller =
+          roleTokens.includes("SELLER") ||
+          user?.sellerStatus === "APPROVED" ||
+          user?.isSeller === true ||
+          user?.role === "SELLER";
 
         if (isAdmin) {
           navigate("/admin", { replace: true });
         } else if (isStaff) {
           navigate("/staff/overview", { replace: true });
-        } else if (redirectTo) {
-          // Khách / người mua hàng -> quay lại trang xuất phát trước đó
+        } else if (isSeller) {
+          navigate("/seller-hub/overview", { replace: true });
+        } else if (redirectTo && !isProtectedRouteRedirect) {
           navigate(redirectTo, { replace: true, state: location.state });
-        } else if (
-          roleTokens.includes("SELLER") ||
-          user.sellerStatus === "APPROVED"
-        ) {
-          navigate("/seller", { replace: true });
         } else {
           navigate("/", { replace: true });
         }
-
-      }, 1000);
+      }, 600);
     } catch (err) {
       const detail =
         err.response?.data?.detail || err.response?.data?.message || "";
 
       if (err.response?.status === 401) {
-        // BE gộp LOCKED/BANNED/BLOCKED/INACTIVE vào chung câu detail này.
         if (detail === ACCOUNT_BLOCKED_DETAIL || /not allowed/i.test(detail)) {
-          const blockedMsg =
-            "Tài khoản của bạn đã bị khóa vì sai thông tin đăng nhập nhiều lần. Vui lòng thử lại sau 15 phút.";
-          setFormError(blockedMsg);
+          const blockedMsg = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+          setErrors({ login: blockedMsg });
           toast.error(blockedMsg);
           return;
         }
 
-        // Còn lại là sai email/số điện thoại hoặc mật khẩu — tô đỏ cả 2 ô và hiện
-        // rõ thông báo ngay dưới form (không chỉ dòng nhỏ dưới ô email).
-        const credMsg = "Email/số điện thoại hoặc mật khẩu không chính xác";
-        setErrors({ login: " ", password: " " });
-        setFormError(credMsg);
+        // Chỉ tô đỏ ô mật khẩu kèm lỗi cụ thể
+        const credMsg = "Mật khẩu không chính xác hoặc tài khoản chưa đúng";
+        setErrors({ password: "Mật khẩu không chính xác" });
         toast.error(credMsg);
         return;
       }
 
-      const genericMsg = err.message || "Đăng nhập thất bại";
-      setFormError(genericMsg);
+      const genericMsg = err.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+      setErrors({ password: genericMsg });
       toast.error(genericMsg);
     } finally {
       setLoading(false);
@@ -269,12 +265,6 @@ function LoginPage() {
 
             <div className="field-error">{errors.password || "\u00A0"}</div>
           </div>
-
-          {formError && (
-            <div className="form-error" role="alert">
-              {formError}
-            </div>
-          )}
 
           <button
             type="button"

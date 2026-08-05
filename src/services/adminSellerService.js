@@ -47,7 +47,7 @@ export const mapSellerToCard = (seller) => {
   if (!seller) return null;
 
   const sellerTypeLabel = SELLER_TYPE_LABELS[seller.sellerType] ?? seller.sellerType;
-  const subtitle = getSellerSubtitle(seller);
+  const owner = seller.bankAccountHolder || seller.owner || seller.fullName || "—";
 
   return {
     id: seller.id,
@@ -56,8 +56,8 @@ export const mapSellerToCard = (seller) => {
     sellerTypeLabel,
     businessName: seller.businessName,
     name: seller.businessName ?? sellerTypeLabel ?? "—",
-    owner: subtitle,
-    subtitle,
+    owner,
+    subtitle: owner,
     status: mapSellerStatusToUi(seller.status),
     apiStatus: seller.status,
     taxCode: seller.taxCode,
@@ -65,6 +65,11 @@ export const mapSellerToCard = (seller) => {
     bankName: seller.bankName,
     bankAccountNumber: seller.bankAccountNumber,
     bankAccountHolder: seller.bankAccountHolder,
+    identityNumber: seller.identityNumber || seller.nationalId || seller.cccd,
+    identityFrontImageUrl: seller.identityFrontImageUrl || seller.frontImageUrl,
+    identityBackImageUrl: seller.identityBackImageUrl || seller.backImageUrl,
+    email: seller.email,
+    phone: seller.phone || seller.phoneNumber,
     businessLicenseUrl: seller.businessLicenseUrl,
     rejectReason: seller.rejectReason,
     submittedAt: seller.submittedAt,
