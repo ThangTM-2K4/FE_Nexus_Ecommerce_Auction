@@ -776,7 +776,7 @@ export const AdminCategories = () => {
               <input
                 value={form.imageUrl || form.image || ""}
                 onChange={(e) => setForm({ ...form, imageUrl: e.target.value, image: e.target.value })}
-                placeholder="Nhập URL hình ảnh (https://...) hoặc chọn tệp tải ảnh..."
+                placeholder="Chọn hình ảnh cho danh mục"
                 style={{
                   flex: 1,
                   padding: '9px 12px',
