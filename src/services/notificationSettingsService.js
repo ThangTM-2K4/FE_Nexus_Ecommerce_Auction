@@ -1,10 +1,15 @@
 import api from "../config/api";
+
+function unwrapResponse(response) {
+  return response?.data?.data ?? response?.data;
+}
+
 export async function getNotificationPreferences() {
   const response = await api.get("/preferences");
-  return response.data.data;
+  return unwrapResponse(response);
 }
 
 export async function updateNotificationPreferences(payload) {
   const response = await api.put("/preferences", payload);
-  return response.data.data;
+  return unwrapResponse(response);
 }
