@@ -60,51 +60,31 @@ const buyerRequestConfig = { skipErrorRedirect: true };
 
 /**
  * Danh sách sản phẩm phía khách mua — GET /api/v1/ecommerce/products hoặc GET /api/v1/products
- * Query: search, categoryId, minPrice, maxPrice, sortBy, sortDirection, pageNumber, pageSize
+ * Chỉ hiển thị 100% sản phẩm có Status = 'ACTIVE' thực sự trong CSDL SQL Server
  */
 export async function getProducts(filters = {}) {
   const params = normalizeProductFilters(filters);
   logDevRequest('GET', BUYER_LIST_PATH, params);
 
-  const productMap = new Map();
-
-  // 1. Tải tất cả sản phẩm đã Duyệt từ local cache seller_created_products
-  try {
-    const localList = JSON.parse(localStorage.getItem('seller_created_products') || '[]');
-    localList.forEach((p) => {
-      if (p && (p.id || p.productId)) {
-        const rawStatus = String(p.status || p.moderationStatus || '').toUpperCase();
-        if (
-          rawStatus.includes('APPROV') ||
-          rawStatus.includes('ACTIVE') ||
-          rawStatus.includes('DUYỆT') ||
-          rawStatus.includes('HOẠT')
-        ) {
-          const id = p.id || p.productId;
-          productMap.set(String(id).toLowerCase(), p);
-        }
-      }
-    });
-  } catch {
-    // ignore
-  }
-
-  // 2. Thử gọi GET /ecommerce/products
+  // 1. Gọi API Public chính thức GET /api/v1/ecommerce/products (Server C# lọc Status = 'ACTIVE' trong DB)
   try {
     const { data } = await api.get(BUYER_LIST_PATH, { params, ...buyerRequestConfig });
     const paged = unwrapPagedList(data);
     const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
-    (Array.isArray(rawItems) ? rawItems : []).forEach((p) => {
-      if (p && (p.id || p.productId)) {
-        const id = p.id || p.productId;
-        productMap.set(String(id).toLowerCase(), p);
-      }
-    });
+    if (Array.isArray(rawItems) && rawItems.length > 0) {
+      return {
+        ok: true,
+        items: rawItems,
+        total: paged.total ?? rawItems.length,
+        pageNumber: paged.page ?? params.pageNumber ?? 1,
+        pageSize: paged.pageSize ?? params.pageSize ?? 20,
+      };
+    }
   } catch {
     // ignore
   }
 
-  // 3. Thử gọi GET /api/v1/products?pageSize=100
+  // 2. Gọi API Public dự phòng GET /api/v1/products
   try {
     const { data } = await api.get('/products', {
       params: { pageSize: 100, ...params },
@@ -112,49 +92,23 @@ export async function getProducts(filters = {}) {
     });
     const paged = unwrapPagedList(data);
     const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
-    (Array.isArray(rawItems) ? rawItems : []).forEach((p) => {
-      if (p && (p.id || p.productId)) {
-        const id = p.id || p.productId;
-        productMap.set(String(id).toLowerCase(), p);
-      }
-    });
+    if (Array.isArray(rawItems) && rawItems.length > 0) {
+      return {
+        ok: true,
+        items: rawItems,
+        total: paged.total ?? rawItems.length,
+        pageNumber: paged.page ?? params.pageNumber ?? 1,
+        pageSize: paged.pageSize ?? params.pageSize ?? 20,
+      };
+    }
   } catch {
     // ignore
   }
 
-  // 4. Fallback sang GET /api/v1/admin/products nếu chưa có sản phẩm
-  if (productMap.size === 0) {
-    try {
-      const { data } = await api.get('/admin/products', {
-        params: { pageSize: 100, ...params },
-        ...buyerRequestConfig,
-      });
-      const paged = unwrapPagedList(data);
-      const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
-      (Array.isArray(rawItems) ? rawItems : []).forEach((p) => {
-        if (p && (p.id || p.productId)) {
-          const rawStatus = String(p.status || p.moderationStatus || '').toUpperCase();
-          if (
-            rawStatus.includes('APPROV') ||
-            rawStatus.includes('ACTIVE') ||
-            rawStatus.includes('DUYỆT') ||
-            rawStatus.includes('HOẠT')
-          ) {
-            const id = p.id || p.productId;
-            productMap.set(String(id).toLowerCase(), p);
-          }
-        }
-      });
-    } catch {
-      // ignore
-    }
-  }
-
-  const items = Array.from(productMap.values());
   return {
     ok: true,
-    items,
-    total: items.length,
+    items: [],
+    total: 0,
     pageNumber: params.pageNumber ?? 1,
     pageSize: params.pageSize ?? 20,
   };
