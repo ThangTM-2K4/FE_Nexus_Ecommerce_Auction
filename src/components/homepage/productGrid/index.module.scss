@@ -1,7 +1,11 @@
 @use '../../../styles/palette' as *;
 
 .section {
-  margin-top: 8px;
+  margin: 20px 0 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .header {

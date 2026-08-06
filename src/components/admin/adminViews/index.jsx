@@ -98,31 +98,39 @@ export const UserListRow = ({ user, type = "customer", actions = [] }) => (
 );
 
 
-export const ProductCard = ({ product, actions = [] }) => (
-  <article className="adm-product-card">
-    <div className="adm-product-card__img">
-      <div className="adm-product-card__thumb" aria-hidden="true">
-        {product.images ? `📦` : "📦"}
+export const ProductCard = ({ product, actions = [] }) => {
+  const imgSrc = product.image || product.imageUrl || product.primaryImageUrl || (Array.isArray(product.images) ? product.images[0] : null);
+
+  return (
+    <article className="adm-product-card">
+      <div className="adm-product-card__img">
+        <div className="adm-product-card__thumb" aria-hidden="true" style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {imgSrc ? (
+            <img src={imgSrc} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            "📦"
+          )}
+        </div>
       </div>
-    </div>
-    <div className="adm-product-card__body">
-      <div className="adm-product-card__head">
-        <small>{product.id} · {product.category}</small>
-        <AdminStatusBadge status={product.status} />
+      <div className="adm-product-card__body">
+        <div className="adm-product-card__head">
+          <small>{product.id} · {product.category}</small>
+          <AdminStatusBadge status={product.status} />
+        </div>
+        <h3>{product.name}</h3>
+        <p className="adm-product-card__seller">{product.seller}</p>
+        {product.brand && <span className="adm-product-card__brand">{product.brand}</span>}
+        <div className="adm-product-card__price">
+          <strong>{product.price}</strong>
+          <span>SL: {product.quantity}</span>
+        </div>
       </div>
-      <h3>{product.name}</h3>
-      <p className="adm-product-card__seller">{product.seller}</p>
-      {product.brand && <span className="adm-product-card__brand">{product.brand}</span>}
-      <div className="adm-product-card__price">
-        <strong>{product.price}</strong>
-        <span>SL: {product.quantity}</span>
-      </div>
-    </div>
-    <footer>{actions.map((a) => (
-      <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
-    ))}</footer>
-  </article>
-);
+      <footer>{actions.map((a) => (
+        <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
+      ))}</footer>
+    </article>
+  );
+};
 
 export const SellerProductGroup = ({ seller, warehouse, stats, viewMode = "grid", children }) => (
   <section className="adm-seller-group">
