@@ -12,6 +12,7 @@ import {
   rejectAdminProduct,
   getApiErrorMessage,
 } from "../../../services/adminProductService";
+import { getProductModeration } from "../../../services/ecommerceProductService";
 import "./index.scss";
 
 const TABS = [
@@ -139,34 +140,75 @@ const StaffProductReview = () => {
         }
       });
 
-      // Nếu API gateway chưa trả về do phân quyền token, nạp từ danh sách sản phẩm đã gửi duyệt
+      // Merge local products case-insensitively so newly submitted products appear in review queue
       try {
         const localProds = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
         localProds.forEach((lp) => {
-          if (lp && (lp.id || lp.productId)) {
-            const id = lp.id || lp.productId;
-            const price = extractPrice(lp);
-            const stock = extractStock(lp);
-            if (!map.has(id)) {
-              map.set(id, { ...lp, id, price, stock });
-            } else {
-              const existing = map.get(id);
-              map.set(id, {
-                ...existing,
-                ...lp,
-                id,
-                price: price > 0 ? price : existing.price,
-                stock: stock > 0 ? stock : existing.stock,
-                moderationStatus: lp.moderationStatus || existing.moderationStatus,
-              });
+          if (!lp) return;
+          const lpId = String(lp.id || lp.productId || "").toLowerCase();
+          if (!lpId) return;
+
+          let foundKey = null;
+          for (const key of map.keys()) {
+            if (String(key).toLowerCase() === lpId) {
+              foundKey = key;
+              break;
             }
+          }
+
+          const price = extractPrice(lp);
+          const stock = extractStock(lp);
+          const modStatus = lp.moderationStatus && lp.moderationStatus !== "NONE" ? lp.moderationStatus : "PENDING_MANUAL_REVIEW";
+
+          if (foundKey) {
+            const existing = map.get(foundKey);
+            map.set(foundKey, {
+              ...existing,
+              ...lp,
+              id: foundKey,
+              price: price > 0 ? price : existing.price,
+              stock: stock > 0 ? stock : existing.stock,
+              moderationStatus: modStatus,
+              status: lp.status || existing.status || "PENDING",
+            });
+          } else {
+            const realId = lp.id || lp.productId;
+            map.set(realId, {
+              ...lp,
+              id: realId,
+              price,
+              stock,
+              moderationStatus: modStatus,
+              status: lp.status || "PENDING",
+            });
           }
         });
       } catch {
         /* ignore */
       }
 
-      setProducts(Array.from(map.values()));
+      const allMapped = Array.from(map.values());
+
+      // Nạp thông tin kiểm duyệt thời gian thực từ API cho từng sản phẩm
+      const enrichedList = await Promise.all(
+        allMapped.map(async (p) => {
+          try {
+            const modData = await getProductModeration(p.id);
+            if (modData && modData.moderationStatus && modData.moderationStatus !== "NONE") {
+              return {
+                ...p,
+                moderationStatus: modData.moderationStatus,
+                rowVersion: modData.rowVersion || p.rowVersion,
+              };
+            }
+          } catch {
+            /* ignore */
+          }
+          return p;
+        })
+      );
+
+      setProducts(enrichedList);
     } catch (err) {
       console.error("Error loading products:", err);
       setProducts([]);
