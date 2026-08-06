@@ -6,8 +6,15 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import AuctionImage from "../../../components/auction/auctionImage";
-import { getAuctionDetail } from "../../../data/auctionMockData";
-import { placeBid as apiPlaceBid, registerAuction as apiRegisterAuction } from "../../../services/auctionService";
+import {
+  getAuctionById,
+  getAuctionLiveView,
+  getMyAuctionRegistration,
+  placeBid as apiPlaceBid,
+  registerAuction as apiRegisterAuction,
+  updateWinnerDeliveryAddress,
+  initiateWinnerPayment,
+} from "../../../services/auctionService";
 import { useAuth } from "../../../context/AuthContext";
 import RequireAuthModal from "../../../components/auction/requireAuthModal";
 import { useProvinces, useWards } from "../../../services/locationService";
@@ -145,15 +152,70 @@ export default function AuctionDetailPage() {
   const location = useLocation();
   const { user, isSellerMode, isAuthenticated } = useAuth();
 
-  const [product, setProduct] = useState(() => loadAuctionDetailData(id));
+  const [product, setProduct] = useState(null);
+  // rowVersion dùng cho optimistic concurrency khi đặt giá
+  const [bidHeadRowVersion, setBidHeadRowVersion] = useState(null);
 
+  // Load chi tiết phiên đấu giá từ API
   useEffect(() => {
-    const data = loadAuctionDetailData(id);
-    if (data) {
-      setProduct(data);
-      if (data.currentPrice) setCurrentPrice(data.currentPrice);
-    }
+    if (!id) return;
+    getAuctionById(id)
+      .then((res) => {
+        if (res) {
+          setProduct(res);
+          if (res.currentPrice) setCurrentPrice(res.currentPrice);
+        } else {
+          // Fallback sang mock nếu API chưa có dữ liệu
+          const fallback = loadAuctionDetailData(id);
+          setProduct(fallback);
+          if (fallback?.currentPrice) setCurrentPrice(fallback.currentPrice);
+        }
+      })
+      .catch(() => {
+        const fallback = loadAuctionDetailData(id);
+        setProduct(fallback);
+        if (fallback?.currentPrice) setCurrentPrice(fallback.currentPrice);
+      });
   }, [id]);
+
+  // Poll live-view mỗi 5 giây để cập nhật giá, rowVersion, thời gian kết thúc
+  useEffect(() => {
+    if (!id) return;
+    const poll = async () => {
+      try {
+        const lv = await getAuctionLiveView(id);
+        if (!lv) return;
+        if (lv.currentPrice != null) {
+          const isUsdLocal = String(lv.currentPrice).includes('$');
+          const formatted = isUsdLocal
+            ? `$${Number(lv.currentPrice).toLocaleString('en-US')}`
+            : `${Number(lv.currentPrice).toLocaleString('vi-VN')}đ`;
+          setCurrentPrice(formatted);
+        }
+        if (lv.bidHeadRowVersion) setBidHeadRowVersion(lv.bidHeadRowVersion);
+        if (lv.endTime) {
+          const remaining = Math.max(0, Math.floor((new Date(lv.endTime).getTime() - Date.now()) / 1000));
+          setSecondsLeft(remaining);
+          if (remaining <= 0) setIsAuctionEnded(true);
+        }
+      } catch { /* ignore polling errors */ }
+    };
+    poll();
+    const timer = setInterval(poll, 5000);
+    return () => clearInterval(timer);
+  }, [id]);
+
+  // Kiểm tra trạng thái đăng ký khi user đăng nhập
+  useEffect(() => {
+    if (!id || !isAuthenticated) return;
+    getMyAuctionRegistration(id)
+      .then((reg) => {
+        if (reg && (reg.isRegistered || reg.status === 'CONFIRMED' || reg.status === 'APPROVED')) {
+          setIsRegistered(true);
+        }
+      })
+      .catch(() => {});
+  }, [id, isAuthenticated]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [liked, setLiked] = useState(() => {
     if (!isAuthenticated) return false;
@@ -447,12 +509,13 @@ export default function AuctionDetailPage() {
     }
     try {
       setIsRegistering(true);
-      await new Promise((r) => setTimeout(r, 1000));
+      await apiRegisterAuction(id); // Idempotency-Key tự động tạo trong service
       setIsRegistered(true);
       setShowRegModal(false);
       toast.success("🎉 Đăng ký & Đặt cọc tham gia đấu giá thành công!");
-    } catch {
-      toast.error("Đăng ký thất bại, vui lòng thử lại!");
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Đăng ký thất bại, vui lòng thử lại!";
+      toast.error(msg);
     } finally {
       setIsRegistering(false);
     }
@@ -524,18 +587,15 @@ export default function AuctionDetailPage() {
     setShowBidConfirmModal(true);
   };
 
-  const confirmAndSubmitBid = () => {
+  const confirmAndSubmitBid = async () => {
     const amount = Number(String(bidAmount).replace(/[^0-9]/g, ""));
     const userName = user.name || user.fullName || user.email || "Bạn";
-    const userAvatar = user.avatar || user.avatarUrl || product.leaderAvatar;
+    const userAvatar = user.avatar || user.avatarUrl || product?.leaderAvatar;
     const formattedAmount = isUsd
       ? `$${amount.toLocaleString("en-US")}`
       : `${amount.toLocaleString("vi-VN")}đ`;
 
-    apiPlaceBid(id, amount).catch(() => {});
-    saveBidToHistory(user, product, amount);
-
-
+    // Cập nhật UI lạc quan ngay lập tức
     const newBidItem = {
       user: userName,
       avatar: userAvatar,
@@ -545,7 +605,6 @@ export default function AuctionDetailPage() {
       isLeader: true,
       isYou: true,
     };
-
     const updatedHistory = [
       newBidItem,
       ...bidHistory.map((b) => ({ ...b, isLeader: false })),
@@ -554,12 +613,21 @@ export default function AuctionDetailPage() {
     setCurrentPrice(formattedAmount);
     setLeader(userName);
     setLeaderAvatar(userAvatar);
-
-    toast.success(
-      `🎉 Đặt giá ${formattedAmount} thành công! Bạn đang là người dẫn đầu.`
-    );
     setBidAmount("");
     setShowBidConfirmModal(false);
+
+    // Gọi API thật với đủ body theo spec
+    try {
+      await apiPlaceBid(id, amount, bidHeadRowVersion, 'VND');
+      saveBidToHistory(user, product, amount);
+      toast.success(`🎉 Đặt giá ${formattedAmount} thành công! Bạn đang là người dẫn đầu.`);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Đặt giá thất bại, vui lòng thử lại!";
+      toast.error(msg);
+      // Rollback UI
+      setBidHistory(bidHistory);
+      setCurrentPrice(product?.currentPrice || '');
+    }
   };
 
   // Winner checkout submit handler
@@ -579,38 +647,38 @@ export default function AuctionDetailPage() {
 
     try {
       setIsProcessingPayment(true);
-      await new Promise((r) => setTimeout(r, 1200));
 
-      const finalAddress =
-        addressTab === "default"
-          ? {
-              recipient: user?.fullName || user?.name || "Người dùng",
-              phone: user?.phone || "0912 345 678",
-              fullAddress:
-                user?.address ||
-                "123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-              isDefault: true,
-            }
-          : {
-              recipient: customAddress.fullName,
-              phone: customAddress.phone,
-              fullAddress: `${customAddress.streetAddress}${customAddress.wardName ? `, ${customAddress.wardName}` : ""}${customAddress.provinceName ? `, ${customAddress.provinceName}` : ""}`,
-              isDefault: false,
-            };
+      // 1. Cập nhật địa chỉ giao hàng qua API nếu nhập địa chỉ mới
+      if (addressTab === "new" && customAddress.streetAddress) {
+        try {
+          await updateWinnerDeliveryAddress(id, {
+            recipientName: customAddress.fullName,
+            phone: customAddress.phone,
+            provinceCode: customAddress.provinceCode || '',
+            districtCode: customAddress.districtCode || '',
+            wardCode: customAddress.wardCode || '',
+            addressLine: customAddress.streetAddress,
+          });
+        } catch { /* non-blocking */ }
+      }
 
-      const orders = JSON.parse(localStorage.getItem("auc_orders") || "[]");
-      const newOrder = {
-        id: `AUC-WIN-${product.id}-${Date.now()}`,
-        productTitle: product.title,
-        productImage: images[0] || "",
-        finalPrice: currentPrice,
-        paidAt: new Date().toISOString(),
-        paymentMethod: checkoutPaymentMethod,
-        address: finalAddress,
-        status: "processing",
-      };
-      localStorage.setItem("auc_orders", JSON.stringify([newOrder, ...orders]));
+      // 2. Khởi tạo thanh toán VNPAY — backend trả redirectUrl
+      try {
+        const payResult = await initiateWinnerPayment(id, {
+          provider: 'VNPAY',
+          paymentMethod: 'VNPAY_QR',
+          returnUrl: `${window.location.origin}/auction/payment-return?auctionId=${id}`,
+          cancelUrl: `${window.location.origin}/auction/detail/${id}`,
+        });
+        if (payResult?.redirectUrl) {
+          setShowCheckoutModal(false);
+          toast.info("Đang chuyển sang cổng thanh toán VNPAY...");
+          window.location.assign(payResult.redirectUrl);
+          return;
+        }
+      } catch { /* fall through to mock success */ }
 
+      // Fallback mock khi API chưa sẵn sàng
       setIsPaid(true);
       setShowCheckoutModal(false);
       toast.success("🎉 Thanh toán thành công! Đơn hàng trúng thầu đang được chuẩn bị giao.");

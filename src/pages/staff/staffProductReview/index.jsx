@@ -12,7 +12,7 @@ import {
   rejectAdminProduct,
   getApiErrorMessage,
 } from "../../../services/adminProductService";
-import { getProductModeration } from "../../../services/ecommerceProductService";
+import { getProductModeration, resolveImageUrl } from "../../../services/ecommerceProductService";
 import "./index.scss";
 
 const TABS = [
@@ -290,10 +290,20 @@ const StaffProductReview = () => {
             const statusNorm = normalizeStatus(p);
             const statusText = STATUS_LABELS[statusNorm] || p.status || "Chờ duyệt";
             const statusClass = STATUS_CLASS[statusNorm] || "status-pending";
+            const imgSrc = resolveImageUrl(p.image || p.imageUrl || p.primaryImageUrl || p.images?.[0]);
             return (
               <article key={p.id} className="stf-product-review__card">
-                <header>
-                  <div>
+                <header style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                  {imgSrc ? (
+                    <img
+                      src={imgSrc}
+                      alt=""
+                      style={{ width: "52px", height: "52px", borderRadius: "8px", objectFit: "cover", flexShrink: 0, border: "1px solid #eee" }}
+                    />
+                  ) : (
+                    <div style={{ width: "52px", height: "52px", borderRadius: "8px", background: "#f5f5f5", display: "grid", placeItems: "center", fontSize: "24px", flexShrink: 0 }}>📦</div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <h3>{p.name || p.productName || p.title || "Sản phẩm chưa đặt tên"}</h3>
                     <p>{p.category || p.categoryName || "Thương mại điện tử"} · Người bán: {p.seller || p.sellerName || p.userId || p.sellerId || "Shop người bán"}</p>
                   </div>
@@ -366,6 +376,7 @@ const StaffProductReview = () => {
                 const statusNorm = normalizeStatus(p);
                 const statusText = STATUS_LABELS[statusNorm] || p.status || "Chờ duyệt";
                 const statusClass = STATUS_CLASS[statusNorm] || "status-pending";
+                const imgSrc = resolveImageUrl(p.image || p.imageUrl || p.primaryImageUrl || p.images?.[0]);
                 return (
                   <tr key={p.id}>
                     <td className="col-id">
@@ -373,8 +384,17 @@ const StaffProductReview = () => {
                       <small>{p.createdAt ? new Date(p.createdAt).toLocaleDateString("vi-VN") : "Hôm nay"}</small>
                     </td>
                     <td className="col-name">
-                      <div className="product-name">{p.name || p.productName || "Sản phẩm chưa đặt tên"}</div>
-                      <small>{p.category || p.categoryName || "Thương mại điện tử"}</small>
+                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        {imgSrc ? (
+                          <img src={imgSrc} alt="" style={{ width: "40px", height: "40px", borderRadius: "6px", objectFit: "cover", flexShrink: 0 }} />
+                        ) : (
+                          <div style={{ width: "40px", height: "40px", borderRadius: "6px", background: "#f5f5f5", display: "grid", placeItems: "center", fontSize: "18px", flexShrink: 0 }}>📦</div>
+                        )}
+                        <div>
+                          <div className="product-name">{p.name || p.productName || "Sản phẩm chưa đặt tên"}</div>
+                          <small>{p.category || p.categoryName || "Thương mại điện tử"}</small>
+                        </div>
+                      </div>
                     </td>
                     <td className="col-price">
                       <strong>{Number(p.price || p.sellingPrice || 0).toLocaleString("vi-VN")}đ</strong>
