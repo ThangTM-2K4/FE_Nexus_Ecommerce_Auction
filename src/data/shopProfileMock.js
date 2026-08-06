@@ -60,25 +60,32 @@ export function getApprovedSellerProducts() {
         const st = String(p.status || "").toUpperCase();
         return mod === "APPROVED" || st === "APPROVED" || st === "ACTIVE" || st === "PUBLISHED";
       })
-      .map((p, i) => ({
-        id: p.id || `p-approved-${i}`,
-        title: p.name || p.title || "Sản phẩm",
-        name: p.name || p.title || "Sản phẩm",
-        price: p.price || 0,
-        stock: p.stockQuantity ?? p.stock ?? 0,
-        stockQuantity: p.stockQuantity ?? p.stock ?? 0,
-        image: p.images?.[0] || "/images/products/electronics/iphone.jpg",
-        images: p.images || ["/images/products/electronics/iphone.jpg"],
-        rating: 5.0,
-        soldNumeric: 0,
-        monthlySold: "Mới đăng",
-        shopId: SHOP_ID,
-        categoryId: p.category || CATEGORY_IDS[0],
-        createdAt: Date.now(),
-        isSuggested: true,
-        isBestSeller: true,
-        tags: ["Hàng Mới"],
-      }));
+      .map((p, i) => {
+        const imgSrc =
+          (typeof p.images?.[0] === "string" ? p.images[0] : p.images?.[0]?.url) ||
+          (typeof p.image === "string" ? p.image : p.image?.url) ||
+          p.imageUrl ||
+          "/images/products/electronics/iphone.jpg";
+        return {
+          id: p.id || `p-approved-${i}`,
+          title: p.name || p.title || "Sản phẩm",
+          name: p.name || p.title || "Sản phẩm",
+          price: Number(p.price || 0),
+          stock: Number(p.stockQuantity ?? p.stock ?? 0),
+          stockQuantity: Number(p.stockQuantity ?? p.stock ?? 0),
+          image: imgSrc,
+          images: p.images || [imgSrc],
+          rating: 5.0,
+          soldNumeric: 0,
+          monthlySold: "Mới đăng",
+          shopId: SHOP_ID,
+          categoryId: p.category || CATEGORY_IDS[0],
+          createdAt: Date.now(),
+          isSuggested: true,
+          isBestSeller: true,
+          tags: ["Hàng Mới"],
+        };
+      });
   } catch {
     return [];
   }
