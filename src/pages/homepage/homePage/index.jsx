@@ -169,7 +169,7 @@ export default function HomePage() {
               <ProductGrid
                 products={products}
                 extraProducts={extraProducts}
-                title={selectedCategory ? `SẢN PHẨM: ${selectedCategory.name.toUpperCase()}` : "GỢI Ý HÔM NAY"}
+                title={selectedCategory ? `SẢN PHẨM: ${selectedCategory.name.toUpperCase()}` : "TẤT CẢ SẢN PHẨM"}
                 columns={6}
                 rows={8}
                 onLoadMore={handleLoadMore}

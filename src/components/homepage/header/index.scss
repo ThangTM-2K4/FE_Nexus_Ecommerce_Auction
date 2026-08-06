@@ -174,22 +174,22 @@
   height: $control-height;
   display: flex;
   align-items: center;
-  background: $surface-soft;
-  border: 1.5px solid $border;
+  background: #fff;
+  border: 1.5px solid #d8b4fe;
   border-radius: $radius-pill;
   padding: 0 5px 0 16px;
   transition: border-color 0.2s $ease, box-shadow 0.2s $ease, background 0.2s $ease;
 
   &:focus-within {
-    background: $surface;
-    border-color: rgba($sky, 0.7);
-    box-shadow: 0 0 0 4px $accent-glow;
+    background: #fff;
+    border-color: #6b3ba7;
+    box-shadow: 0 0 0 4px rgba(107, 59, 167, 0.15);
   }
 }
 
 .header-search-icon {
   font-size: 1.1rem;
-  color: $ink-faint;
+  color: #9ca3af;
   flex-shrink: 0;
   margin-right: 8px;
   line-height: 1;
@@ -201,14 +201,23 @@
   height: 100%;
   border: 0;
   outline: 0;
-  background: transparent;
-  color: $ink;
+  background: transparent !important;
+  color: #1f2937;
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 500;
 
   &::placeholder {
-    color: $ink-faint;
+    color: #9ca3af;
+  }
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+    -webkit-text-fill-color: #1f2937 !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 }
 
@@ -217,7 +226,7 @@
   height: calc(#{$control-height} - 10px);
   padding: 0 22px;
   border-radius: $radius-pill;
-  background: linear-gradient(135deg, $navy, $teal);
+  background: linear-gradient(135deg, #6b3ba7, #ec4899);
   color: #fff;
   font-family: inherit;
   font-weight: 700;
@@ -230,7 +239,7 @@
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px $blue-glow;
+    box-shadow: 0 6px 18px rgba(107, 59, 167, 0.35);
   }
 
   &:active {
