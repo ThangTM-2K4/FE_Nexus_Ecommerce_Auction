@@ -354,7 +354,7 @@ const StaffProductReview = () => {
       ) : viewMode === "grid" ? (
         <div className="stf-product-review__list">
           {filteredProducts.map((p) => {
-            const statusNorm = normalizeStatus(p.status || p.reviewStatus || p.approvalStatus);
+            const statusNorm = normalizeStatus(p);
             const statusText = STATUS_LABELS[statusNorm] || p.status || "Chờ duyệt";
             const statusClass = STATUS_CLASS[statusNorm] || "status-pending";
             return (
@@ -430,7 +430,7 @@ const StaffProductReview = () => {
             </thead>
             <tbody>
               {filteredProducts.map((p) => {
-                const statusNorm = normalizeStatus(p.status || p.reviewStatus || p.approvalStatus);
+                const statusNorm = normalizeStatus(p);
                 const statusText = STATUS_LABELS[statusNorm] || p.status || "Chờ duyệt";
                 const statusClass = STATUS_CLASS[statusNorm] || "status-pending";
                 return (

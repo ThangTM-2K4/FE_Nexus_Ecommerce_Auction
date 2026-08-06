@@ -31,15 +31,57 @@ export default function ProductsPage() {
         ? res.products
         : [];
 
+      // Merge items from localStorage so newly created items, stock, and moderationStatus are preserved
+      try {
+        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        const map = new Map();
+        list.forEach((p) => {
+          if (p && (p.id || p.productId)) {
+            const id = String(p.id || p.productId);
+            map.set(id, { ...p, id });
+          }
+        });
+        localList.forEach((lp) => {
+          if (lp && (lp.id || lp.productId)) {
+            const id = String(lp.id || lp.productId);
+            const stockVal = Number(lp.stockQuantity ?? lp.stock ?? 0);
+            if (!map.has(id)) {
+              map.set(id, {
+                ...lp,
+                id,
+                stock: stockVal,
+                stockQuantity: stockVal,
+                moderationStatus: lp.moderationStatus || "NONE",
+              });
+            } else {
+              const existing = map.get(id);
+              const mergedStock = stockVal > 0 ? stockVal : Number(existing.stockQuantity ?? existing.stock ?? 0);
+              const mergedMod = lp.moderationStatus && lp.moderationStatus !== "NONE" ? lp.moderationStatus : existing.moderationStatus;
+              map.set(id, {
+                ...existing,
+                ...lp,
+                id,
+                stock: mergedStock,
+                stockQuantity: mergedStock,
+                moderationStatus: mergedMod || "NONE",
+              });
+            }
+          }
+        });
+        list = Array.from(map.values());
+      } catch {
+        /* ignore */
+      }
+
       // Nạp thông tin kiểm duyệt thời gian thực cho từng sản phẩm
       const enrichedList = await Promise.all(
         list.map(async (p) => {
           try {
             const modData = await getProductModeration(p.id);
-            if (modData) {
+            if (modData && modData.moderationStatus && modData.moderationStatus !== "NONE") {
               return {
                 ...p,
-                moderationStatus: modData.moderationStatus || p.moderationStatus || "NONE",
+                moderationStatus: modData.moderationStatus,
                 rowVersion: modData.rowVersion || p.rowVersion,
               };
             }
@@ -52,7 +94,12 @@ export default function ProductsPage() {
 
       setMyProducts(enrichedList);
     } catch {
-      setMyProducts([]);
+      try {
+        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        setMyProducts(localList);
+      } catch {
+        setMyProducts([]);
+      }
     } finally {
       setLoading(false);
     }
