@@ -1,5 +1,6 @@
 import api from '../config/api';
 import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiResponse';
+import { extractProductStock } from './ecommerceProductService';
 
 export { getApiErrorMessage };
 
@@ -89,8 +90,8 @@ const mapAdminProductItem = (p) => {
     sellerEligible: p.sellerEligible ?? true,
     catalogVersion: p.catalogVersion ?? 0,
     updatedAtUtc: p.updatedAtUtc,
-    quantity: p.stockQuantity ?? p.stock ?? p.quantity ?? 10,
-    stock: p.stockQuantity ?? p.stock ?? p.quantity ?? 10,
+    quantity: extractProductStock(p),
+    stock: extractProductStock(p),
     image,
     imageUrl: image,
     images,

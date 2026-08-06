@@ -529,21 +529,31 @@ export default function CreateProductPage() {
                 currency: "VND",
                 salesChannel: "ECOMMERCE",
                 isDefault: true,
+                stock: stockNum,
+                stockQuantity: stockNum,
                 attributes: { stock: stockNum, condition: form.condition || "new" },
+                attributesJson: JSON.stringify({ stock: stockNum, stockQuantity: stockNum, condition: form.condition || "new" }),
                 barcode: "",
               },
             ]
-          : variationRows.map((r, idx) => ({
-              skuCode: r.sku?.trim() || `SKU-${idx + 1}-${Date.now().toString(36).toUpperCase()}`,
-              skuName: [r.val1, r.val2].filter(Boolean).join(" - ") || `Phân loại ${idx + 1}`,
-              unitPrice: Number(r.price) > 0 ? Number(r.price) : 1000,
-              price: Number(r.price) > 0 ? Number(r.price) : 1000,
-              currency: "VND",
-              salesChannel: "ECOMMERCE",
-              isDefault: idx === 0,
-              attributes: { stock: Number(r.stock) >= 0 ? Number(r.stock) : 0, condition: form.condition || "new" },
-              barcode: "",
-            }));
+          : variationRows.map((r, idx) => {
+              const rPrice = Number(r.price) > 0 ? Number(r.price) : 1000;
+              const rStock = Number(r.stock) >= 0 ? Number(r.stock) : 0;
+              return {
+                skuCode: r.sku?.trim() || `SKU-${idx + 1}-${Date.now().toString(36).toUpperCase()}`,
+                skuName: [r.val1, r.val2].filter(Boolean).join(" - ") || `Phân loại ${idx + 1}`,
+                unitPrice: rPrice,
+                price: rPrice,
+                currency: "VND",
+                salesChannel: "ECOMMERCE",
+                isDefault: idx === 0,
+                stock: rStock,
+                stockQuantity: rStock,
+                attributes: { stock: rStock, condition: form.condition || "new" },
+                attributesJson: JSON.stringify({ stock: rStock, stockQuantity: rStock, condition: form.condition || "new" }),
+                barcode: "",
+              };
+            });
 
         const createPayload = {
           name: form.name.trim(),
@@ -608,13 +618,20 @@ export default function CreateProductPage() {
 
       try {
         const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        const calcPrice = productTypeMode === "single"
+          ? Number(form.price) || 0
+          : (variationRows.length > 0 ? Number(variationRows[0].price) || 0 : 0);
+        const calcStock = productTypeMode === "single"
+          ? (Number(form.stock) >= 0 ? Number(form.stock) : 0)
+          : variationRows.reduce((sum, r) => sum + (Number(r.stock) || 0), 0);
+
         const newProd = {
           id: productId,
           name: form.name.trim(),
           category: form.category,
-          price: Number(form.price),
-          stock: Number(form.stock),
-          stockQuantity: Number(form.stock),
+          price: calcPrice,
+          stock: calcStock,
+          stockQuantity: calcStock,
           status: hidden ? "DRAFT" : "PENDING",
           moderationStatus: hidden ? "NONE" : "PENDING_MANUAL_REVIEW",
           createdAt: new Date().toISOString(),

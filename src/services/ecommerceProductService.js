@@ -378,6 +378,58 @@ export const resolveImageUrl = (img) => {
   return '';
 };
 
+export function extractProductStock(item) {
+  if (!item) return 0;
+
+  // 1. Kiểm tra thuộc tính trên root
+  if (item.stockQuantity != null && !isNaN(Number(item.stockQuantity))) return Number(item.stockQuantity);
+  if (item.stock != null && !isNaN(Number(item.stock))) return Number(item.stock);
+  if (item.totalStock != null && !isNaN(Number(item.totalStock))) return Number(item.totalStock);
+  if (item.quantity != null && !isNaN(Number(item.quantity))) return Number(item.quantity);
+  if (item.availableStock != null && !isNaN(Number(item.availableStock))) return Number(item.availableStock);
+
+  // 2. Kiểm tra mảng SKUs
+  if (Array.isArray(item.skus) && item.skus.length > 0) {
+    let total = 0;
+    let found = false;
+
+    item.skus.forEach((s) => {
+      let skuStock = s.stockQuantity ?? s.stock ?? s.quantity;
+
+      if (skuStock == null && s.attributes) {
+        if (typeof s.attributes === 'object') {
+          skuStock = s.attributes.stock ?? s.attributes.stockQuantity;
+        } else if (typeof s.attributes === 'string') {
+          try {
+            const parsed = JSON.parse(s.attributes);
+            skuStock = parsed?.stock ?? parsed?.stockQuantity;
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+
+      if (skuStock == null && s.attributesJson) {
+        try {
+          const parsed = JSON.parse(s.attributesJson);
+          skuStock = parsed?.stock ?? parsed?.stockQuantity;
+        } catch {
+          /* ignore */
+        }
+      }
+
+      if (skuStock != null && !isNaN(Number(skuStock))) {
+        total += Number(skuStock);
+        found = true;
+      }
+    });
+
+    if (found) return total;
+  }
+
+  return 0;
+}
+
 export function mapSellerProductToUi(item) {
   if (!item) return null;
 
@@ -423,16 +475,7 @@ export function mapSellerProductToUi(item) {
     moderationStatus = 'REJECTED';
   }
 
-  const stock =
-    item.stockQuantity ??
-    item.stock ??
-    item.totalStock ??
-    item.quantity ??
-    item.availableStock ??
-    item.skus?.[0]?.stockQuantity ??
-    item.skus?.[0]?.stock ??
-    item.skus?.[0]?.quantity ??
-    0;
+  const stock = extractProductStock(item);
 
   const price =
     item.price ??
