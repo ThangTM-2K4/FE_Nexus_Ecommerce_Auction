@@ -167,17 +167,17 @@ export function toVietnameseSlug(str) {
 }
 
 /**
- * Chi tiết danh mục quản trị GET /api/v1/management/categories/{categoryId} hoặc GET /api/v1/categories/{categoryId}
- * Lấy danh mục bằng API Management dành riêng cho Admin để lấy rowVersion mới nhất (kể cả khi bị INACTIVE)
+ * Chi tiết danh mục dành riêng cho Admin — GET /api/v1/management/categories/{categoryId}
+ * Lấy danh mục bằng API Management để lấy rowVersion mới nhất từ C# Server (kể cả khi INACTIVE)
  */
-export async function getCategoryById(categoryId, scope = 'admin') {
+export async function getCategoryById(categoryId) {
+  if (!categoryId) return null;
   try {
     const { data } = await api.get(`/management/categories/${categoryId}`);
     return unwrapData(data);
   } catch {
     try {
-      const params = scope ? { scope } : {};
-      const { data } = await api.get(`/categories/${categoryId}`, { params });
+      const { data } = await api.get(`/categories/${categoryId}`);
       return unwrapData(data);
     } catch {
       return null;
@@ -205,11 +205,17 @@ export async function uploadCategoryImage(file) {
  * Đổi trạng thái Bật/Tắt danh mục — PATCH /api/v1/categories/{categoryId}/status
  */
 export async function updateCategoryStatus(categoryId, targetStatus, rowVersion) {
+  let latestRowVersion = rowVersion;
+  if (!latestRowVersion) {
+    const detail = await getCategoryById(categoryId);
+    latestRowVersion = detail?.rowVersion;
+  }
+
   const body = {
     targetStatus: typeof targetStatus === 'boolean'
       ? (targetStatus ? 'ACTIVE' : 'INACTIVE')
       : String(targetStatus).toUpperCase(),
-    ...(rowVersion ? { rowVersion } : {}),
+    ...(latestRowVersion ? { rowVersion: latestRowVersion } : {}),
   };
   const { data } = await api.patch(`/categories/${categoryId}/status`, body);
   return unwrapData(data);
@@ -252,46 +258,26 @@ export async function createCategory(payload) {
 export async function updateCategory(categoryId, payload) {
   let rowVersion = payload.rowVersion;
 
-  // Lấy rowVersion mới nhất từ Server bằng GET /management/categories/{id} nếu chưa có
-  if (!rowVersion) {
-    try {
-      const detail = await getCategoryById(categoryId, 'admin');
-      if (detail?.rowVersion) {
-        rowVersion = detail.rowVersion;
-      }
-    } catch {
-      // ignore
-    }
+  // Lấy rowVersion mới nhất từ GET /api/v1/management/categories/{id}
+  const detail = await getCategoryById(categoryId);
+  if (detail?.rowVersion) {
+    rowVersion = detail.rowVersion;
   }
 
-  // Nếu vẫn chưa tìm thấy rowVersion, lấy danh mục từ getCategories()
-  if (!rowVersion) {
-    try {
-      const allCats = await getCategories({ includeInactive: true });
-      const found = allCats.find(c => c.id === categoryId || c.categoryId === categoryId)
-        || allCats.flatMap(c => c.children || []).find(c => c.id === categoryId || c.categoryId === categoryId);
-      if (found?.rowVersion) {
-        rowVersion = found.rowVersion;
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  const name = payload.name?.trim() || '';
+  const name = payload.name?.trim() || detail?.name || '';
   const cleanSlug = payload.slug ? toVietnameseSlug(payload.slug) : toVietnameseSlug(name);
-  const rawKey = payload.imageKey || payload.key || payload.imageUrl || payload.image || '';
+  const rawKey = payload.imageKey || payload.key || payload.imageUrl || payload.image || detail?.imageKey || '';
   const validKey = isValidUploadedImageKey(rawKey) ? rawKey.trim() : null;
 
   const body = {
     name,
     slug: cleanSlug || 'danh-muc',
-    description: payload.description || '',
+    description: payload.description ?? detail?.description ?? '',
     ...(validKey ? { imageKey: validKey } : {}),
     removeImage: payload.removeImage ?? false,
-    parentCategoryId: payload.parentCategoryId || payload.parentId || null,
-    sortOrder: payload.sortOrder ?? 0,
-    isActive: payload.isActive ?? true,
+    parentCategoryId: payload.parentCategoryId ?? payload.parentId ?? detail?.parentCategoryId ?? null,
+    sortOrder: payload.sortOrder ?? detail?.sortOrder ?? 0,
+    isActive: payload.isActive ?? detail?.isActive ?? true,
     ...(rowVersion ? { rowVersion } : {}),
   };
 
