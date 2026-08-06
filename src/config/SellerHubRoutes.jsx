@@ -10,6 +10,7 @@ import MyReportsPage from "../pages/seller/sellerMyReportsPage";
 import RevenuePage from "../pages/seller/sellerRevenuePage";
 import ProductsPage from "../pages/seller/sellerProductsPage";
 import CreateProductPage from "../pages/seller/sellerCreateProductPage";
+import WarehousesPage from "../pages/seller/sellerWarehousesPage";
 import OrdersPage from "../pages/seller/sellerOrdersPage";
 import CustomersPage from "../pages/seller/sellerCustomersPage";
 import PerformancePage from "../pages/seller/sellerPerformancePage";
@@ -38,6 +39,7 @@ export default function SellerHubRoutes() {
         <Route path="finance/revenue" element={<RevenuePage />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="products/create" element={<CreateProductPage />} />
+        <Route path="warehouses" element={<WarehousesPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="orders-cancelled" element={<OrdersPage />} />
         <Route path="orders-returns" element={<OrdersPage />} />

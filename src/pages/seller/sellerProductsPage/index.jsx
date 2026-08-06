@@ -32,13 +32,11 @@ export default function ProductsPage() {
       const endpoints = [
         "/seller/products",
         "/ecommerce/products",
-        "/management/products",
-        "/products",
       ];
 
       const results = await Promise.allSettled(
         endpoints.map((ep) =>
-          api.get(ep, { params: { scope: "management", pageSize: 100, pageNumber: 1, limit: 100 } })
+          api.get(ep, { params: { pageSize: 100, pageNumber: 1 }, skipErrorRedirect: true })
         )
       );
 
@@ -81,42 +79,6 @@ export default function ProductsPage() {
           });
         }
       });
-
-      // Merge local products case-insensitively so newly created/submitted items appear
-      try {
-        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
-        localList.forEach((lp) => {
-          if (!lp || (!lp.id && !lp.productId)) return;
-          const realId = lp.id || lp.productId;
-          const key = String(realId).toLowerCase();
-          const stockVal = Number(lp.stockQuantity ?? lp.stock ?? 0);
-          const modVal = lp.moderationStatus && lp.moderationStatus !== "NONE" ? lp.moderationStatus : "PENDING_MANUAL_REVIEW";
-
-          if (!map.has(key)) {
-            map.set(key, {
-              ...lp,
-              id: realId,
-              stock: stockVal,
-              stockQuantity: stockVal,
-              moderationStatus: modVal,
-              status: lp.status || "PENDING",
-            });
-          } else {
-            const existing = map.get(key);
-            const mergedStock = stockVal > 0 ? stockVal : Number(existing.stockQuantity ?? existing.stock ?? 0);
-            map.set(key, {
-              ...existing,
-              ...lp,
-              id: realId,
-              stock: mergedStock,
-              stockQuantity: mergedStock,
-              moderationStatus: modVal || existing.moderationStatus || "NONE",
-            });
-          }
-        });
-      } catch {
-        /* ignore */
-      }
 
       let list = Array.from(map.values());
 
@@ -264,20 +226,18 @@ export default function ProductsPage() {
                 <tbody>
                   {myProducts.map((p) => {
                     const category = productCategories.find((c) => c.id === p.category);
-                    const rawMod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
                     const rawSt = String(p.status || "").toUpperCase();
+                    const rawMod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
 
-                    let effectiveModStatus = "NONE";
-                    if (rawMod === "APPROVED" || rawSt === "APPROVED" || rawSt === "ACTIVE" || rawSt === "PUBLISHED") {
+                    let effectiveModStatus = "DRAFT";
+                    if (rawSt === "ACTIVE" || rawSt === "APPROVED" || rawMod === "APPROVED" || rawSt === "PUBLISHED") {
                       effectiveModStatus = "APPROVED";
-                    } else if (rawMod === "REJECTED" || rawSt === "REJECTED") {
+                    } else if (rawSt === "REJECTED" || rawMod === "REJECTED") {
                       effectiveModStatus = "REJECTED";
                     } else if (
-                      rawMod === "PENDING_MANUAL_REVIEW" ||
-                      rawMod.includes("PENDING") ||
-                      rawSt.includes("PENDING") ||
-                      rawSt.includes("REVIEW") ||
-                      rawSt.includes("CHỜ")
+                      rawSt === "PENDING_REVIEW" ||
+                      rawSt === "PENDING" ||
+                      rawMod === "PENDING_MANUAL_REVIEW"
                     ) {
                       effectiveModStatus = "PENDING_MANUAL_REVIEW";
                     }
@@ -287,12 +247,12 @@ export default function ProductsPage() {
                       effectiveModStatus === "APPROVED";
 
                     let buttonText = "Gửi duyệt";
-                    let badgeLabel = "Đang ẩn";
+                    let badgeLabel = "Đang ẩn / Nháp";
                     let badgeClass = "draft";
 
                     if (effectiveModStatus === "APPROVED") {
                       buttonText = "Đã duyệt";
-                      badgeLabel = "Đã duyệt";
+                      badgeLabel = "Đang bán";
                       badgeClass = "approved";
                     } else if (effectiveModStatus === "PENDING_MANUAL_REVIEW") {
                       buttonText = "Đang chờ duyệt";
@@ -312,7 +272,7 @@ export default function ProductsPage() {
                           </div>
                         </td>
                         <td>
-                          <strong>{p.name || category?.label || "Sản phẩm"}</strong>
+                          <strong>{p.name || p.productName || category?.label || "Sản phẩm"}</strong>
                           {p.brand && <div style={{ fontSize: "12px", color: "#888" }}>Thương hiệu: {p.brand}</div>}
                         </td>
                         <td style={{ fontSize: "12px", color: "#555" }}>{p.id}</td>

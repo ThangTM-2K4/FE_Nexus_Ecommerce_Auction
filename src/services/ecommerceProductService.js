@@ -4,7 +4,7 @@ import { extractUploadKey, normalizeUploadKey } from './uploadResponse';
 
 export { getApiErrorMessage };
 
-const MULTIPART = { headers: { 'Content-Type': undefined } };
+const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
 const BUYER_LIST_PATH = '/ecommerce/products';
 const isDev = import.meta.env.DEV;
 
@@ -157,7 +157,7 @@ const extractUploadUrl = (response) => {
 const extractProductId = (payload) =>
   payload?.id ?? payload?.productId ?? payload?.data?.id ?? payload?.data?.productId;
 
-const DEFAULT_SALES_CHANNEL = 'Ecommerce';
+const DEFAULT_SALES_CHANNEL = 'ECOMMERCE';
 const DEFAULT_CURRENCY = 'VND';
 const DEFAULT_ORIGIN_COUNTRY = 'VN';
 
@@ -362,22 +362,22 @@ const normalizeStatus = (status) => {
 export function mapSellerProductToUi(item) {
   if (!item) return null;
   const images = Array.isArray(item.images)
-    ? item.images.map((img) => (typeof img === 'string' ? img : img.url || img.imageUrl)).filter(Boolean)
-    : item.imageUrl
-      ? [item.imageUrl]
+    ? item.images.map((img) => (typeof img === 'string' ? img : img.url || img.imageUrl || img.imageKey)).filter(Boolean)
+    : item.imageUrl || item.primaryImageUrl || item.coverImageUrl || item.image || item.imageKey
+      ? [item.imageUrl || item.primaryImageUrl || item.coverImageUrl || item.image || item.imageKey]
       : [];
 
-  const rawStatus = String(item.status || item.moderationStatus || '').toUpperCase();
+  const rawStatus = String(item.status || '').toUpperCase();
+  const rawMod = String(item.moderationStatus || item.moderation_status || item.reviewStatus || item.approvalStatus || '').toUpperCase();
 
-  const moderationStatus =
-    item.moderationStatus ||
-    item.moderation_status ||
-    item.moderation?.status ||
-    item.reviewStatus ||
-    item.approvalStatus ||
-    (rawStatus.includes('PENDING') || rawStatus.includes('REVIEW') || rawStatus.includes('CHỜ')
-      ? 'PENDING_MANUAL_REVIEW'
-      : 'NONE');
+  let moderationStatus = 'DRAFT';
+  if (rawMod.includes('PENDING') || rawStatus === 'PENDING' || rawStatus === 'PENDING_REVIEW') {
+    moderationStatus = 'PENDING_MANUAL_REVIEW';
+  } else if (rawMod.includes('APPROV') || rawStatus === 'ACTIVE' || rawStatus === 'APPROVED') {
+    moderationStatus = 'APPROVED';
+  } else if (rawMod.includes('REJECT') || rawStatus === 'REJECTED') {
+    moderationStatus = 'REJECTED';
+  }
 
   const stock =
     item.stockQuantity ??
@@ -399,11 +399,19 @@ export function mapSellerProductToUi(item) {
     item.skus?.[0]?.price ??
     0;
 
+  const name =
+    item.productName ||
+    item.name ||
+    item.title ||
+    item.productCode ||
+    'Sản phẩm';
+
   return {
     id: item.id ?? item.productId,
-    name: item.name ?? item.title ?? '',
-    category: item.categoryId ?? item.category ?? '',
-    brand: item.brand ?? '',
+    name,
+    productName: name,
+    category: item.categoryName || item.categoryId || item.category || '',
+    brand: item.brand || item.brandName || '',
     price,
     stock,
     status: normalizeStatus(item.status ?? moderationStatus),

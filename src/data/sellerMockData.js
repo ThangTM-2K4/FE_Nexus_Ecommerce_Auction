@@ -12,6 +12,7 @@ export const sidebarMenuItems = [
       { id: "media-library", label: "Kho Hình Ảnh/Video", path: "/seller-hub/media-library" },
       { id: "my-reports", label: "Báo Cáo Của Tôi", path: "/seller-hub/my-reports" },
       { id: "products", label: "Sản phẩm", path: "/seller-hub/products" },
+      { id: "warehouses", label: "Kho hàng", path: "/seller-hub/warehouses" },
     ],
   },
   {

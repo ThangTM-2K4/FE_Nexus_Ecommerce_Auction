@@ -256,7 +256,13 @@ export default function CreateProductPage() {
             const file = await dataUrlToFile(dataUrl, `product-${productId}-${i + 1}.jpg`);
             const { url, key } = await uploadProductImage(file);
             const isCover = i === 0;
-            await attachProductImage(productId, { url, key, isCover }, rowVersion);
+            await attachProductImage(productId, {
+              imageKey: key || url,
+              imageUrl: url,
+              isCover,
+              isPrimary: isCover,
+              sortOrder: i,
+            }, rowVersion);
           } catch (imgErr) {
             console.warn("Upload image warning:", imgErr);
           }
@@ -272,31 +278,10 @@ export default function CreateProductPage() {
         }
       }
 
-      try {
-        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
-        const newProd = {
-          id: productId,
-          name: form.name.trim(),
-          category: form.category,
-          price: Number(form.price),
-          stock: Number(form.stock),
-          stockQuantity: Number(form.stock),
-          status: hidden ? "DRAFT" : "PENDING",
-          moderationStatus: hidden ? "NONE" : "PENDING_MANUAL_REVIEW",
-          createdAt: new Date().toISOString(),
-          description: form.description.trim(),
-          images: filledImages,
-        };
-        const updated = [newProd, ...localList.filter((p) => p.id !== productId)];
-        localStorage.setItem("seller_created_products", JSON.stringify(updated));
-      } catch {
-        /* ignore */
-      }
-
       toast.success(
         hidden
-          ? "Đã lưu sản phẩm ở chế độ ẩn (DRAFT)"
-          : "Đã tạo sản phẩm thành công và chuyển sang chờ duyệt!"
+          ? "Đã lưu bản nháp sản phẩm thành công!"
+          : "Đã gửi sản phẩm lên hệ thống chờ Admin duyệt!"
       );
       navigate("/seller-hub/products");
     } catch (err) {

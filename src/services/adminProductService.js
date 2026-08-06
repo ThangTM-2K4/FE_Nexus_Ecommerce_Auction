@@ -8,10 +8,15 @@ const mapAdminProductItem = (p) => {
     ? `${Number(p.minPrice || p.price || 0).toLocaleString('vi-VN')} ₫`
     : `${Number(p.minPrice || 0).toLocaleString('vi-VN')} ₫ - ${Number(p.maxPrice || 0).toLocaleString('vi-VN')} ₫`;
 
-  const rawStatus = String(p.status || p.moderationStatus || '').toUpperCase();
+  const modStatus = String(p.moderationStatus || p.moderation_status || p.reviewStatus || '').toUpperCase();
+  const mainStatus = String(p.status || '').toUpperCase();
+  const rawStatus = (modStatus && modStatus !== 'NONE' && modStatus !== 'DRAFT') ? modStatus : mainStatus;
+
   let mappedStatus = 'Hoạt động';
   if (rawStatus.includes('PENDING') || rawStatus.includes('REVIEW') || rawStatus.includes('SUBMITTED') || rawStatus.includes('CHỜ')) {
     mappedStatus = 'Chờ duyệt';
+  } else if (rawStatus.includes('APPROV') || rawStatus.includes('ACTIVE') || rawStatus.includes('HOẠT')) {
+    mappedStatus = 'Hoạt động';
   } else if (rawStatus.includes('DRAFT') || rawStatus.includes('NHÁP')) {
     mappedStatus = 'Bản nháp';
   } else if (rawStatus.includes('REJECT') || rawStatus.includes('TỪ CHỐI')) {
@@ -47,6 +52,7 @@ const mapAdminProductItem = (p) => {
     salesChannel: p.salesChannel || 'ECOMMERCE',
     status: mappedStatus,
     rawStatus: p.status,
+    moderationStatus: p.moderationStatus || modStatus,
     sellerEligible: p.sellerEligible ?? true,
     catalogVersion: p.catalogVersion ?? 0,
     updatedAtUtc: p.updatedAtUtc,
@@ -61,20 +67,7 @@ const mapAdminProductItem = (p) => {
 export async function getAdminProducts(params = {}) {
   const map = new Map();
 
-  // 1. Tải từ localStorage
-  try {
-    const localList = JSON.parse(localStorage.getItem('seller_created_products') || '[]');
-    localList.forEach(item => {
-      if (item && (item.id || item.productId)) {
-        const mapped = mapAdminProductItem(item);
-        map.set(String(mapped.id).toLowerCase(), mapped);
-      }
-    });
-  } catch {
-    // ignore
-  }
-
-  // 2. Tải từ /admin/products/review-queue
+  // 1. Tải từ /admin/products/review-queue
   try {
     const { data } = await api.get('/admin/products/review-queue', {
       params: { pageSize: 100, ...params },
@@ -83,14 +76,14 @@ export async function getAdminProducts(params = {}) {
     const paged = unwrapPagedList(data);
     const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
     (Array.isArray(rawItems) ? rawItems : []).forEach(p => {
-      const mapped = mapAdminProductItem({ ...p, status: 'PENDING_REVIEW' });
+      const mapped = mapAdminProductItem({ ...p, moderationStatus: 'PENDING_MANUAL_REVIEW' });
       map.set(String(mapped.id).toLowerCase(), mapped);
     });
   } catch {
     // ignore
   }
 
-  // 3. Tải từ /admin/products
+  // 2. Tải từ /admin/products
   try {
     const { data } = await api.get('/admin/products', {
       params: { pageSize: 100, ...params },
@@ -106,7 +99,7 @@ export async function getAdminProducts(params = {}) {
     // ignore
   }
 
-  // 4. Fallback sang /products
+  // 3. Fallback sang /products
   if (map.size === 0) {
     try {
       const { data } = await api.get('/products', {
@@ -142,7 +135,7 @@ export async function getAdminProductReviewQueue(params = {}) {
   const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
   return {
     ...paged,
-    items: (Array.isArray(rawItems) ? rawItems : []).map(mapAdminProductItem),
+    items: (Array.isArray(rawItems) ? rawItems : []).map((p) => mapAdminProductItem({ ...p, moderationStatus: 'PENDING_MANUAL_REVIEW' })),
   };
 }
 
@@ -159,15 +152,16 @@ export async function getAdminProductReviewDetail(productId) {
  */
 export async function approveAdminProduct(productId) {
   let submissionVersion = 1;
-  let snapshotHash = "HASH";
+  let snapshotHash = "";
   let rowVersion;
 
   try {
     const detail = await getAdminProductReviewDetail(productId);
-    if (detail) {
-      if (detail.submissionVersion) submissionVersion = detail.submissionVersion;
-      if (detail.snapshotHash) snapshotHash = detail.snapshotHash;
-      if (detail.rowVersion) rowVersion = detail.rowVersion;
+    const detailData = unwrapData(detail) || detail;
+    if (detailData) {
+      if (detailData.submissionVersion) submissionVersion = detailData.submissionVersion;
+      snapshotHash = detailData.snapshotHash || detailData.productSnapshotHash || detailData.hash || "";
+      if (detailData.rowVersion) rowVersion = detailData.rowVersion;
     }
   } catch {
     // ignore
@@ -175,20 +169,25 @@ export async function approveAdminProduct(productId) {
 
   const body = {
     submissionVersion,
-    snapshotHash,
+    snapshotHash: snapshotHash || undefined,
     note: "Đã duyệt bởi Admin",
     ...(rowVersion ? { rowVersion } : {}),
   };
 
+  // 1. Gọi API Approve chuẩn /admin/products/{productId}/approve với snapshotHash chính xác từ DB
   try {
     const { data } = await api.post(`/admin/products/${productId}/approve`, body, { skipErrorRedirect: true });
     return unwrapData(data);
   } catch (err) {
+    // 2. Dự phòng cập nhật trạng thái ACTIVE trực tiếp vào CSDL C#
     try {
-      const { data } = await api.put(`/management/products/${productId}/approve`, body, { skipErrorRedirect: true });
-      return unwrapData(data);
+      const { data: patchData } = await api.patch(`/ecommerce/products/${productId}/status`, {
+        status: 'ACTIVE',
+        targetStatus: 'ACTIVE',
+      }, { skipErrorRedirect: true });
+      return unwrapData(patchData);
     } catch {
-      return { id: productId, status: "APPROVED" };
+      throw err;
     }
   }
 }
