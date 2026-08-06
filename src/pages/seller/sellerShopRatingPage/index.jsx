@@ -55,7 +55,7 @@ export default function ShopRatingPage() {
 
       {user && (
         <div style={{ marginBottom: "20px" }}>
-          <TrustRankBar profile={user} sellerStatus="APPROVED" />
+          <TrustRankBar profile={user} sellerStatus="APPROVED" type="seller" />
         </div>
       )}
 

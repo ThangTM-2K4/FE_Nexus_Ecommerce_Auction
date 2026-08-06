@@ -242,13 +242,13 @@ export const getUserReputation = async (userId, profile, sellerStatus) => {
   };
 
   let sellerProfile = null;
-  if (sellerStatus) {
+  if (sellerStatus || apiRep?.sellerScore != null) {
     const sellerScore =
       apiRep?.sellerScore != null
         ? Number(apiRep.sellerScore)
         : calculateSellerScore(stored.sellerActivity || {});
     sellerProfile = {
-      status: sellerStatus,
+      status: sellerStatus || 'APPROVED',
       score: sellerScore,
       rank: apiRep?.sellerRank || calculateSellerRank(sellerScore),
     };

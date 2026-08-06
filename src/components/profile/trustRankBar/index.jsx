@@ -6,7 +6,7 @@ import ProgressBar from '../progressBar';
 import RankBadge from '../rankBadge';
 import './index.scss';
 
-export default function TrustRankBar({ profile, sellerStatus }) {
+export default function TrustRankBar({ profile, sellerStatus, type }) {
   const { user } = useAuth();
   const [reputation, setReputation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,9 +24,18 @@ export default function TrustRankBar({ profile, sellerStatus }) {
     return <div className="account-trust-bar account-trust-bar--loading">Đang tải uy tín...</div>;
   }
 
-  if (!reputation?.buyerProfile) return null;
+  if (!reputation) return null;
 
-  const { score, rank } = reputation.buyerProfile;
+  // Xác định hiển thị Uy tín Người bán hay Uy tín Người mua
+  const isSellerMode = type === 'seller' || (sellerStatus && reputation.sellerProfile?.score != null);
+  const targetProfile = isSellerMode && reputation.sellerProfile
+    ? reputation.sellerProfile
+    : reputation.buyerProfile;
+
+  if (!targetProfile) return null;
+
+  const { score, rank } = targetProfile;
+  const label = isSellerMode ? 'Uy tín người bán' : 'Uy tín người mua';
   const progress = reputationService.getRankProgress(score, rank);
   const nextRank = reputationService.getNextRank(rank);
   const pointsToNext = reputationService.getPointsToNextRank(score, rank);
@@ -35,7 +44,7 @@ export default function TrustRankBar({ profile, sellerStatus }) {
   return (
     <div className="account-trust-bar">
       <div className="account-trust-bar__header">
-        <span className="account-trust-bar__label">Uy tín người mua</span>
+        <span className="account-trust-bar__label">{label}</span>
         <RankBadge rank={rank} />
       </div>
 
