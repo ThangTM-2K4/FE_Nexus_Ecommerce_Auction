@@ -82,17 +82,47 @@ const StaffProductReview = () => {
   };
 
   const loadProducts = async () => {
+    let localList = [];
+    try {
+      localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+    } catch {
+      /* ignore */
+    }
+
+    const initialMap = new Map();
+    localList.forEach((lp) => {
+      if (lp && (lp.id || lp.productId)) {
+        const id = lp.id || lp.productId;
+        const key = String(id).toLowerCase();
+        const price = extractPrice(lp);
+        const stock = extractStock(lp);
+        const modStatus = lp.moderationStatus && lp.moderationStatus !== "NONE" ? lp.moderationStatus : "PENDING_MANUAL_REVIEW";
+        initialMap.set(key, {
+          ...lp,
+          id,
+          price,
+          stock,
+          moderationStatus: modStatus,
+          status: lp.status || "PENDING",
+        });
+      }
+    });
+
+    if (initialMap.size > 0 && products.length === 0) {
+      setProducts(Array.from(initialMap.values()));
+    }
+
     setLoading(true);
     try {
       const endpoints = [
         "/ecommerce/products",
+        "/seller/products",
         "/admin/products/review-queue",
         "/admin/products",
         "/staff/products/review-queue",
+        "/staff/products",
         "/management/products",
         "/products",
-        "/catalog/products",
-        "/seller/products",
       ];
 
       const results = await Promise.allSettled(
@@ -101,7 +131,7 @@ const StaffProductReview = () => {
         )
       );
 
-      const map = new Map();
+      const map = new Map(initialMap);
 
       results.forEach((res) => {
         if (res.status === "fulfilled") {
@@ -110,8 +140,12 @@ const StaffProductReview = () => {
             ? val
             : Array.isArray(val?.items)
             ? val.items
+            : Array.isArray(val?.products)
+            ? val.products
             : Array.isArray(val?.data?.items)
             ? val.data.items
+            : Array.isArray(val?.data?.products)
+            ? val.data.products
             : Array.isArray(val?.data)
             ? val.data
             : Array.isArray(val?.results)
@@ -120,72 +154,27 @@ const StaffProductReview = () => {
 
           items.forEach((p) => {
             if (p && (p.id || p.productId)) {
-              const id = p.id || p.productId;
+              const realId = p.id || p.productId;
+              const key = String(realId).toLowerCase();
               const price = extractPrice(p);
               const stock = extractStock(p);
-              if (!map.has(id)) {
-                map.set(id, { ...p, id, price, stock });
+              if (!map.has(key)) {
+                map.set(key, { ...p, id: realId, price, stock });
               } else {
-                const existing = map.get(id);
-                map.set(id, {
+                const existing = map.get(key);
+                map.set(key, {
                   ...existing,
                   ...p,
-                  id,
+                  id: realId,
                   price: price > 0 ? price : existing.price,
                   stock: stock > 0 ? stock : existing.stock,
+                  moderationStatus: existing.moderationStatus || p.moderationStatus,
                 });
               }
             }
           });
         }
       });
-
-      // Merge local products case-insensitively so newly submitted products appear in review queue
-      try {
-        const localProds = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
-        localProds.forEach((lp) => {
-          if (!lp) return;
-          const lpId = String(lp.id || lp.productId || "").toLowerCase();
-          if (!lpId) return;
-
-          let foundKey = null;
-          for (const key of map.keys()) {
-            if (String(key).toLowerCase() === lpId) {
-              foundKey = key;
-              break;
-            }
-          }
-
-          const price = extractPrice(lp);
-          const stock = extractStock(lp);
-          const modStatus = lp.moderationStatus && lp.moderationStatus !== "NONE" ? lp.moderationStatus : "PENDING_MANUAL_REVIEW";
-
-          if (foundKey) {
-            const existing = map.get(foundKey);
-            map.set(foundKey, {
-              ...existing,
-              ...lp,
-              id: foundKey,
-              price: price > 0 ? price : existing.price,
-              stock: stock > 0 ? stock : existing.stock,
-              moderationStatus: modStatus,
-              status: lp.status || existing.status || "PENDING",
-            });
-          } else {
-            const realId = lp.id || lp.productId;
-            map.set(realId, {
-              ...lp,
-              id: realId,
-              price,
-              stock,
-              moderationStatus: modStatus,
-              status: lp.status || "PENDING",
-            });
-          }
-        });
-      } catch {
-        /* ignore */
-      }
 
       const allMapped = Array.from(map.values());
 
@@ -194,11 +183,17 @@ const StaffProductReview = () => {
         allMapped.map(async (p) => {
           try {
             const modData = await getProductModeration(p.id);
-            if (modData && modData.moderationStatus && modData.moderationStatus !== "NONE") {
+            const modStatus = modData?.moderationStatus || modData?.data?.moderationStatus;
+            if (
+              modStatus &&
+              modStatus !== "NONE" &&
+              modStatus !== "NOT_SUBMITTED" &&
+              modStatus !== "DRAFT"
+            ) {
               return {
                 ...p,
-                moderationStatus: modData.moderationStatus,
-                rowVersion: modData.rowVersion || p.rowVersion,
+                moderationStatus: modStatus,
+                rowVersion: modData?.rowVersion || p.rowVersion,
               };
             }
           } catch {
@@ -211,7 +206,9 @@ const StaffProductReview = () => {
       setProducts(enrichedList);
     } catch (err) {
       console.error("Error loading products:", err);
-      setProducts([]);
+      if (initialMap.size > 0) {
+        setProducts(Array.from(initialMap.values()));
+      }
     } finally {
       setLoading(false);
     }
@@ -219,6 +216,17 @@ const StaffProductReview = () => {
 
   useEffect(() => {
     loadProducts();
+
+    const handleStorageChange = (e) => {
+      if (!e.key || e.key === "seller_created_products") {
+        loadProducts();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   const normalizeStatus = (p) => {
@@ -350,7 +358,10 @@ const StaffProductReview = () => {
               key={t.id}
               type="button"
               className={tab === t.id ? "active" : ""}
-              onClick={() => setTab(t.id)}
+              onClick={() => {
+                setTab(t.id);
+                loadProducts();
+              }}
             >
               {t.label} ({counts[t.id] ?? 0})
             </button>

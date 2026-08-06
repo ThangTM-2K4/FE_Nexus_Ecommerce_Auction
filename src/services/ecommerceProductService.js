@@ -204,24 +204,31 @@ export async function submitProductForReview(productId, rowVersion) {
       ? crypto.randomUUID()
       : `key-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
-  const { data } = await api.post(
-    `/ecommerce/products/${productId}/submit-review`,
-    {
-      rowVersion: finalRowVersion,
-      operationKey: key,
-      idempotencyKey: key,
-      callerPayloadHash: null,
-    },
-    {
-      headers: {
-        'If-Match': finalRowVersion || '*',
-        'X-Operation-Key': key,
-        'X-Idempotency-Key': key,
+  try {
+    const { data } = await api.post(
+      `/ecommerce/products/${productId}/submit-review`,
+      {
+        rowVersion: finalRowVersion,
+        operationKey: key,
+        idempotencyKey: key,
+        callerPayloadHash: null,
       },
-    }
-  );
+      {
+        headers: {
+          'If-Match': finalRowVersion || '*',
+          'X-Operation-Key': key,
+          'X-Idempotency-Key': key,
+        },
+      }
+    );
 
-  return unwrapData(data);
+    return unwrapData(data);
+  } catch (err) {
+    if (err?.response?.status === 409) {
+      return { moderationStatus: "PENDING_MANUAL_REVIEW" };
+    }
+    throw err;
+  }
 }
 
 /**

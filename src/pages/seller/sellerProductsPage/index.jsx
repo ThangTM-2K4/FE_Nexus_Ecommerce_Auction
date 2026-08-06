@@ -4,7 +4,14 @@ import { toast } from "react-toastify";
 import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { useAuth } from "../../../context/AuthContext";
-import { getMyEcommerceProducts, submitProductForReview, getApiErrorMessage } from "../../../services/ecommerceProductService";
+import api from "../../../config/api";
+import {
+  getMyEcommerceProducts,
+  submitProductForReview,
+  getProductModeration,
+  mapSellerProductToUi,
+  getApiErrorMessage,
+} from "../../../services/ecommerceProductService";
 import { productCategories } from "../../../data/auctionMockData";
 
 const STATUS_LABELS = {
@@ -22,56 +29,96 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await getMyEcommerceProducts();
-      let list = Array.isArray(res)
-        ? res
-        : Array.isArray(res?.items)
-        ? res.items
-        : Array.isArray(res?.products)
-        ? res.products
-        : [];
+      const endpoints = [
+        "/seller/products",
+        "/ecommerce/products",
+        "/management/products",
+        "/products",
+      ];
 
-      // Merge items from localStorage so newly created items, stock, and moderationStatus are preserved
+      const results = await Promise.allSettled(
+        endpoints.map((ep) =>
+          api.get(ep, { params: { scope: "management", pageSize: 100, pageNumber: 1, limit: 100 } })
+        )
+      );
+
+      const map = new Map();
+
+      results.forEach((res) => {
+        if (res.status === "fulfilled") {
+          const val = res.value?.data || res.value;
+          const items = Array.isArray(val)
+            ? val
+            : Array.isArray(val?.items)
+            ? val.items
+            : Array.isArray(val?.data?.items)
+            ? val.data.items
+            : Array.isArray(val?.data)
+            ? val.data
+            : Array.isArray(val?.results)
+            ? val.results
+            : [];
+
+          items.forEach((item) => {
+            if (item && (item.id || item.productId)) {
+              const mapped = mapSellerProductToUi(item);
+              if (mapped && mapped.id) {
+                const key = String(mapped.id).toLowerCase();
+                if (!map.has(key)) {
+                  map.set(key, mapped);
+                } else {
+                  const existing = map.get(key);
+                  map.set(key, {
+                    ...existing,
+                    ...mapped,
+                    id: mapped.id,
+                    stock: mapped.stock > 0 ? mapped.stock : existing.stock,
+                    stockQuantity: mapped.stockQuantity > 0 ? mapped.stockQuantity : existing.stockQuantity,
+                  });
+                }
+              }
+            }
+          });
+        }
+      });
+
+      // Merge local products case-insensitively so newly created/submitted items appear
       try {
         const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
-        const map = new Map();
-        list.forEach((p) => {
-          if (p && (p.id || p.productId)) {
-            const id = String(p.id || p.productId);
-            map.set(id, { ...p, id });
-          }
-        });
         localList.forEach((lp) => {
-          if (lp && (lp.id || lp.productId)) {
-            const id = String(lp.id || lp.productId);
-            const stockVal = Number(lp.stockQuantity ?? lp.stock ?? 0);
-            if (!map.has(id)) {
-              map.set(id, {
-                ...lp,
-                id,
-                stock: stockVal,
-                stockQuantity: stockVal,
-                moderationStatus: lp.moderationStatus || "NONE",
-              });
-            } else {
-              const existing = map.get(id);
-              const mergedStock = stockVal > 0 ? stockVal : Number(existing.stockQuantity ?? existing.stock ?? 0);
-              const mergedMod = lp.moderationStatus && lp.moderationStatus !== "NONE" ? lp.moderationStatus : existing.moderationStatus;
-              map.set(id, {
-                ...existing,
-                ...lp,
-                id,
-                stock: mergedStock,
-                stockQuantity: mergedStock,
-                moderationStatus: mergedMod || "NONE",
-              });
-            }
+          if (!lp || (!lp.id && !lp.productId)) return;
+          const realId = lp.id || lp.productId;
+          const key = String(realId).toLowerCase();
+          const stockVal = Number(lp.stockQuantity ?? lp.stock ?? 0);
+          const modVal = lp.moderationStatus && lp.moderationStatus !== "NONE" ? lp.moderationStatus : "PENDING_MANUAL_REVIEW";
+
+          if (!map.has(key)) {
+            map.set(key, {
+              ...lp,
+              id: realId,
+              stock: stockVal,
+              stockQuantity: stockVal,
+              moderationStatus: modVal,
+              status: lp.status || "PENDING",
+            });
+          } else {
+            const existing = map.get(key);
+            const mergedStock = stockVal > 0 ? stockVal : Number(existing.stockQuantity ?? existing.stock ?? 0);
+            map.set(key, {
+              ...existing,
+              ...lp,
+              id: realId,
+              stock: mergedStock,
+              stockQuantity: mergedStock,
+              moderationStatus: modVal || existing.moderationStatus || "NONE",
+            });
           }
         });
-        list = Array.from(map.values());
       } catch {
         /* ignore */
       }
+
+      let list = Array.from(map.values());
 
       // Nạp thông tin kiểm duyệt thời gian thực cho từng sản phẩm
       const enrichedList = await Promise.all(
