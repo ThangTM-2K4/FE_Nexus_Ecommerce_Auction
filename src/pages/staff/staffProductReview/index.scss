@@ -1,9 +1,80 @@
-﻿@use "../../../styles/staff-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
 .stf-product-review {
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  &__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    button {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid $color-border;
+      background: $color-bg-card;
+      color: $color-text-muted;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.active {
+        background: linear-gradient(135deg, $color-primary, $color-accent-mid);
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 2px 8px rgba($color-primary, 0.25);
+      }
+    }
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 14px;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+    min-width: 240px;
+
+    svg {
+      color: $color-text-muted;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    input {
+      border: none;
+      background: none;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+      color: $color-text;
+
+      &::placeholder {
+        color: $color-text-muted;
+      }
+    }
+  }
 
   &__empty {
     padding: 40px;
@@ -79,9 +150,28 @@
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 999px;
-    background: rgba($color-warning, 0.15);
-    color: $color-warning;
     height: fit-content;
+    white-space: nowrap;
+
+    &.status-pending {
+      background: rgba($color-warning, 0.15);
+      color: $color-warning;
+    }
+
+    &.status-approved {
+      background: rgba($color-success, 0.15);
+      color: $color-success;
+    }
+
+    &.status-rejected {
+      background: rgba($color-danger, 0.12);
+      color: $color-danger;
+    }
+
+    &.status-draft {
+      background: rgba($color-text-muted, 0.12);
+      color: $color-text-muted;
+    }
   }
 
   &__desc {
@@ -128,6 +218,78 @@
         border: 1px solid $color-border;
         color: $color-danger;
       }
+    }
+  }
+
+  &__table-wrap {
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-lg;
+    overflow-x: auto;
+    box-shadow: $shadow-sm;
+  }
+}
+
+.stf-product-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid $color-border-light;
+  }
+
+  th {
+    background: rgba($color-primary, 0.04);
+    font-size: 11px;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  tbody tr {
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba($color-primary, 0.02);
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  .col-id {
+    strong {
+      display: block;
+      color: $color-primary-dark;
+      font-weight: 700;
+    }
+
+    small {
+      color: $color-text-muted;
+      font-size: 11px;
+    }
+  }
+
+  .col-name {
+    .product-name {
+      font-weight: 700;
+      color: $color-primary-dark;
+    }
+
+    small {
+      color: $color-text-muted;
+    }
+  }
+
+  .col-price {
+    strong {
+      color: $color-primary;
     }
   }
 }

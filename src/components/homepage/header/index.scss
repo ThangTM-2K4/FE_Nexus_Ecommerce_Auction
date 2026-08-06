@@ -66,6 +66,46 @@
   font-weight: inherit;
 }
 
+.header-language-wrap {
+  position: relative;
+}
+
+.header-language-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 140px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+  z-index: 120;
+
+  button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: $radius-sm;
+    color: $ink;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background $transition-fast, color $transition-fast;
+
+    &:hover,
+    &.active {
+      background: rgba($accent, 0.12);
+      color: $navy;
+    }
+  }
+}
+
 .header-topbar-cta {
   background: linear-gradient(135deg, $teal, $sky) !important;
   color: $deep !important;
@@ -182,8 +222,8 @@
 
   &:focus-within {
     background: $surface;
-    border-color: rgba($sky, 0.7);
-    box-shadow: 0 0 0 4px $accent-glow;
+    border-color: rgba($accent, 0.55);
+    box-shadow: 0 0 0 2px rgba($accent, 0.22);
   }
 }
 
@@ -200,12 +240,27 @@
   min-width: 0;
   height: 100%;
   border: 0;
-  outline: 0;
+  outline: none;
+  box-shadow: none;
   background: transparent;
   color: $ink;
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 500;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px $surface inset;
+    -webkit-text-fill-color: $ink;
+    transition: background-color 9999s ease-in-out 0s;
+  }
 
   &::placeholder {
     color: $ink-faint;
@@ -510,24 +565,62 @@
   gap: 6px;
   flex-wrap: wrap;
   min-width: 0;
+}
 
-  a {
-    text-decoration: none;
-    color: $ink;
-    font-size: 0.82rem;
-    font-weight: 600;
-    padding: 5px 12px;
-    border-radius: $radius-pill;
-    background: $surface;
-    border: 1px solid rgba($sage, 0.4);
-    white-space: nowrap;
-    transition: color 0.2s $ease, border-color 0.2s $ease, box-shadow 0.2s $ease;
+.header-tag-btn {
+  border: 1px solid rgba($sage, 0.4);
+  background: $surface;
+  color: $ink;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: $radius-pill;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s $ease, border-color 0.2s $ease, box-shadow 0.2s $ease,
+    background 0.2s $ease;
+
+  &:hover {
+    color: $navy;
+    border-color: rgba($accent, 0.55);
+    background: rgba($accent, 0.08);
+    box-shadow: $shadow-sm;
+  }
+
+  &--muted {
+    color: $ink-muted;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border-color: transparent;
+    background: transparent;
 
     &:hover {
       color: $navy;
-      border-color: rgba($sky, 0.6);
-      box-shadow: $shadow-sm;
+      background: rgba($accent, 0.12);
+      border-color: rgba($accent, 0.25);
     }
+  }
+}
+
+.header-subnav-links a {
+  text-decoration: none;
+  color: $ink;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: $radius-pill;
+  background: $surface;
+  border: 1px solid rgba($sage, 0.4);
+  white-space: nowrap;
+  transition: color 0.2s $ease, border-color 0.2s $ease, box-shadow 0.2s $ease;
+
+  &:hover {
+    color: $navy;
+    border-color: rgba($sky, 0.6);
+    box-shadow: $shadow-sm;
   }
 }
 
@@ -549,7 +642,8 @@
   padding-right: 4px;
 }
 
-.header-subnav-trending a {
+.header-subnav-trending a,
+.header-subnav-trending .header-tag-btn--muted {
   text-decoration: none;
   color: $ink-muted;
   font-size: 0.8rem;
@@ -560,7 +654,7 @@
 
   &:hover {
     color: $navy;
-    background: rgba($sky, 0.18);
+    background: rgba($accent, 0.12);
   }
 }
 

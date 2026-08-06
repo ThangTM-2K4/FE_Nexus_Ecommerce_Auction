@@ -50,7 +50,53 @@ const extraShopProducts = Array.from({ length: 24 }, (_, i) => {
   };
 });
 
-export const shopProducts = [...baseProducts, ...extraShopProducts];
+export function getApprovedSellerProducts() {
+  try {
+    const raw = localStorage.getItem("seller_created_products") || "[]";
+    const list = JSON.parse(raw);
+    return list
+      .filter((p) => {
+        const mod = String(p.moderationStatus || "").toUpperCase();
+        const st = String(p.status || "").toUpperCase();
+        return mod === "APPROVED" || st === "APPROVED" || st === "ACTIVE" || st === "PUBLISHED";
+      })
+      .map((p, i) => {
+        const imgSrc =
+          (typeof p.images?.[0] === "string" ? p.images[0] : p.images?.[0]?.url) ||
+          (typeof p.image === "string" ? p.image : p.image?.url) ||
+          p.imageUrl ||
+          "/images/products/electronics/iphone.jpg";
+        return {
+          id: p.id || `p-approved-${i}`,
+          title: p.name || p.title || "Sản phẩm",
+          name: p.name || p.title || "Sản phẩm",
+          price: Number(p.price || 0),
+          stock: Number(p.stockQuantity ?? p.stock ?? 0),
+          stockQuantity: Number(p.stockQuantity ?? p.stock ?? 0),
+          image: imgSrc,
+          images: p.images || [imgSrc],
+          rating: 5.0,
+          soldNumeric: 0,
+          monthlySold: "Mới đăng",
+          shopId: SHOP_ID,
+          categoryId: p.category || CATEGORY_IDS[0],
+          createdAt: Date.now(),
+          isSuggested: true,
+          isBestSeller: true,
+          tags: ["Hàng Mới"],
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
+export function getAllShopProducts() {
+  const approved = getApprovedSellerProducts();
+  return [...approved, ...baseProducts, ...extraShopProducts];
+}
+
+export const shopProducts = getAllShopProducts();
 
 export const shopProfile = {
   id: SHOP_ID,
@@ -85,11 +131,11 @@ export function getShopCategories() {
 }
 
 export function getSuggestedProducts(shopId, limit = 6) {
-  return shopProducts.filter((p) => p.shopId === shopId && p.isSuggested).slice(0, limit);
+  return getAllShopProducts().filter((p) => p.shopId === shopId && p.isSuggested).slice(0, limit);
 }
 
 export function getBestSellerProducts(shopId, limit = 6) {
-  return shopProducts
+  return getAllShopProducts()
     .filter((p) => p.shopId === shopId && p.isBestSeller)
     .sort((a, b) => b.soldNumeric - a.soldNumeric)
     .slice(0, limit);
@@ -106,7 +152,8 @@ export function filterShopProducts(
   products,
   { categoryId = null, sortBy = 'popular', priceFilter = 'all' } = {},
 ) {
-  let list = products.filter((p) => p.shopId === SHOP_ID);
+  const source = Array.isArray(products) && products.length > 0 ? products : getAllShopProducts();
+  let list = source.filter((p) => p.shopId === SHOP_ID);
 
   if (categoryId) {
     list = list.filter((p) => p.categoryId === categoryId);

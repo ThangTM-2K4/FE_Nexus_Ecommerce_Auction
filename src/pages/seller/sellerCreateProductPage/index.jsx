@@ -261,7 +261,7 @@ export default function CreateProductPage() {
             {
               imageUrl: uploaded.url,
               storageObjectKey: uploaded.key,
-              altText: form.name || '',
+              altText: form.name || "",
               isPrimary,
               sortOrder: i,
             },
@@ -671,7 +671,7 @@ export default function CreateProductPage() {
                 disabled={submitting || !canSubmitProduct}
                 onClick={() => handleSubmit(true)}
               >
-                {submitLabel || "Lưu & Ẩn"}
+                Lưu & Ẩn
               </button>
               <button type="submit" className="slr-btn-create" disabled={submitting || !canSubmitProduct}>
                 {submitLabel || "Lưu & Hiển thị"}

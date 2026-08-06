@@ -12,6 +12,7 @@ import RegisterVerifyOtpPage from "./pages/auth/registerVerifyOtp";
 import TermsPage from "./pages/auth/termsPage";
 
 import HomePage from "./pages/homepage/homePage";
+import ProductListPage from "./pages/homepage/productListPage";
 import ProductDetailPage from "./pages/productDetailPage";
 import ShopProfilePage from "./pages/shop/shopProfilePage";
 import CartPage from "./pages/cartPage";
@@ -109,6 +110,7 @@ function App() {
     <Route path="/home" element={<HomePage />} />
     <Route path="/homepage" element={<HomePage />} />
     <Route path="/homePage" element={<HomePage />} />
+    <Route path="/products" element={<ProductListPage />} />
     <Route path="/product/:id" element={<ProductDetailPage />} />
     <Route path="/shop/:shopId" element={<ShopProfilePage />} />
 

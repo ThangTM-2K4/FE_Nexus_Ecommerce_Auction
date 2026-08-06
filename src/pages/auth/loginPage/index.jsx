@@ -145,8 +145,11 @@ function LoginPage() {
         const isSeller =
           roleTokens.includes("SELLER") ||
           user?.sellerStatus === "APPROVED" ||
+          user?.currentMode === "SELLER" ||
           user?.isSeller === true ||
-          user?.role === "SELLER";
+          user?.role === "SELLER" ||
+          user?.roles?.includes("SELLER") ||
+          Boolean(user?.sellerId);
 
         if (isAdmin) {
           navigate("/admin", { replace: true });

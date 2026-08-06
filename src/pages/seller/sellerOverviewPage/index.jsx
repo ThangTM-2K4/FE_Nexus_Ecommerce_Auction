@@ -32,31 +32,80 @@ export default function OverviewPage() {
   const [realProducts, setRealProducts] = useState([]);
   const [walletInfo, setWalletInfo] = useState(null);
   const [sellerBalance, setSellerBalance] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    getMyEcommerceProducts().then((res) => {
-      setRealProducts(res.items || []);
-    }).catch(() => {});
+  const loadData = async () => {
+    setRefreshing(true);
+    try {
+      const [productsRes, walletStateRes, walletsRes] = await Promise.allSettled([
+        getMyEcommerceProducts(),
+        getWalletState(),
+        getMyWallets(),
+      ]);
 
-    getWalletState().then((res) => {
-      setWalletInfo(res?.walletStats || null);
-    }).catch(() => {});
+      if (productsRes.status === "fulfilled") {
+        const res = productsRes.value;
+        const list = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.items)
+          ? res.items
+          : Array.isArray(res?.products)
+          ? res.products
+          : [];
+        setRealProducts(list);
+      }
 
-    getMyWallets().then((res) => {
-      if (res?.wallets) {
-        const sellerWd = res.wallets.find((w) => w.walletType === 'SELLER');
-        if (sellerWd) {
-          setSellerBalance(sellerWd.availableBalance ?? 0);
+      if (walletStateRes.status === "fulfilled") {
+        const res = walletStateRes.value;
+        if (res?.walletStats) {
+          setWalletInfo(res.walletStats);
         }
       }
-    }).catch(() => {});
+
+      if (walletsRes.status === "fulfilled") {
+        const res = walletsRes.value;
+        const list = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.wallets)
+          ? res.wallets
+          : Array.isArray(res?.items)
+          ? res.items
+          : [];
+
+        if (list.length > 0) {
+          const sellerWd = list.find((w) => String(w.walletType).toUpperCase() === "SELLER");
+          const buyerWd = list.find((w) => String(w.walletType).toUpperCase() === "BUYER");
+          const buyerBal = Number(buyerWd?.availableBalance ?? buyerWd?.balance ?? 0);
+          const sellerBal = Number(sellerWd?.availableBalance ?? sellerWd?.balance ?? 0);
+          const totalBal = buyerBal + sellerBal;
+          setSellerBalance(totalBal);
+        }
+      }
+    } catch (err) {
+      console.warn("Error loading overview data:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, [user]);
 
-  const activeProducts = useMemo(() => realProducts.filter((p) => p.status === "ACTIVE" || p.status === "APPROVED").length, [realProducts]);
+  const activeProducts = useMemo(() => {
+    if (!realProducts.length) return 0;
+    return realProducts.filter((p) => {
+      const st = String(p.status || "").toUpperCase();
+      return st === "ACTIVE" || st === "APPROVED" || st === "PUBLISHED";
+    }).length;
+  }, [realProducts]);
+
   const totalProducts = realProducts.length;
-  const availableBalance = sellerBalance !== null ? sellerBalance : (walletInfo?.availableBalance ?? 0);
+  const availableBalance = sellerBalance !== null && sellerBalance !== undefined
+    ? sellerBalance
+    : (walletInfo?.availableBalance ?? 0);
   const netRevenue = availableBalance + (walletInfo?.withdrawnAmount ?? 0);
-  const totalOrders = realProducts.reduce((sum, p) => sum + (p.soldCount || p.sold || 0), 0);
+  const totalOrders = realProducts.reduce((sum, p) => sum + Number(p.soldCount || p.sold || 0), 0);
 
   const heroKpis = useMemo(() => [
     {
@@ -209,6 +258,27 @@ export default function OverviewPage() {
           </div>
           <div className="slr-overview-hero__toolbar">
             <SellerRealtimeClock label="Cập nhật" />
+            <button
+              type="button"
+              className="slr-btn-plain"
+              onClick={loadData}
+              disabled={refreshing}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 14px",
+                borderRadius: "8px",
+                border: "1px solid rgba(255, 255, 255, 0.25)",
+                background: "rgba(255, 255, 255, 0.12)",
+                color: "#fff",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {refreshing ? "↻ Đang tải..." : "↻ Làm mới"}
+            </button>
             <Link to="/seller-hub/products/create" className="slr-btn-create">
               + Tạo sản phẩm
             </Link>

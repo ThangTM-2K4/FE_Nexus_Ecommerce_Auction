@@ -3,7 +3,6 @@ import { toast } from 'react-toastify';
 import PasswordInput from '../../common/passwordInput';
 import Button from '../../common/button';
 import * as passwordService from '../../../services/passwordService';
-import { useAuth } from '../../../context/AuthContext';
 import './index.scss';
 
 const emptyForm = {
@@ -13,32 +12,8 @@ const emptyForm = {
 };
 
 export default function ChangePassword() {
-  const { user } = useAuth();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
-
-  const isGoogle = Boolean(
-    user?.isGoogle ||
-    user?.provider === 'google' ||
-    user?.authProvider === 'Google' ||
-    user?.isGoogleAccount ||
-    user?.loginMethod === 'google' ||
-    user?.hasPassword === false
-  );
-
-  if (isGoogle) {
-    return (
-      <section className="change-password">
-        <h1 className="change-password__title">Đổi Mật Khẩu</h1>
-        <hr className="change-password__divider" />
-        <div style={{ padding: '32px 16px', textAlign: 'center', color: '#6b7280' }}>
-          <p style={{ fontSize: '15px', fontWeight: 500 }}>
-            💡 Tài khoản của bạn đăng nhập bằng Google. Không cần đổi mật khẩu tại đây.
-          </p>
-        </div>
-      </section>
-    );
-  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
