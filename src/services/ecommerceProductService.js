@@ -135,6 +135,64 @@ const extractUploadUrl = (response) => {
 const extractProductId = (payload) =>
   payload?.id ?? payload?.productId ?? payload?.data?.id ?? payload?.data?.productId;
 
+const extractRowVersion = (payload) =>
+  payload?.rowVersion ?? payload?.RowVersion ?? null;
+
+const buildIfMatchHeader = (rowVersion, quoted = true) =>
+  quoted ? `"${rowVersion}"` : String(rowVersion);
+
+const resolveRowVersion = (result, previousRowVersion, context) => {
+  const next = extractRowVersion(result);
+  if (!next) {
+    console.warn(`[ecommerceProductService] ${context}: response không có rowVersion mới, giữ rowVersion cũ.`);
+    return previousRowVersion;
+  }
+  return next;
+};
+
+async function requestWithIfMatch(method, url, { body, rowVersion, quoted = true }) {
+  const config = {
+    headers: { 'If-Match': buildIfMatchHeader(rowVersion, quoted) },
+  };
+  if (method === 'post') return api.post(url, body ?? {}, config);
+  if (method === 'patch') return api.patch(url, body ?? {}, config);
+  throw new Error(`Unsupported method: ${method}`);
+}
+
+/**
+ * Gọi API có If-Match — thử quoted trước (chuẩn HTTP ETag), fallback unquoted nếu fail.
+ */
+async function requestWithIfMatchRetry(method, url, { body, rowVersion, context }) {
+  if (!rowVersion) {
+    throw new Error(`Thiếu rowVersion cho ${context}.`);
+  }
+
+  try {
+    return await requestWithIfMatch(method, url, { body, rowVersion, quoted: true });
+  } catch (error) {
+    console.error(
+      `[ecommerceProductService] ${context} If-Match (quoted) failed`,
+      error?.response?.status,
+      error?.response?.data ?? error,
+    );
+
+    try {
+      const response = await requestWithIfMatch(method, url, { body, rowVersion, quoted: false });
+      if (isDev) {
+        console.info(`[ecommerceProductService] ${context}: If-Match unquoted thành công.`);
+      }
+      return response;
+    } catch (retryError) {
+      console.error(
+        `[ecommerceProductService] ${context} If-Match (unquoted) failed`,
+        retryError?.response?.status,
+        retryError?.response?.data ?? retryError,
+      );
+      throw retryError;
+    }
+  }
+}
+
 const DEFAULT_SALES_CHANNEL = 'Ecommerce';
 const DEFAULT_CURRENCY = 'VND';
 const DEFAULT_ORIGIN_COUNTRY = 'VN';
@@ -157,6 +215,8 @@ export function buildCreateProductPayload({
   const trimmedDesc = String(description || '').trim();
   const unitPrice = Number(price);
   const stockQty = Number(stock);
+  const uniqueSuffix = `${Date.now()}${Math.random().toString(36).slice(2, 6)}`.toUpperCase();
+  const skuCode = `DEFAULT-${uniqueSuffix}`;
 
   return {
     sellerUserId,
@@ -168,7 +228,7 @@ export function buildCreateProductPayload({
     originCountry: originCountry || DEFAULT_ORIGIN_COUNTRY,
     skus: [
       {
-        skuCode: 'DEFAULT',
+        skuCode,
         skuName: trimmedName || 'Mặc định',
         unitPrice,
         currency: DEFAULT_CURRENCY,
@@ -194,10 +254,88 @@ export async function createEcommerceProduct(payload) {
   const { data } = await api.post('/ecommerce/products', payload);
   const result = unwrapData(data);
   if (isDev) {
-    console.info('[ecommerceProductService] POST /ecommerce/products response', result);
+    console.info('[ecommerceProductService] POST /ecommerce/products response', result, {
+      inferredStatus: result?.status ?? result?.moderationStatus ?? result?.productStatus,
+    });
   }
   const productId = extractProductId(result);
-  return { ...result, productId };
+  return { ...result, productId, rowVersion: extractRowVersion(result) };
+}
+
+const isAbsoluteHttpsUrl = (value) => {
+  if (typeof value !== 'string' || !value.trim()) return false;
+  try {
+    return new URL(value.trim()).protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+const extractCatalogProductUploadKey = (response) => {
+  const data = getUploadPayload(response);
+  if (typeof data === 'string') return normalizeUploadKey(data);
+  const raw =
+    data.catalogProductUploadKey
+    || data.storageObjectKey
+    || data.productUploadKey
+    || data.uploadKey
+    || data.key
+    || data.fileKey
+    || extractUploadKey(response)
+    || '';
+  return normalizeUploadKey(raw);
+};
+
+/**
+ * Map body gắn ảnh → POST /ecommerce/products/{id}/images (Swagger).
+ * BE chấp nhận imageUrl (HTTPS) và/hoặc storageObjectKey (key từ catalog upload).
+ */
+export function buildAttachProductImagePayload(imageData = {}) {
+  const {
+    url,
+    key,
+    imageUrl: imageUrlIn,
+    storageObjectKey: storageKeyIn,
+    isCover,
+    isPrimary,
+    altText,
+    sortOrder,
+  } = imageData;
+
+  const storageObjectKey = String(storageKeyIn || key || '').trim();
+  const rawUrl = imageUrlIn || url || '';
+  const imageUrl = isAbsoluteHttpsUrl(rawUrl) ? rawUrl.trim() : '';
+
+  if (!storageObjectKey && !imageUrl) {
+    throw new Error(
+      'Thiếu storageObjectKey hoặc imageUrl HTTPS — kiểm tra response POST /catalog/uploads/product.',
+    );
+  }
+
+  const payload = {
+    isPrimary: Boolean(isPrimary ?? isCover ?? false),
+  };
+
+  if (storageObjectKey) {
+    payload.storageObjectKey = storageObjectKey;
+  }
+  if (imageUrl) {
+    payload.imageUrl = imageUrl;
+  }
+
+  if (altText != null && String(altText).trim()) {
+    payload.altText = String(altText).trim();
+  }
+
+  if (sortOrder != null && !Number.isNaN(Number(sortOrder))) {
+    payload.sortOrder = Number(sortOrder);
+  }
+
+  if (isDev) {
+    console.info('[ecommerceProductService] attach image payload', payload);
+  }
+
+  return payload;
 }
 
 /**
@@ -207,20 +345,40 @@ export async function uploadProductImage(file) {
   const fd = new FormData();
   fd.append('file', file);
   const response = await api.post('/catalog/uploads/product', fd, MULTIPART);
+  const rawPayload = getUploadPayload(response);
   const url = extractUploadUrl(response);
-  const key = normalizeUploadKey(extractUploadKey(response) || url);
-  if (!url && !key) {
-    throw new Error('Server không trả về URL/key ảnh.');
+  const key = extractCatalogProductUploadKey(response);
+
+  if (isDev) {
+    console.info('[ecommerceProductService] POST /catalog/uploads/product response', rawPayload, {
+      url,
+      key,
+    });
+  }
+
+  if (!key && !isAbsoluteHttpsUrl(url)) {
+    throw new Error('Server không trả về catalogProductUploadKey hoặc imageUrl HTTPS.');
   }
   return { url, key };
 }
 
 /**
  * Gắn ảnh vào sản phẩm — POST /ecommerce/products/{productId}/images
+ * @returns {{ data: object, rowVersion: string }}
  */
-export async function attachProductImage(productId, imageData) {
-  const { data } = await api.post(`/ecommerce/products/${productId}/images`, imageData);
-  return unwrapData(data);
+export async function attachProductImage(productId, imageData, currentRowVersion) {
+  const path = `/ecommerce/products/${productId}/images`;
+  const body = buildAttachProductImagePayload(imageData);
+  const { data } = await requestWithIfMatchRetry('post', path, {
+    body,
+    rowVersion: currentRowVersion,
+    context: 'attachProductImage',
+  });
+  const result = unwrapData(data);
+  return {
+    data: result,
+    rowVersion: resolveRowVersion(result, currentRowVersion, 'attachProductImage'),
+  };
 }
 
 /**
@@ -233,10 +391,39 @@ export async function createProductSku(productId, skuData) {
 
 /**
  * Gửi duyệt — POST /ecommerce/products/{productId}/submit-review
+ * @returns {object} result kèm rowVersion mới nhất (nếu có)
  */
-export async function submitProductForReview(productId) {
-  const { data } = await api.post(`/ecommerce/products/${productId}/submit-review`);
-  return unwrapData(data);
+export async function submitProductForReview(productId, currentRowVersion) {
+  const path = `/ecommerce/products/${productId}/submit-review`;
+  let result;
+
+  if (currentRowVersion) {
+    const { data } = await requestWithIfMatchRetry('post', path, {
+      body: {},
+      rowVersion: currentRowVersion,
+      context: 'submitProductForReview',
+    });
+    result = unwrapData(data);
+  } else {
+    const { data } = await api.post(path);
+    result = unwrapData(data);
+  }
+
+  if (isDev) {
+    console.info('[ecommerceProductService] POST /ecommerce/products/submit-review response', {
+      productId,
+      status: result?.status ?? result?.moderationStatus ?? result?.productStatus,
+      rowVersion: extractRowVersion(result),
+      result,
+    });
+  }
+
+  return {
+    ...result,
+    rowVersion: currentRowVersion
+      ? resolveRowVersion(result, currentRowVersion, 'submitProductForReview')
+      : extractRowVersion(result),
+  };
 }
 
 /**
@@ -262,8 +449,24 @@ export async function updateEcommerceProduct(productId, payload) {
 /**
  * Đổi trạng thái — PATCH /ecommerce/products/{productId}/status
  */
-export async function updateProductStatus(productId, status) {
-  const { data } = await api.patch(`/ecommerce/products/${productId}/status`, { status });
+export async function updateProductStatus(productId, status, currentRowVersion) {
+  const path = `/ecommerce/products/${productId}/status`;
+  const body = { status };
+
+  if (currentRowVersion) {
+    const { data } = await requestWithIfMatchRetry('patch', path, {
+      body,
+      rowVersion: currentRowVersion,
+      context: 'updateProductStatus',
+    });
+    const result = unwrapData(data);
+    return {
+      ...result,
+      rowVersion: resolveRowVersion(result, currentRowVersion, 'updateProductStatus'),
+    };
+  }
+
+  const { data } = await api.patch(path, body);
   return unwrapData(data);
 }
 

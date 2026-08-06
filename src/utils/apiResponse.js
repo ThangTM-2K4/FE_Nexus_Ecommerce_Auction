@@ -16,7 +16,7 @@ export const unwrapPagedList = (payload) => {
   const items = data?.items ?? data?.results ?? data?.content ?? data?.data ?? [];
   return {
     items: Array.isArray(items) ? items : [],
-    total: data?.totalCount ?? data?.total ?? data?.count ?? (Array.isArray(items) ? items.length : 0),
+    total: data?.totalCount ?? data?.totalItems ?? data?.total ?? data?.count ?? (Array.isArray(items) ? items.length : 0),
     page: data?.page ?? data?.pageNumber ?? 1,
     pageSize: data?.pageSize ?? data?.limit ?? 20,
   };

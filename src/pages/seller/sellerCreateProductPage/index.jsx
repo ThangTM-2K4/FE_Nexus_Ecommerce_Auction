@@ -8,6 +8,7 @@ import {
   uploadProductImage,
   attachProductImage,
   submitProductForReview,
+  getProductById,
   getApiErrorMessage,
 } from "../../../services/ecommerceProductService";
 import { getCategories, toSelectOptions } from "../../../services/categoryService";
@@ -59,6 +60,7 @@ export default function CreateProductPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitStep, setSubmitStep] = useState("");
   const [draftProductId, setDraftProductId] = useState(null);
+  const [draftRowVersion, setDraftRowVersion] = useState(null);
   const [shippingOptions, setShippingOptions] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(true);
@@ -209,6 +211,7 @@ export default function CreateProductPage() {
     setSubmitting(true);
 
     let productId = draftProductId;
+    let rowVersion = draftRowVersion;
 
     try {
       if (!productId) {
@@ -226,10 +229,22 @@ export default function CreateProductPage() {
           }),
         );
         productId = created.productId ?? created.id;
+        rowVersion = created.rowVersion ?? null;
         if (!productId) {
           throw new Error("Không nhận được productId từ server.");
         }
         setDraftProductId(productId);
+        setDraftRowVersion(rowVersion);
+      } else if (!rowVersion) {
+        const fresh = await getProductById(productId);
+        if (fresh.ok && fresh.data?.rowVersion) {
+          rowVersion = fresh.data.rowVersion;
+          setDraftRowVersion(rowVersion);
+        }
+      }
+
+      if (!rowVersion) {
+        throw new Error("Không có rowVersion — không thể cập nhật sản phẩm (ảnh/trạng thái).");
       }
 
       const imagesToUpload = [...filledImages];
@@ -241,13 +256,27 @@ export default function CreateProductPage() {
           const file = await dataUrlToFile(dataUrl, `product-${productId}-${i + 1}.jpg`);
           const { url, key } = await uploadProductImage(file);
           const isCover = i === 0;
-          await attachProductImage(productId, { url, key, isCover });
+          const attachResult = await attachProductImage(
+            productId,
+            {
+              imageUrl: url,
+              storageObjectKey: key,
+              altText: form.name || '',
+              isPrimary: isCover,
+              sortOrder: i,
+            },
+            rowVersion,
+          );
+          rowVersion = attachResult.rowVersion;
+          setDraftRowVersion(rowVersion);
         }
       }
 
       if (!hidden) {
         setSubmitStep("review");
-        await submitProductForReview(productId);
+        const reviewResult = await submitProductForReview(productId, rowVersion);
+        rowVersion = reviewResult.rowVersion ?? rowVersion;
+        setDraftRowVersion(rowVersion);
       }
 
       toast.success(
