@@ -15,8 +15,8 @@ export default function Error401Page() {
       className="error-page--401"
       code="401"
       tagline="Authorization required"
-      title="Ơ khoan, bạn đăng nhập chưa vậy?"
-      description="Bạn cần đăng nhập để xem trang này đó nha."
+      title="Ơ khoan, bạn chưa đăng nhập!"
+      description="Bạn cần đăng nhập để truy cập trang này. Vui lòng đăng nhập hoặc quay về trang chủ."
       animationData={animation401}
       illustration={<Illustration401 />}
       actions={[
@@ -25,6 +25,11 @@ export default function Error401Page() {
           to: '/login',
           variant: 'accent',
           state: { redirectTo },
+        },
+        {
+          label: 'Quay Về Trang Chủ',
+          to: '/',
+          variant: 'outline',
         },
       ]}
     />

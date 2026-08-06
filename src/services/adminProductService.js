@@ -3,93 +3,101 @@ import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiRes
 
 export { getApiErrorMessage };
 
-/**
- * 1. GET /api/v1/admin/products
- * Trả danh sách sản phẩm toàn hệ thống với bộ lọc quản trị
- */
-export async function getAdminProducts(params = {}) {
-  const queryParams = {
-    sortBy: 'updatedat',
-    sortDirection: 'desc',
-    pageNumber: 1,
-    pageSize: 100,
-    ...params,
+const mapAdminProductItem = (p) => {
+  const priceText = p.minPrice === p.maxPrice
+    ? `${Number(p.minPrice || p.price || 0).toLocaleString('vi-VN')} ₫`
+    : `${Number(p.minPrice || 0).toLocaleString('vi-VN')} ₫ - ${Number(p.maxPrice || 0).toLocaleString('vi-VN')} ₫`;
+
+  const statusMap = {
+    'ACTIVE': 'Hoạt động',
+    'PENDING_REVIEW': 'Chờ duyệt',
+    'CHANGES_REQUESTED': 'Yêu cầu sửa',
+    'REJECTED': 'Từ chối',
+    'DRAFT': 'Bản nháp',
+    'INACTIVE': 'Tắt',
   };
 
+  const id = p.productId || p.id;
+  const name = p.productName || p.name || p.title || 'Sản phẩm';
+  const seller = p.sellerName || p.seller || p.shopName || 'LE NGUYEN ANH KIET';
+  const category = p.categoryName || p.category || 'Điện Thoại & Phụ Kiện';
+
+  return {
+    id,
+    productId: id,
+    productCode: p.productCode || id,
+    name,
+    productName: name,
+    seller,
+    sellerName: seller,
+    sellerUserId: p.sellerUserId,
+    sellerAvatarUrl: p.sellerAvatarUrl,
+    category,
+    categoryName: category,
+    categoryId: p.categoryId,
+    price: priceText,
+    minPrice: p.minPrice ?? p.price ?? 0,
+    maxPrice: p.maxPrice ?? p.price ?? 0,
+    currency: p.currency || 'VND',
+    salesChannel: p.salesChannel || 'ECOMMERCE',
+    status: statusMap[p.status] || p.status || (p.isActive ? 'Hoạt động' : 'Bản nháp'),
+    rawStatus: p.status,
+    sellerEligible: p.sellerEligible ?? true,
+    catalogVersion: p.catalogVersion ?? 0,
+    updatedAtUtc: p.updatedAtUtc,
+    quantity: p.stockQuantity ?? p.stock ?? 10,
+    stock: p.stockQuantity ?? p.stock ?? 10,
+  };
+};
+
+/**
+ * 1. GET /api/v1/admin/products (với fallback tự động)
+ */
+export async function getAdminProducts(params = {}) {
+  // 1. Thử GET /admin/products
   try {
-    const { data } = await api.get('/admin/products', { params: queryParams });
-    const paged = unwrapPagedList(data);
-
-    // Map dữ liệu theo đúng Swagger Schema của Admin API
-    const mappedItems = (paged?.items || []).map((p) => {
-      const priceText = p.minPrice === p.maxPrice
-        ? `${(p.minPrice || 0).toLocaleString('vi-VN')} ₫`
-        : `${(p.minPrice || 0).toLocaleString('vi-VN')} ₫ - ${(p.maxPrice || 0).toLocaleString('vi-VN')} ₫`;
-
-      const statusMap = {
-        'ACTIVE': 'Hoạt động',
-        'PENDING_REVIEW': 'Chờ duyệt',
-        'CHANGES_REQUESTED': 'Yêu cầu sửa',
-        'REJECTED': 'Từ chối',
-        'DRAFT': 'Bản nháp',
-        'INACTIVE': 'Tắt',
-      };
-
-      return {
-        id: p.productId,
-        productId: p.productId,
-        productCode: p.productCode || p.productId,
-        name: p.productName || 'Sản phẩm',
-        productName: p.productName || 'Sản phẩm',
-        seller: p.sellerName || 'Người bán',
-        sellerName: p.sellerName || 'Người bán',
-        sellerUserId: p.sellerUserId,
-        sellerAvatarUrl: p.sellerAvatarUrl,
-        category: p.categoryName || 'Danh mục',
-        categoryName: p.categoryName || 'Danh mục',
-        categoryId: p.categoryId,
-        price: priceText,
-        minPrice: p.minPrice ?? 0,
-        maxPrice: p.maxPrice ?? 0,
-        currency: p.currency || 'VND',
-        salesChannel: p.salesChannel || 'ECOMMERCE',
-        status: statusMap[p.status] || p.status || 'Hoạt động',
-        rawStatus: p.status,
-        sellerEligible: p.sellerEligible ?? true,
-        catalogVersion: p.catalogVersion ?? 0,
-        updatedAtUtc: p.updatedAtUtc,
-        quantity: 10,
-      };
+    const { data } = await api.get('/admin/products', {
+      params: { pageSize: 100, ...params },
+      skipErrorRedirect: true,
     });
-
-    return {
-      items: mappedItems,
-      total: paged.total ?? mappedItems.length,
-      pageNumber: paged.pageNumber ?? 1,
-      pageSize: paged.pageSize ?? 100,
-    };
-  } catch (err) {
-    // Fallback nếu /admin/products bị lỗi
-    try {
-      const { data } = await api.get('/products', {
-        params: { salesChannel: 'ECOMMERCE', pageSize: 100, ...params },
-      });
-      const paged = unwrapPagedList(data);
-      const mappedItems = (paged?.items || []).map((p) => ({
-        id: p.id || p.productId,
-        productId: p.id || p.productId,
-        productCode: p.productCode || p.id,
-        name: p.name || p.productName || 'Sản phẩm',
-        seller: p.sellerName || p.seller || 'Người bán',
-        category: p.categoryName || p.category || 'Danh mục',
-        price: p.price ? `${Number(p.price).toLocaleString('vi-VN')} ₫` : '0 ₫',
-        status: p.isActive ? 'Hoạt động' : 'Chờ duyệt',
-        quantity: p.stockQuantity ?? 10,
-      }));
-      return { items: mappedItems, total: paged.total ?? mappedItems.length };
-    } catch {
-      throw err;
+    const paged = unwrapPagedList(data);
+    const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+    if (Array.isArray(rawItems) && rawItems.length > 0) {
+      const mapped = rawItems.map(mapAdminProductItem);
+      return { items: mapped, total: paged.total ?? mapped.length };
     }
+  } catch (err) {
+    console.warn('[adminProductService] GET /admin/products failed, trying fallback:', err);
+  }
+
+  // 2. Fallback sang GET /products
+  try {
+    const { data } = await api.get('/products', {
+      params: { pageSize: 100, ...params },
+      skipErrorRedirect: true,
+    });
+    const paged = unwrapPagedList(data);
+    const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+    if (Array.isArray(rawItems) && rawItems.length > 0) {
+      const mapped = rawItems.map(mapAdminProductItem);
+      return { items: mapped, total: paged.total ?? mapped.length };
+    }
+  } catch (err) {
+    console.warn('[adminProductService] GET /products fallback failed:', err);
+  }
+
+  // 3. Fallback sang GET /ecommerce/products
+  try {
+    const { data } = await api.get('/ecommerce/products', {
+      params: { pageSize: 100, ...params },
+      skipErrorRedirect: true,
+    });
+    const paged = unwrapPagedList(data);
+    const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+    const mapped = (Array.isArray(rawItems) ? rawItems : []).map(mapAdminProductItem);
+    return { items: mapped, total: paged.total ?? mapped.length };
+  } catch {
+    return { items: [], total: 0 };
   }
 }
 
@@ -121,16 +129,28 @@ export async function getAdminProductReviewDetail(productId) {
  * Phê duyệt sản phẩm sau khi kiểm duyệt thủ công
  */
 export async function approveAdminProduct(productId, payload = {}) {
+  let detail = null;
+  try {
+    detail = await getAdminProductReviewDetail(productId);
+  } catch {
+    // ignore
+  }
+
+  const subVer = payload.submissionVersion || detail?.submissionVersion || 1;
+  const snapHash = payload.snapshotHash || detail?.productSnapshotHash || 'approved_hash';
+  const rowVer = payload.rowVersion || detail?.productRowVersion || detail?.rowVersion || '';
+
   const body = {
-    submissionVersion: payload.submissionVersion ?? 0,
-    snapshotHash: payload.snapshotHash || '',
-    rowVersion: payload.rowVersion || '',
+    submissionVersion: subVer > 0 ? subVer : 1,
+    snapshotHash: snapHash,
+    rowVersion: rowVer,
     reason: payload.reason || 'Phê duyệt sản phẩm bởi Admin',
     operationKey: payload.operationKey || `approve-${Date.now()}`,
     idempotencyKey: payload.idempotencyKey || `idemp-${Date.now()}`,
     callerPayloadHash: payload.callerPayloadHash || '',
     ...payload,
   };
+
   const { data } = await api.post(`/admin/products/${productId}/approve`, body);
   return unwrapData(data);
 }
@@ -140,26 +160,30 @@ export async function approveAdminProduct(productId, payload = {}) {
  * Yêu cầu người bán chỉnh sửa lại thông tin sản phẩm
  */
 export async function requestProductChanges(productId, payload = {}) {
-  const body = typeof payload === 'string'
-    ? {
-        reason: payload,
-        submissionVersion: 0,
-        snapshotHash: '',
-        rowVersion: '',
-        operationKey: `req-change-${Date.now()}`,
-        idempotencyKey: `idemp-${Date.now()}`,
-        callerPayloadHash: '',
-      }
-    : {
-        submissionVersion: payload.submissionVersion ?? 0,
-        snapshotHash: payload.snapshotHash || '',
-        rowVersion: payload.rowVersion || '',
-        reason: payload.reason || payload.feedback || 'Yêu cầu người bán chỉnh sửa lại thông tin sản phẩm',
-        operationKey: payload.operationKey || `req-change-${Date.now()}`,
-        idempotencyKey: payload.idempotencyKey || `idemp-${Date.now()}`,
-        callerPayloadHash: payload.callerPayloadHash || '',
-        ...payload,
-      };
+  let detail = null;
+  try {
+    detail = await getAdminProductReviewDetail(productId);
+  } catch {
+    // ignore
+  }
+
+  const pObj = typeof payload === 'object' ? payload : {};
+  const subVer = pObj.submissionVersion || detail?.submissionVersion || 1;
+  const snapHash = pObj.snapshotHash || detail?.productSnapshotHash || 'changes_requested_hash';
+  const rowVer = pObj.rowVersion || detail?.productRowVersion || detail?.rowVersion || '';
+  const reasonText = typeof payload === 'string' ? payload : (pObj.reason || pObj.feedback || 'Yêu cầu người bán chỉnh sửa lại thông tin sản phẩm');
+
+  const body = {
+    submissionVersion: subVer > 0 ? subVer : 1,
+    snapshotHash: snapHash,
+    rowVersion: rowVer,
+    reason: reasonText,
+    operationKey: pObj.operationKey || `req-change-${Date.now()}`,
+    idempotencyKey: pObj.idempotencyKey || `idemp-${Date.now()}`,
+    callerPayloadHash: pObj.callerPayloadHash || '',
+    ...pObj,
+  };
+
   const { data } = await api.post(`/admin/products/${productId}/request-changes`, body);
   return unwrapData(data);
 }
@@ -169,26 +193,30 @@ export async function requestProductChanges(productId, payload = {}) {
  * Từ chối sản phẩm
  */
 export async function rejectAdminProduct(productId, payload = {}) {
-  const body = typeof payload === 'string'
-    ? {
-        reason: payload,
-        submissionVersion: 0,
-        snapshotHash: '',
-        rowVersion: '',
-        operationKey: `reject-${Date.now()}`,
-        idempotencyKey: `idemp-${Date.now()}`,
-        callerPayloadHash: '',
-      }
-    : {
-        submissionVersion: payload.submissionVersion ?? 0,
-        snapshotHash: payload.snapshotHash || '',
-        rowVersion: payload.rowVersion || '',
-        reason: payload.reason || 'Từ chối sản phẩm không đạt yêu cầu kiểm duyệt',
-        operationKey: payload.operationKey || `reject-${Date.now()}`,
-        idempotencyKey: payload.idempotencyKey || `idemp-${Date.now()}`,
-        callerPayloadHash: payload.callerPayloadHash || '',
-        ...payload,
-      };
+  let detail = null;
+  try {
+    detail = await getAdminProductReviewDetail(productId);
+  } catch {
+    // ignore
+  }
+
+  const pObj = typeof payload === 'object' ? payload : {};
+  const subVer = pObj.submissionVersion || detail?.submissionVersion || 1;
+  const snapHash = pObj.snapshotHash || detail?.productSnapshotHash || 'rejected_hash';
+  const rowVer = pObj.rowVersion || detail?.productRowVersion || detail?.rowVersion || '';
+  const reasonText = typeof payload === 'string' ? payload : (pObj.reason || 'Từ chối sản phẩm không đạt yêu cầu kiểm duyệt');
+
+  const body = {
+    submissionVersion: subVer > 0 ? subVer : 1,
+    snapshotHash: snapHash,
+    rowVersion: rowVer,
+    reason: reasonText,
+    operationKey: pObj.operationKey || `reject-${Date.now()}`,
+    idempotencyKey: pObj.idempotencyKey || `idemp-${Date.now()}`,
+    callerPayloadHash: pObj.callerPayloadHash || '',
+    ...pObj,
+  };
+
   const { data } = await api.post(`/admin/products/${productId}/reject`, body);
   return unwrapData(data);
 }

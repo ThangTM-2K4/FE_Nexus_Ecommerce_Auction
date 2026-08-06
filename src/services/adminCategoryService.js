@@ -6,6 +6,26 @@ export { getApiErrorMessage };
 /**
  * Đảm bảo dữ liệu danh mục luôn tuân theo cấu trúc 2 tầng (category tree)
  */
+const getSavedCategoryImage = (id, name) => {
+  try {
+    const store = JSON.parse(localStorage.getItem('cat_images_store') || '{}');
+    return store[id] || store[name] || store[toVietnameseSlug(name)] || '';
+  } catch {
+    return '';
+  }
+};
+
+export const saveCategoryImage = (idOrName, imageUrl) => {
+  if (!idOrName || !imageUrl) return;
+  try {
+    const store = JSON.parse(localStorage.getItem('cat_images_store') || '{}');
+    store[idOrName] = imageUrl;
+    localStorage.setItem('cat_images_store', JSON.stringify(store));
+  } catch {
+    // ignore
+  }
+};
+
 export function ensureCategoryTree(raw) {
   if (!raw) return [];
   const items = Array.isArray(raw)
@@ -13,36 +33,48 @@ export function ensureCategoryTree(raw) {
     : raw?.tree || raw?.items || raw?.page?.items || [];
   if (!Array.isArray(items)) return [];
 
-  if (items.some(i => Array.isArray(i.children))) {
-    return items.map((cat, idx) => ({
-      id: cat.categoryId || cat.id || `cat-${idx}`,
-      categoryId: cat.categoryId || cat.id,
-      name: cat.name || cat.categoryName || 'Danh mục',
-      slug: cat.slug || '',
-      description: cat.description || '',
-      icon: cat.icon || '📦',
-      status: cat.isActive !== undefined ? (cat.isActive ? 'Hoạt động' : 'Tắt') : (cat.status || 'Hoạt động'),
-      isActive: cat.isActive ?? true,
-      rowVersion: cat.rowVersion || null,
-      parentCategoryId: cat.parentCategoryId || cat.parentId || null,
-      sortOrder: cat.sortOrder ?? 0,
-      productCount: cat.productCount ?? 0,
-      children: Array.isArray(cat.children) ? cat.children.map((c, cIdx) => ({
-        id: c.categoryId || c.id || `cat-${idx}-${cIdx}`,
-        categoryId: c.categoryId || c.id,
-        name: c.name || c.categoryName || 'Danh mục con',
-        slug: c.slug || '',
-        description: c.description || '',
-        status: c.isActive !== undefined ? (c.isActive ? 'Hoạt động' : 'Tắt') : (c.status || 'Hoạt động'),
-        isActive: c.isActive ?? true,
-        rowVersion: c.rowVersion || null,
-        parentCategoryId: c.parentCategoryId || c.parentId || cat.categoryId || cat.id,
-        sortOrder: c.sortOrder ?? 0,
-        productCount: c.productCount ?? 0,
-      })) : [],
-    }));
-  }
+  const resolveImage = (cat) => {
+    const fromApi = cat.imageUrl || (cat.imageKey?.startsWith?.('http') ? cat.imageKey : '') || cat.image || '';
+    if (fromApi) return fromApi;
+    return getSavedCategoryImage(cat.categoryId || cat.id, cat.name);
+  };
 
+  if (items.some(i => Array.isArray(i.children))) {
+    return items.map((cat, idx) => {
+      const img = resolveImage(cat);
+      return {
+        id: cat.categoryId || cat.id || `cat-${idx}`,
+        categoryId: cat.categoryId || cat.id,
+        name: cat.name || cat.categoryName || 'Danh mục',
+        slug: cat.slug || '',
+        description: cat.description || '',
+        icon: cat.icon || '📦',
+        imageUrl: img,
+        imageKey: cat.imageKey || cat.imageUrl || '',
+        status: cat.isActive !== undefined ? (cat.isActive ? 'Hoạt động' : 'Tắt') : (cat.status || 'Hoạt động'),
+        isActive: cat.isActive ?? true,
+        rowVersion: cat.rowVersion || null,
+        parentCategoryId: cat.parentCategoryId || cat.parentId || null,
+        sortOrder: cat.sortOrder ?? 0,
+        productCount: cat.productCount ?? 0,
+        children: Array.isArray(cat.children) ? cat.children.map((c, cIdx) => ({
+          id: c.categoryId || c.id || `cat-${idx}-${cIdx}`,
+          categoryId: c.categoryId || c.id,
+          name: c.name || c.categoryName || 'Danh mục con',
+          slug: c.slug || '',
+          description: c.description || '',
+          imageUrl: resolveImage(c),
+          imageKey: c.imageKey || c.imageUrl || '',
+          status: c.isActive !== undefined ? (c.isActive ? 'Hoạt động' : 'Tắt') : (c.status || 'Hoạt động'),
+          isActive: c.isActive ?? true,
+          rowVersion: c.rowVersion || null,
+          parentCategoryId: c.parentCategoryId || c.parentId || cat.categoryId || cat.id,
+          sortOrder: c.sortOrder ?? 0,
+          productCount: c.productCount ?? 0,
+        })) : [],
+      };
+    });
+  }
   const parents = items.filter(i => !(i.parentCategoryId || i.parentId));
   const listToUse = parents.length > 0 ? parents : items;
   return listToUse.map((p, idx) => {
@@ -54,6 +86,8 @@ export function ensureCategoryTree(raw) {
       slug: p.slug || '',
       description: p.description || '',
       icon: p.icon || '📦',
+      imageUrl: resolveImage(p),
+      imageKey: p.imageKey || p.imageUrl || '',
       status: p.isActive !== undefined ? (p.isActive ? 'Hoạt động' : 'Tắt') : (p.status || 'Hoạt động'),
       isActive: p.isActive ?? true,
       rowVersion: p.rowVersion || null,
@@ -66,6 +100,8 @@ export function ensureCategoryTree(raw) {
         name: c.name || c.categoryName || 'Danh mục con',
         slug: c.slug || '',
         description: c.description || '',
+        imageUrl: resolveImage(c),
+        imageKey: c.imageKey || c.imageUrl || '',
         status: c.isActive !== undefined ? (c.isActive ? 'Hoạt động' : 'Tắt') : (c.status || 'Hoạt động'),
         isActive: c.isActive ?? true,
         rowVersion: c.rowVersion || null,
@@ -149,17 +185,31 @@ export async function getCategoryById(categoryId, scope = 'admin') {
   }
 }
 
+export function sanitizeImageKey(val) {
+  if (!val || typeof val !== 'string') return null;
+  const str = val.trim();
+  if (!str) return null;
+  // Base64 data URL hoặc URL bên ngoài (http/https) không phải là upload key trong storage backend
+  if (str.startsWith('data:') || str.startsWith('http://') || str.startsWith('https://')) {
+    return null;
+  }
+  return str.slice(0, 500);
+}
+
 /**
  * Tạo danh mục sản phẩm mới POST /api/v1/categories
  */
 export async function createCategory(payload) {
   const name = payload.name?.trim() || '';
   const cleanSlug = payload.slug ? toVietnameseSlug(payload.slug) : toVietnameseSlug(name);
+  const rawImg = payload.imageKey || payload.imageUrl || payload.image || '';
+  const cleanKey = sanitizeImageKey(rawImg);
+
   const body = {
     name,
     slug: cleanSlug || 'danh-muc',
     description: payload.description || '',
-    imageUrl: payload.imageUrl || payload.image || '',
+    ...(cleanKey ? { imageKey: cleanKey } : {}),
     parentCategoryId: payload.parentCategoryId || payload.parentId || null,
     sortOrder: payload.sortOrder ?? 0,
     isActive: payload.isActive ?? true,
@@ -202,12 +252,15 @@ export async function updateCategory(categoryId, payload) {
 
   const name = payload.name?.trim() || '';
   const cleanSlug = payload.slug ? toVietnameseSlug(payload.slug) : toVietnameseSlug(name);
+  const rawImg = payload.imageKey || payload.imageUrl || payload.image || '';
+  const cleanKey = sanitizeImageKey(rawImg);
 
   const body = {
     name,
     slug: cleanSlug || 'danh-muc',
     description: payload.description || '',
-    imageUrl: payload.imageUrl || payload.image || '',
+    ...(cleanKey ? { imageKey: cleanKey } : {}),
+    removeImage: payload.removeImage ?? false,
     parentCategoryId: payload.parentCategoryId || payload.parentId || null,
     sortOrder: payload.sortOrder ?? 0,
     isActive: payload.isActive ?? true,

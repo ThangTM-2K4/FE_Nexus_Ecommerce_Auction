@@ -10,9 +10,16 @@ export default function Error403Page() {
       code="403"
       tagline="Forbidden"
       title="Khu vực cấm địa!"
-      description="Bạn không có quyền vào khu vực này đâu, quay lại thôi."
+      description="Bạn không có quyền truy cập khu vực này. Vui lòng quay về trang chủ."
       animationData={animation403}
       illustration={<Illustration403 />}
+      actions={[
+        {
+          label: 'Quay Về Trang Chủ',
+          to: '/',
+          variant: 'accent',
+        },
+      ]}
     />
   );
 }
