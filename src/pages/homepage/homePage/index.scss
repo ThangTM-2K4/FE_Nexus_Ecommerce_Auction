@@ -29,7 +29,13 @@
   overflow: visible;
 }
 
-@media (max-width: 768px) {
+@include respond(tablet-lg) {
+  .home-page__shell > #product-section {
+    padding: 16px 18px;
+  }
+}
+
+@include respond(tablet) {
   .home-page {
     padding: 12px 0 24px;
   }
@@ -37,5 +43,37 @@
   .home-page__shell {
     width: calc(100% - 24px);
     gap: 12px;
+  }
+
+  .home-page__shell > #product-section {
+    padding: 14px 12px;
+  }
+}
+
+@include respond(mobile) {
+  .home-page__shell {
+    width: calc(100% - 16px);
+    gap: 10px;
+  }
+
+  .home-page__shell > #product-section {
+    padding: 12px 10px;
+  }
+}
+
+@include respond(desktop-lg) {
+  .home-page__shell {
+    width: min(1240px, calc(100% - 48px));
+    gap: 22px;
+  }
+}
+
+@include respond(desktop-xl) {
+  .home-page {
+    padding: 20px 0 40px;
+  }
+
+  .home-page__shell {
+    width: min(1520px, calc(100% - 64px));
   }
 }

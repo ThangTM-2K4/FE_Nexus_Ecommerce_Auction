@@ -154,3 +154,34 @@
   color: #6b7280;
   white-space: nowrap;
 }
+
+@include respond(tablet) {
+  .body {
+    padding: 8px 10px 10px;
+    gap: 4px;
+  }
+
+  .title {
+    font-size: 0.75rem;
+    height: 32px;
+  }
+
+  .price {
+    font-size: 0.85rem;
+  }
+
+  .footer {
+    font-size: 0.65rem;
+  }
+}
+
+@include respond(mobile-sm) {
+  .cornerTag {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+
+  .hoverOverlay {
+    font-size: 0.7rem;
+  }
+}

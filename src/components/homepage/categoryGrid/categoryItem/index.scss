@@ -84,7 +84,7 @@
   color: $accent-dark;
 }
 
-@media (max-width: 1024px) {
+@include respond(tablet-lg) {
   .category-item__visual {
     width: 42px;
     height: 42px;
@@ -95,7 +95,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@include respond(tablet) {
   .category-item__visual {
     width: 40px;
     height: 40px;
@@ -103,5 +103,16 @@
 
   .category-item__name {
     font-size: 0.64rem;
+  }
+}
+
+@include respond(mobile-sm) {
+  .category-item__visual {
+    width: 36px;
+    height: 36px;
+  }
+
+  .category-item__name {
+    font-size: 0.6rem;
   }
 }

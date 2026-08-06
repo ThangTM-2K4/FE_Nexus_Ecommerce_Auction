@@ -92,18 +92,33 @@
   min-width: 0;
 }
 
-@media (max-width: 1024px) {
+@include respond(tablet-lg) {
   .category-grid {
     padding: 10px 10px 12px;
   }
+
+  .category-grid__grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
 }
 
-@media (max-width: 767px) {
+@include respond(tablet) {
   .category-grid__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 4px;
   }
 
   .category-grid__title {
     font-size: 0.85rem;
+  }
+}
+
+@include respond(mobile) {
+  .category-grid__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .category-grid__subtitle {
+    display: none;
   }
 }

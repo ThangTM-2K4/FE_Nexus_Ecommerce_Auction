@@ -1,37 +1,244 @@
 @use '../../../styles/palette' as *;
-@use '../../../styles/auth-theme' as auth;
+
+$login-ease: cubic-bezier(0.22, 1, 0.36, 1);
+$login-focus-glow: rgba($raspberry, 0.22);
+$login-card-shadow: 0 28px 60px rgba($indigo, 0.28), 0 8px 24px rgba($indigo, 0.12);
+$login-input-bg: rgba($blush-pink, 0.22);
+$login-input-border: rgba($lavender, 0.55);
+
+@keyframes loginCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loginBlobFloat {
+  0%,
+  100% {
+    transform: translate(-8%, 6%) scale(1);
+  }
+  50% {
+    transform: translate(-4%, 2%) scale(1.04);
+  }
+}
+
+@keyframes loginParticleDrift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translateY(-10px) rotate(8deg);
+    opacity: 1;
+  }
+}
 
 .login-page {
-  @include auth.auth-page-shell;
-  // Shell canh giữa bằng align-items sẽ CẮT phần thừa khi thẻ cao hơn màn hình.
-  // Đổi sang margin:auto trên thẻ để vẫn canh giữa mà tràn thì cuộn được.
-  align-items: flex-start;
-  overflow-y: auto;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: linear-gradient(145deg, $indigo 0%, mix($indigo, $lavender, 55%) 48%, $lavender 100%);
+}
+
+.login-page__bg-shape {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(2px);
+
+  &--one {
+    width: 420px;
+    height: 420px;
+    top: -120px;
+    right: -80px;
+    background: rgba($blush-pink, 0.18);
+  }
+
+  &--two {
+    width: 320px;
+    height: 320px;
+    bottom: -100px;
+    left: -60px;
+    background: rgba($raspberry, 0.14);
+  }
+}
+
+.login-shell {
+  position: relative;
+  z-index: 1;
+  width: min(980px, 100%);
+  margin: auto;
 }
 
 .login-card {
-  @include auth.auth-card;
-  width: 480px;
-  max-width: 100%;
-  margin: auto;
-  padding: 32px 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  min-height: 580px;
+  background: $surface;
+  border-radius: $radius-xl;
+  box-shadow: $login-card-shadow;
+  overflow: hidden;
+  animation: loginCardEnter 0.55s $login-ease both;
+}
+
+.login-card__visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 28px 24px 20px;
+  background: linear-gradient(
+    165deg,
+    rgba($lavender, 0.35) 0%,
+    rgba($blush-pink, 0.28) 45%,
+    rgba($surface, 0.92) 100%
+  );
+  overflow: hidden;
+}
+
+.login-card__brand {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: $indigo;
+    letter-spacing: 0.02em;
+  }
+
+  span {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: $slate;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}
+
+.login-card__logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: rgba($surface, 0.85);
+  padding: 4px;
+  box-shadow: 0 6px 18px rgba($indigo, 0.12);
+}
+
+.login-card__blob {
+  position: absolute;
+  inset: auto -20% -28% -10%;
+  height: 72%;
+  z-index: 1;
+  background: linear-gradient(145deg, $indigo 0%, mix($indigo, $raspberry, 70%) 100%);
+  border-radius: 58% 42% 52% 48% / 46% 54% 46% 54%;
+  animation: loginBlobFloat 9s ease-in-out infinite;
+  opacity: 0.92;
+}
+
+.login-card__particles {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.login-particle {
+  position: absolute;
+  font-weight: 700;
+  animation: loginParticleDrift 6s ease-in-out infinite;
+
+  &--plus {
+    top: 34%;
+    right: 18%;
+    color: $raspberry;
+    font-size: 1.1rem;
+    animation-delay: 0s;
+  }
+
+  &--x {
+    top: 52%;
+    left: 16%;
+    color: $slate;
+    font-size: 1rem;
+    animation-delay: 1.2s;
+  }
+
+  &--dot {
+    top: 22%;
+    left: 42%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $blush-pink;
+    animation-delay: 0.6s;
+  }
+
+  &--tri {
+    bottom: 36%;
+    right: 28%;
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 12px solid rgba($lavender, 0.95);
+    animation-delay: 1.8s;
+  }
+}
+
+.login-card__lottie {
+  position: relative;
+  z-index: 3;
+  width: min(100%, 360px);
+  margin: 0 auto;
+  aspect-ratio: 1 / 0.82;
+}
+
+.login-lottie {
+  width: 100%;
+  height: 100%;
+}
+
+.login-card__form-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 36px 24px;
 }
 
 .back-home-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  align-self: flex-start;
   background: none;
   border: none;
   padding: 0;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   font-size: 13px;
   font-weight: 500;
-  color: $ink-muted;
+  color: $slate;
   cursor: pointer;
-  transition: $transition;
-  letter-spacing: 0.01em;
+  transition: color $transition-fast, gap $transition-fast;
 
   &:hover {
     color: $raspberry;
@@ -39,27 +246,43 @@
   }
 }
 
-.login-card h1 {
-  @include auth.auth-title;
+.login-avatar {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, rgba($blush-pink, 0.55), rgba($lavender, 0.35));
+  color: $indigo;
+  font-size: 1.45rem;
+  box-shadow: inset 0 0 0 1px rgba($lavender, 0.45);
+}
+
+.login-card__form-panel h1 {
+  margin: 0 0 4px;
   text-align: center;
-  font-size: 28px;
+  font-size: 1.45rem;
   line-height: 1.25;
-  margin-bottom: 6px;
+  font-weight: 700;
+  color: $indigo;
 }
 
 .subtitle {
-  @include auth.auth-subtitle;
+  margin: 0 0 4px;
   text-align: center;
-  font-size: 15px;
-  margin-bottom: 6px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: $raspberry;
 }
 
 .description {
-  @include auth.auth-muted-text;
+  margin: 0 0 18px;
   text-align: center;
-  font-size: 13px;
-  margin-bottom: 18px;
+  font-size: 0.78rem;
   line-height: 1.5;
+  color: $slate;
 }
 
 .form-group {
@@ -69,35 +292,70 @@
   margin-bottom: 4px;
 }
 
-.login-card input {
-  @include auth.auth-input;
-  width: 100%;
-  height: 48px;
-  padding: 0 16px;
-  font-size: 15px;
-}
-
-.password-wrapper {
+.input-with-icon {
   position: relative;
 
   input {
-    padding-right: 46px; // chừa chỗ cho nút hiện/ẩn mật khẩu
+    width: 100%;
+    height: 48px;
+    padding: 0 44px 0 44px;
+    border: 1px solid $login-input-border;
+    border-radius: $radius-pill;
+    background: $login-input-bg;
+    color: $indigo;
+    font-size: 0.92rem;
+    box-sizing: border-box;
+    transition: border-color $transition-fast, box-shadow $transition-fast, background $transition-fast;
+
+    &::placeholder {
+      color: rgba($slate, 0.85);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $raspberry;
+      background: $surface;
+      box-shadow: 0 0 0 4px $login-focus-glow;
+    }
+  }
+}
+
+.input-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $slate;
+  font-size: 0.95rem;
+  pointer-events: none;
+
+  &--left {
+    right: auto;
+    left: 16px;
+  }
+}
+
+.password-wrapper {
+  input {
+    padding-right: 72px;
+    padding-left: 44px;
   }
 }
 
 .eye-btn {
   position: absolute;
-  right: 15px;
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
   border: none;
   background: transparent;
   cursor: pointer;
-  color: $ink-muted;
+  color: $slate;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
+  z-index: 1;
 
   &:hover {
     color: $raspberry;
@@ -105,27 +363,52 @@
 }
 
 .forgot-password {
-  @include auth.auth-link;
   display: block;
-  margin: 0 0 14px auto;
-  font-size: 13px;
-  text-align: right;
-  background: none;
-  border: none;
+  margin: 2px 0 16px auto;
   padding: 0;
-}
+  border: none;
+  background: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $slate;
+  cursor: pointer;
+  transition: color $transition-fast;
 
-.error {
-  color: $live-red;
-  font-size: 14px;
-  margin-bottom: 10px;
+  &:hover {
+    color: $raspberry;
+    text-decoration: underline;
+  }
 }
 
 .login-btn {
-  @include auth.auth-primary-btn;
   width: 100%;
   height: 48px;
-  font-size: 15px;
+  border: none;
+  border-radius: $radius-pill;
+  background: linear-gradient(135deg, $raspberry 0%, $indigo 100%);
+  color: $surface;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba($indigo, 0.22);
+  transition: transform $transition-fast, box-shadow $transition-fast, filter $transition-fast;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.02);
+    box-shadow: 0 14px 30px rgba($indigo, 0.28);
+    filter: brightness(1.03);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.72;
+    cursor: not-allowed;
+  }
 }
 
 .divider {
@@ -133,15 +416,17 @@
   align-items: center;
   gap: 12px;
   margin: 16px 0;
-  color: $ink-muted;
-  font-size: 13px;
+  color: $slate;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 
   &::before,
   &::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: auth.$auth-divider;
+    background: rgba($lavender, 0.55);
   }
 }
 
@@ -153,49 +438,53 @@
   align-items: center;
   gap: 10px;
   background: $surface;
-  border: 1px solid auth.$auth-input-border;
-  border-radius: $radius-sm;
+  border: 1px solid rgba($lavender, 0.65);
+  border-radius: $radius-pill;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  transition: $transition;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $indigo;
+  transition: border-color $transition-fast, background $transition-fast, transform $transition-fast;
 
   &:hover {
-    background: $surface-soft;
+    background: rgba($blush-pink, 0.2);
     border-color: $raspberry;
+    transform: translateY(-1px);
   }
 }
 
 .register-link {
   text-align: center;
   margin-top: 14px;
-  font-size: 13px;
-  color: $ink-muted;
+  font-size: 0.82rem;
+  color: $slate;
 
   a,
   span {
-    @include auth.auth-link;
-    font-weight: 600;
+    color: $raspberry;
+    font-weight: 700;
     text-decoration: none;
     margin-left: 5px;
-  }
+    cursor: pointer;
+    transition: color $transition-fast;
 
-  a:hover,
-  span:hover {
-    text-decoration: underline;
+    &:hover {
+      color: $indigo;
+      text-decoration: underline;
+    }
   }
 }
 
 .login-footer {
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px solid auth.$auth-divider;
+  border-top: 1px solid rgba($lavender, 0.45);
   text-align: center;
 
   p {
     margin: 3px 0;
-    color: $ink-muted;
-    font-size: 12px;
+    color: $slate;
+    font-size: 0.72rem;
     line-height: 1.5;
 
     &:first-child {
@@ -205,34 +494,37 @@
   }
 }
 
-
 .login-card .field-error {
   display: block;
   min-height: 16px;
   margin: 0;
-  padding-left: 4px;
-  color: $live-red;
-  font-size: 12px;
-  font-weight: 500;
+  padding-left: 8px;
+  color: $raspberry;
+  font-size: 0.72rem;
+  font-weight: 600;
   text-align: left;
 }
 
 .input-error {
-  @include auth.auth-input-error;
+  border-color: $raspberry !important;
+  background: rgba($blush-pink, 0.35) !important;
+
+  &:focus {
+    box-shadow: 0 0 0 4px rgba($raspberry, 0.18) !important;
+  }
 }
 
-// Thông báo lỗi chung của form (vd sai thông tin đăng nhập) — hiện rõ dưới các ô nhập.
 .login-card .form-error {
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 4px 0 12px;
   padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba($live-red, 0.08);
-  border: 1px solid rgba($live-red, 0.35);
-  color: $live-red;
-  font-size: 13px;
+  border-radius: $radius-md;
+  background: rgba($blush-pink, 0.35);
+  border: 1px solid rgba($raspberry, 0.35);
+  color: $indigo;
+  font-size: 0.82rem;
   font-weight: 600;
   text-align: left;
   line-height: 1.4;
@@ -246,9 +538,116 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: $live-red;
-    color: #fff;
+    background: $raspberry;
+    color: $surface;
     font-size: 12px;
     font-weight: 800;
+  }
+}
+
+@include respond(tablet-lg) {
+  .login-shell {
+    width: min(920px, 100%);
+  }
+
+  .login-card {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    min-height: 540px;
+  }
+
+  .login-card__visual {
+    padding: 22px 18px 16px;
+  }
+
+  .login-card__lottie {
+    width: min(78%, 260px);
+  }
+}
+
+@include respond(tablet) {
+  .login-page {
+    padding: 16px;
+    align-items: flex-start;
+  }
+
+  .login-page__bg-shape--one {
+    width: 280px;
+    height: 280px;
+  }
+
+  .login-page__bg-shape--two {
+    width: 220px;
+    height: 220px;
+  }
+
+  .login-card {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .login-card__visual {
+    min-height: min(35vh, 260px);
+    max-height: 35vh;
+    padding: 20px 16px 12px;
+  }
+
+  .login-card__brand {
+    top: 16px;
+    left: 16px;
+  }
+
+  .login-card__blob {
+    height: 65%;
+    inset: auto -15% -20% -5%;
+  }
+
+  .login-card__lottie {
+    width: min(72%, 240px);
+    aspect-ratio: 1 / 0.75;
+  }
+
+  .login-particle--tri,
+  .login-particle--dot {
+    display: none;
+  }
+
+  .login-card__form-panel {
+    padding: 22px 20px 20px;
+  }
+
+  .login-avatar {
+    width: 62px;
+    height: 62px;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+  }
+
+  .login-card__form-panel h1 {
+    font-size: 1.25rem;
+  }
+
+  .description {
+    margin-bottom: 14px;
+  }
+}
+
+@include respond(mobile-sm) {
+  .login-card__visual {
+    min-height: min(32vh, 200px);
+    max-height: 32vh;
+  }
+
+  .login-card__brand span {
+    display: none;
+  }
+
+  .login-card__form-panel {
+    padding: 18px 16px 16px;
+  }
+}
+
+@include respond(desktop-lg) {
+  .login-shell {
+    width: min(1040px, 100%);
   }
 }

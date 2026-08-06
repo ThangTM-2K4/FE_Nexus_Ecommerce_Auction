@@ -1,0 +1,39 @@
+//=====================================================
+// Breakpoints — dùng chung toàn dự án (mobile-first max-width / desktop min-width)
+//=====================================================
+
+$bp-mobile-sm: 375px;
+$bp-mobile: 480px;
+$bp-tablet: 768px;
+$bp-tablet-lg: 1024px;
+$bp-desktop: 1280px;
+$bp-desktop-lg: 1440px;
+$bp-desktop-xl: 1920px;
+
+@mixin respond($breakpoint) {
+  @if $breakpoint == mobile-sm {
+    @media (max-width: $bp-mobile-sm) {
+      @content;
+    }
+  } @else if $breakpoint == mobile {
+    @media (max-width: $bp-mobile) {
+      @content;
+    }
+  } @else if $breakpoint == tablet {
+    @media (max-width: $bp-tablet) {
+      @content;
+    }
+  } @else if $breakpoint == tablet-lg {
+    @media (max-width: $bp-tablet-lg) {
+      @content;
+    }
+  } @else if $breakpoint == desktop-lg {
+    @media (min-width: $bp-desktop-lg) {
+      @content;
+    }
+  } @else if $breakpoint == desktop-xl {
+    @media (min-width: $bp-desktop-xl) {
+      @content;
+    }
+  }
+}

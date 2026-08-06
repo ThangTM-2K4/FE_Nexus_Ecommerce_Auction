@@ -266,3 +266,15 @@
   color: $ink-muted;
   text-align: center;
 }
+
+@include respond(tablet) {
+  .common-select__field {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .common-select--auto {
+    min-width: 120px;
+    width: 100%;
+  }
+}

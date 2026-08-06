@@ -574,7 +574,7 @@
 }
 
 // ─── Responsive ──────────────────────────────────────────
-@media (max-width: 1024px) {
+@include respond(tablet-lg) {
   .header-main-shell {
     flex-wrap: wrap;
     gap: 14px;
@@ -592,7 +592,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@include respond(tablet) {
   .header-topbar,
   .header-subnav {
     display: none;
@@ -1148,7 +1148,7 @@
   font-size: 0.9rem;
 }
 
-@media (max-width: 480px) {
+@include respond(mobile) {
   .header-shell {
     width: calc(100% - 24px);
   }
@@ -1183,5 +1183,11 @@
   .header-auction-cta {
     flex: 1;
     justify-content: center;
+  }
+}
+
+@include respond(desktop-lg) {
+  .header-shell {
+    width: min(1240px, calc(100% - 48px));
   }
 }

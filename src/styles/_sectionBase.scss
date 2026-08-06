@@ -135,3 +135,37 @@
   color: $ink-muted;
   font-size: 0.88rem;
 }
+
+@include respond(tablet) {
+  .profile-section {
+    padding: 1.15rem;
+  }
+
+  .profile-section-header {
+    margin-bottom: 1rem;
+
+    h2 {
+      font-size: 1rem;
+    }
+  }
+
+  .profile-btn {
+    min-height: 44px;
+  }
+
+  .profile-field input,
+  .profile-field select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+}
+
+@include respond(mobile) {
+  .profile-section-actions {
+    width: 100%;
+
+    .profile-btn {
+      flex: 1;
+    }
+  }
+}
