@@ -24,7 +24,9 @@ import {
 import { getCategories, createCategory, updateCategory, deleteCategory } from "../../../services/adminCategoryService";
 import {
   getAdminProducts,
+  getAdminProductReviewDetail,
   approveAdminProduct,
+  requestProductChanges,
   rejectAdminProduct,
   getApiErrorMessage,
 } from "../../../services/adminProductService";
@@ -151,8 +153,17 @@ export const AdminProducts = () => {
         })(),
       };
 
+  const handleViewDetail = async (p) => {
+    try {
+      const detailData = await getAdminProductReviewDetail(p.id || p.productId);
+      setDetail(detailData || p);
+    } catch {
+      setDetail(p);
+    }
+  };
+
   const productActions = (p) => [
-    { label: "Xem", variant: "primary", onClick: () => setDetail(p) },
+    { label: "Xem", variant: "primary", onClick: () => handleViewDetail(p) },
     ...(isPendingReview(p.status) ? [
       { label: "Duyệt", variant: "success", onClick: () => handleApprove(p) },
       { label: "Từ chối", variant: "danger", onClick: () => handleReject(p) },
@@ -394,18 +405,20 @@ export const AdminAuctionProducts = () => {
       {viewMode === "grid" ? (
         <div className="adm-auction-grid">
           {displayedList.map((a) => {
-            const isPending = a.status === "Chờ duyệt đề xuất";
-            const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
+            const statusStr = String(a.status || "").toLowerCase();
+            const isPending = statusStr.includes("chờ") || statusStr.includes("pending");
+            const isLive = statusStr.includes("diễn ra") || statusStr.includes("kết thúc") || statusStr.includes("live");
+
             const actions = [
               { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
+              { label: "🔴 Xem live", variant: "success", onClick: () => window.open(`/auction/detail/${a.id || 1}?from=admin`, '_blank') },
               ...(isPending ? [
                 { label: "✅ Duyệt đề xuất", variant: "success", onClick: () => handleApproveProposal(a) },
                 { label: "🚀 Xuất bản sảnh", variant: "primary", onClick: () => handlePublish(a) },
                 { label: "❌ Từ chối", variant: "danger", onClick: () => handleRejectProposal(a) },
               ] : []),
               ...(isLive ? [
-                { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
-                { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
+                { label: `${a.bids || 0} bid`, onClick: () => toast.info("Xem lịch sử bid") },
                 { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
                 { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
                 { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
@@ -424,18 +437,20 @@ export const AdminAuctionProducts = () => {
       ) : (
         <div className="adm-list-container">
           {displayedList.map((a) => {
-            const isPending = a.status === "Chờ duyệt đề xuất";
-            const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
+            const statusStr = String(a.status || "").toLowerCase();
+            const isPending = statusStr.includes("chờ") || statusStr.includes("pending");
+            const isLive = statusStr.includes("diễn ra") || statusStr.includes("kết thúc") || statusStr.includes("live");
+
             const actions = [
               { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
+              { label: "🔴 Xem live", variant: "success", onClick: () => window.open(`/auction/detail/${a.id || 1}?from=admin`, '_blank') },
               ...(isPending ? [
                 { label: "✅ Duyệt đề xuất", variant: "success", onClick: () => handleApproveProposal(a) },
                 { label: "🚀 Xuất bản sảnh", variant: "primary", onClick: () => handlePublish(a) },
                 { label: "❌ Từ chối", variant: "danger", onClick: () => handleRejectProposal(a) },
               ] : []),
               ...(isLive ? [
-                { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
-                { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
+                { label: `${a.bids || 0} bid`, onClick: () => toast.info("Xem lịch sử bid") },
                 { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
                 { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
                 { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },

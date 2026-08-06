@@ -4,19 +4,89 @@ import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiRes
 export { getApiErrorMessage };
 
 /**
- * 1. Lấy danh sách sản phẩm quản trị GET /api/v1/admin/products hoặc GET /api/v1/products?salesChannel=ECOMMERCE
- * KHÔNG DÙNG MOCK - 100% dữ liệu thực từ Backend Catalog Service API
+ * 1. GET /api/v1/admin/products
+ * Trả danh sách sản phẩm toàn hệ thống với bộ lọc quản trị
  */
 export async function getAdminProducts(params = {}) {
+  const queryParams = {
+    sortBy: 'updatedat',
+    sortDirection: 'desc',
+    pageNumber: 1,
+    pageSize: 100,
+    ...params,
+  };
+
   try {
-    const { data } = await api.get('/admin/products', { params });
-    return unwrapPagedList(data);
+    const { data } = await api.get('/admin/products', { params: queryParams });
+    const paged = unwrapPagedList(data);
+
+    // Map dữ liệu theo đúng Swagger Schema của Admin API
+    const mappedItems = (paged?.items || []).map((p) => {
+      const priceText = p.minPrice === p.maxPrice
+        ? `${(p.minPrice || 0).toLocaleString('vi-VN')} ₫`
+        : `${(p.minPrice || 0).toLocaleString('vi-VN')} ₫ - ${(p.maxPrice || 0).toLocaleString('vi-VN')} ₫`;
+
+      const statusMap = {
+        'ACTIVE': 'Hoạt động',
+        'PENDING_REVIEW': 'Chờ duyệt',
+        'CHANGES_REQUESTED': 'Yêu cầu sửa',
+        'REJECTED': 'Từ chối',
+        'DRAFT': 'Bản nháp',
+        'INACTIVE': 'Tắt',
+      };
+
+      return {
+        id: p.productId,
+        productId: p.productId,
+        productCode: p.productCode || p.productId,
+        name: p.productName || 'Sản phẩm',
+        productName: p.productName || 'Sản phẩm',
+        seller: p.sellerName || 'Người bán',
+        sellerName: p.sellerName || 'Người bán',
+        sellerUserId: p.sellerUserId,
+        sellerAvatarUrl: p.sellerAvatarUrl,
+        category: p.categoryName || 'Danh mục',
+        categoryName: p.categoryName || 'Danh mục',
+        categoryId: p.categoryId,
+        price: priceText,
+        minPrice: p.minPrice ?? 0,
+        maxPrice: p.maxPrice ?? 0,
+        currency: p.currency || 'VND',
+        salesChannel: p.salesChannel || 'ECOMMERCE',
+        status: statusMap[p.status] || p.status || 'Hoạt động',
+        rawStatus: p.status,
+        sellerEligible: p.sellerEligible ?? true,
+        catalogVersion: p.catalogVersion ?? 0,
+        updatedAtUtc: p.updatedAtUtc,
+        quantity: 10,
+      };
+    });
+
+    return {
+      items: mappedItems,
+      total: paged.total ?? mappedItems.length,
+      pageNumber: paged.pageNumber ?? 1,
+      pageSize: paged.pageSize ?? 100,
+    };
   } catch (err) {
+    // Fallback nếu /admin/products bị lỗi
     try {
       const { data } = await api.get('/products', {
         params: { salesChannel: 'ECOMMERCE', pageSize: 100, ...params },
       });
-      return unwrapPagedList(data);
+      const paged = unwrapPagedList(data);
+      const mappedItems = (paged?.items || []).map((p) => ({
+        id: p.id || p.productId,
+        productId: p.id || p.productId,
+        productCode: p.productCode || p.id,
+        name: p.name || p.productName || 'Sản phẩm',
+        seller: p.sellerName || p.seller || 'Người bán',
+        category: p.categoryName || p.category || 'Danh mục',
+        price: p.price ? `${Number(p.price).toLocaleString('vi-VN')} ₫` : '0 ₫',
+        status: p.isActive ? 'Hoạt động' : 'Chờ duyệt',
+        quantity: p.stockQuantity ?? 10,
+      }));
+      return { items: mappedItems, total: paged.total ?? mappedItems.length };
     } catch {
       throw err;
     }
@@ -24,15 +94,22 @@ export async function getAdminProducts(params = {}) {
 }
 
 /**
- * 2. Hàng chờ sản phẩm chờ duyệt GET /api/v1/admin/products/review-queue
+ * 2. GET /api/v1/admin/products/review-queue
+ * Trả hàng đợi kiểm duyệt sản phẩm dành cho Staff/Admin
  */
 export async function getAdminProductReviewQueue(params = {}) {
-  const { data } = await api.get('/admin/products/review-queue', { params });
+  const queryParams = {
+    pageNumber: 1,
+    pageSize: 100,
+    ...params,
+  };
+  const { data } = await api.get('/admin/products/review-queue', { params: queryParams });
   return unwrapPagedList(data);
 }
 
 /**
- * 3. Chi tiết duyệt sản phẩm GET /api/v1/admin/products/{productId}/review-detail
+ * 3. GET /api/v1/admin/products/{productId}/review-detail
+ * Trả chi tiết kiểm duyệt sản phẩm dành cho Staff/Admin
  */
 export async function getAdminProductReviewDetail(productId) {
   const { data } = await api.get(`/admin/products/${productId}/review-detail`);
@@ -40,42 +117,88 @@ export async function getAdminProductReviewDetail(productId) {
 }
 
 /**
- * 4. Phê duyệt sản phẩm POST /api/v1/admin/products/{productId}/approve
+ * 4. POST /api/v1/admin/products/{productId}/approve
+ * Phê duyệt sản phẩm sau khi kiểm duyệt thủ công
  */
-export async function approveAdminProduct(productId) {
-  try {
-    const { data } = await api.post(`/admin/products/${productId}/approve`, {}, { skipErrorRedirect: true });
-    return unwrapData(data);
-  } catch (err) {
-    try {
-      const { data } = await api.put(`/management/products/${productId}/approve`, {}, { skipErrorRedirect: true });
-      return unwrapData(data);
-    } catch {
-      return { id: productId, status: "APPROVED" };
-    }
-  }
+export async function approveAdminProduct(productId, payload = {}) {
+  const body = {
+    submissionVersion: payload.submissionVersion ?? 0,
+    snapshotHash: payload.snapshotHash || '',
+    rowVersion: payload.rowVersion || '',
+    reason: payload.reason || 'Phê duyệt sản phẩm bởi Admin',
+    operationKey: payload.operationKey || `approve-${Date.now()}`,
+    idempotencyKey: payload.idempotencyKey || `idemp-${Date.now()}`,
+    callerPayloadHash: payload.callerPayloadHash || '',
+    ...payload,
+  };
+  const { data } = await api.post(`/admin/products/${productId}/approve`, body);
+  return unwrapData(data);
 }
 
 /**
- * 5. Yêu cầu sửa đổi sản phẩm POST /api/v1/admin/products/{productId}/request-changes
+ * 5. POST /api/v1/admin/products/{productId}/request-changes
+ * Yêu cầu người bán chỉnh sửa lại thông tin sản phẩm
  */
-export async function requestProductChanges(productId, feedback) {
-  try {
-    const { data } = await api.post(`/admin/products/${productId}/request-changes`, { feedback }, { skipErrorRedirect: true });
-    return unwrapData(data);
-  } catch {
-    return { id: productId, status: "CHANGES_REQUESTED", feedback };
-  }
+export async function requestProductChanges(productId, payload = {}) {
+  const body = typeof payload === 'string'
+    ? {
+        reason: payload,
+        submissionVersion: 0,
+        snapshotHash: '',
+        rowVersion: '',
+        operationKey: `req-change-${Date.now()}`,
+        idempotencyKey: `idemp-${Date.now()}`,
+        callerPayloadHash: '',
+      }
+    : {
+        submissionVersion: payload.submissionVersion ?? 0,
+        snapshotHash: payload.snapshotHash || '',
+        rowVersion: payload.rowVersion || '',
+        reason: payload.reason || payload.feedback || 'Yêu cầu người bán chỉnh sửa lại thông tin sản phẩm',
+        operationKey: payload.operationKey || `req-change-${Date.now()}`,
+        idempotencyKey: payload.idempotencyKey || `idemp-${Date.now()}`,
+        callerPayloadHash: payload.callerPayloadHash || '',
+        ...payload,
+      };
+  const { data } = await api.post(`/admin/products/${productId}/request-changes`, body);
+  return unwrapData(data);
 }
 
 /**
- * 6. Từ chối sản phẩm POST /api/v1/admin/products/{productId}/reject
+ * 6. POST /api/v1/admin/products/{productId}/reject
+ * Từ chối sản phẩm
  */
-export async function rejectAdminProduct(productId, reason) {
-  try {
-    const { data } = await api.post(`/admin/products/${productId}/reject`, { reason }, { skipErrorRedirect: true });
-    return unwrapData(data);
-  } catch {
-    return { id: productId, status: "REJECTED", reason };
-  }
+export async function rejectAdminProduct(productId, payload = {}) {
+  const body = typeof payload === 'string'
+    ? {
+        reason: payload,
+        submissionVersion: 0,
+        snapshotHash: '',
+        rowVersion: '',
+        operationKey: `reject-${Date.now()}`,
+        idempotencyKey: `idemp-${Date.now()}`,
+        callerPayloadHash: '',
+      }
+    : {
+        submissionVersion: payload.submissionVersion ?? 0,
+        snapshotHash: payload.snapshotHash || '',
+        rowVersion: payload.rowVersion || '',
+        reason: payload.reason || 'Từ chối sản phẩm không đạt yêu cầu kiểm duyệt',
+        operationKey: payload.operationKey || `reject-${Date.now()}`,
+        idempotencyKey: payload.idempotencyKey || `idemp-${Date.now()}`,
+        callerPayloadHash: payload.callerPayloadHash || '',
+        ...payload,
+      };
+  const { data } = await api.post(`/admin/products/${productId}/reject`, body);
+  return unwrapData(data);
+}
+
+/**
+ * 7. POST /api/v1/admin/products/{productId}/resolve-legacy-channel
+ * Chuyển đổi kênh bán legacy BOTH thành ECOMMERCE hoặc AUCTION dành cho Admin
+ */
+export async function resolveLegacyChannel(productId, { targetChannel = 'ECOMMERCE', rowVersion = '', reason = 'Chuyển đổi kênh bán' } = {}) {
+  const body = { targetChannel, rowVersion, reason };
+  const { data } = await api.post(`/admin/products/${productId}/resolve-legacy-channel`, body);
+  return unwrapData(data);
 }

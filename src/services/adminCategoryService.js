@@ -131,17 +131,17 @@ export function toVietnameseSlug(str) {
 }
 
 /**
- * Chi tiết danh mục GET /api/v1/categories/{categoryId}
- * Dùng scope 'admin' hoặc không truyền scope để lấy thông tin danh mục cả khi Tắt (INACTIVE)
+ * Chi tiết danh mục quản trị GET /api/v1/management/categories/{categoryId} hoặc GET /api/v1/categories/{categoryId}
+ * Lấy danh mục bằng API Management dành riêng cho Admin để lấy rowVersion mới nhất (kể cả khi bị INACTIVE)
  */
 export async function getCategoryById(categoryId, scope = 'admin') {
   try {
-    const params = scope ? { scope } : {};
-    const { data } = await api.get(`/categories/${categoryId}`, { params });
+    const { data } = await api.get(`/management/categories/${categoryId}`);
     return unwrapData(data);
   } catch {
     try {
-      const { data } = await api.get(`/categories/${categoryId}`);
+      const params = scope ? { scope } : {};
+      const { data } = await api.get(`/categories/${categoryId}`, { params });
       return unwrapData(data);
     } catch {
       return null;
@@ -174,7 +174,7 @@ export async function createCategory(payload) {
 export async function updateCategory(categoryId, payload) {
   let rowVersion = payload.rowVersion;
 
-  // Lấy rowVersion mới nhất từ Server bằng GET /categories/{id} nếu chưa có
+  // Lấy rowVersion mới nhất từ Server bằng GET /management/categories/{id} nếu chưa có
   if (!rowVersion) {
     try {
       const detail = await getCategoryById(categoryId, 'admin');

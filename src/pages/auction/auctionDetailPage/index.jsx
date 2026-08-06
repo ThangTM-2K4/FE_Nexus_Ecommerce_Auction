@@ -294,9 +294,10 @@ export default function AuctionDetailPage() {
   const { provinces, loading: loadingProvinces } = useProvinces();
   const { wards, loading: loadingWards } = useWards(customAddress.provinceCode);
 
-  // Detect if navigated from admin
+  // Detect if navigated from admin or user is Admin
   const [searchParams] = useSearchParams();
-  const fromAdmin = searchParams.get('from') === 'admin';
+  const isAdminUser = user?.role === 'ADMIN' || user?.roleCode === 'ADMIN' || (Array.isArray(user?.roles) && user.roles.includes('ADMIN')) || (Array.isArray(user?.privileges) && user.privileges.some(p => String(p).startsWith('ADMIN')));
+  const fromAdmin = searchParams.get('from') === 'admin' || isAdminUser;
 
   const [showRegModal, setShowRegModal] = useState(false);
   const [regStep, setRegStep] = useState(1);
