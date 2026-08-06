@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaPlus, FaTimes, FaMapMarkerAlt, FaCheckCircle, FaShieldAlt, FaMedal } from "react-icons/fa";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
-import { getAuctionProposals } from "../../../services/auctionProposalService";
+import { getAuctionProposals, publishProposal } from "../../../services/auctionProposalService";
 import { useAuth } from "../../../context/AuthContext";
 import * as profileService from "../../../services/profileService";
 import "./index.scss";
@@ -32,39 +32,70 @@ export default function AuctionSellerPage() {
 
   useEffect(() => {
     async function loadProposals() {
-      const localItems = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]").map(p => ({
-        id: p.id,
-        title: p.title,
-        image: p.image || "/images/auction/default.png",
-        status: p.status || { label: "Chờ duyệt", type: "upcoming", color: "orange" },
-        bids: 0,
-        price: `${(p.startingPrice || 0).toLocaleString()}đ`,
-        timeLeft: "Đang chờ Admin duyệt",
-      }));
-
       try {
-        const res = await getAuctionProposals();
-        const apiItems = (res?.items || []).map(p => ({
-          id: p.id,
-          title: p.title,
-          image: p.imageUrl || "/images/auction/default.png",
-          status: { label: p.status || "Chờ duyệt", type: "upcoming", color: "orange" },
-          bids: 0,
-          price: `${(p.startingPrice || 0).toLocaleString()}đ`,
-          timeLeft: "Đang chờ Admin duyệt",
-        }));
-        setRealAuctions([...localItems, ...apiItems]);
+        const res = await getAuctionProposals({ scope: 'mine', pageSize: 100 });
+        const apiItems = (res?.items || []).map(p => {
+          // Map trạng thái từ API sang UI
+          const rawStatus = (p.status || '').toUpperCase();
+          let statusLabel = 'Chờ duyệt';
+          let statusType = 'upcoming';
+          if (rawStatus === 'DRAFT') { statusLabel = 'Nháp'; statusType = 'draft'; }
+          else if (rawStatus === 'PENDING_REVIEW' || rawStatus === 'SUBMITTED') { statusLabel = 'Chờ duyệt'; statusType = 'upcoming'; }
+          else if (rawStatus === 'APPROVED') { statusLabel = 'Đã duyệt'; statusType = 'approved'; }
+          else if (rawStatus === 'REJECTED') { statusLabel = 'Bị từ chối'; statusType = 'ended'; }
+          else if (rawStatus === 'PUBLISHED' || rawStatus === 'SCHEDULED') { statusLabel = 'Sắp diễn ra'; statusType = 'upcoming'; }
+          else if (rawStatus === 'LIVE') { statusLabel = 'Đang diễn ra'; statusType = 'active'; }
+          else if (rawStatus === 'ENDED' || rawStatus === 'CANCELLED') { statusLabel = 'Đã kết thúc'; statusType = 'ended'; }
+          return {
+            id: p.id,
+            title: p.title || p.productName || 'Sản phẩm đấu giá',
+            image: p.imageUrl || p.image || '/images/auction/default.png',
+            status: { label: statusLabel, type: statusType, color: 'orange' },
+            rawStatus,
+            bids: p.totalBids ?? 0,
+            price: p.currentPrice
+              ? `${Number(p.currentPrice).toLocaleString('vi-VN')}đ`
+              : `${(p.startingPrice || 0).toLocaleString('vi-VN')}đ`,
+            currentPrice: p.currentPrice
+              ? `${Number(p.currentPrice).toLocaleString('vi-VN')}đ`
+              : `${(p.startingPrice || 0).toLocaleString('vi-VN')}đ`,
+            timeLeft: p.scheduledEndUtc
+              ? new Date(p.scheduledEndUtc).toLocaleDateString('vi-VN')
+              : 'Chờ Admin duyệt',
+            rowVersion: p.rowVersion,
+          };
+        });
+        setRealAuctions(apiItems);
       } catch {
-        setRealAuctions(localItems);
+        setRealAuctions([]);
       }
     }
     loadProposals();
   }, []);
 
   const filteredAuctions = realAuctions.filter((item) => {
-    if (tab === "all") return true;
+    if (tab === 'all') return true;
+    if (tab === 'active') return item.status.type === 'active';
+    if (tab === 'upcoming') return item.status.type === 'upcoming' || item.status.type === 'approved';
+    if (tab === 'ended') return item.status.type === 'ended' || item.status.type === 'draft';
     return item.status.type === tab;
   });
+
+  const handlePublish = async (item) => {
+    if (!window.confirm(`Xuất bản phiên đấu giá "${item.title}"?`)) return;
+    try {
+      await publishProposal(item.id);
+      setRealAuctions(prev => prev.map(a =>
+        a.id === item.id
+          ? { ...a, status: { label: 'Sắp diễn ra', type: 'upcoming', color: 'blue' }, rawStatus: 'PUBLISHED' }
+          : a
+      ));
+      toast.success('🎉 Xuất bản phiên đấu giá thành công!');
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Xuất bản thất bại!';
+      toast.error(msg);
+    }
+  };
 
   const dynamicStats = [
     { label: "TỔNG ĐỀ XUẤT", value: String(realAuctions.length), sub: "Phiên đã tạo" },
@@ -179,22 +210,20 @@ export default function AuctionSellerPage() {
                   <th>TRẠNG THÁI</th>
                   <th>LƯỢT BID</th>
                   <th>GIÁ HIỆN TẠI</th>
-                  <th>THỜI GIAN CÒN LẠI</th>
+                  <th>THỜI GIAN</th>
+                  <th>THAO TÁC</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAuctions.map((item) => (
-                  <tr 
-                    key={item.id} 
-                    onClick={() => item.status.type === 'upcoming' && setSelectedUpcoming(item)}
-                    style={{ cursor: item.status.type === 'upcoming' ? 'pointer' : 'default' }}
-                    title={item.status.type === 'upcoming' ? "Bấm vào để xem người đã đăng ký" : ""}
+                  <tr
+                    key={item.id}
+                    style={{ cursor: 'default' }}
                   >
                     <td className="product-cell">
-                      <AuctionImage src={item.image} alt={item.name} />
+                      <AuctionImage src={item.image} alt={item.title} />
                       <div>
-                        <strong>{item.name}</strong>
-                        <span>{item.code}</span>
+                        <strong>{item.title}</strong>
                       </div>
                     </td>
                     <td>
@@ -202,13 +231,21 @@ export default function AuctionSellerPage() {
                         {item.status.label}
                       </span>
                     </td>
-                    <td>
-                      {item.status.type === 'upcoming' 
-                        ? `${item.registeredUsers?.length || 0} đăng ký` 
-                        : item.bids}
-                    </td>
-                    <td className="price">{item.currentPrice}</td>
+                    <td>{item.bids ?? 0}</td>
+                    <td className="price">{item.currentPrice || item.price}</td>
                     <td className="time">{item.timeLeft}</td>
+                    <td>
+                      {item.rawStatus === 'APPROVED' && (
+                        <button
+                          type="button"
+                          className="auc-seller__publish-btn"
+                          onClick={(e) => { e.stopPropagation(); handlePublish(item); }}
+                          style={{ padding: '4px 12px', borderRadius: '6px', background: '#1a7f4b', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+                        >
+                          ▶ Xuất bản
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

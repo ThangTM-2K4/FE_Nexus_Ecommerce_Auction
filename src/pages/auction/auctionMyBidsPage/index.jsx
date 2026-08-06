@@ -8,6 +8,7 @@ import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayo
 import AuctionImage from "../../../components/auction/auctionImage";
 import AuctionCountdown from "../../../components/auction/auctionCountdown";
 import { useAuth } from "../../../context/AuthContext";
+import { getMyAuctionActivities } from "../../../services/auctionService";
 import "./index.scss";
 
 const BID_HISTORY_KEY = "auc_bid_history";
@@ -172,39 +173,83 @@ export default function AuctionMyBidsPage() {
     }
   }, [syncLiveAuctions]);
 
-  // Load won orders from localStorage
-  const loadWonOrders = useCallback(() => {
+  // Load won orders — ưu tiên API, fallback sang mock nếu API chưa có dữ liệu
+  const loadWonOrders = useCallback(async () => {
     try {
-      const local = JSON.parse(localStorage.getItem(WON_ORDERS_KEY) || "[]");
+      const activities = await getMyAuctionActivities();
+      const won = Array.isArray(activities)
+        ? activities.filter(a => a.result === 'WINNER' || a.isWinner || a.winnerOrder)
+        : [];
+
+      if (won.length > 0) {
+        const mapped = won.map((a) => {
+          const order = a.winnerOrder || a;
+          return {
+            id: order.orderId || order.id || `AUC-WIN-${a.auctionId}`,
+            auctionId: a.auctionId || a.id,
+            productTitle: a.title || a.productName || 'Sản phẩm trúng thầu',
+            productImage: a.imageUrl || a.image || MOCK_WON_AUCTIONS[0].productImage,
+            finalPrice: order.winningAmount
+              ? `${Number(order.winningAmount).toLocaleString('vi-VN')} ₫`
+              : (order.finalPrice || '---'),
+            startingPrice: a.startingPrice
+              ? `${Number(a.startingPrice).toLocaleString('vi-VN')} ₫`
+              : '---',
+            depositAmount: order.depositAmount
+              ? `${Number(order.depositAmount).toLocaleString('vi-VN')} ₫`
+              : '---',
+            paidAmount: order.totalPayable
+              ? `${Number(order.totalPayable).toLocaleString('vi-VN')} ₫`
+              : (order.finalPrice || '---'),
+            paidAt: order.paidAt || order.createdAt || new Date().toISOString(),
+            paymentMethod: order.paymentMethod || 'VNPAY',
+            status: order.orderStatus === 'COMPLETED' ? 'completed' : 'delivering',
+            shippingCarrier: order.shippingCarrier || 'Giao Hàng Nhanh (GHN Express)',
+            trackingCode: order.trackingCode || (order.shipmentId ? `VTP-${order.shipmentId}` : 'Chưa có mã vận đơn'),
+            estimatedDeliveryDate: order.estimatedDeliveryDate || 'Chưa có thông tin',
+            deliveryTimeSlot: order.deliveryTimeSlot || 'Giờ hành chính',
+            address: {
+              recipient: order.recipientName || user?.fullName || 'Người dùng',
+              phone: order.phone || user?.phone || '',
+              fullAddress: order.addressLine || user?.address || '',
+            },
+            timeline: order.timeline || [
+              { time: formatDateTime(order.createdAt || new Date().toISOString()), text: 'Trúng đấu giá - Đơn hàng được tạo', done: true },
+            ],
+          };
+        });
+        setWonOrders(mapped);
+        return;
+      }
+    } catch { /* ignore, fallback below */ }
+
+    // Fallback sang mock data
+    const local = JSON.parse(localStorage.getItem(WON_ORDERS_KEY) || '[]');
+    if (local.length > 0) {
       const normalizedLocal = local.map((item) => ({
-        id: item.id || `AUC-WIN-${item.productTitle?.slice(0, 5)}-${Date.now()}`,
-        productTitle: item.productTitle || "Sản phẩm trúng thầu",
+        id: item.id || `AUC-WIN-${Date.now()}`,
+        productTitle: item.productTitle || 'Sản phẩm trúng thầu',
         productImage: item.productImage || MOCK_WON_AUCTIONS[0].productImage,
-        finalPrice: item.finalPrice || "100.000.000 ₫",
-        startingPrice: "80.000.000 ₫",
-        depositAmount: "5.000.000 ₫",
-        paidAmount: item.finalPrice || "95.000.000 ₫",
+        finalPrice: item.finalPrice || '100.000.000 ₫',
+        startingPrice: '80.000.000 ₫',
+        depositAmount: '5.000.000 ₫',
+        paidAmount: item.finalPrice || '95.000.000 ₫',
         paidAt: item.paidAt || new Date().toISOString(),
-        paymentMethod: item.paymentMethod === "wallet" ? "Ví Nexus Pay" : "Chuyển khoản Ngân hàng",
-        status: item.status || "delivering",
-        shippingCarrier: "Giao Hàng Nhanh (GHN Express)",
+        paymentMethod: item.paymentMethod === 'wallet' ? 'Ví Nexus Pay' : 'Chuyển khoản Ngân hàng',
+        status: item.status || 'delivering',
+        shippingCarrier: 'Giao Hàng Nhanh (GHN Express)',
         trackingCode: `GHN-AUC-${Math.floor(100000 + Math.random() * 900000)}`,
-        estimatedDeliveryDate: "30/07/2026 - 01/08/2026 (2 - 3 ngày làm việc)",
-        deliveryTimeSlot: "08:00 - 12:00 hoặc 13:00 - 17:00 (Giờ hành chính)",
-        address: item.address || {
-          recipient: user?.fullName || user?.name || "Người dùng",
-          phone: user?.phone || "0912 345 678",
-          fullAddress: user?.address || "123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-        },
+        estimatedDeliveryDate: '30/07/2026 - 01/08/2026 (2 - 3 ngày làm việc)',
+        deliveryTimeSlot: '08:00 - 12:00 hoặc 13:00 - 17:00 (Giờ hành chính)',
+        address: item.address || { recipient: user?.fullName, phone: user?.phone, fullAddress: user?.address || '' },
         timeline: [
-          { time: formatDateTime(item.paidAt || new Date().toISOString()), text: "Thanh toán trúng thầu thành công & Khấu trừ cọc 5.000.000 ₫", done: true },
-          { time: "Hôm nay 10:30", text: "Người bán xác nhận đơn hàng & Đóng gói bảo hiểm sản phẩm", done: true },
-          { time: "Hôm nay 14:15", text: "Đã bàn giao cho đơn vị vận chuyển GHN Express", done: true },
-          { time: "Dự kiến 31/07/2026", text: "Shipper giao hàng tận nhà", done: false },
+          { time: formatDateTime(item.paidAt || new Date().toISOString()), text: 'Thanh toán trúng thầu thành công & Khấu trừ cọc 5.000.000 ₫', done: true },
+          { time: 'Hôm nay 14:15', text: 'Đã bàn giao cho đơn vị vận chuyển GHN Express', done: true },
+          { time: 'Dự kiến', text: 'Shipper giao hàng tận nhà', done: false },
         ],
       }));
       setWonOrders([...normalizedLocal, ...MOCK_WON_AUCTIONS]);
-    } catch {
+    } else {
       setWonOrders(MOCK_WON_AUCTIONS);
     }
   }, [user]);

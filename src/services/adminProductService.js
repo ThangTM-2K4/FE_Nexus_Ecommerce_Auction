@@ -113,20 +113,23 @@ export async function getAdminProducts(params = {}) {
     // ignore
   }
 
-  // 2. Tải từ /admin/products
-  try {
-    const { data } = await api.get('/admin/products', {
-      params: { pageSize: 100, ...params },
-      skipErrorRedirect: true,
-    });
-    const paged = unwrapPagedList(data);
-    const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
-    (Array.isArray(rawItems) ? rawItems : []).forEach(p => {
-      const mapped = mapAdminProductItem(p);
-      map.set(String(mapped.id).toLowerCase(), mapped);
-    });
-  } catch {
-    // ignore
+  // 2. Tải từ /staff/products và /admin/products
+  const listEndpoints = ['/staff/products', '/admin/products', '/staff/products/review-queue'];
+  for (const ep of listEndpoints) {
+    try {
+      const { data } = await api.get(ep, {
+        params: { pageSize: 100, ...params },
+        skipErrorRedirect: true,
+      });
+      const paged = unwrapPagedList(data);
+      const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+      (Array.isArray(rawItems) ? rawItems : []).forEach(p => {
+        const mapped = mapAdminProductItem(p);
+        map.set(String(mapped.id).toLowerCase(), mapped);
+      });
+    } catch {
+      // ignore
+    }
   }
 
   // 3. Fallback sang /products
@@ -254,6 +257,13 @@ export async function approveAdminProduct(productId) {
 
   if (rowVersion) {
     body.rowVersion = rowVersion;
+  }
+
+  try {
+    const { data } = await api.post(`/staff/products/${productId}/approve`, body, { skipErrorRedirect: true });
+    return unwrapData(data);
+  } catch {
+    /* ignore */
   }
 
   try {
