@@ -59,11 +59,21 @@ api.interceptors.request.use(
     }
     const isAuthPath = config.url?.includes('/auth/');
     if (!isAuthPath && ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
-      if (!config.headers['Idempotency-Key']) {
-        const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `idemp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-        config.headers['Idempotency-Key'] = uuid;
+      const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : '00000000-0000-0000-0000-000000000001';
+
+      config.headers['Idempotency-Key'] = config.headers['Idempotency-Key'] || uuid;
+      config.headers['X-Idempotency-Key'] = config.headers['X-Idempotency-Key'] || uuid;
+      config.headers['IdempotencyKey'] = config.headers['IdempotencyKey'] || uuid;
+      config.headers['X-Operation-Key'] = config.headers['X-Operation-Key'] || uuid;
+      config.headers['OperationKey'] = config.headers['OperationKey'] || uuid;
+
+      if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData)) {
+        if (!config.data.idempotencyKey) config.data.idempotencyKey = uuid;
+        if (!config.data.IdempotencyKey) config.data.IdempotencyKey = uuid;
+        if (!config.data.operationKey) config.data.operationKey = uuid;
+        if (!config.data.OperationKey) config.data.OperationKey = uuid;
       }
     }
     return config;

@@ -35,6 +35,7 @@ export default function SellerHubRoutes() {
         <Route path="media-library" element={<MediaLibraryPage />} />
         <Route path="my-reports" element={<MyReportsPage />} />
         <Route path="revenue" element={<RevenuePage />} />
+        <Route path="finance/revenue" element={<RevenuePage />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="products/create" element={<CreateProductPage />} />
         <Route path="orders" element={<OrdersPage />} />
@@ -45,6 +46,8 @@ export default function SellerHubRoutes() {
         <Route path="reviews" element={<ReviewsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="wallet" element={<WalletPage />} />
+        <Route path="finance/wallet" element={<WalletPage />} />
+        <Route path="finance" element={<Navigate to="wallet" replace />} />
         <Route path="general-settings" element={<GeneralSettingsPage />} />
         <Route path="shipping" element={<ShippingManagementPage />} />
         <Route path="shipping-batch" element={<BatchShippingPage />} />

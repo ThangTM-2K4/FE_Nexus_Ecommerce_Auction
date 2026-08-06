@@ -236,13 +236,19 @@ export const login = async (loginValue, password) => {
 const enrichSellerStatus = async () => {
   try {
     const { data } = await api.get("/sellers/me", { skipErrorRedirect: true });
-    const seller = data?.data ?? data;
-    const status = seller?.status ?? seller?.sellerStatus;
-    if (status) {
-      const upper = String(status).toUpperCase();
-      const updates = { sellerStatus: upper };
-      // Seller đã duyệt → mặc định vào chế độ Người bán (vẫn đổi lại được)
-      if (upper === "APPROVED") updates.currentMode = "SELLER";
+    const seller = unwrapData(data) || data?.data || data;
+    const status = seller?.status ?? seller?.sellerStatus ?? seller?.approvalStatus;
+    if (seller && (status || seller.id || seller.sellerId || seller.shopName || seller.businessName)) {
+      const upper = status ? String(status).toUpperCase() : "APPROVED";
+      const isApproved = upper === "APPROVED" || upper === "ACTIVE";
+      const updates = {
+        sellerStatus: isApproved ? "APPROVED" : upper,
+        sellerId: seller.id ?? seller.sellerId ?? null,
+        sellerInfo: seller,
+      };
+      if (isApproved) {
+        updates.currentMode = "SELLER";
+      }
       return updateSessionUser(updates);
     }
   } catch (err) {

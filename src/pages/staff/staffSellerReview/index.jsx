@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { FaSearch, FaTh, FaList, FaEye, FaCheck, FaTimes } from "react-icons/fa";
 import StaffPageHeader from "../../../components/staff/staffPageHeader";
 import StaffKpiCard from "../../../components/staff/staffKpiCard";
 import RejectReasonModal from "../../../components/staff/rejectReasonModal";
 import ImageLightbox from "../../../components/common/imageLightbox";
+import Modal from "../../../components/common/modal";
 import { sellerRejectReasons } from "../../../data/staffMockData";
 import { getApiErrorMessage } from "../../../utils/apiResponse";
 import {
@@ -44,12 +46,14 @@ const StaffSellerReview = () => {
   const [processingId, setProcessingId] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [tab, setTab] = useState("PENDING");
+  const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
+  const [search, setSearch] = useState("");
+  const [detailSeller, setDetailSeller] = useState(null);
   const [lightbox, setLightbox] = useState(null); // { images, index }
 
   const loadApplications = async () => {
     setLoading(true);
     try {
-      // Sử dụng API thật từ adminSellerService - cùng API với admin
       const data = await getAdminSellers({ page: 1, pageSize: 100 });
       setApplications(data?.items || []);
     } catch (err) {
@@ -90,6 +94,22 @@ const StaffSellerReview = () => {
     [applications, tab]
   );
 
+  const filteredList = useMemo(() => {
+    let list = shown;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((a) => {
+        const name = (a.businessName || a.owner || a.fullName || "").toLowerCase();
+        const email = (a.email || "").toLowerCase();
+        const phone = (a.phone || a.phoneNumber || "").toLowerCase();
+        const taxCode = (a.taxCode || "").toLowerCase();
+        const id = String(a.id).toLowerCase();
+        return name.includes(q) || email.includes(q) || phone.includes(q) || taxCode.includes(q) || id.includes(q);
+      });
+    }
+    return list;
+  }, [shown, search]);
+
   const handleApprove = async (app) => {
     setProcessingId(app.id);
     try {
@@ -119,34 +139,120 @@ const StaffSellerReview = () => {
     }
   };
 
-  // Ảnh xem được (JPG/PNG...) mở trong lightbox; PDF mở tab mới.
   const isViewableImage = (url) =>
     typeof url === "string" && /^(data:image|https?:.*\.(png|jpe?g|webp|gif)(\?|#|$))/i.test(url);
-  const isLicenseAttached = (app) =>
-    typeof app.businessLicense === "string" && /^data:|^https?:/.test(app.businessLicense);
 
   const openImages = (app, startIndex) => {
     const images = [];
-    if (app.frontImageUrl) images.push({ src: app.frontImageUrl, caption: "CCCD mặt trước" });
-    if (app.backImageUrl) images.push({ src: app.backImageUrl, caption: "CCCD mặt sau" });
+    if (app.identityFrontImageUrl || app.frontImageUrl) {
+      images.push({ src: app.identityFrontImageUrl || app.frontImageUrl, caption: "CCCD mặt trước" });
+    }
+    if (app.identityBackImageUrl || app.backImageUrl) {
+      images.push({ src: app.identityBackImageUrl || app.backImageUrl, caption: "CCCD mặt sau" });
+    }
     if (isViewableImage(app.businessLicense)) {
       images.push({ src: app.businessLicense, caption: "Giấy phép kinh doanh" });
     }
     if (images.length) setLightbox({ images, index: startIndex });
   };
 
-  const openLicense = (app) => {
-    if (isViewableImage(app.businessLicense)) {
-      const idx = (app.frontImageUrl ? 1 : 0) + (app.backImageUrl ? 1 : 0);
-      openImages(app, idx);
-    } else {
-      window.open(app.businessLicense, "_blank", "noopener,noreferrer");
-    }
-  };
-
   const hasImages = (app) => Boolean(app.identityFrontImageUrl || app.frontImageUrl || app.identityBackImageUrl || app.backImageUrl);
 
   const getStatus = (app) => normalizeStatus(app.apiStatus || app.status);
+
+  const renderSellerDetailContent = (app) => {
+    const status = getStatus(app);
+    const cccdVerified = status === "APPROVED";
+    return (
+      <div className="stf-seller-modal-body">
+        <header className="stf-seller-review__card-header">
+          <div>
+            <h3>{app.businessName || app.owner || app.fullName || "Người bán"}</h3>
+            <p>{app.sellerTypeLabel || app.sellerType || app.category || "—"} · {app.subtitle || app.name || "—"}</p>
+          </div>
+          <span className={`stf-seller-review__status ${STATUS_CLASS[status] || ""}`}>
+            {STATUS_LABEL[status] || app.status}
+          </span>
+        </header>
+
+        <div className="stf-seller-review__grid">
+          <section className="stf-seller-review__col">
+            <h4>Thông tin cửa hàng</h4>
+            <dl>
+              <div><dt>Email</dt><dd>{app.email || "—"}</dd></div>
+              <div><dt>Số điện thoại</dt><dd>{app.phone || app.phoneNumber || "—"}</dd></div>
+              <div><dt>Loại hình</dt><dd>{app.sellerTypeLabel || app.sellerType || "—"}</dd></div>
+              <div><dt>Mã số thuế</dt><dd>{app.taxCode || "—"}</dd></div>
+              <div><dt>Địa chỉ lấy hàng</dt><dd>{app.address || app.pickupAddress || "—"}</dd></div>
+              <div><dt>Ngân hàng</dt><dd>{app.bankName || "—"} {app.bankAccountNumber ? `· ${app.bankAccountNumber}` : ""}<br/>{app.bankAccountHolder || app.accountHolder || ""}</dd></div>
+              <div><dt>Ngày nộp</dt><dd>{app.submittedAt || "—"}</dd></div>
+              <div><dt>Mã đơn</dt><dd>{app.id}</dd></div>
+            </dl>
+          </section>
+
+          <section className="stf-seller-review__col stf-seller-review__identity">
+            <h4>
+              Xác minh CCCD
+              <span className={`stf-seller-review__idbadge ${cccdVerified ? "verified" : "pending"}`}>
+                {cccdVerified ? "✓ Đã xác minh" : "Chờ xác minh"}
+              </span>
+            </h4>
+            <dl>
+              <div><dt>Số CCCD</dt><dd>{app.identityNumber || app.cccd || "—"}</dd></div>
+              <div><dt>Địa chỉ</dt><dd>{app.cccdAddress || "—"}</dd></div>
+            </dl>
+
+            {hasImages(app) ? (
+              <div className="stf-seller-review__imgs">
+                {(app.identityFrontImageUrl || app.frontImageUrl) && (
+                  <button type="button" onClick={() => openImages(app, 0)}>
+                    <img src={app.identityFrontImageUrl || app.frontImageUrl} alt="CCCD mặt trước" />
+                    <span>CCCD mặt trước 🔍</span>
+                  </button>
+                )}
+                {(app.identityBackImageUrl || app.backImageUrl) && (
+                  <button type="button" onClick={() => openImages(app, 1)}>
+                    <img src={app.identityBackImageUrl || app.backImageUrl} alt="CCCD mặt sau" />
+                    <span>CCCD mặt sau 🔍</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <p className="stf-seller-review__no-img">Chưa có ảnh CCCD đính kèm.</p>
+            )}
+
+            <div className="stf-seller-review__license">
+              <strong>Giấy phép kinh doanh:</strong>
+              {app.businessLicenseUrl || app.businessLicense ? (
+                <button
+                  type="button"
+                  className="stf-seller-review__license-btn"
+                  onClick={() => {
+                    const url = app.businessLicenseUrl || app.businessLicense;
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <span className="stf-seller-review__license-file">📄</span>
+                  <span>Xem giấy phép kinh doanh 🔍</span>
+                </button>
+              ) : (
+                <span className="stf-seller-review__no-img">
+                  Chưa có tệp đính kèm.
+                </span>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {(status === "REJECTED" && (app.rejectReason || app.rejectionReason)) && (
+          <div className="stf-seller-review__reject-box">
+            {app.rejectReason && <p><strong>Lý do từ chối:</strong> {app.rejectReason}</p>}
+            {app.rejectionReason && <p><strong>Lý do từ chối:</strong> {app.rejectionReason}</p>}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="stf-seller-review">
@@ -163,117 +269,64 @@ const StaffSellerReview = () => {
         <StaffKpiCard label="Tổng hồ sơ" value={String(counts.ALL)} hint="Toàn bộ đơn" />
       </div>
 
-      <div className="stf-seller-review__tabs">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={tab === t.id ? "active" : ""}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label} ({counts[t.id]})
-          </button>
-        ))}
+      <div className="stf-seller-review__toolbar">
+        <div className="stf-seller-review__tabs">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={tab === t.id ? "active" : ""}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label} ({counts[t.id]})
+            </button>
+          ))}
+        </div>
+
+        <div className="stf-seller-review__controls">
+          <div className="stf-seller-review__search">
+            <FaSearch aria-hidden />
+            <input
+              type="search"
+              placeholder="Tìm kiếm người bán, email, SĐT..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="adm-view-toggle" role="group" aria-label="Chế độ hiển thị">
+            <button
+              type="button"
+              className={`adm-view-toggle__btn ${viewMode === "grid" ? "is-active" : ""}`}
+              onClick={() => setViewMode("grid")}
+              title="Hiển thị dạng Lưới (Hộp)"
+            >
+              <FaTh /> <span>Lưới</span>
+            </button>
+            <button
+              type="button"
+              className={`adm-view-toggle__btn ${viewMode === "list" ? "is-active" : ""}`}
+              onClick={() => setViewMode("list")}
+              title="Hiển thị dạng Danh sách"
+            >
+              <FaList /> <span>Danh sách</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {loading ? (
         <p className="stf-seller-review__empty">Đang tải danh sách...</p>
-      ) : shown.length === 0 ? (
+      ) : filteredList.length === 0 ? (
         <p className="stf-seller-review__empty">Không có đơn nào ở mục này.</p>
-      ) : (
+      ) : viewMode === "grid" ? (
+        /* DẠNG LƯỚI / BOX CARD (Cũ) */
         <div className="stf-seller-review__list">
-          {shown.map((app) => {
+          {filteredList.map((app) => {
             const status = getStatus(app);
-            const cccdVerified = status === "APPROVED";
             return (
               <article key={app.id} className="stf-seller-review__card">
-                <header>
-                  <div>
-                    <h3>{app.businessName || app.owner || app.fullName || "Người bán"}</h3>
-                    <p>{app.sellerTypeLabel || app.sellerType || app.category || "—"} · {app.subtitle || app.name || "—"}</p>
-                  </div>
-                  <span className={`stf-seller-review__status ${STATUS_CLASS[status] || ""}`}>
-                    {STATUS_LABEL[status] || app.status}
-                  </span>
-                </header>
-
-                <div className="stf-seller-review__grid">
-                  {/* Cột trái: thông tin cửa hàng & liên hệ */}
-                  <section className="stf-seller-review__col">
-                    <h4>Thông tin cửa hàng</h4>
-                    <dl>
-                      <div><dt>Email</dt><dd>{app.email || "—"}</dd></div>
-                      <div><dt>Số điện thoại</dt><dd>{app.phone || app.phoneNumber || "—"}</dd></div>
-                      <div><dt>Loại hình</dt><dd>{app.sellerTypeLabel || app.sellerType || "—"}</dd></div>
-                      <div><dt>Mã số thuế</dt><dd>{app.taxCode || "—"}</dd></div>
-                      <div><dt>Địa chỉ lấy hàng</dt><dd>{app.address || app.pickupAddress || "—"}</dd></div>
-                      <div><dt>Ngân hàng</dt><dd>{app.bankName || "—"} {app.bankAccountNumber ? `· ${app.bankAccountNumber}` : ""}<br/>{app.bankAccountHolder || app.accountHolder || ""}</dd></div>
-                      <div><dt>Ngày nộp</dt><dd>{app.submittedAt || "—"}</dd></div>
-                      <div><dt>Mã đơn</dt><dd>{app.id}</dd></div>
-                    </dl>
-                  </section>
-
-                  {/* Cột phải: XÁC MINH CCCD */}
-                  <section className="stf-seller-review__col stf-seller-review__identity">
-                    <h4>
-                      Xác minh CCCD
-                      <span className={`stf-seller-review__idbadge ${cccdVerified ? "verified" : "pending"}`}>
-                        {cccdVerified ? "✓ Đã xác minh" : "Chờ xác minh"}
-                      </span>
-                    </h4>
-                    <dl>
-                      <div><dt>Số CCCD</dt><dd>{app.identityNumber || app.cccd || "—"}</dd></div>
-                      <div><dt>Địa chỉ</dt><dd>{app.cccdAddress || "—"}</dd></div>
-                    </dl>
-
-                    {hasImages(app) ? (
-                      <div className="stf-seller-review__imgs">
-                        {(app.identityFrontImageUrl || app.frontImageUrl) && (
-                          <button type="button" onClick={() => openImages(app, 0)}>
-                            <img src={app.identityFrontImageUrl || app.frontImageUrl} alt="CCCD mặt trước" />
-                            <span>CCCD mặt trước 🔍</span>
-                          </button>
-                        )}
-                        {(app.identityBackImageUrl || app.backImageUrl) && (
-                          <button type="button" onClick={() => openImages(app, 1)}>
-                            <img src={app.identityBackImageUrl || app.backImageUrl} alt="CCCD mặt sau" />
-                            <span>CCCD mặt sau 🔍</span>
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="stf-seller-review__no-img">Chưa có ảnh CCCD đính kèm.</p>
-                    )}
-
-                    <div className="stf-seller-review__license">
-                      <strong>Giấy phép kinh doanh:</strong>
-                      {app.businessLicenseUrl || app.businessLicense ? (
-                        <button
-                          type="button"
-                          className="stf-seller-review__license-btn"
-                          onClick={() => {
-                            const url = app.businessLicenseUrl || app.businessLicense;
-                            window.open(url, "_blank", "noopener,noreferrer");
-                          }}
-                        >
-                          <span className="stf-seller-review__license-file">📄</span>
-                          <span>Xem giấy phép kinh doanh 🔍</span>
-                        </button>
-                      ) : (
-                        <span className="stf-seller-review__no-img">
-                          Chưa có tệp đính kèm.
-                        </span>
-                      )}
-                    </div>
-                  </section>
-                </div>
-
-                {(status === "REJECTED" && (app.rejectReason || app.rejectionReason)) && (
-                  <div className="stf-seller-review__reject-box">
-                    {app.rejectReason && <p><strong>Lý do từ chối:</strong> {app.rejectReason}</p>}
-                    {app.rejectionReason && <p><strong>Lý do từ chối:</strong> {app.rejectionReason}</p>}
-                  </div>
-                )}
+                {renderSellerDetailContent(app)}
 
                 {status === "PENDING" && (
                   <footer>
@@ -299,6 +352,143 @@ const StaffSellerReview = () => {
             );
           })}
         </div>
+      ) : (
+        /* DẠNG DANH SÁCH / TABLE (Mới giống Admin) */
+        <div className="stf-seller-review__table-wrap">
+          <table className="stf-seller-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Thông tin người bán</th>
+                <th>Liên hệ</th>
+                <th>MST / Ngân hàng</th>
+                <th>Xác minh CCCD</th>
+                <th>Trạng thái</th>
+                <th style={{ textAlign: "right" }}>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredList.map((app) => {
+                const status = getStatus(app);
+                const cccdVerified = status === "APPROVED";
+                return (
+                  <tr key={app.id}>
+                    <td className="col-id">
+                      <strong>#{String(app.id).slice(0, 8)}</strong>
+                      <small>{app.submittedAt || "—"}</small>
+                    </td>
+                    <td className="col-seller">
+                      <div className="seller-name">{app.businessName || app.owner || app.fullName || "Người bán"}</div>
+                      <span className="seller-type-tag">{app.sellerTypeLabel || app.sellerType || "Cá nhân"}</span>
+                    </td>
+                    <td className="col-contact">
+                      <div>📞 {app.phone || app.phoneNumber || "—"}</div>
+                      <small>✉️ {app.email || "—"}</small>
+                    </td>
+                    <td className="col-tax">
+                      <div>MST: <strong>{app.taxCode || "—"}</strong></div>
+                      <small>{app.bankName ? `${app.bankName} (${app.bankAccountNumber || "—"})` : "Chưa có ngân hàng"}</small>
+                    </td>
+                    <td className="col-cccd">
+                      <span className={`stf-seller-review__idbadge ${cccdVerified ? "verified" : "pending"}`}>
+                        {cccdVerified ? "✓ Đã xác minh" : "Chờ xác minh"}
+                      </span>
+                    </td>
+                    <td className="col-status">
+                      <span className={`stf-seller-review__status ${STATUS_CLASS[status] || ""}`}>
+                        {STATUS_LABEL[status] || app.status}
+                      </span>
+                    </td>
+                    <td className="col-actions" style={{ textAlign: "right" }}>
+                      <div className="stf-table-actions">
+                        <button
+                          type="button"
+                          className="stf-btn-action stf-btn-action--view"
+                          onClick={() => setDetailSeller(app)}
+                          title="Xem chi tiết hồ sơ"
+                        >
+                          <FaEye /> Xem
+                        </button>
+                        {status === "PENDING" && (
+                          <>
+                            <button
+                              type="button"
+                              className="stf-btn-action stf-btn-action--approve"
+                              disabled={processingId === app.id}
+                              onClick={() => handleApprove(app)}
+                              title="Duyệt"
+                            >
+                              <FaCheck /> Duyệt
+                            </button>
+                            <button
+                              type="button"
+                              className="stf-btn-action stf-btn-action--reject"
+                              disabled={processingId === app.id}
+                              onClick={() => setRejectTarget(app)}
+                              title="Từ chối"
+                            >
+                              <FaTimes /> Từ chối
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {detailSeller && (
+        <Modal
+          open={Boolean(detailSeller)}
+          onClose={() => setDetailSeller(null)}
+          title={`Chi tiết hồ sơ: ${detailSeller.businessName || detailSeller.owner || "Người bán"}`}
+          className="stf-seller-detail-modal"
+          footer={
+            <div className="stf-modal-actions">
+              <button
+                type="button"
+                className="stf-btn-action stf-btn-action--plain"
+                onClick={() => setDetailSeller(null)}
+              >
+                Đóng
+              </button>
+              {getStatus(detailSeller) === "PENDING" && (
+                <>
+                  <button
+                    type="button"
+                    className="stf-btn-action stf-btn-action--reject"
+                    disabled={processingId === detailSeller.id}
+                    onClick={() => {
+                      const target = detailSeller;
+                      setDetailSeller(null);
+                      setRejectTarget(target);
+                    }}
+                  >
+                    Từ chối
+                  </button>
+                  <button
+                    type="button"
+                    className="stf-btn-action stf-btn-action--approve"
+                    disabled={processingId === detailSeller.id}
+                    onClick={async () => {
+                      const target = detailSeller;
+                      setDetailSeller(null);
+                      await handleApprove(target);
+                    }}
+                  >
+                    Phê duyệt & Xác minh CCCD
+                  </button>
+                </>
+              )}
+            </div>
+          }
+        >
+          {renderSellerDetailContent(detailSeller)}
+        </Modal>
       )}
 
       <RejectReasonModal
