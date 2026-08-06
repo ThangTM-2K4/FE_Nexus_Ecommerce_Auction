@@ -6,7 +6,7 @@
   gap: 8px;
   font-size: 13px;
   color: $color-text-muted;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 
   .sep {
     color: $color-text-muted;
@@ -21,31 +21,34 @@
 .slr-cp__layout {
   display: flex;
   align-items: flex-start;
-  gap: 20px;
+  gap: 24px;
 }
 
 .slr-cp__tips {
-  width: 240px;
+  width: 250px;
   flex-shrink: 0;
-  background: $color-bg;
-  border: 1px solid $color-border-light;
+  background: #ffffff;
+  border: 1px solid rgba(107, 59, 167, 0.15);
   border-radius: $radius-md;
-  padding: 16px;
+  padding: 18px;
   position: sticky;
   top: 84px;
+  box-shadow: 0 4px 16px rgba(107, 59, 167, 0.04);
 
   h4 {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: $color-primary-dark;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(107, 59, 167, 0.2);
   }
 
   ul {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     padding: 0;
     margin: 0;
   }
@@ -53,17 +56,19 @@
   li {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
+    gap: 10px;
     font-size: 12px;
-    line-height: 1.4;
+    line-height: 1.45;
     color: $color-text-muted;
+    transition: $transition-fast;
 
     &.done {
-      color: $color-text;
+      color: $color-primary-dark;
+      font-weight: 600;
 
       .slr-cp__tip-dot {
-        border-color: $color-success;
-        background: $color-success;
+        border-color: $color-primary;
+        background: $color-primary;
 
         &::after {
           opacity: 1;
@@ -87,7 +92,7 @@
     position: absolute;
     inset: 0;
     opacity: 0;
-    background: radial-gradient(circle at center, #fff 0 2px, transparent 2px);
+    background: radial-gradient(circle at center, #fff 0 2.5px, transparent 2.5px);
   }
 }
 
@@ -98,16 +103,16 @@
 
 .slr-cp__tabs {
   display: flex;
-  gap: 4px;
-  background: $color-bg;
-  border: 1px solid $color-border-light;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid rgba(107, 59, 167, 0.15);
   border-bottom: none;
   border-radius: $radius-md $radius-md 0 0;
-  padding: 0 8px;
+  padding: 4px 12px 0;
   overflow-x: auto;
 
   button {
-    padding: 14px 20px;
+    padding: 14px 22px;
     border: none;
     background: none;
     font-size: 14px;
@@ -115,7 +120,7 @@
     color: $color-text-muted;
     cursor: pointer;
     white-space: nowrap;
-    border-bottom: 2.5px solid transparent;
+    border-bottom: 3px solid transparent;
     transition: $transition-fast;
 
     &:hover {
@@ -132,14 +137,15 @@
 .slr-create-product__card {
   margin-top: 0;
   border-radius: 0 0 $radius-md $radius-md;
-  background: #fff;
-  border: 1px solid $color-border-light;
-  padding: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(107, 59, 167, 0.15);
+  padding: 28px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.02);
 }
 
 .slr-cp__section {
   h3 {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
     color: $color-primary-dark;
     margin-bottom: 6px;
@@ -148,15 +154,15 @@
   .slr-cp__subtext {
     font-size: 13px;
     color: $color-text-muted;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
   }
 }
 
 .slr-cp__row {
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
+  grid-template-columns: 190px minmax(0, 1fr);
   gap: 8px 24px;
-  padding: 18px 0;
+  padding: 20px 0;
   border-bottom: 1px solid $color-border-light;
 
   &:first-child {
@@ -172,7 +178,7 @@
   font-size: 13px;
   font-weight: 600;
   color: $color-text;
-  padding-top: 8px;
+  padding-top: 10px;
 
   .required {
     color: $color-danger;
@@ -188,8 +194,8 @@
   input[type="datetime-local"],
   textarea {
     width: 100%;
-    min-height: 40px;
-    padding: 0 14px;
+    min-height: 42px;
+    padding: 0 16px;
     border: 1px solid $color-border;
     border-radius: $radius-sm;
     font-size: 14px;
@@ -201,12 +207,16 @@
     &:focus {
       outline: none;
       border-color: $color-primary;
-      box-shadow: 0 0 0 3px rgba($color-primary, 0.12);
+      box-shadow: 0 0 0 3px rgba(107, 59, 167, 0.12);
+    }
+
+    &::placeholder {
+      color: #aaa;
     }
   }
 
   textarea {
-    padding: 10px 14px;
+    padding: 12px 16px;
     resize: vertical;
   }
 }
@@ -235,7 +245,7 @@
   .prefix {
     position: absolute;
     left: 14px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     color: $color-primary;
     pointer-events: none;
@@ -254,7 +264,7 @@
 
     &:focus {
       border-color: $color-primary;
-      box-shadow: 0 0 0 3px rgba($color-primary, 0.12);
+      box-shadow: 0 0 0 3px rgba(107, 59, 167, 0.12);
     }
   }
 }
@@ -263,12 +273,12 @@
   position: relative;
 
   input {
-    padding-right: 60px;
+    padding-right: 64px;
   }
 
   .slr-cp__counter {
     position: absolute;
-    right: 12px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 12px;
@@ -288,29 +298,24 @@
 .slr-cp__detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px 24px;
+  gap: 18px 24px;
   padding-bottom: 16px;
 }
 
 .slr-cp__grid-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 
   label {
     font-size: 13px;
     font-weight: 600;
     color: $color-text;
-
-    .required {
-      color: $color-danger;
-      font-weight: 700;
-    }
   }
 
   input {
     width: 100%;
-    height: 40px;
+    height: 42px;
     padding: 0 14px;
     border: 1px solid $color-border;
     border-radius: $radius-sm;
@@ -322,21 +327,21 @@
     &:focus {
       outline: none;
       border-color: $color-primary;
-      box-shadow: 0 0 0 3px rgba($color-primary, 0.12);
+      box-shadow: 0 0 0 3px rgba(107, 59, 167, 0.12);
     }
   }
 }
 
 .slr-cp__custom-attr-section {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px dashed $color-border-light;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(107, 59, 167, 0.2);
 
   h4 {
     font-size: 14px;
     font-weight: 700;
     color: $color-primary-dark;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
 }
 
@@ -344,12 +349,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 
   input {
     flex: 1;
-    height: 38px;
-    padding: 0 12px;
+    height: 40px;
+    padding: 0 14px;
     border: 1px solid $color-border;
     border-radius: $radius-sm;
     font-size: 13px;
@@ -361,32 +366,62 @@
     color: $color-danger;
     cursor: pointer;
     padding: 8px;
+    font-size: 14px;
+    transition: $transition-fast;
+
+    &:hover {
+      opacity: 0.8;
+    }
   }
 }
 
-/* Category suggestion pills */
-.slr-cp__suggestion-pills {
+/* Category Suggestion Card Container (Gợi ý phân loại nhanh) */
+.slr-cp__suggestion-card {
+  margin: 12px 0 20px;
+  padding: 16px 20px;
+  background: rgba(107, 59, 167, 0.035);
+  border: 1px dashed rgba(107, 59, 167, 0.25);
+  border-radius: $radius-md;
   display: flex;
+  align-items: center;
+  gap: 18px;
   flex-wrap: wrap;
-  gap: 8px;
+
+  .slr-cp__suggestion-header {
+    font-size: 13px;
+    font-weight: 700;
+    color: $color-primary-dark;
+    white-space: nowrap;
+  }
+
+  .slr-cp__suggestion-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
 
   .slr-cp__pill-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 12px;
-    background: #f4f0fa;
+    padding: 7px 16px;
+    background: #ffffff;
     border: 1px solid rgba(107, 59, 167, 0.25);
-    border-radius: 16px;
-    font-size: 12px;
+    border-radius: 20px;
+    font-size: 13px;
     font-weight: 600;
     color: $color-primary-dark;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(107, 59, 167, 0.06);
     transition: $transition-fast;
 
     &:hover {
-      background: #e8e0f5;
-      border-color: $color-primary;
+      background: $color-primary-dark;
+      color: #ffffff;
+      border-color: $color-primary-dark;
+      box-shadow: 0 4px 12px rgba(107, 59, 167, 0.25);
+      transform: translateY(-1px);
     }
   }
 }
@@ -395,26 +430,27 @@
 .slr-cp__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .slr-cp__tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  background: #f0ebf8;
-  border: 1px solid rgba(107, 59, 167, 0.3);
-  border-radius: 12px;
-  font-size: 12px;
+  padding: 5px 14px;
+  background: #f4effa;
+  border: 1px solid rgba(107, 59, 167, 0.25);
+  border-radius: 16px;
+  font-size: 13px;
   font-weight: 600;
   color: $color-primary-dark;
+  box-shadow: 0 2px 4px rgba(107, 59, 167, 0.04);
 
   button {
     border: none;
     background: none;
-    color: $color-text-muted;
-    font-size: 10px;
+    color: #888;
+    font-size: 11px;
     cursor: pointer;
     padding: 0 2px;
     line-height: 1;
@@ -425,41 +461,169 @@
   }
 }
 
-/* Batch Apply Bar */
+/* BATCH APPLY BAR - Ultra-Modern Layout */
 .slr-cp__batch-bar {
-  margin: 18px 0;
-  padding: 14px 18px;
-  background: #f8f6fc;
+  margin: 22px 0;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #f7f3fc 0%, #ede5f7 100%);
   border: 1px solid rgba(107, 59, 167, 0.2);
-  border-radius: $radius-md;
+  border-radius: 12px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  box-shadow: 0 4px 16px rgba(107, 59, 167, 0.06);
 
   .slr-cp__batch-title {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 700;
     color: $color-primary-dark;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+
+    .slr-cp__batch-icon {
+      color: $color-primary;
+      font-size: 15px;
+    }
   }
 
   .slr-cp__batch-inputs {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
 
-    input {
-      width: 180px !important;
-      height: 38px !important;
-      font-size: 13px !important;
+  .slr-cp__batch-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .slr-cp__batch-currency {
+      position: absolute;
+      left: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      color: $color-primary;
+      pointer-events: none;
+      z-index: 2;
     }
 
-    .slr-btn-create {
-      height: 38px;
-      padding: 0 16px;
-      font-size: 13px;
+    input {
+      width: 190px !important;
+      height: 42px !important;
+      padding-left: 32px !important;
+      padding-right: 14px !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      border: 1px solid rgba(107, 59, 167, 0.22) !important;
+      border-radius: 8px !important;
+      background: #ffffff !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+      transition: $transition-fast !important;
+
+      &:focus {
+        border-color: $color-primary !important;
+        box-shadow: 0 0 0 3px rgba(107, 59, 167, 0.14) !important;
+        outline: none !important;
+      }
+    }
+
+    /* Input without currency prefix (Kho hàng) */
+    &:nth-child(2) input {
+      padding-left: 14px !important;
+    }
+  }
+
+  .slr-cp__batch-btn {
+    height: 42px;
+    padding: 0 24px;
+    background: linear-gradient(135deg, #6b3ba7 0%, #523f77 100%);
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(107, 59, 167, 0.28);
+    transition: $transition-fast;
+    white-space: nowrap;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(107, 59, 167, 0.38);
+      background: linear-gradient(135deg, #7842ba 0%, #5b4685 100%);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Table styling for variations */
+.slr-table-wrap {
+  border: 1px solid rgba(107, 59, 167, 0.18);
+  border-radius: $radius-md;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.slr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  thead {
+    background: #f4eefc;
+    border-bottom: 1px solid rgba(107, 59, 167, 0.18);
+
+    th {
+      padding: 14px 18px;
+      text-align: left;
+      font-weight: 700;
+      color: $color-primary-dark;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid $color-border-light;
+      transition: $transition-fast;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background: #faf7fe;
+      }
+
+      td {
+        padding: 14px 18px;
+        vertical-align: middle;
+
+        strong {
+          color: $color-primary-dark;
+        }
+
+        input[type="number"] {
+          height: 40px;
+          border-radius: $radius-sm;
+          font-weight: 600;
+          border: 1px solid $color-border;
+
+          &:focus {
+            border-color: $color-primary;
+            box-shadow: 0 0 0 3px rgba(107, 59, 167, 0.12);
+          }
+        }
+      }
     }
   }
 }
@@ -468,7 +632,7 @@
 .slr-create-image-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  gap: 14px;
 }
 
 .slr-cp__upload-slot-wrapper {
@@ -478,7 +642,7 @@
 .slr-cp__upload-slot {
   width: 100%;
   height: 100%;
-  border: 1px dashed $color-primary;
+  border: 1.5px dashed $color-primary;
   background: #f8f6fc;
   border-radius: $radius-sm;
   display: flex;
@@ -494,7 +658,7 @@
   }
 
   .slr-cp__upload-icon {
-    font-size: 24px;
+    font-size: 26px;
     color: $color-primary;
     line-height: 1;
   }
@@ -522,22 +686,22 @@
       position: absolute;
       bottom: 0;
       inset-x: 0;
-      background: rgba(82, 63, 119, 0.85);
+      background: rgba(82, 63, 119, 0.88);
       color: #fff;
       font-size: 10px;
       font-weight: 700;
       text-align: center;
-      padding: 2px 0;
+      padding: 3px 0;
     }
 
     .slr-cp__img-remove-btn {
       position: absolute;
-      top: 4px;
-      right: 4px;
-      width: 20px;
-      height: 20px;
+      top: 5px;
+      right: 5px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.65);
       color: #fff;
       border: none;
       font-size: 11px;
@@ -564,9 +728,9 @@
 .slr-cp__btn-dashed {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  border: 1px dashed $color-primary;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1.5px dashed $color-primary;
   background: #f8f6fc;
   color: $color-primary;
   border-radius: $radius-sm;
@@ -580,7 +744,7 @@
   }
 
   &--sm {
-    padding: 6px 12px;
+    padding: 6px 14px;
     font-size: 12px;
     margin-top: 8px;
   }
@@ -590,8 +754,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border: 1px dashed $color-primary;
+  padding: 8px 14px;
+  border: 1.5px dashed $color-primary;
   background: #f8f6fc;
   color: $color-primary;
   border-radius: $radius-sm;
@@ -608,8 +772,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 38px;
-  padding: 0 14px;
+  height: 40px;
+  padding: 0 16px;
   border: 1px solid $color-border;
   background: #fff;
   color: $color-text;
@@ -628,15 +792,15 @@
   border: none;
   background: none;
   color: $color-danger;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 
-/* Pre-order Radio Group */
+/* Radio Group */
 .slr-cp__radio-group {
   display: flex;
-  gap: 24px;
+  gap: 28px;
   margin-bottom: 8px;
 }
 
@@ -662,23 +826,23 @@
 .slr-cp__subrow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 10px;
   font-size: 13px;
 }
 
 /* Actions Footer */
 .slr-create-product__actions {
-  margin-top: 28px;
-  padding-top: 20px;
+  margin-top: 32px;
+  padding-top: 22px;
   border-top: 1px solid $color-border-light;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 14px;
 
   .slr-btn-plain {
-    padding: 10px 20px;
+    padding: 10px 22px;
     border: 1px solid $color-border;
     background: #fff;
     border-radius: $radius-sm;
@@ -693,7 +857,7 @@
   }
 
   .slr-btn-outline {
-    padding: 10px 20px;
+    padding: 10px 22px;
     border: 1px solid $color-primary;
     background: #fff;
     border-radius: $radius-sm;
@@ -708,7 +872,7 @@
   }
 
   .slr-btn-create {
-    padding: 10px 24px;
+    padding: 10px 26px;
     border: none;
     background: $color-primary;
     border-radius: $radius-sm;

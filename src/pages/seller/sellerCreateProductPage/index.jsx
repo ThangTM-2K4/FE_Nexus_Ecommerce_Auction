@@ -20,7 +20,7 @@ import "./index.scss";
 const SUBMIT_STEP_LABELS = {
   create: "Đang tạo sản phẩm...",
   images: "Đang tải ảnh lên...",
-  sku: "Đang tạo SKU...",
+  sku: "Đang xử lý...",
   review: "Đang gửi duyệt...",
 };
 
@@ -28,13 +28,13 @@ const DEFAULT_CATEGORY_OPTIONS = [
   { value: "00000000-0000-0000-0000-000000000003", label: "Thời trang & Phụ kiện > Áo quần" },
   { value: "00000000-0000-0000-0000-000000000002", label: "Điện thoại & Công nghệ > Thiết bị di động" },
   { value: "00000000-0000-0000-0000-000000000001", label: "Nghệ thuật & Sưu tầm" },
-  { value: "00000000-0000-0000-0000-000000000004", label: "Ô tô & Xe máy" },
+  { value: "00000000-0000-0000-0000-000000000004", label: "Ô ô & Xe máy" },
   { value: "00000000-0000-0000-0000-000000000005", label: "Điện gia dụng & Nhà cửa" },
   { value: "00000000-0000-0000-0000-000000000006", label: "Mỹ phẩm & Sức khỏe" },
 ];
 
 const CONDITIONS = [
-  { value: "new", label: "Mới" },
+  { value: "new", label: "Mới 100%" },
   { value: "used", label: "Đã qua sử dụng" },
 ];
 
@@ -74,10 +74,9 @@ export default function CreateProductPage() {
   const [selectedShipping, setSelectedShipping] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(true);
 
-  // Tab 2: Thông tin chi tiết - Free text custom preset name & fields
+  // Tab 2: Thông tin chi tiết - (Đã bỏ Thương hiệu ở đây)
   const [customPresetName, setCustomPresetName] = useState("");
   const [detailFields, setDetailFields] = useState({
-    brand: "",
     origin: "",
     material: "",
   });
@@ -86,7 +85,7 @@ export default function CreateProductPage() {
   // Tab 3: Thông tin bán hàng
   const [productTypeMode, setProductTypeMode] = useState("single"); // 'single' | 'multi'
   
-  // Dynamic Variation Builder (Clean & empty by default)
+  // Dynamic Variation Builder
   const [group1Name, setGroup1Name] = useState("");
   const [group1Options, setGroup1Options] = useState([]);
   const [inputOpt1, setInputOpt1] = useState("");
@@ -96,10 +95,10 @@ export default function CreateProductPage() {
   const [group2Options, setGroup2Options] = useState([]);
   const [inputOpt2, setInputOpt2] = useState("");
 
-  // Detailed variation rows
+  // Detailed variation rows (Giá bán & Kho hàng)
   const [variationRows, setVariationRows] = useState([]);
 
-  // Batch Apply inputs for seller convenience
+  // Batch Apply inputs
   const [batchPrice, setBatchPrice] = useState("");
   const [batchStock, setBatchStock] = useState("");
 
@@ -326,19 +325,17 @@ export default function CreateProductPage() {
   };
 
   const rebuildVariationTable = (g1Opts, g2Opts, useG2) => {
-    const list1 = g1Opts.length > 0 ? g1Opts : ["Tùy chọn 1"];
+    const list1 = g1Opts.length > 0 ? g1Opts : ["Tùy chọn A", "Tùy chọn B"];
     const list2 = useG2 && g2Opts.length > 0 ? g2Opts : [null];
 
     const newRows = [];
     list1.forEach((v1) => {
       list2.forEach((v2) => {
-        const skuTag = v2 ? `${v1}-${v2}` : v1;
         newRows.push({
           val1: v1,
           val2: v2,
           price: form.price || "",
           stock: form.stock || "",
-          sku: `SKU-${skuTag.substring(0, 10).toUpperCase().replace(/\s+/g, "")}`,
         });
       });
     });
@@ -347,7 +344,7 @@ export default function CreateProductPage() {
 
   const handleBatchApply = () => {
     if (!batchPrice && !batchStock) {
-      toast.info("Vui lòng nhập giá bán hoặc số lượng kho chung để áp dụng hàng loạt.");
+      toast.info("Vui lòng nhập giá bán hoặc số lượng tồn kho chung.");
       return;
     }
     setVariationRows((prev) =>
@@ -357,7 +354,7 @@ export default function CreateProductPage() {
         stock: batchStock || r.stock,
       }))
     );
-    toast.success("Đã áp dụng giá & kho hàng cho tất cả các phân loại!");
+    toast.success("Đã áp dụng giá bán & tồn kho cho tất cả phân loại!");
   };
 
   const handleRowChange = (idx, field, val) => {
@@ -397,26 +394,26 @@ export default function CreateProductPage() {
     let rowVersion = null;
 
     try {
-      setSubmitStep("images");
-      const uploadedImages = [];
-      const imagesToUpload = [...filledImages];
-
-      for (let i = 0; i < imagesToUpload.length; i += 1) {
-        try {
-          const dataUrl = imagesToUpload[i];
-          const file = await dataUrlToFile(dataUrl, `product-${Date.now()}-${i + 1}.jpg`);
-          const { url, key } = await uploadProductImage(file);
-          if (url || key) {
-            uploadedImages.push({
-              imageUrl: url,
-              storageObjectKey: key || url,
-              altText: form.name.trim(),
-              isPrimary: i === 0,
-              sortOrder: i,
-            });
+      const imagesToUpload = [];
+      if (filledImages.length > 0) {
+        setSubmitStep("images");
+        for (let i = 0; i < filledImages.length; i += 1) {
+          try {
+            const dataUrl = filledImages[i];
+            const file = await dataUrlToFile(dataUrl, `product-${Date.now()}-${i + 1}.jpg`);
+            const { url, key } = await uploadProductImage(file);
+            if (url || key) {
+              imagesToUpload.push({
+                imageUrl: url,
+                storageObjectKey: key || url,
+                altText: form.name.trim(),
+                isPrimary: i === 0,
+                sortOrder: i,
+              });
+            }
+          } catch (imgErr) {
+            console.warn("Upload image warning:", imgErr);
           }
-        } catch (imgErr) {
-          console.warn("Upload image warning:", imgErr);
         }
       }
 
@@ -431,7 +428,7 @@ export default function CreateProductPage() {
           description: form.description.trim() || undefined,
           categoryId: form.category,
           salesChannel: "ECOMMERCE",
-          brand: form.brand.trim() || detailFields.brand.trim() || undefined,
+          brand: form.brand.trim() || undefined,
           originCountry: "VN",
           skus: [
             {
@@ -446,7 +443,7 @@ export default function CreateProductPage() {
               barcode: "",
             },
           ],
-          images: uploadedImages,
+          images: imagesToUpload,
         };
 
         const created = await createEcommerceProduct(createPayload);
@@ -458,11 +455,10 @@ export default function CreateProductPage() {
         setDraftProductId(productId);
       }
 
-      // Gắn bổ sung từng ảnh vào sản phẩm làm phương án dự phòng & Lưu Cache FE
-      if (productId && uploadedImages.length > 0) {
+      if (productId && imagesToUpload.length > 0) {
         try {
           const imageMap = JSON.parse(localStorage.getItem("seller_product_images_map") || "{}");
-          const urls = uploadedImages.map((img) => img.imageUrl || img.storageObjectKey).filter(Boolean);
+          const urls = imagesToUpload.map((img) => img.imageUrl || img.storageObjectKey).filter(Boolean);
           if (urls.length > 0) {
             imageMap[productId] = urls;
             localStorage.setItem("seller_product_images_map", JSON.stringify(imageMap));
@@ -471,9 +467,9 @@ export default function CreateProductPage() {
           /* ignore */
         }
 
-        for (let i = 0; i < uploadedImages.length; i += 1) {
+        for (let i = 0; i < imagesToUpload.length; i += 1) {
           try {
-            const img = uploadedImages[i];
+            const img = imagesToUpload[i];
             await attachProductImage(productId, {
               imageKey: img.storageObjectKey,
               imageUrl: img.imageUrl,
@@ -634,7 +630,7 @@ export default function CreateProductPage() {
                   </div>
                 </div>
 
-                {/* Thương hiệu */}
+                {/* Thương hiệu (Duy nhất tại Tab 1) */}
                 <div className="slr-cp__row">
                   <label className="slr-cp__row-label" htmlFor="brand">
                     Thương hiệu
@@ -672,7 +668,7 @@ export default function CreateProductPage() {
               </div>
             )}
 
-            {/* TAB 2: THÔNG TIN CHI TIẾT */}
+            {/* TAB 2: THÔNG TIN CHI TIẾT (ĐÃ XÓA THƯƠNG HIỆU THEO YÊU CẦU) */}
             {activeTab === "detail" && (
               <div className="slr-cp__section">
                 <h3>Thông tin chi tiết</h3>
@@ -693,18 +689,8 @@ export default function CreateProductPage() {
                   </div>
                 </div>
 
-                {/* Các Field chính: Thương hiệu, Xuất xứ, Chất liệu */}
+                {/* Các Field chính: Xuất xứ, Chất liệu (Đã xóa Thương hiệu khỏi Tab 2) */}
                 <div className="slr-cp__detail-grid" style={{ marginTop: "16px" }}>
-                  <div className="slr-cp__grid-field">
-                    <label>Thương hiệu</label>
-                    <input
-                      name="brand"
-                      value={detailFields.brand}
-                      onChange={handleDetailChange}
-                      placeholder="Vui lòng nhập thương hiệu sản phẩm..."
-                    />
-                  </div>
-
                   <div className="slr-cp__grid-field">
                     <label>Xuất xứ</label>
                     <input
@@ -763,7 +749,7 @@ export default function CreateProductPage() {
               </div>
             )}
 
-            {/* TAB 3: THÔNG TIN BÁN HÀNG */}
+            {/* TAB 3: THÔNG TIN BÁN HÀNG (ĐÃ XÓA BẢNG SKU, CHỈ CÒN GIÁ BÁN & KHO HÀNG) */}
             {activeTab === "sales" && (
               <div className="slr-cp__section">
                 <h3>Thông tin bán hàng</h3>
@@ -844,7 +830,7 @@ export default function CreateProductPage() {
                             }
                           }}
                         />
-                        <span>Sản phẩm nhiều loại (Phân loại theo Dung lượng, Màu, Version...)</span>
+                        <span>Sản phẩm nhiều loại (Phân loại theo Dung lượng, Màu, Phiên bản...)</span>
                       </label>
                     </div>
                   </div>
@@ -878,7 +864,7 @@ export default function CreateProductPage() {
                     {/* Kho hàng */}
                     <div className="slr-cp__row">
                       <label className="slr-cp__row-label" htmlFor="stock">
-                        Kho hàng (Số lượng)<span className="required"> *</span>
+                        Kho hàng (Số lượng tồn kho)<span className="required"> *</span>
                       </label>
                       <div className="slr-cp__row-body">
                         <input
@@ -895,25 +881,25 @@ export default function CreateProductPage() {
                     </div>
                   </>
                 ) : (
-                  /* SẢN PHẨM NHIỀU LOẠI (CLEAN, NO FORCED CLOTHING TAGS, CATEGORY SUGGESTION PILLS & BATCH APPLY) */
+                  /* SẢN PHẨM NHIỀU LOẠI (BẢNG GIÁ BÁN & KHO HÀNG - ĐÃ XÓA SKU) */
                   <div className="slr-cp__variation-section">
                     
-                    {/* Smart Quick Suggestion Pills */}
-                    <div className="slr-cp__row" style={{ paddingTop: 0 }}>
-                      <label className="slr-cp__row-label" style={{ color: "#6b3ba7" }}>Gợi ý mẫu phân loại</label>
-                      <div className="slr-cp__row-body">
-                        <div className="slr-cp__suggestion-pills">
-                          {categorySuggestions.map((sug, sIdx) => (
-                            <button
-                              key={sIdx}
-                              type="button"
-                              className="slr-cp__pill-btn"
-                              onClick={() => handleApplySuggestion(sug)}
-                            >
-                              <FaPlus style={{ fontSize: 10 }} /> {sug.label} ({sug.options.join(", ")})
-                            </button>
-                          ))}
-                        </div>
+                    {/* Gợi ý mẫu phân loại - Thiết kế Card khung bo góc hiện đại */}
+                    <div className="slr-cp__suggestion-card">
+                      <div className="slr-cp__suggestion-header">
+                        <span>✨ Gợi ý phân loại nhanh:</span>
+                      </div>
+                      <div className="slr-cp__suggestion-pills">
+                        {categorySuggestions.map((sug, sIdx) => (
+                          <button
+                            key={sIdx}
+                            type="button"
+                            className="slr-cp__pill-btn"
+                            onClick={() => handleApplySuggestion(sug)}
+                          >
+                            <FaPlus style={{ fontSize: 10 }} /> {sug.label} ({sug.options.join(", ")})
+                          </button>
+                        ))}
                       </div>
                     </div>
 
@@ -1029,33 +1015,39 @@ export default function CreateProductPage() {
                       </div>
                     )}
 
-                    {/* BATCH APPLY BAR (ÁP DỤNG HÀNG LOẠT CHO NGƯỜI BÁN) */}
+                    {/* BATCH APPLY BAR - Thiết kế Card ngang hiện đại */}
                     <div className="slr-cp__batch-bar">
                       <div className="slr-cp__batch-title">
-                        <FaBolt /> Áp dụng hàng loạt cho tất cả phân loại:
+                        <FaBolt className="slr-cp__batch-icon" />
+                        <span>Áp dụng hàng loạt cho tất cả phân loại:</span>
                       </div>
                       <div className="slr-cp__batch-inputs">
-                        <input
-                          type="number"
-                          placeholder="Giá bán chung (₫)..."
-                          value={batchPrice}
-                          onChange={(e) => setBatchPrice(e.target.value)}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Số lượng kho chung..."
-                          value={batchStock}
-                          onChange={(e) => setBatchStock(e.target.value)}
-                        />
-                        <button type="button" className="slr-btn-create" onClick={handleBatchApply}>
+                        <div className="slr-cp__batch-field">
+                          <span className="slr-cp__batch-currency">₫</span>
+                          <input
+                            type="number"
+                            placeholder="Giá bán chung..."
+                            value={batchPrice}
+                            onChange={(e) => setBatchPrice(e.target.value)}
+                          />
+                        </div>
+                        <div className="slr-cp__batch-field">
+                          <input
+                            type="number"
+                            placeholder="Số lượng kho chung..."
+                            value={batchStock}
+                            onChange={(e) => setBatchStock(e.target.value)}
+                          />
+                        </div>
+                        <button type="button" className="slr-cp__batch-btn" onClick={handleBatchApply}>
                           Áp dụng cho tất cả
                         </button>
                       </div>
                     </div>
 
-                    {/* BẢNG CHI TIẾT PHÂN LOẠI HÀNG DỘNG */}
+                    {/* BẢNG GIÁ BÁN & KHO HÀNG CHI TIẾT (ĐÃ XÓA CỘT SKU) */}
                     <div className="slr-cp__row">
-                      <label className="slr-cp__row-label">Bảng phân loại SKU & Giá</label>
+                      <label className="slr-cp__row-label">Bảng giá & Số lượng tồn kho</label>
                       <div className="slr-cp__row-body">
                         <div className="slr-table-wrap">
                           <table className="slr-table">
@@ -1064,8 +1056,7 @@ export default function CreateProductPage() {
                                 <th>{group1Name || "Phân loại 1"}</th>
                                 {hasGroup2 && <th>{group2Name || "Phân loại 2"}</th>}
                                 <th>Giá bán (₫)<span className="required"> *</span></th>
-                                <th>Kho hàng<span className="required"> *</span></th>
-                                <th>Mã SKU Phân loại</th>
+                                <th>Kho hàng (Số lượng)<span className="required"> *</span></th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1076,27 +1067,18 @@ export default function CreateProductPage() {
                                   <td>
                                     <input
                                       type="number"
-                                      placeholder="Nhập giá ₫..."
+                                      placeholder="Nhập giá bán ₫..."
                                       value={r.price}
                                       onChange={(e) => handleRowChange(idx, "price", e.target.value)}
-                                      style={{ width: "120px" }}
+                                      style={{ width: "160px" }}
                                     />
                                   </td>
                                   <td>
                                     <input
                                       type="number"
-                                      placeholder="Kho..."
+                                      placeholder="Số lượng tồn..."
                                       value={r.stock}
                                       onChange={(e) => handleRowChange(idx, "stock", e.target.value)}
-                                      style={{ width: "100px" }}
-                                    />
-                                  </td>
-                                  <td>
-                                    <input
-                                      type="text"
-                                      placeholder="Mã SKU nội bộ..."
-                                      value={r.sku}
-                                      onChange={(e) => handleRowChange(idx, "sku", e.target.value)}
                                       style={{ width: "160px" }}
                                     />
                                   </td>
