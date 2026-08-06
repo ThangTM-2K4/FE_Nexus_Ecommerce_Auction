@@ -4,12 +4,11 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 import * as profileService from "../../../services/profileService";
 import * as sellerService from "../../../services/sellerService";
-import { fileToDataUrl } from "../../../utils/fileToDataUrl";
+import { uploadBusinessLicense } from "../../../services/uploadService";
 import Header from "../../../components/homepage/header";
 import Footer from "../../../components/homepage/footer";
 import SellerTermsGate from "./SellerTermsGate";
 import "./index.scss";
-
 const STEPS = ["Thông tin cửa hàng", "Tài khoản ngân hàng"];
 
 import { resolveBankLabel } from "../../../services/bankService";
@@ -28,7 +27,10 @@ const translateApiError = (msg) => {
   if (m.includes("verified email")) {
     return "Bạn cần xác thực email trước khi đăng ký người bán.";
   }
-  if (m.includes("identity verification") || (m.includes("identity") && m.includes("verif"))) {
+  if (
+    m.includes("identity verification") ||
+    (m.includes("identity") && m.includes("verif"))
+  ) {
     return "Bạn cần hoàn tất xác minh danh tính (CCCD) trước khi đăng ký người bán. Vào Hồ sơ → Thông tin cá nhân để xác minh CCCD.";
   }
   if (m.includes("already") && m.includes("seller")) {
@@ -39,7 +41,12 @@ const translateApiError = (msg) => {
 
 // Lấy thông báo lỗi từ backend ở nhiều dạng field khác nhau
 const extractApiError = (err, fallback) => {
-  console.error("[become-seller] submit error:", err?.response?.status, err?.response?.data, err);
+  console.error(
+    "[become-seller] submit error:",
+    err?.response?.status,
+    err?.response?.data,
+    err,
+  );
   const d = err?.response?.data;
   const raw =
     (typeof d === "string" && d.trim() ? d : null) ||
@@ -47,7 +54,9 @@ const extractApiError = (err, fallback) => {
     d?.error ||
     d?.detail ||
     d?.title ||
-    (Array.isArray(d?.errors) ? d.errors.join(", ") : d?.errors && Object.values(d.errors).flat().join(", ")) ||
+    (Array.isArray(d?.errors)
+      ? d.errors.join(", ")
+      : d?.errors && Object.values(d.errors).flat().join(", ")) ||
     err?.message ||
     fallback;
   return translateApiError(raw);
@@ -58,7 +67,7 @@ const initialForm = {
   shopName: "",
   taxCode: "",
   contactPhone: "",
-  businessLicense: "",
+  businessLicenseKey: "",
   businessLicenseFileName: "",
   pickupAddress: "",
   returnAddress: "",
@@ -80,7 +89,9 @@ const emptyAddr = {
 
 // Ghép địa chỉ có cấu trúc thành 1 chuỗi để gửi backend + hiển thị lại (staff duyệt).
 const composeAddr = (a) =>
-  [a.addressLine?.trim(), a.wardName, a.provinceName].filter(Boolean).join(", ");
+  [a.addressLine?.trim(), a.wardName, a.provinceName]
+    .filter(Boolean)
+    .join(", ");
 
 // Khối nhập 1 địa chỉ: Tỉnh/Thành phố + Phường/Xã (cùng hàng) rồi Địa chỉ cụ thể.
 function AddressFields({ idPrefix, value, onChange, errors = {} }) {
@@ -89,9 +100,16 @@ function AddressFields({ idPrefix, value, onChange, errors = {} }) {
 
   const handleProvince = (e) => {
     const provinceCode = e.target.value;
-    const provinceName = provinces.find((p) => p.value === provinceCode)?.label || "";
+    const provinceName =
+      provinces.find((p) => p.value === provinceCode)?.label || "";
     // Đổi tỉnh → reset phường/xã đã chọn.
-    onChange({ ...value, provinceCode, provinceName, wardCode: "", wardName: "" });
+    onChange({
+      ...value,
+      provinceCode,
+      provinceName,
+      wardCode: "",
+      wardName: "",
+    });
   };
 
   const handleWard = (e) => {
@@ -109,7 +127,9 @@ function AddressFields({ idPrefix, value, onChange, errors = {} }) {
           value={value.provinceCode}
           onChange={handleProvince}
           options={provinces}
-          placeholder={loadingProvinces ? "Đang tải tỉnh/thành..." : "Chọn Tỉnh/Thành phố"}
+          placeholder={
+            loadingProvinces ? "Đang tải tỉnh/thành..." : "Chọn Tỉnh/Thành phố"
+          }
           disabled={loadingProvinces}
           error={errors.province}
         />
@@ -142,7 +162,8 @@ function AddressFields({ idPrefix, value, onChange, errors = {} }) {
   );
 }
 
-// Upload thật một chứng từ (giấy phép kinh doanh...) -> lưu data URL trong form để
+// Upload giấy phép kinh doanh lên private storage.
+// Chỉ lưu storage key vào form, không lưu file binary/data URL.
 // đính kèm đơn và hiển thị lại cho staff/admin duyệt. Nhận ảnh (JPG/PNG) hoặc PDF.
 function FileInput({ label, name, form, setForm, required, error, hint }) {
   const inputRef = useRef(null);
@@ -156,13 +177,25 @@ function FileInput({ label, name, form, setForm, required, error, hint }) {
       toast.error("Tệp tối đa 5MB");
       return;
     }
+    const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Chỉ hỗ trợ JPG, PNG hoặc PDF");
+      return;
+    }
     setUploading(true);
     try {
-      const dataUrl = await fileToDataUrl(file);
-      setForm((prev) => ({ ...prev, [name]: dataUrl, [`${name}FileName`]: file.name }));
-      toast.success(`Đã tải lên: ${label}`);
+      const uploaded = await uploadBusinessLicense(file);
+
+      setForm((prev) => ({
+        ...prev,
+        [name]: uploaded.key,
+        [`${name}FileName`]: file.name,
+      }));
+
+      toast.success("Đã tải giấy phép kinh doanh");
     } catch (err) {
-      toast.error(err.message || "Tải tệp thất bại");
+      toast.error(err?.response?.data?.message || "Upload thất bại");
     } finally {
       setUploading(false);
     }
@@ -170,7 +203,6 @@ function FileInput({ label, name, form, setForm, required, error, hint }) {
 
   const value = form[name];
   const fileName = form[`${name}FileName`];
-  const isImage = typeof value === "string" && value.startsWith("data:image");
 
   return (
     <div className="seller-field seller-field--full">
@@ -178,16 +210,25 @@ function FileInput({ label, name, form, setForm, required, error, hint }) {
         {label}
         {required && <span className="required"> *</span>}
       </label>
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,application/pdf" hidden onChange={handlePick} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,application/pdf"
+        hidden
+        onChange={handlePick}
+      />
       <button
         type="button"
         className={`seller-upload-btn ${error ? "input-error" : ""}`}
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
       >
-        {uploading ? "Đang tải..." : value ? "✓ Đã tải lên — Đổi tệp" : "Chọn tệp"}
+        {uploading
+          ? "Đang tải..."
+          : value
+            ? "✓ Đã tải lên — Đổi tệp"
+            : "Chọn tệp"}
       </button>
-      {isImage && <img className="seller-file-preview" src={value} alt={label} />}
       {fileName && <small className="seller-file-name">{fileName}</small>}
       {hint && <small className="seller-file-hint">{hint}</small>}
       {error && <span className="field-error">{error}</span>}
@@ -261,15 +302,19 @@ export default function BecomeSellerPage() {
   const validateStep = (s) => {
     const next = {};
     if (s === 0) {
-      if (!form.shopName.trim()) next.shopName = "Vui lòng nhập tên shop / doanh nghiệp";
+      if (!form.shopName.trim())
+        next.shopName = "Vui lòng nhập tên shop / doanh nghiệp";
       // Mã số thuế: BẮT BUỘC với cả cá nhân lẫn doanh nghiệp.
       if (!form.taxCode.trim()) next.taxCode = "Vui lòng nhập mã số thuế";
       // Số điện thoại liên hệ: bắt buộc, 10 số bắt đầu bằng 0.
-      if (!form.contactPhone.trim()) next.contactPhone = "Vui lòng nhập số điện thoại liên hệ";
+      if (!form.contactPhone.trim())
+        next.contactPhone = "Vui lòng nhập số điện thoại liên hệ";
       else if (!/^0\d{9}$/.test(form.contactPhone.trim()))
-        next.contactPhone = "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0)";
+        next.contactPhone =
+          "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0)";
       // Giấy phép kinh doanh: BẮT BUỘC với mọi loại hình.
-      if (!form.businessLicense) next.businessLicense = "Vui lòng tải lên giấy phép kinh doanh";
+      if (!form.businessLicenseKey)
+        next.businessLicenseKey = "Vui lòng tải lên giấy phép kinh doanh";
       // Địa chỉ nhận hàng (và trả hàng nếu khác).
       const pickupErr = validateAddr(pickupAddr);
       if (pickupErr) next.pickup = pickupErr;
@@ -283,8 +328,10 @@ export default function BecomeSellerPage() {
       if (form.bankName === "other" && !form.bankNameCustom.trim()) {
         next.bankNameCustom = "Vui lòng nhập tên ngân hàng";
       }
-      if (!form.accountNumber.trim()) next.accountNumber = "Vui lòng nhập số tài khoản";
-      if (!form.accountHolder.trim()) next.accountHolder = "Vui lòng nhập tên chủ tài khoản";
+      if (!form.accountNumber.trim())
+        next.accountNumber = "Vui lòng nhập số tài khoản";
+      if (!form.accountHolder.trim())
+        next.accountHolder = "Vui lòng nhập tên chủ tài khoản";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -296,7 +343,11 @@ export default function BecomeSellerPage() {
       // Ghép địa chỉ có cấu trúc thành chuỗi cho payload + phần "Xem lại".
       const pickupStr = composeAddr(pickupAddr);
       const returnStr = sameAddress ? pickupStr : composeAddr(returnAddr);
-      setForm((prev) => ({ ...prev, pickupAddress: pickupStr, returnAddress: returnStr }));
+      setForm((prev) => ({
+        ...prev,
+        pickupAddress: pickupStr,
+        returnAddress: returnStr,
+      }));
     }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   };
@@ -327,7 +378,10 @@ export default function BecomeSellerPage() {
     if (!validateStep(1)) return;
     setSubmitting(true);
     try {
-      const app = await sellerService.submitSellerApplication(user.id, buildPayload());
+      const app = await sellerService.submitSellerApplication(
+        user.id,
+        buildPayload(),
+      );
       refreshUser();
       setApplication(app);
       setResubmitMode(false);
@@ -345,7 +399,10 @@ export default function BecomeSellerPage() {
     if (!validateStep(1)) return;
     setSubmitting(true);
     try {
-      const app = await sellerService.resubmitSellerApplication(user.id, buildPayload());
+      const app = await sellerService.resubmitSellerApplication(
+        user.id,
+        buildPayload(),
+      );
       refreshUser();
       setApplication(app);
       setResubmitMode(false);
@@ -377,9 +434,16 @@ export default function BecomeSellerPage() {
         <Header />
         <main className="become-seller-main">
           <div className="seller-card seller-status-card approved">
-            <img src="/images/seller/status/approved.svg" alt="" className="seller-status-illustration" />
+            <img
+              src="/images/seller/status/approved.svg"
+              alt=""
+              className="seller-status-illustration"
+            />
             <h1>Bạn đã là Người bán</h1>
-            <p className="description">Tài khoản của bạn đã được phê duyệt. Truy cập Kênh Người Bán để bắt đầu.</p>
+            <p className="description">
+              Tài khoản của bạn đã được phê duyệt. Truy cập Kênh Người Bán để
+              bắt đầu.
+            </p>
             <Link to="/seller-hub/overview" className="seller-submit-btn">
               Mở Kênh Người Bán
             </Link>
@@ -390,21 +454,61 @@ export default function BecomeSellerPage() {
     );
   }
 
-  if (user?.sellerStatus === "PENDING" && application && step === 0 && !form.shopName) {
+  if (
+    user?.sellerStatus === "PENDING" &&
+    application &&
+    step === 0 &&
+    !form.shopName
+  ) {
     return (
       <div className="become-seller-page">
         <Header />
         <main className="become-seller-main">
           <div className="seller-card seller-status-card pending">
-            <div className="seller-status-waiting" role="img" aria-label="Đang chờ duyệt">
+            <div
+              className="seller-status-waiting"
+              role="img"
+              aria-label="Đang chờ duyệt"
+            >
               <span className="seller-status-waiting__pulse" />
               <span className="seller-status-waiting__pulse seller-status-waiting__pulse--delay" />
-              <svg viewBox="0 0 64 64" className="seller-status-waiting__clock" aria-hidden="true">
-                <circle cx="32" cy="32" r="26" className="seller-status-waiting__face" />
-                <circle cx="32" cy="32" r="26" className="seller-status-waiting__ring" />
-                <line x1="32" y1="32" x2="32" y2="16" className="seller-status-waiting__hand seller-status-waiting__hand--min" />
-                <line x1="32" y1="32" x2="44" y2="32" className="seller-status-waiting__hand seller-status-waiting__hand--hour" />
-                <circle cx="32" cy="32" r="2.6" className="seller-status-waiting__pin" />
+              <svg
+                viewBox="0 0 64 64"
+                className="seller-status-waiting__clock"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="26"
+                  className="seller-status-waiting__face"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="26"
+                  className="seller-status-waiting__ring"
+                />
+                <line
+                  x1="32"
+                  y1="32"
+                  x2="32"
+                  y2="16"
+                  className="seller-status-waiting__hand seller-status-waiting__hand--min"
+                />
+                <line
+                  x1="32"
+                  y1="32"
+                  x2="44"
+                  y2="32"
+                  className="seller-status-waiting__hand seller-status-waiting__hand--hour"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="2.6"
+                  className="seller-status-waiting__pin"
+                />
               </svg>
             </div>
             <h1>Đơn đang chờ duyệt</h1>
@@ -428,7 +532,9 @@ export default function BecomeSellerPage() {
             </div>
             <div className="seller-status-notice">
               <p>
-                💡 <strong>Hồ sơ của bạn đang được nhân viên phê duyệt.</strong> Kết quả phê duyệt sẽ được phản hồi qua Email & Hệ thống trong vòng 24h - 48h làm việc.
+                💡 <strong>Hồ sơ của bạn đang được nhân viên phê duyệt.</strong>{" "}
+                Kết quả phê duyệt sẽ được phản hồi qua Email & Hệ thống trong
+                vòng 24h - 48h làm việc.
               </p>
             </div>
           </div>
@@ -438,17 +544,24 @@ export default function BecomeSellerPage() {
     );
   }
 
-
   if (user?.sellerStatus === "REJECTED" && application && !resubmitMode) {
     return (
       <div className="become-seller-page">
         <Header />
         <main className="become-seller-main">
           <div className="seller-card seller-status-card rejected">
-            <img src="/images/seller/status/rejected.svg" alt="" className="seller-status-illustration" />
+            <img
+              src="/images/seller/status/rejected.svg"
+              alt=""
+              className="seller-status-illustration"
+            />
             <h1>Đơn bị từ chối</h1>
-            <p><strong>Lý do:</strong> {application.rejectionReason}</p>
-            <p><strong>Ghi chú của nhân viên:</strong> {application.adminNote}</p>
+            <p>
+              <strong>Lý do:</strong> {application.rejectionReason}
+            </p>
+            <p>
+              <strong>Ghi chú của nhân viên:</strong> {application.adminNote}
+            </p>
             <button
               type="button"
               className="seller-submit-btn"
@@ -473,9 +586,15 @@ export default function BecomeSellerPage() {
         <Header />
         <main className="become-seller-main">
           <div className="seller-card seller-status-card blocked">
-            <img src="/images/seller/status/blocked.svg" alt="" className="seller-status-illustration" />
+            <img
+              src="/images/seller/status/blocked.svg"
+              alt=""
+              className="seller-status-illustration"
+            />
             <h1>Chưa đủ điều kiện</h1>
-            <p className="description">Hoàn thành các bước sau trước khi đăng ký người bán:</p>
+            <p className="description">
+              Hoàn thành các bước sau trước khi đăng ký người bán:
+            </p>
             <ul className="seller-preconditions">
               <li className={checks.emailVerified ? "done" : "pending"}>
                 {checks.emailVerified ? "✓" : "○"} Xác thực email
@@ -486,17 +605,16 @@ export default function BecomeSellerPage() {
                 <small>Nhập SĐT và xác thực tại mục Xác minh tài khoản</small>
               </li>
               <li className={checks.nationalIdVerified ? "done" : "pending"}>
-                {checks.nationalIdVerified ? "✓" : "○"} Xác minh danh tính (CCCD)
-                <small>Bắt buộc để đăng ký người bán — xác minh tại Thông tin cá nhân</small>
+                {checks.nationalIdVerified ? "✓" : "○"} Xác minh danh tính
+                (CCCD)
+                <small>
+                  Bắt buộc để đăng ký người bán — xác minh tại Thông tin cá nhân
+                </small>
               </li>
             </ul>
-            <Link
-              to="/profile"
-              className="seller-submit-btn"
-            >
+            <Link to="/profile" className="seller-submit-btn">
               Hoàn thiện hồ sơ
             </Link>
-
           </div>
         </main>
         <Footer />
@@ -513,17 +631,23 @@ export default function BecomeSellerPage() {
   const isIndividual = form.businessType === "individual";
   const isResubmit = user?.sellerStatus === "REJECTED" && resubmitMode;
   const resolvedBank =
-    form.bankName === "other" ? form.bankNameCustom : resolveBankLabel(form.bankName);
+    form.bankName === "other"
+      ? form.bankNameCustom
+      : resolveBankLabel(form.bankName);
 
   return (
     <div className="become-seller-page">
       <Header />
       <main className="become-seller-main">
         <div className="seller-card seller-form-card">
-          <Link to="/profile" className="seller-back">← Quay lại hồ sơ</Link>
+          <Link to="/profile" className="seller-back">
+            ← Quay lại hồ sơ
+          </Link>
 
           <h1>Đăng ký Người bán</h1>
-          <p className="subtitle">Hoàn thành hồ sơ để mở cửa hàng trên nền tảng</p>
+          <p className="subtitle">
+            Hoàn thành hồ sơ để mở cửa hàng trên nền tảng
+          </p>
 
           <div className="seller-stepper">
             {STEPS.map((label, i) => (
@@ -545,34 +669,53 @@ export default function BecomeSellerPage() {
                     <h3>Giấy tờ định danh (lấy từ hồ sơ của bạn)</h3>
                     <div className="seller-cccd-carry__info">
                       {profile.cccdFullName && (
-                        <div><span>Họ tên trên CCCD</span><strong>{profile.cccdFullName}</strong></div>
+                        <div>
+                          <span>Họ tên trên CCCD</span>
+                          <strong>{profile.cccdFullName}</strong>
+                        </div>
                       )}
                       {profile.cccdNumber && (
-                        <div><span>Số CCCD</span><strong>{profile.cccdNumber}</strong></div>
+                        <div>
+                          <span>Số CCCD</span>
+                          <strong>{profile.cccdNumber}</strong>
+                        </div>
                       )}
                       {profile.cccdAddress && (
-                        <div><span>Địa chỉ thường trú</span><strong>{profile.cccdAddress}</strong></div>
+                        <div>
+                          <span>Địa chỉ thường trú</span>
+                          <strong>{profile.cccdAddress}</strong>
+                        </div>
                       )}
                     </div>
-                    {(profile.cccdFrontImageUrl || profile.cccdBackImageUrl) && (
+                    {(profile.cccdFrontImageUrl ||
+                      profile.cccdBackImageUrl) && (
                       <div className="seller-cccd-carry__images">
                         {profile.cccdFrontImageUrl && (
                           <figure>
-                            <img src={profile.cccdFrontImageUrl} alt="CCCD mặt trước" />
+                            <img
+                              src={profile.cccdFrontImageUrl}
+                              alt="CCCD mặt trước"
+                            />
                             <figcaption>Mặt trước</figcaption>
                           </figure>
                         )}
                         {profile.cccdBackImageUrl && (
                           <figure>
-                            <img src={profile.cccdBackImageUrl} alt="CCCD mặt sau" />
+                            <img
+                              src={profile.cccdBackImageUrl}
+                              alt="CCCD mặt sau"
+                            />
                             <figcaption>Mặt sau</figcaption>
                           </figure>
                         )}
                       </div>
                     )}
                     <small>
-                      Giấy tờ này sẽ được gửi kèm đơn đăng ký cho nhân viên duyệt. Cần chỉnh sửa?{' '}
-                      <Link to="/profile/personal-info">Cập nhật tại Thông tin cá nhân</Link>
+                      Giấy tờ này sẽ được gửi kèm đơn đăng ký cho nhân viên
+                      duyệt. Cần chỉnh sửa?{" "}
+                      <Link to="/profile/personal-info">
+                        Cập nhật tại Thông tin cá nhân
+                      </Link>
                     </small>
                   </div>
                 </div>
@@ -614,15 +757,23 @@ export default function BecomeSellerPage() {
                   name="shopName"
                   value={form.shopName}
                   onChange={handleChange}
-                  placeholder={isIndividual ? "Tên shop của bạn" : "Tên công ty / doanh nghiệp"}
+                  placeholder={
+                    isIndividual
+                      ? "Tên shop của bạn"
+                      : "Tên công ty / doanh nghiệp"
+                  }
                   className={errors.shopName ? "input-error" : ""}
                 />
-                {errors.shopName && <span className="field-error">{errors.shopName}</span>}
+                {errors.shopName && (
+                  <span className="field-error">{errors.shopName}</span>
+                )}
               </div>
 
               <div className="seller-field">
                 <label className="field-label" htmlFor="taxCode">
-                  {isIndividual ? "Mã số thuế cá nhân" : "Mã số thuế doanh nghiệp"}
+                  {isIndividual
+                    ? "Mã số thuế cá nhân"
+                    : "Mã số thuế doanh nghiệp"}
                   <span className="required"> *</span>
                 </label>
                 <input
@@ -633,7 +784,9 @@ export default function BecomeSellerPage() {
                   placeholder="0123456789"
                   className={errors.taxCode ? "input-error" : ""}
                 />
-                {errors.taxCode && <span className="field-error">{errors.taxCode}</span>}
+                {errors.taxCode && (
+                  <span className="field-error">{errors.taxCode}</span>
+                )}
               </div>
 
               <div className="seller-field">
@@ -650,16 +803,18 @@ export default function BecomeSellerPage() {
                   placeholder="VD: 0901234567"
                   className={errors.contactPhone ? "input-error" : ""}
                 />
-                {errors.contactPhone && <span className="field-error">{errors.contactPhone}</span>}
+                {errors.contactPhone && (
+                  <span className="field-error">{errors.contactPhone}</span>
+                )}
               </div>
 
               <FileInput
                 label="Giấy phép kinh doanh"
-                name="businessLicense"
+                name="businessLicenseKey"
                 form={form}
                 setForm={setForm}
                 required
-                error={errors.businessLicense}
+                error={errors.businessLicenseKey}
                 hint={
                   isIndividual
                     ? "Giấy chứng nhận đăng ký hộ kinh doanh / giấy phép kinh doanh (ảnh JPG, PNG hoặc PDF, tối đa 5MB)."
@@ -669,7 +824,9 @@ export default function BecomeSellerPage() {
 
               <div className="seller-field seller-field--full seller-addr-block">
                 <label className="field-label">
-                  {sameAddress ? "Địa chỉ nhận hàng & trả hàng" : "Địa chỉ nhận hàng"}
+                  {sameAddress
+                    ? "Địa chỉ nhận hàng & trả hàng"
+                    : "Địa chỉ nhận hàng"}
                   <span className="required"> *</span>
                 </label>
                 <AddressFields
@@ -709,8 +866,15 @@ export default function BecomeSellerPage() {
           {step === 1 && (
             <div className="seller-form-grid">
               <div className="seller-field">
-                <BankSelect name="bankName" value={form.bankName} onChange={handleChange} includeOther />
-                {errors.bankName && <span className="field-error">{errors.bankName}</span>}
+                <BankSelect
+                  name="bankName"
+                  value={form.bankName}
+                  onChange={handleChange}
+                  includeOther
+                />
+                {errors.bankName && (
+                  <span className="field-error">{errors.bankName}</span>
+                )}
               </div>
 
               {form.bankName === "other" && (
@@ -727,7 +891,9 @@ export default function BecomeSellerPage() {
                     placeholder="Nhập tên ngân hàng"
                     className={errors.bankNameCustom ? "input-error" : ""}
                   />
-                  {errors.bankNameCustom && <span className="field-error">{errors.bankNameCustom}</span>}
+                  {errors.bankNameCustom && (
+                    <span className="field-error">{errors.bankNameCustom}</span>
+                  )}
                 </div>
               )}
 
@@ -744,7 +910,9 @@ export default function BecomeSellerPage() {
                   placeholder="0123456789"
                   className={errors.accountNumber ? "input-error" : ""}
                 />
-                {errors.accountNumber && <span className="field-error">{errors.accountNumber}</span>}
+                {errors.accountNumber && (
+                  <span className="field-error">{errors.accountNumber}</span>
+                )}
               </div>
 
               <div className="seller-field seller-field--full">
@@ -760,32 +928,63 @@ export default function BecomeSellerPage() {
                   placeholder="NGUYEN VAN A"
                   className={errors.accountHolder ? "input-error" : ""}
                 />
-                {errors.accountHolder && <span className="field-error">{errors.accountHolder}</span>}
+                {errors.accountHolder && (
+                  <span className="field-error">{errors.accountHolder}</span>
+                )}
               </div>
 
               <div className="seller-field seller-field--full">
                 <div className="seller-bank-note">
-                  Thông tin ngân hàng dùng để chi trả doanh thu bán hàng. Vui lòng nhập chính xác tên chủ tài khoản.
+                  Thông tin ngân hàng dùng để chi trả doanh thu bán hàng. Vui
+                  lòng nhập chính xác tên chủ tài khoản.
                 </div>
               </div>
 
               <div className="seller-field seller-field--full">
                 <div className="seller-summary">
                   <h3>Xem lại thông tin</h3>
-                  <div><span>Loại hình</span><strong>{isIndividual ? "Cá nhân" : "Doanh nghiệp"}</strong></div>
-                  <div><span>Tên shop</span><strong>{form.shopName}</strong></div>
                   <div>
-                    <span>{isIndividual ? "Mã số thuế cá nhân" : "Mã số thuế doanh nghiệp"}</span>
+                    <span>Loại hình</span>
+                    <strong>{isIndividual ? "Cá nhân" : "Doanh nghiệp"}</strong>
+                  </div>
+                  <div>
+                    <span>Tên shop</span>
+                    <strong>{form.shopName}</strong>
+                  </div>
+                  <div>
+                    <span>
+                      {isIndividual
+                        ? "Mã số thuế cá nhân"
+                        : "Mã số thuế doanh nghiệp"}
+                    </span>
                     <strong>{form.taxCode || "—"}</strong>
                   </div>
-                  <div><span>Số điện thoại liên hệ</span><strong>{form.contactPhone || "—"}</strong></div>
+                  <div>
+                    <span>Số điện thoại liên hệ</span>
+                    <strong>{form.contactPhone || "—"}</strong>
+                  </div>
                   <div>
                     <span>Giấy phép kinh doanh</span>
-                    <strong>{form.businessLicense ? "✓ Đã tải lên" : "Chưa tải lên"}</strong>
+                    <strong>
+                      {form.businessLicenseKey
+                        ? "✓ Đã tải lên"
+                        : "Chưa tải lên"}
+                    </strong>
                   </div>
-                  <div><span>Địa chỉ nhận hàng</span><strong>{form.pickupAddress}</strong></div>
-                  <div><span>Địa chỉ trả hàng</span><strong>{form.returnAddress}</strong></div>
-                  <div><span>Ngân hàng</span><strong>{resolvedBank} — {form.accountNumber}</strong></div>
+                  <div>
+                    <span>Địa chỉ nhận hàng</span>
+                    <strong>{form.pickupAddress}</strong>
+                  </div>
+                  <div>
+                    <span>Địa chỉ trả hàng</span>
+                    <strong>{form.returnAddress}</strong>
+                  </div>
+                  <div>
+                    <span>Ngân hàng</span>
+                    <strong>
+                      {resolvedBank} — {form.accountNumber}
+                    </strong>
+                  </div>
                 </div>
               </div>
             </div>
@@ -793,12 +992,20 @@ export default function BecomeSellerPage() {
 
           <div className="seller-wizard-nav">
             {step > 0 && (
-              <button type="button" className="seller-nav-btn outline" onClick={prevStep}>
+              <button
+                type="button"
+                className="seller-nav-btn outline"
+                onClick={prevStep}
+              >
                 Quay lại
               </button>
             )}
             {step < STEPS.length - 1 ? (
-              <button type="button" className="seller-submit-btn" onClick={nextStep}>
+              <button
+                type="button"
+                className="seller-submit-btn"
+                onClick={nextStep}
+              >
                 Tiếp theo
               </button>
             ) : (

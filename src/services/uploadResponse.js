@@ -3,16 +3,18 @@ const getUploadData = (response) =>
 
 export const extractUploadKey = (response) => {
   const data = getUploadData(response);
-  if (typeof data === 'string') return data;
-  return data.key || data.fileKey || '';
+
+  if (typeof data === "string") {
+    return data.trim();
+  }
+
+  return (data.key || data.fileKey || data.storageKey || "").trim();
 };
 
 export const normalizeUploadKey = (value) => {
-  if (typeof value !== 'string') return '';
-  const trimmed = value.trim();
-  const uploadMarker = '/uploads/';
-  const markerIndex = trimmed.toLowerCase().indexOf(uploadMarker);
-  return markerIndex >= 0
-    ? trimmed.slice(markerIndex + uploadMarker.length)
-    : trimmed;
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
 };
