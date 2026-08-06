@@ -82,133 +82,13 @@ const StaffProductReview = () => {
   };
 
   const loadProducts = async () => {
-    let localList = [];
-    try {
-      localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
-    } catch {
-      /* ignore */
-    }
-
-    const initialMap = new Map();
-    localList.forEach((lp) => {
-      if (lp && (lp.id || lp.productId)) {
-        const id = lp.id || lp.productId;
-        const key = String(id).toLowerCase();
-        const price = extractPrice(lp);
-        const stock = extractStock(lp);
-        const modStatus = lp.moderationStatus && lp.moderationStatus !== "NONE" ? lp.moderationStatus : "PENDING_MANUAL_REVIEW";
-        initialMap.set(key, {
-          ...lp,
-          id,
-          price,
-          stock,
-          moderationStatus: modStatus,
-          status: lp.status || "PENDING",
-        });
-      }
-    });
-
-    if (initialMap.size > 0 && products.length === 0) {
-      setProducts(Array.from(initialMap.values()));
-    }
-
     setLoading(true);
     try {
-      const endpoints = [
-        "/ecommerce/products",
-        "/seller/products",
-        "/admin/products/review-queue",
-        "/admin/products",
-        "/staff/products/review-queue",
-        "/staff/products",
-        "/management/products",
-        "/products",
-      ];
-
-      const results = await Promise.allSettled(
-        endpoints.map((ep) =>
-          api.get(ep, { params: { scope: "management", pageSize: 100, pageNumber: 1, limit: 100 } })
-        )
-      );
-
-      const map = new Map(initialMap);
-
-      results.forEach((res) => {
-        if (res.status === "fulfilled") {
-          const val = res.value?.data || res.value;
-          const items = Array.isArray(val)
-            ? val
-            : Array.isArray(val?.items)
-            ? val.items
-            : Array.isArray(val?.products)
-            ? val.products
-            : Array.isArray(val?.data?.items)
-            ? val.data.items
-            : Array.isArray(val?.data?.products)
-            ? val.data.products
-            : Array.isArray(val?.data)
-            ? val.data
-            : Array.isArray(val?.results)
-            ? val.results
-            : [];
-
-          items.forEach((p) => {
-            if (p && (p.id || p.productId)) {
-              const realId = p.id || p.productId;
-              const key = String(realId).toLowerCase();
-              const price = extractPrice(p);
-              const stock = extractStock(p);
-              if (!map.has(key)) {
-                map.set(key, { ...p, id: realId, price, stock });
-              } else {
-                const existing = map.get(key);
-                map.set(key, {
-                  ...existing,
-                  ...p,
-                  id: realId,
-                  price: price > 0 ? price : existing.price,
-                  stock: stock > 0 ? stock : existing.stock,
-                  moderationStatus: existing.moderationStatus || p.moderationStatus,
-                });
-              }
-            }
-          });
-        }
-      });
-
-      const allMapped = Array.from(map.values());
-
-      // Nạp thông tin kiểm duyệt thời gian thực từ API cho từng sản phẩm
-      const enrichedList = await Promise.all(
-        allMapped.map(async (p) => {
-          try {
-            const modData = await getProductModeration(p.id);
-            const modStatus = modData?.moderationStatus || modData?.data?.moderationStatus;
-            if (
-              modStatus &&
-              modStatus !== "NONE" &&
-              modStatus !== "NOT_SUBMITTED" &&
-              modStatus !== "DRAFT"
-            ) {
-              return {
-                ...p,
-                moderationStatus: modStatus,
-                rowVersion: modData?.rowVersion || p.rowVersion,
-              };
-            }
-          } catch {
-            /* ignore */
-          }
-          return p;
-        })
-      );
-
-      setProducts(enrichedList);
+      const res = await getAdminProducts();
+      setProducts(res?.items || []);
     } catch (err) {
-      console.error("Error loading products:", err);
-      if (initialMap.size > 0) {
-        setProducts(Array.from(initialMap.values()));
-      }
+      console.error("Error loading products for staff:", err);
+      setProducts([]);
     } finally {
       setLoading(false);
     }

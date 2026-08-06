@@ -30,6 +30,13 @@ import {
   rejectAdminProduct,
   getApiErrorMessage,
 } from "../../../services/adminProductService";
+import {
+  getWarehouses,
+  createWarehouse,
+  updateWarehouse,
+  updateWarehouseStatus,
+  deleteWarehouse,
+} from "../../../services/adminFulfillmentService";
 import "../../../components/admin/adminViews/index.scss";
 
 import "../../../components/admin/adminDataTable/index.scss";
@@ -1012,7 +1019,16 @@ export const AdminBrands = () => {
 export const AdminInventory = () => {
   const [sellerTab, setSellerTab] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
+  const [apiWarehouses, setApiWarehouses] = useState([]);
   const list = useAdminList(mockInventory, ["product", "seller", "sku"]);
+
+  useEffect(() => {
+    getWarehouses().then((res) => {
+      if (res?.items && res.items.length > 0) {
+        setApiWarehouses(res.items);
+      }
+    }).catch(() => {});
+  }, []);
 
   const sellers = useMemo(
     () => [...new Set(mockInventory.map((i) => i.seller))],
