@@ -669,10 +669,10 @@ export default function CreateProductPage() {
                 disabled={submitting}
                 onClick={() => handleSubmit(true)}
               >
-                {isEditMode ? "Lưu bản nháp" : "Lưu & Ẩn"}
+                Lưu & Ẩn
               </button>
               <button type="submit" className="slr-btn-create" disabled={submitting}>
-                {isEditMode ? "Cập nhật sản phẩm" : "Gửi duyệt"}
+                {submitLabel || "Gửi duyệt"}
               </button>
             </div>
           </form>
