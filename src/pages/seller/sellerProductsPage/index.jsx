@@ -217,23 +217,44 @@ export default function ProductsPage() {
                 <tbody>
                   {myProducts.map((p) => {
                     const category = productCategories.find((c) => c.id === p.category);
-                    const modStatus = p.moderationStatus || "NONE";
+                    const rawMod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
+                    const rawSt = String(p.status || "").toUpperCase();
+
+                    let effectiveModStatus = "NONE";
+                    if (rawMod === "APPROVED" || rawSt === "APPROVED" || rawSt === "ACTIVE" || rawSt === "PUBLISHED") {
+                      effectiveModStatus = "APPROVED";
+                    } else if (rawMod === "REJECTED" || rawSt === "REJECTED") {
+                      effectiveModStatus = "REJECTED";
+                    } else if (
+                      rawMod === "PENDING_MANUAL_REVIEW" ||
+                      rawMod.includes("PENDING") ||
+                      rawSt.includes("PENDING") ||
+                      rawSt.includes("REVIEW") ||
+                      rawSt.includes("CHỜ")
+                    ) {
+                      effectiveModStatus = "PENDING_MANUAL_REVIEW";
+                    }
+
                     const isSubmittingDisabled =
-                      modStatus === "PENDING_MANUAL_REVIEW" ||
-                      modStatus === "APPROVED";
+                      effectiveModStatus === "PENDING_MANUAL_REVIEW" ||
+                      effectiveModStatus === "APPROVED";
 
                     let buttonText = "Gửi duyệt";
-                    let badgeLabel = STATUS_LABELS[p.status] || p.status || "Đang ẩn";
+                    let badgeLabel = "Đang ẩn";
+                    let badgeClass = "draft";
 
-                    if (modStatus === "PENDING_MANUAL_REVIEW") {
-                      buttonText = "Đang chờ duyệt";
-                      badgeLabel = "Chờ duyệt";
-                    } else if (modStatus === "APPROVED") {
+                    if (effectiveModStatus === "APPROVED") {
                       buttonText = "Đã duyệt";
                       badgeLabel = "Đã duyệt";
-                    } else if (modStatus === "REJECTED") {
+                      badgeClass = "approved";
+                    } else if (effectiveModStatus === "PENDING_MANUAL_REVIEW") {
+                      buttonText = "Đang chờ duyệt";
+                      badgeLabel = "Chờ duyệt";
+                      badgeClass = "pending";
+                    } else if (effectiveModStatus === "REJECTED") {
                       buttonText = "Gửi lại duyệt";
                       badgeLabel = "Bị từ chối";
+                      badgeClass = "rejected";
                     }
 
                     return (
@@ -252,7 +273,7 @@ export default function ProductsPage() {
                         <td className={Number(p.stock) === 0 ? "warn" : ""}>{p.stock}</td>
                         <td>
                           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-                            <span className={`slr-badge slr-badge--${(modStatus === "PENDING_MANUAL_REVIEW" ? "pending" : (p.status || "DRAFT")).toLowerCase()}`}>
+                            <span className={`slr-badge slr-badge--${badgeClass}`}>
                               {badgeLabel}
                             </span>
                             <button
