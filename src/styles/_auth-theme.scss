@@ -20,6 +20,11 @@ $auth-divider: rgba($sky-pale, 0.85);
   justify-content: center;
   align-items: center;
   padding: 30px;
+
+  @include respond(tablet) {
+    padding: 16px;
+    align-items: flex-start;
+  }
 }
 
 @mixin auth-card {
@@ -27,6 +32,10 @@ $auth-divider: rgba($sky-pale, 0.85);
   border-radius: $radius-xl;
   box-shadow: $auth-card-shadow;
   animation: authFadeIn 0.45s ease;
+
+  @include respond(tablet) {
+    border-radius: $radius-lg;
+  }
 }
 
 @mixin auth-title {

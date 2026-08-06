@@ -1,3 +1,6 @@
+@forward 'abstracts/breakpoints';
+@use 'abstracts/breakpoints' as *;
+
 //=====================================================
 // Raspberry Bloom Palette
 // #B35A8A · #F6B7C7 · #B6A5CE · #523F77 · #7880AE · #A3BBD7
