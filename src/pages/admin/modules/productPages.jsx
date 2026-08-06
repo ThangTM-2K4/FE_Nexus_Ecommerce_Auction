@@ -21,7 +21,7 @@ import {
   mockProducts, mockAuctions, mockCategories, mockBrands, mockInventory,
   mockSellerWarehouses, STATUS_OPTIONS,
 } from "../../../data/adminEntities";
-import { getCategories, createCategory, updateCategory, deleteCategory, saveCategoryImage } from "../../../services/adminCategoryService";
+import { getCategories, createCategory, updateCategory, deleteCategory, saveCategoryImage, uploadCategoryImage, updateCategoryStatus } from "../../../services/adminCategoryService";
 import {
   getAdminProducts,
   getAdminProductReviewDetail,
@@ -525,16 +525,10 @@ export const AdminCategories = () => {
   };
 
   const handleToggleParent = async (cat) => {
-    const nextStatus = cat.status === "Hoạt động" ? "Tắt" : "Hoạt động";
+    const nextStatus = cat.status === "Hoạt động" ? "INACTIVE" : "ACTIVE";
     try {
-      await updateCategory(cat.id, {
-        name: cat.name,
-        description: cat.description || "",
-        isActive: nextStatus === "Hoạt động",
-        rowVersion: cat.rowVersion,
-      });
-      list.updateItem(cat.id, { status: nextStatus });
-      toast.success(`Danh mục "${cat.name}" đã ${nextStatus === "Tắt" ? "tắt" : "bật"}`);
+      await updateCategoryStatus(cat.id, nextStatus, cat.rowVersion);
+      toast.success(`Danh mục "${cat.name}" đã ${nextStatus === "INACTIVE" ? "tắt" : "bật"}`);
       reloadCategories();
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Thao tác thất bại"));
@@ -566,19 +560,10 @@ export const AdminCategories = () => {
   };
 
   const handleToggleChild = async (parentId, child) => {
-    const nextStatus = child.status === "Hoạt động" ? "Tắt" : "Hoạt động";
-    const parent = list.filtered.find((c) => c.id === parentId);
-    if (!parent) return;
+    const nextStatus = child.status === "Hoạt động" ? "INACTIVE" : "ACTIVE";
     try {
-      await updateCategory(child.id, {
-        name: child.name,
-        isActive: nextStatus === "Hoạt động",
-        parentCategoryId: parent.categoryId || parent.id,
-        rowVersion: child.rowVersion,
-      });
-      const newChildren = parent.children.map((c) => c.id === child.id ? { ...c, status: nextStatus } : c);
-      list.updateItem(parentId, { children: newChildren });
-      toast.success(`"${child.name}" đã ${nextStatus === "Tắt" ? "tắt" : "bật"}`);
+      await updateCategoryStatus(child.id, nextStatus, child.rowVersion);
+      toast.success(`"${child.name}" đã ${nextStatus === "INACTIVE" ? "tắt" : "bật"}`);
       reloadCategories();
     } catch (err) {
       reloadCategories();
@@ -603,6 +588,7 @@ export const AdminCategories = () => {
   const save = async () => {
     try {
       const imgUrl = form.imageUrl || form.image || "";
+      const imgKey = form.imageKey || imgUrl;
       if (imgUrl) {
         if (form.name) saveCategoryImage(form.name, imgUrl);
         if (form.id) saveCategoryImage(form.id, imgUrl);
@@ -612,6 +598,7 @@ export const AdminCategories = () => {
         await createCategory({
           name: form.name,
           description: form.description || "",
+          imageKey: imgKey,
           imageUrl: imgUrl,
           isActive: form.status === "Hoạt động",
           parentCategoryId: null,
@@ -620,6 +607,7 @@ export const AdminCategories = () => {
         await updateCategory(form.id, {
           name: form.name,
           description: form.description || "",
+          imageKey: imgKey,
           imageUrl: imgUrl,
           isActive: form.status === "Hoạt động",
           parentCategoryId: null,
@@ -631,6 +619,7 @@ export const AdminCategories = () => {
         await createCategory({
           name: form.name,
           description: form.description || "",
+          imageKey: imgKey,
           imageUrl: imgUrl,
           isActive: form.status === "Hoạt động",
           parentCategoryId: parent.categoryId || parent.id,
@@ -641,6 +630,7 @@ export const AdminCategories = () => {
         await updateCategory(form.id, {
           name: form.name,
           description: form.description || "",
+          imageKey: imgKey,
           imageUrl: imgUrl,
           isActive: form.status === "Hoạt động",
           parentCategoryId: parent.categoryId || parent.id,
@@ -812,15 +802,34 @@ export const AdminCategories = () => {
                   type="file"
                   accept="image/*"
                   style={{ display: 'none' }}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        const url = ev.target?.result;
-                        setForm((prev) => ({ ...prev, imageUrl: url, image: url }));
-                      };
-                      reader.readAsDataURL(file);
+                      const toastId = toast.loading("Đang tải ảnh lên máy chủ...");
+                      try {
+                        const res = await uploadCategoryImage(file);
+                        const serverUrl = res.url || res.key;
+                        const serverKey = res.key || res.url;
+                        if (serverUrl) {
+                          setForm((prev) => ({
+                            ...prev,
+                            imageUrl: serverUrl,
+                            imageKey: serverKey,
+                            image: serverUrl
+                          }));
+                          toast.update(toastId, { render: "Đã tải ảnh lên máy chủ thành công!", type: "success", isLoading: false, autoClose: 2000 });
+                        } else {
+                          throw new Error("Không nhận được URL ảnh từ server");
+                        }
+                      } catch (uploadErr) {
+                        toast.update(toastId, { render: "Tải ảnh lên máy chủ thất bại, dùng preview tạm", type: "warning", isLoading: false, autoClose: 3000 });
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const url = ev.target?.result;
+                          setForm((prev) => ({ ...prev, imageUrl: url, image: url }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
                     }
                   }}
                 />

@@ -185,15 +185,43 @@ export async function getCategoryById(categoryId, scope = 'admin') {
   }
 }
 
-export function sanitizeImageKey(val) {
-  if (!val || typeof val !== 'string') return null;
+/**
+ * Upload ảnh danh mục — POST /api/v1/catalog/uploads/category
+ */
+export async function uploadCategoryImage(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  const { data } = await api.post('/catalog/uploads/category', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  const result = unwrapData(data) || data;
+  return {
+    url: result?.url || result?.imageUrl || '',
+    key: result?.key || result?.imageKey || '',
+  };
+}
+
+/**
+ * Đổi trạng thái Bật/Tắt danh mục — PATCH /api/v1/categories/{categoryId}/status
+ */
+export async function updateCategoryStatus(categoryId, targetStatus, rowVersion) {
+  const body = {
+    targetStatus: typeof targetStatus === 'boolean'
+      ? (targetStatus ? 'ACTIVE' : 'INACTIVE')
+      : String(targetStatus).toUpperCase(),
+    ...(rowVersion ? { rowVersion } : {}),
+  };
+  const { data } = await api.patch(`/categories/${categoryId}/status`, body);
+  return unwrapData(data);
+}
+
+export function isValidUploadedImageKey(val) {
+  if (!val || typeof val !== 'string') return false;
   const str = val.trim();
-  if (!str) return null;
-  // Base64 data URL hoặc URL bên ngoài (http/https) không phải là upload key trong storage backend
-  if (str.startsWith('data:') || str.startsWith('http://') || str.startsWith('https://')) {
-    return null;
-  }
-  return str.slice(0, 500);
+  if (!str) return false;
+  if (str.startsWith('data:')) return false;
+  if (str.length > 500) return false;
+  return true;
 }
 
 /**
@@ -202,14 +230,14 @@ export function sanitizeImageKey(val) {
 export async function createCategory(payload) {
   const name = payload.name?.trim() || '';
   const cleanSlug = payload.slug ? toVietnameseSlug(payload.slug) : toVietnameseSlug(name);
-  const rawImg = payload.imageKey || payload.imageUrl || payload.image || '';
-  const cleanKey = sanitizeImageKey(rawImg);
+  const rawKey = payload.imageKey || payload.key || payload.imageUrl || payload.image || '';
+  const validKey = isValidUploadedImageKey(rawKey) ? rawKey.trim() : null;
 
   const body = {
     name,
     slug: cleanSlug || 'danh-muc',
     description: payload.description || '',
-    ...(cleanKey ? { imageKey: cleanKey } : {}),
+    ...(validKey ? { imageKey: validKey } : {}),
     parentCategoryId: payload.parentCategoryId || payload.parentId || null,
     sortOrder: payload.sortOrder ?? 0,
     isActive: payload.isActive ?? true,
@@ -252,14 +280,14 @@ export async function updateCategory(categoryId, payload) {
 
   const name = payload.name?.trim() || '';
   const cleanSlug = payload.slug ? toVietnameseSlug(payload.slug) : toVietnameseSlug(name);
-  const rawImg = payload.imageKey || payload.imageUrl || payload.image || '';
-  const cleanKey = sanitizeImageKey(rawImg);
+  const rawKey = payload.imageKey || payload.key || payload.imageUrl || payload.image || '';
+  const validKey = isValidUploadedImageKey(rawKey) ? rawKey.trim() : null;
 
   const body = {
     name,
     slug: cleanSlug || 'danh-muc',
     description: payload.description || '',
-    ...(cleanKey ? { imageKey: cleanKey } : {}),
+    ...(validKey ? { imageKey: validKey } : {}),
     removeImage: payload.removeImage ?? false,
     parentCategoryId: payload.parentCategoryId || payload.parentId || null,
     sortOrder: payload.sortOrder ?? 0,
