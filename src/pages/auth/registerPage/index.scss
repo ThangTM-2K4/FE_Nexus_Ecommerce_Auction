@@ -301,7 +301,7 @@ $register-input-border: rgba($lavender, 0.55);
   input {
     width: 100%;
     height: 48px;
-    padding: 0 44px 0 44px;
+    padding: 0 18px;
     border: 1px solid $register-input-border;
     border-radius: $radius-pill;
     background: $register-input-bg;
@@ -323,25 +323,10 @@ $register-input-border: rgba($lavender, 0.55);
   }
 }
 
-.input-icon {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: $slate;
-  font-size: 0.95rem;
-  pointer-events: none;
-
-  &--left {
-    right: auto;
-    left: 16px;
-  }
-}
-
 .password-wrapper {
   input {
-    padding-right: 72px;
-    padding-left: 44px;
+    padding-right: 48px;
+    padding-left: 18px;
   }
 }
 

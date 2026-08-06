@@ -226,9 +226,6 @@ function RegisterPage() {
                     onChange={handleChange}
                     className={errors.fullName ? "input-error" : ""}
                   />
-                  <span className="input-icon" aria-hidden="true">
-                    <FaUser />
-                  </span>
                 </div>
                 <div className="field-error">{errors.fullName || "\u00A0"}</div>
               </div>
@@ -244,9 +241,6 @@ function RegisterPage() {
                     onChange={handleChange}
                     className={errors.email ? "input-error" : ""}
                   />
-                  <span className="input-icon" aria-hidden="true">
-                    <FaEnvelope />
-                  </span>
                 </div>
                 <div className="field-error">{errors.email || "\u00A0"}</div>
               </div>
@@ -262,9 +256,6 @@ function RegisterPage() {
                     onChange={handleChange}
                     className={errors.phone ? "input-error" : ""}
                   />
-                  <span className="input-icon" aria-hidden="true">
-                    <FaPhone />
-                  </span>
                 </div>
                 <div className="field-error">{errors.phone || "\u00A0"}</div>
               </div>
@@ -281,9 +272,6 @@ function RegisterPage() {
                       onChange={handleChange}
                       className={errors.password ? "input-error" : ""}
                     />
-                    <span className="input-icon input-icon--left" aria-hidden="true">
-                      <FaLock />
-                    </span>
                     <button
                       type="button"
                       className="eye-btn"
@@ -346,9 +334,6 @@ function RegisterPage() {
                       onChange={handleChange}
                       className={errors.confirmPassword ? "input-error" : ""}
                     />
-                    <span className="input-icon input-icon--left" aria-hidden="true">
-                      <FaLock />
-                    </span>
                     <button
                       type="button"
                       className="eye-btn"
