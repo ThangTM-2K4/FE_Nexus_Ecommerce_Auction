@@ -57,7 +57,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
       setShowSwitchModal(false);
       setShowProfileMenu(false);
       if (mode === "SELLER") {
-        navigate("/seller");
+        navigate("/seller-hub/overview");
       } else {
         navigate("/auction");
       }
@@ -161,7 +161,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
           {isAuthenticated && isSellerMode && (
             <>
               <Link
-                to="/seller"
+                to="/seller-hub/overview"
                 className="auction-header__home-link"
                 style={{
                   background: 'rgba(232, 196, 104, 0.12)',
@@ -298,7 +298,7 @@ export default function AuctionHeader({ searchQuery = '', onSearchChange }) {
 
                     {isSellerMode && (
                       <li>
-                        <Link to="/seller" onClick={() => setShowProfileMenu(false)}>
+                        <Link to="/seller-hub/overview" onClick={() => setShowProfileMenu(false)}>
                           <FaUser className="menu-icon" style={{ color: '#e8c468' }} /> Kênh Quản Lý Seller
                         </Link>
                       </li>

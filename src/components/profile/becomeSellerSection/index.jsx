@@ -31,7 +31,7 @@ export default function BecomeSellerSection({ profile, application }) {
         <div className="profile-seller-approved">
           <span className="profile-badge verified">✓ Người bán đã được phê duyệt</span>
           <p>Bạn có thể truy cập Kênh Người Bán để quản lý cửa hàng và phiên đấu giá.</p>
-          <Link to="/seller" className="profile-btn profile-btn--primary">Mở Kênh Người Bán</Link>
+          <Link to="/seller-hub/overview" className="profile-btn profile-btn--primary">Mở Kênh Người Bán</Link>
         </div>
       </section>
     );
