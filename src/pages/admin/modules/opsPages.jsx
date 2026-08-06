@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../../components/admin/adminPageHeader";
 import AdminTabs from "../../../components/admin/adminTabs";
@@ -17,6 +17,7 @@ import {
   mockCommissions, mockCoupons, mockShippingPartners, mockShippingZones,
   mockReviews, mockReports, mockFraudAlerts, mockSupportTickets,
 } from "../../../data/adminEntities";
+import { getFulfillmentCarriers, getFulfillmentShipments } from "../../../services/adminFulfillmentService";
 import "../../../components/admin/adminViews/index.scss";
 import "../../../components/admin/adminDataTable/index.scss";
 import "../../../components/admin/adminTabOverview/index.scss";
@@ -125,6 +126,23 @@ export const AdminShipping = () => {
   const [viewMode, setViewMode] = useState("grid");
   const partners = useAdminList(mockShippingPartners, ["name"]);
   const zones = useAdminList(mockShippingZones, ["name"]);
+
+  useEffect(() => {
+    Promise.allSettled([getFulfillmentCarriers(), getFulfillmentShipments()]).then(([cRes]) => {
+      if (cRes.status === "fulfilled" && Array.isArray(cRes.value) && cRes.value.length > 0) {
+        const mappedCarriers = cRes.value.map((c, i) => ({
+          id: c.id || c.carrierId || `carrier-${i}`,
+          name: c.name || c.carrierName || "Đơn vị vận chuyển",
+          code: c.code || c.carrierCode || "GHN",
+          status: c.isActive || c.status === "ACTIVE" || c.status === "Hoạt động" ? "Hoạt động" : "Tắt",
+          type: c.type || "Tiêu chuẩn",
+          avgDeliveryTime: c.avgDeliveryTime || "1-3 ngày",
+          baseFee: c.baseFee ? `${Number(c.baseFee).toLocaleString("vi-VN")} ₫` : "22.000 ₫",
+        }));
+        partners.setInitial(mappedCarriers);
+      }
+    });
+  }, []);
 
   const partnerOverview = {
     title: "Tổng quan đối tác vận chuyển",
