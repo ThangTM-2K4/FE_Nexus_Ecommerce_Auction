@@ -101,6 +101,36 @@ export async function getCategories(params = {}) {
 }
 
 /**
+ * Chuyển đổi tên tiếng Việt có dấu thành chuỗi Slug chuẩn SEO chuẩn hóa ASCII
+ * Ví dụ: "Đồng Hồ" -> "dong-ho", "Thời Trang Nam" -> "thoi-trang-nam", "Máy Tính & Laptop" -> "may-tinh-and-laptop"
+ */
+export function toVietnameseSlug(str) {
+  if (!str) return '';
+
+  let slug = str.toString().toLowerCase().trim();
+
+  // Chuyển đổi các ký tự tiếng Việt có dấu thành không dấu
+  slug = slug.replace(/á|à|ả|ã|ạ|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/g, 'a');
+  slug = slug.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/g, 'e');
+  slug = slug.replace(/í|ì|ỉ|ĩ|ị/g, 'i');
+  slug = slug.replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/g, 'o');
+  slug = slug.replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/g, 'u');
+  slug = slug.replace(/ý|ỳ|ỷ|ỹ|ỵ/g, 'y');
+  slug = slug.replace(/đ/g, 'd');
+
+  // Đổi ký tự & thành and
+  slug = slug.replace(/&/g, '-and-');
+
+  // Loại bỏ các ký tự không hợp lệ trừ a-z0-9 và dấu gạch ngang
+  slug = slug.replace(/[^a-z0-9\s-]/g, '');
+
+  // Đổi khoảng trắng thành dấu gạch ngang và loại bỏ gạch ngang dư thừa
+  slug = slug.replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+
+  return slug;
+}
+
+/**
  * Chi tiết danh mục GET /api/v1/categories/{categoryId}
  * Dùng scope 'admin' hoặc không truyền scope để lấy thông tin danh mục cả khi Tắt (INACTIVE)
  */
@@ -124,7 +154,7 @@ export async function getCategoryById(categoryId, scope = 'admin') {
  */
 export async function createCategory(payload) {
   const name = payload.name?.trim() || '';
-  const cleanSlug = (payload.slug || name.toLowerCase()).trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  const cleanSlug = payload.slug ? toVietnameseSlug(payload.slug) : toVietnameseSlug(name);
   const body = {
     name,
     slug: cleanSlug || 'danh-muc',
@@ -170,9 +200,12 @@ export async function updateCategory(categoryId, payload) {
     }
   }
 
+  const name = payload.name?.trim() || '';
+  const cleanSlug = payload.slug ? toVietnameseSlug(payload.slug) : toVietnameseSlug(name);
+
   const body = {
-    name: payload.name,
-    slug: payload.slug || payload.name?.toLowerCase?.().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
+    name,
+    slug: cleanSlug || 'danh-muc',
     description: payload.description || '',
     imageUrl: payload.imageUrl || payload.image || '',
     parentCategoryId: payload.parentCategoryId || payload.parentId || null,
