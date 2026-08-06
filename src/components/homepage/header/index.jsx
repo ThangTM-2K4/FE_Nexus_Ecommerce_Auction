@@ -11,7 +11,9 @@ import UserAvatar from "../../common/userAvatar";
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const currentRedirect = encodeURIComponent(location.pathname + location.search);
+  const currentRedirect = encodeURIComponent(
+    location.pathname + location.search,
+  );
 
   const [language, setLanguage] = useState("vi");
   const [showNotifications, setShowNotifications] = useState(false);
@@ -35,22 +37,39 @@ export default function Header() {
     if (user?.roleCode) raw.push(user.roleCode);
     if (Array.isArray(user?.roles)) raw.push(...user.roles);
     return raw
-      .map((r) => (typeof r === 'string' ? r : r?.code ?? r?.name ?? ''))
+      .map((r) => (typeof r === "string" ? r : (r?.code ?? r?.name ?? "")))
       .filter(Boolean)
-      .map((s) => String(s).toUpperCase().replace(/^ROLE_/, ''));
+      .map((s) =>
+        String(s)
+          .toUpperCase()
+          .replace(/^ROLE_/, ""),
+      );
   })();
-  const isAdmin = userRoles.some((r) => r === 'ADMIN' || r === 'SUPER_ADMIN');
-  const isStaffRole = userRoles.some((r) => r === 'STAFF' || r === 'SUPPORT_STAFF');
+  const isAdmin = userRoles.some((r) => r === "ADMIN" || r === "SUPER_ADMIN");
+  const isStaffRole = userRoles.some(
+    (r) => r === "STAFF" || r === "SUPPORT_STAFF",
+  );
   const isAdminOrStaff = isAdmin || isStaffRole;
-  const profileVariant = isAdmin ? 'admin' : isStaffRole ? 'staff' : undefined;
+  const profileVariant = isAdmin ? "admin" : isStaffRole ? "staff" : undefined;
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!isAuthenticated) {
       setUnreadCount(0);
       return;
     }
-    notificationService.getUnreadCount(user.id).then(setUnreadCount);
-  }, [user?.id, showNotifications]);
+
+    notificationService
+      .getUnreadCount()
+      .then(setUnreadCount)
+      .catch((error) => {
+        console.error(
+          "[Header] Failed to get unread notification count",
+          error,
+        );
+
+        setUnreadCount(0);
+      });
+  }, [isAuthenticated, showNotifications]);
 
   const handleLanguageChange = () => {
     setLanguage(language === "vi" ? "en" : "vi");
@@ -115,15 +134,20 @@ export default function Header() {
 
             {!isAuthenticated ? (
               <>
-                <Link to={`/register?redirect=${currentRedirect}`} className="header-topbar-cta">
+                <Link
+                  to={`/register?redirect=${currentRedirect}`}
+                  className="header-topbar-cta"
+                >
                   Đăng Ký
                 </Link>
-                <Link to={`/login?redirect=${currentRedirect}`} className="header-topbar-login">
+                <Link
+                  to={`/login?redirect=${currentRedirect}`}
+                  className="header-topbar-login"
+                >
                   Đăng Nhập
                 </Link>
               </>
             ) : (
-
               <div className="header-topbar-auth">
                 <div className="header-notif-wrap">
                   <button
@@ -158,11 +182,10 @@ export default function Header() {
                     <NotificationDropdown
                       onClose={() => {
                         setShowNotifications(false);
-                        if (user?.id) {
-                          notificationService
-                            .getUnreadCount(user.id)
-                            .then(setUnreadCount);
-                        }
+                        notificationService
+                          .getUnreadCount()
+                          .then(setUnreadCount)
+                          .catch(() => setUnreadCount(0));
                       }}
                     />
                   )}
@@ -190,7 +213,12 @@ export default function Header() {
                       />
                     )}
                   </button>
-                  {showProfile && <ProfileDropdown onClose={closeDropdowns} variant={profileVariant} />}
+                  {showProfile && (
+                    <ProfileDropdown
+                      onClose={closeDropdowns}
+                      variant={profileVariant}
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -267,7 +295,7 @@ export default function Header() {
                 </svg>
                 {cartCount > 0 && (
                   <span className="header-cart-badge">
-                    {cartCount > 99 ? '99+' : cartCount}
+                    {cartCount > 99 ? "99+" : cartCount}
                   </span>
                 )}
               </Link>
