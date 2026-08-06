@@ -5,6 +5,10 @@ import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { useAuth } from "../../../context/AuthContext";
 import { getMyEcommerceProducts } from "../../../services/ecommerceProductService";
 import { productCategories } from "../../../data/auctionMockData";
+<<<<<<< HEAD
+=======
+import { getCategories, getCategoryLabel } from "../../../services/categoryService";
+>>>>>>> develop
 
 const STATUS_LABELS = {
   DRAFT: "Đang ẩn",
@@ -17,6 +21,16 @@ export default function ProductsPage() {
   const { user } = useAuth();
   const [myProducts, setMyProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
+=======
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    getCategories().then((res) => {
+      if (res?.ok) setCategories(res.items || []);
+    }).catch(() => {});
+  }, []);
+>>>>>>> develop
 
   useEffect(() => {
     if (!user?.id) {
@@ -91,6 +105,7 @@ export default function ProductsPage() {
                 <tbody>
                   {myProducts.map((p) => {
                     const category = productCategories.find((c) => c.id === p.category);
+                    const categoryName = p.name || getCategoryLabel(categories, p.category) || category?.label || "Sản phẩm";
                     return (
                       <tr key={p.id}>
                         <td>
@@ -99,7 +114,7 @@ export default function ProductsPage() {
                           </div>
                         </td>
                         <td>
-                          <strong>{p.name || category?.label || "Sản phẩm"}</strong>
+                          <strong>{categoryName}</strong>
                           {p.brand && <div style={{ fontSize: "12px", color: "#888" }}>Thương hiệu: {p.brand}</div>}
                         </td>
                         <td style={{ fontSize: "12px", color: "#555" }}>{p.id}</td>

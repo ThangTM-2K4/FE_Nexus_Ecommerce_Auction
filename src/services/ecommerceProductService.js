@@ -59,20 +59,61 @@ const logDevError = (label, error) => {
 const buyerRequestConfig = { skipErrorRedirect: true };
 
 /**
- * Danh sách sản phẩm phía khách mua — GET /ecommerce/products
+ * Danh sách sản phẩm phía khách mua — GET /api/v1/ecommerce/products hoặc GET /api/v1/products
  * Query: search, categoryId, minPrice, maxPrice, sortBy, sortDirection, pageNumber, pageSize
  */
 export async function getProducts(filters = {}) {
   const params = normalizeProductFilters(filters);
   logDevRequest('GET', BUYER_LIST_PATH, params);
 
+  // 1. Thử gọi GET /ecommerce/products
   try {
     const { data } = await api.get(BUYER_LIST_PATH, { params, ...buyerRequestConfig });
+    const paged = unwrapPagedList(data);
+    if (Array.isArray(paged.items) && paged.items.length > 0) {
+      return {
+        ok: true,
+        items: paged.items,
+        total: paged.total ?? paged.items.length,
+        pageNumber: paged.page ?? params.pageNumber ?? 1,
+        pageSize: paged.pageSize ?? params.pageSize ?? 20,
+      };
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2. Thử gọi GET /api/v1/products?pageSize=100
+  try {
+    const { data } = await api.get('/products', {
+      params: { pageSize: 100, ...params },
+      ...buyerRequestConfig,
+    });
+    const paged = unwrapPagedList(data);
+    if (Array.isArray(paged.items) && paged.items.length > 0) {
+      return {
+        ok: true,
+        items: paged.items,
+        total: paged.total ?? paged.items.length,
+        pageNumber: paged.page ?? params.pageNumber ?? 1,
+        pageSize: paged.pageSize ?? params.pageSize ?? 20,
+      };
+    }
+  } catch {
+    // ignore
+  }
+
+  // 3. Thử gọi GET /api/v1/admin/products (Lấy sản phẩm hệ thống)
+  try {
+    const { data } = await api.get('/admin/products', {
+      params: { pageSize: 100, ...params },
+      ...buyerRequestConfig,
+    });
     const paged = unwrapPagedList(data);
     return {
       ok: true,
       items: paged.items || [],
-      total: paged.total ?? 0,
+      total: paged.total ?? (paged.items || []).length,
       pageNumber: paged.page ?? params.pageNumber ?? 1,
       pageSize: paged.pageSize ?? params.pageSize ?? 20,
     };

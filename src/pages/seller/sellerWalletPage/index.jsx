@@ -139,18 +139,18 @@ export default function WalletPage() {
         <article className="slr-dual-wallet-card">
           <div className="slr-dual-wallet-card__header">
             <div className="slr-dual-wallet-card__title">
-              <span>🔨</span> Ví Đấu Giá (Auction Wallet)
+              <span>🔨</span> Ví Đấu Giá & Nạp Tiền (Buyer Wallet)
             </div>
             <span className="slr-dual-wallet-card__tag slr-dual-wallet-card__tag--auction">
-              Sàn Đấu Giá
+              Sàn Đấu Giá & Nexus Pay
             </span>
           </div>
           <div className="slr-dual-wallet-card__balance">
-            {formatCurrency(Math.round(walletStats.availableBalance * 0.6))}
+            {formatCurrency(walletStats.buyerAvailable ?? Math.round(walletStats.availableBalance * 0.6))}
           </div>
           <div className="slr-dual-wallet-card__sub">
             <span>Tiền cọc đang giữ:</span>
-            <strong>{formatCurrency(Math.round(walletStats.pendingBalance * 0.4))}</strong>
+            <strong>{formatCurrency(walletStats.buyerPending ?? Math.round(walletStats.pendingBalance * 0.4))}</strong>
           </div>
         </article>
 
@@ -164,11 +164,11 @@ export default function WalletPage() {
             </span>
           </div>
           <div className="slr-dual-wallet-card__balance">
-            {formatCurrency(Math.round(walletStats.availableBalance * 0.4))}
+            {formatCurrency(walletStats.sellerAvailable ?? Math.round(walletStats.availableBalance * 0.4))}
           </div>
           <div className="slr-dual-wallet-card__sub">
             <span>Doanh thu chờ đối soát:</span>
-            <strong>{formatCurrency(Math.round(walletStats.pendingBalance * 0.6))}</strong>
+            <strong>{formatCurrency(walletStats.sellerPending ?? Math.round(walletStats.pendingBalance * 0.6))}</strong>
           </div>
         </article>
       </section>

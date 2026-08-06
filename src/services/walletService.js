@@ -200,16 +200,28 @@ export const getWalletState = async () => {
     if (realWallet?.wallets && realWallet.wallets.length > 0) {
       const buyerWd = realWallet.wallets.find((w) => w.walletType === "BUYER");
       const sellerWd = realWallet.wallets.find((w) => w.walletType === "SELLER");
-      const activeWd = sellerWd || buyerWd || realWallet.wallets[0];
+
+      const buyerAvailable = buyerWd?.availableBalance ?? 0;
+      const buyerPending = buyerWd?.pendingBalance ?? 0;
+
+      const sellerAvailable = sellerWd?.availableBalance ?? 0;
+      const sellerPending = sellerWd?.pendingBalance ?? 0;
+
+      const totalAvailable = buyerAvailable + sellerAvailable;
+      const totalPending = buyerPending + sellerPending;
 
       const txns = await getMyWalletTransactions();
       const wds = await getMyWithdrawals();
 
       return {
         walletStats: {
-          availableBalance: activeWd.availableBalance ?? 0,
-          pendingBalance: activeWd.pendingBalance ?? 0,
-          currency: activeWd.currency || "VND",
+          availableBalance: totalAvailable,
+          pendingBalance: totalPending,
+          buyerAvailable,
+          buyerPending,
+          sellerAvailable,
+          sellerPending,
+          currency: (sellerWd || buyerWd)?.currency || "VND",
         },
         transactions: txns.items || [],
         withdrawals: wds.items || [],

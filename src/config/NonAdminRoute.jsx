@@ -1,22 +1,8 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getRoleTokens } from './ProtectedRoute';
 
 export default function NonAdminRoute({ children }) {
-  const { isAuthenticated, user } = useAuth();
-
-  if (isAuthenticated && user) {
-    const roleTokens = getRoleTokens(user);
-    const isAdmin =
-      roleTokens.includes('ADMIN') ||
-      roleTokens.includes('SUPER_ADMIN') ||
-      user?.role === 'ADMIN' ||
-      user?.roleCode === 'ADMIN';
-
-    if (isAdmin) {
-      return <Navigate to="/admin/dashboard" replace />;
-    }
-  }
-
+  // Cho phép tất cả người dùng (kể cả Admin) xem trang chủ và các trang mua sắm công khai
   return children;
 }

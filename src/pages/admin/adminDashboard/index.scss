@@ -71,8 +71,13 @@
 
   &__kpis {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+
+    @media (min-width: 1920px) {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
   }
 
   &__charts {
@@ -100,6 +105,10 @@
 
     @media (max-width: 1100px) {
       grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 2200px) {
+      grid-template-columns: repeat(3, 1fr);
     }
   }
 }

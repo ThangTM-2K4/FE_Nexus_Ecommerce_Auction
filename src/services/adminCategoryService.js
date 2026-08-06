@@ -6,6 +6,26 @@ export { getApiErrorMessage };
 /**
  * Đảm bảo dữ liệu danh mục luôn tuân theo cấu trúc 2 tầng (category tree)
  */
+const getSavedCategoryImage = (id, name) => {
+  try {
+    const store = JSON.parse(localStorage.getItem('cat_images_store') || '{}');
+    return store[id] || store[name] || store[toVietnameseSlug(name)] || '';
+  } catch {
+    return '';
+  }
+};
+
+export const saveCategoryImage = (idOrName, imageUrl) => {
+  if (!idOrName || !imageUrl) return;
+  try {
+    const store = JSON.parse(localStorage.getItem('cat_images_store') || '{}');
+    store[idOrName] = imageUrl;
+    localStorage.setItem('cat_images_store', JSON.stringify(store));
+  } catch {
+    // ignore
+  }
+};
+
 export function ensureCategoryTree(raw) {
   if (!raw) return [];
   const items = Array.isArray(raw)
@@ -13,34 +33,47 @@ export function ensureCategoryTree(raw) {
     : raw?.tree || raw?.items || raw?.page?.items || [];
   if (!Array.isArray(items)) return [];
 
+  const resolveImage = (cat) => {
+    const fromApi = cat.imageUrl || (cat.imageKey?.startsWith?.('http') ? cat.imageKey : '') || cat.image || '';
+    if (fromApi) return fromApi;
+    return getSavedCategoryImage(cat.categoryId || cat.id, cat.name);
+  };
+
   if (items.some(i => Array.isArray(i.children))) {
-    return items.map((cat, idx) => ({
-      id: cat.categoryId || cat.id || `cat-${idx}`,
-      categoryId: cat.categoryId || cat.id,
-      name: cat.name || cat.categoryName || 'Danh mục',
-      slug: cat.slug || '',
-      description: cat.description || '',
-      icon: cat.icon || '📦',
-      status: cat.isActive !== undefined ? (cat.isActive ? 'Hoạt động' : 'Tắt') : (cat.status || 'Hoạt động'),
-      isActive: cat.isActive ?? true,
-      rowVersion: cat.rowVersion || null,
-      parentCategoryId: cat.parentCategoryId || cat.parentId || null,
-      sortOrder: cat.sortOrder ?? 0,
-      productCount: cat.productCount ?? 0,
-      children: Array.isArray(cat.children) ? cat.children.map((c, cIdx) => ({
-        id: c.categoryId || c.id || `cat-${idx}-${cIdx}`,
-        categoryId: c.categoryId || c.id,
-        name: c.name || c.categoryName || 'Danh mục con',
-        slug: c.slug || '',
-        description: c.description || '',
-        status: c.isActive !== undefined ? (c.isActive ? 'Hoạt động' : 'Tắt') : (c.status || 'Hoạt động'),
-        isActive: c.isActive ?? true,
-        rowVersion: c.rowVersion || null,
-        parentCategoryId: c.parentCategoryId || c.parentId || cat.categoryId || cat.id,
-        sortOrder: c.sortOrder ?? 0,
-        productCount: c.productCount ?? 0,
-      })) : [],
-    }));
+    return items.map((cat, idx) => {
+      const img = resolveImage(cat);
+      return {
+        id: cat.categoryId || cat.id || `cat-${idx}`,
+        categoryId: cat.categoryId || cat.id,
+        name: cat.name || cat.categoryName || 'Danh mục',
+        slug: cat.slug || '',
+        description: cat.description || '',
+        icon: cat.icon || '📦',
+        imageUrl: img,
+        imageKey: cat.imageKey || cat.imageUrl || '',
+        status: cat.isActive !== undefined ? (cat.isActive ? 'Hoạt động' : 'Tắt') : (cat.status || 'Hoạt động'),
+        isActive: cat.isActive ?? true,
+        rowVersion: cat.rowVersion || null,
+        parentCategoryId: cat.parentCategoryId || cat.parentId || null,
+        sortOrder: cat.sortOrder ?? 0,
+        productCount: cat.productCount ?? 0,
+        children: Array.isArray(cat.children) ? cat.children.map((c, cIdx) => ({
+          id: c.categoryId || c.id || `cat-${idx}-${cIdx}`,
+          categoryId: c.categoryId || c.id,
+          name: c.name || c.categoryName || 'Danh mục con',
+          slug: c.slug || '',
+          description: c.description || '',
+          imageUrl: resolveImage(c),
+          imageKey: c.imageKey || c.imageUrl || '',
+          status: c.isActive !== undefined ? (c.isActive ? 'Hoạt động' : 'Tắt') : (c.status || 'Hoạt động'),
+          isActive: c.isActive ?? true,
+          rowVersion: c.rowVersion || null,
+          parentCategoryId: c.parentCategoryId || c.parentId || cat.categoryId || cat.id,
+          sortOrder: c.sortOrder ?? 0,
+          productCount: c.productCount ?? 0,
+        })) : [],
+      };
+    });
   }
   const parents = items.filter(i => !(i.parentCategoryId || i.parentId));
   const listToUse = parents.length > 0 ? parents : items;
@@ -53,6 +86,8 @@ export function ensureCategoryTree(raw) {
       slug: p.slug || '',
       description: p.description || '',
       icon: p.icon || '📦',
+      imageUrl: resolveImage(p),
+      imageKey: p.imageKey || p.imageUrl || '',
       status: p.isActive !== undefined ? (p.isActive ? 'Hoạt động' : 'Tắt') : (p.status || 'Hoạt động'),
       isActive: p.isActive ?? true,
       rowVersion: p.rowVersion || null,
@@ -65,6 +100,8 @@ export function ensureCategoryTree(raw) {
         name: c.name || c.categoryName || 'Danh mục con',
         slug: c.slug || '',
         description: c.description || '',
+        imageUrl: resolveImage(c),
+        imageKey: c.imageKey || c.imageUrl || '',
         status: c.isActive !== undefined ? (c.isActive ? 'Hoạt động' : 'Tắt') : (c.status || 'Hoạt động'),
         isActive: c.isActive ?? true,
         rowVersion: c.rowVersion || null,
@@ -100,17 +137,47 @@ export async function getCategories(params = {}) {
 }
 
 /**
- * Chi tiết danh mục GET /api/v1/categories/{categoryId}
- * Dùng scope 'admin' hoặc không truyền scope để lấy thông tin danh mục cả khi Tắt (INACTIVE)
+ * Chuyển đổi tên tiếng Việt có dấu thành chuỗi Slug chuẩn SEO chuẩn hóa ASCII
+ * Ví dụ: "Đồng Hồ" -> "dong-ho", "Thời Trang Nam" -> "thoi-trang-nam", "Máy Tính & Laptop" -> "may-tinh-and-laptop"
+ */
+export function toVietnameseSlug(str) {
+  if (!str) return '';
+
+  let slug = str.toString().toLowerCase().trim();
+
+  // Chuyển đổi các ký tự tiếng Việt có dấu thành không dấu
+  slug = slug.replace(/á|à|ả|ã|ạ|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/g, 'a');
+  slug = slug.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/g, 'e');
+  slug = slug.replace(/í|ì|ỉ|ĩ|ị/g, 'i');
+  slug = slug.replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/g, 'o');
+  slug = slug.replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/g, 'u');
+  slug = slug.replace(/ý|ỳ|ỷ|ỹ|ỵ/g, 'y');
+  slug = slug.replace(/đ/g, 'd');
+
+  // Đổi ký tự & thành and
+  slug = slug.replace(/&/g, '-and-');
+
+  // Loại bỏ các ký tự không hợp lệ trừ a-z0-9 và dấu gạch ngang
+  slug = slug.replace(/[^a-z0-9\s-]/g, '');
+
+  // Đổi khoảng trắng thành dấu gạch ngang và loại bỏ gạch ngang dư thừa
+  slug = slug.replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+
+  return slug;
+}
+
+/**
+ * Chi tiết danh mục quản trị GET /api/v1/management/categories/{categoryId} hoặc GET /api/v1/categories/{categoryId}
+ * Lấy danh mục bằng API Management dành riêng cho Admin để lấy rowVersion mới nhất (kể cả khi bị INACTIVE)
  */
 export async function getCategoryById(categoryId, scope = 'admin') {
   try {
-    const params = scope ? { scope } : {};
-    const { data } = await api.get(`/categories/${categoryId}`, { params });
+    const { data } = await api.get(`/management/categories/${categoryId}`);
     return unwrapData(data);
   } catch {
     try {
-      const { data } = await api.get(`/categories/${categoryId}`);
+      const params = scope ? { scope } : {};
+      const { data } = await api.get(`/categories/${categoryId}`, { params });
       return unwrapData(data);
     } catch {
       return null;
@@ -118,17 +185,31 @@ export async function getCategoryById(categoryId, scope = 'admin') {
   }
 }
 
+export function sanitizeImageKey(val) {
+  if (!val || typeof val !== 'string') return null;
+  const str = val.trim();
+  if (!str) return null;
+  // Base64 data URL hoặc URL bên ngoài (http/https) không phải là upload key trong storage backend
+  if (str.startsWith('data:') || str.startsWith('http://') || str.startsWith('https://')) {
+    return null;
+  }
+  return str.slice(0, 500);
+}
+
 /**
  * Tạo danh mục sản phẩm mới POST /api/v1/categories
  */
 export async function createCategory(payload) {
   const name = payload.name?.trim() || '';
-  const cleanSlug = (payload.slug || name.toLowerCase()).trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  const cleanSlug = payload.slug ? toVietnameseSlug(payload.slug) : toVietnameseSlug(name);
+  const rawImg = payload.imageKey || payload.imageUrl || payload.image || '';
+  const cleanKey = sanitizeImageKey(rawImg);
+
   const body = {
     name,
     slug: cleanSlug || 'danh-muc',
     description: payload.description || '',
-    imageUrl: payload.imageUrl || payload.image || '',
+    ...(cleanKey ? { imageKey: cleanKey } : {}),
     parentCategoryId: payload.parentCategoryId || payload.parentId || null,
     sortOrder: payload.sortOrder ?? 0,
     isActive: payload.isActive ?? true,
@@ -143,7 +224,7 @@ export async function createCategory(payload) {
 export async function updateCategory(categoryId, payload) {
   let rowVersion = payload.rowVersion;
 
-  // Lấy rowVersion mới nhất từ Server bằng GET /categories/{id} nếu chưa có
+  // Lấy rowVersion mới nhất từ Server bằng GET /management/categories/{id} nếu chưa có
   if (!rowVersion) {
     try {
       const detail = await getCategoryById(categoryId, 'admin');
@@ -169,11 +250,17 @@ export async function updateCategory(categoryId, payload) {
     }
   }
 
+  const name = payload.name?.trim() || '';
+  const cleanSlug = payload.slug ? toVietnameseSlug(payload.slug) : toVietnameseSlug(name);
+  const rawImg = payload.imageKey || payload.imageUrl || payload.image || '';
+  const cleanKey = sanitizeImageKey(rawImg);
+
   const body = {
-    name: payload.name,
-    slug: payload.slug || payload.name?.toLowerCase?.().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
+    name,
+    slug: cleanSlug || 'danh-muc',
     description: payload.description || '',
-    imageUrl: payload.imageUrl || payload.image || '',
+    ...(cleanKey ? { imageKey: cleanKey } : {}),
+    removeImage: payload.removeImage ?? false,
     parentCategoryId: payload.parentCategoryId || payload.parentId || null,
     sortOrder: payload.sortOrder ?? 0,
     isActive: payload.isActive ?? true,

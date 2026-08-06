@@ -1,4 +1,5 @@
-import { getApiErrorMessage } from '../utils/apiResponse';
+import api from '../config/api';
+import { unwrapData, getApiErrorMessage } from '../utils/apiResponse';
 import { getCategories as fetchCategories } from './categoryService';
 import { getProducts, getProductById } from './ecommerceProductService';
 
@@ -13,18 +14,90 @@ const CATEGORY_ICONS = [
 
 const DEFAULT_PRODUCT_IMAGE = '/images/products/electronics/iphone.jpg';
 
+const CATEGORY_IMAGE_BY_NAME = {
+  'điện thoại': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&q=80',
+  'máy tính': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=300&q=80',
+  'laptop': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=300&q=80',
+  'đồng hồ': 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=300&q=80',
+  'thời trang': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&q=80',
+  'sắc đẹp': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=300&q=80',
+  'giày': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80',
+  'sức khỏe': 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=300&q=80',
+  'thiết bị': 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=300&q=80',
+  'mẹ & bé': 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=300&q=80',
+  'thể thao': 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=300&q=80',
+  'bách hóa': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&q=80',
+  'balo': 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&q=80',
+  'máy ảnh': 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=300&q=80',
+  'nhà cửa': 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=300&q=80',
+  'thú cưng': 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=300&q=80',
+  'sách': 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=300&q=80',
+  'trang sức': 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&q=80',
+};
+
+const resolveCategoryImage = (cat, index) => {
+  if (cat.imageUrl && (cat.imageUrl.startsWith('http') || cat.imageUrl.startsWith('/'))) {
+    return cat.imageUrl;
+  }
+  if (cat.imageKey && (cat.imageKey.startsWith('http') || cat.imageKey.startsWith('/'))) {
+    return cat.imageKey;
+  }
+  if (cat.image && (cat.image.startsWith('http') || cat.image.startsWith('/'))) {
+    return cat.image;
+  }
+
+  try {
+    const store = JSON.parse(localStorage.getItem('cat_images_store') || '{}');
+    const localSaved = store[cat.categoryId || cat.id] || store[cat.name];
+    if (localSaved && (localSaved.startsWith('http') || localSaved.startsWith('data:') || localSaved.startsWith('/'))) {
+      return localSaved;
+    }
+  } catch {
+    // ignore
+  }
+
+  const lowerName = String(cat.name || '').toLowerCase();
+  for (const [key, url] of Object.entries(CATEGORY_IMAGE_BY_NAME)) {
+    if (lowerName.includes(key)) {
+      return url;
+    }
+  }
+
+  return CATEGORY_ICONS[index % CATEGORY_ICONS.length];
+};
+
 /**
- * Cây danh mục public — GET /categories (qua categoryService)
+ * Cây danh mục public — GET /api/v1/categories (Real API, 100% không dùng mock)
  */
 export async function getCategoryTree(params = {}) {
-  const res = await fetchCategories(params);
-  if (!res.ok) return [];
-  return res.items.map((cat, index) => mapCategoryItem({ id: cat.id, name: cat.name }, index));
+  try {
+    const { data } = await api.get('/categories', {
+      params: { view: 'tree', includeInactive: false, pageSize: 100, ...params },
+      skipErrorRedirect: true,
+    });
+    const payload = unwrapData(data) || data?.data || data;
+    const rawItems = payload?.tree || payload?.items || (Array.isArray(payload) ? payload : []);
+
+    return rawItems.map((cat, index) => {
+      const id = cat.categoryId || cat.id;
+      const name = cat.name || cat.categoryName || 'Danh mục';
+      return {
+        id,
+        categoryId: id,
+        name,
+        icon: resolveCategoryImage(cat, index),
+        slug: cat.slug || '',
+      };
+    });
+  } catch (err) {
+    console.error('Failed to load categories from API:', err);
+    return [];
+  }
 }
 
 export function mapCategoryItem(cat, index = 0) {
   return {
-    id: cat.id,
+    id: cat.id || cat.categoryId,
     name: cat.name || cat.categoryName || 'Danh mục',
     icon: cat.icon?.startsWith?.('/') || cat.icon?.startsWith?.('http')
       ? cat.icon
@@ -42,15 +115,19 @@ export function mapProductListItem(item) {
     ? firstImage
     : firstImage?.url || firstImage?.imageUrl;
 
+  const finalImage = item.imageUrl || item.primaryImageUrl || item.coverImageUrl || item.image || imageUrl || DEFAULT_PRODUCT_IMAGE;
+  const finalTitle = item.productName || item.name || item.title || 'Sản phẩm E-Commerce';
+  const priceVal = item.price ?? item.minPrice ?? item.unitPrice ?? item.skuMinPrice ?? item.skus?.[0]?.price ?? 0;
+
   return {
     id: item.id ?? item.productId,
-    image: item.imageUrl ?? item.coverImageUrl ?? item.image ?? imageUrl ?? DEFAULT_PRODUCT_IMAGE,
-    title: item.name ?? item.title ?? 'Sản phẩm',
-    price: item.price ?? item.minPrice ?? item.skuMinPrice ?? item.skus?.[0]?.price ?? 0,
+    image: finalImage,
+    title: finalTitle,
+    price: Number(priceVal) || 0,
     discountPercent: item.discountPercent ?? item.discount ?? null,
     soldCount: formatSoldCount(item.soldCount ?? item.sold ?? item.totalSold),
     tags: Array.isArray(item.tags) ? item.tags : [],
-    rating: item.rating ?? item.averageRating ?? null,
+    rating: item.rating ?? item.averageRating ?? 5.0,
   };
 }
 

@@ -21,10 +21,12 @@ import {
   mockProducts, mockAuctions, mockCategories, mockBrands, mockInventory,
   mockSellerWarehouses, STATUS_OPTIONS,
 } from "../../../data/adminEntities";
-import { getCategories, createCategory, updateCategory, deleteCategory } from "../../../services/adminCategoryService";
+import { getCategories, createCategory, updateCategory, deleteCategory, saveCategoryImage } from "../../../services/adminCategoryService";
 import {
   getAdminProducts,
+  getAdminProductReviewDetail,
   approveAdminProduct,
+  requestProductChanges,
   rejectAdminProduct,
   getApiErrorMessage,
 } from "../../../services/adminProductService";
@@ -84,16 +86,33 @@ export const AdminProducts = () => {
 
   const isPendingReview = (status) => {
     const normalized = String(status || "").toLowerCase();
-    return normalized.includes("chờ") || normalized.includes("pending") || normalized.includes("review");
+    return (
+      normalized.includes("chờ") ||
+      normalized.includes("pending") ||
+      normalized.includes("review") ||
+      normalized.includes("submit")
+    );
+  };
+
+  const isApprovedStatus = (status) => {
+    const normalized = String(status || "").toLowerCase();
+    return normalized === "active" || normalized === "hoạt động" || normalized === "approved";
   };
 
   const handleApprove = async (row) => {
     try {
       await approveAdminProduct(row.id);
       list.updateItem(row.id, { status: "Hoạt động" });
-      toast.success("Đã duyệt sản phẩm");
+      toast.success("🎉 Đã duyệt sản phẩm thành công! Sản phẩm đã xuất hiện ngoài Trang chủ.");
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Duyệt sản phẩm thất bại"));
+      const errorMsg = getApiErrorMessage(err);
+      if (err?.response?.status === 409 || errorMsg.includes("pending manual review")) {
+        toast.warning("⚠️ Sản phẩm đang ở dạng 'Bản nháp' (DRAFT). Người bán (Seller) cần bấm 'Gửi duyệt' trước khi Admin duyệt.");
+      } else if (err?.response?.status === 404 || errorMsg.includes("Submission version not found")) {
+        toast.warning("⚠️ Chưa tìm thấy bản nộp duyệt. Vui lòng yêu cầu Seller nộp duyệt lại sản phẩm.");
+      } else {
+        toast.error(errorMsg || "Duyệt sản phẩm thất bại");
+      }
     }
   };
 
@@ -103,7 +122,8 @@ export const AdminProducts = () => {
       list.updateItem(row.id, { status: "Từ chối" });
       toast.success("Đã từ chối sản phẩm");
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Từ chối sản phẩm thất bại"));
+      const errorMsg = getApiErrorMessage(err);
+      toast.error(errorMsg || "Từ chối sản phẩm thất bại");
     }
   };
 
@@ -132,7 +152,7 @@ export const AdminProducts = () => {
           { label: "Đang trưng bày", value: platformStats.displayed, hint: "status Hoạt động" },
           { label: "Trong kho", value: platformStats.inStock.toLocaleString("vi-VN"), hint: "tổng số lượng tồn" },
           { label: "Seller", value: sellers.length, hint: "shop đang có SP" },
-          { label: "Chờ duyệt", value: list.filtered.filter((p) => p.status === "Chờ duyệt").length, warn: true },
+          { label: "Chờ duyệt", value: list.filtered.filter((p) => isPendingReview(p.status)).length, warn: true },
         ],
       }
     : {
@@ -146,14 +166,23 @@ export const AdminProducts = () => {
             { label: "SKU", value: visibleProducts.length, highlight: true },
             { label: "Đang trưng bày", value: s.displayed },
             { label: "Trong kho", value: s.inStock.toLocaleString("vi-VN") },
-            { label: "Chờ duyệt", value: visibleProducts.filter((p) => p.status === "Chờ duyệt").length, warn: true },
+            { label: "Chờ duyệt", value: visibleProducts.filter((p) => isPendingReview(p.status)).length, warn: true },
           ];
         })(),
       };
 
+  const handleViewDetail = async (p) => {
+    try {
+      const detailData = await getAdminProductReviewDetail(p.id || p.productId);
+      setDetail(detailData || p);
+    } catch {
+      setDetail(p);
+    }
+  };
+
   const productActions = (p) => [
-    { label: "Xem", variant: "primary", onClick: () => setDetail(p) },
-    ...(isPendingReview(p.status) ? [
+    { label: "Xem", variant: "primary", onClick: () => handleViewDetail(p) },
+    ...(isPendingReview(p.status) || p.status === "Bản nháp" || p.status === "DRAFT" ? [
       { label: "Duyệt", variant: "success", onClick: () => handleApprove(p) },
       { label: "Từ chối", variant: "danger", onClick: () => handleReject(p) },
     ] : []),
@@ -394,18 +423,20 @@ export const AdminAuctionProducts = () => {
       {viewMode === "grid" ? (
         <div className="adm-auction-grid">
           {displayedList.map((a) => {
-            const isPending = a.status === "Chờ duyệt đề xuất";
-            const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
+            const statusStr = String(a.status || "").toLowerCase();
+            const isPending = statusStr.includes("chờ") || statusStr.includes("pending");
+            const isLive = statusStr.includes("diễn ra") || statusStr.includes("kết thúc") || statusStr.includes("live");
+
             const actions = [
               { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
+              { label: "🔴 Xem live", variant: "success", onClick: () => window.open(`/auction/detail/${a.id || 1}?from=admin`, '_blank') },
               ...(isPending ? [
                 { label: "✅ Duyệt đề xuất", variant: "success", onClick: () => handleApproveProposal(a) },
                 { label: "🚀 Xuất bản sảnh", variant: "primary", onClick: () => handlePublish(a) },
                 { label: "❌ Từ chối", variant: "danger", onClick: () => handleRejectProposal(a) },
               ] : []),
               ...(isLive ? [
-                { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
-                { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
+                { label: `${a.bids || 0} bid`, onClick: () => toast.info("Xem lịch sử bid") },
                 { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
                 { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
                 { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
@@ -424,18 +455,20 @@ export const AdminAuctionProducts = () => {
       ) : (
         <div className="adm-list-container">
           {displayedList.map((a) => {
-            const isPending = a.status === "Chờ duyệt đề xuất";
-            const isLive = a.status === "Đang diễn ra" || a.status === "Sắp kết thúc";
+            const statusStr = String(a.status || "").toLowerCase();
+            const isPending = statusStr.includes("chờ") || statusStr.includes("pending");
+            const isLive = statusStr.includes("diễn ra") || statusStr.includes("kết thúc") || statusStr.includes("live");
+
             const actions = [
               { label: "Chi tiết", variant: "primary", onClick: () => setDetail(a) },
+              { label: "🔴 Xem live", variant: "success", onClick: () => window.open(`/auction/detail/${a.id || 1}?from=admin`, '_blank') },
               ...(isPending ? [
                 { label: "✅ Duyệt đề xuất", variant: "success", onClick: () => handleApproveProposal(a) },
                 { label: "🚀 Xuất bản sảnh", variant: "primary", onClick: () => handlePublish(a) },
                 { label: "❌ Từ chối", variant: "danger", onClick: () => handleRejectProposal(a) },
               ] : []),
               ...(isLive ? [
-                { label: "👁️ Xem live", variant: "success", onClick: () => navigate(`/auction/detail/1?from=admin`) },
-                { label: `${a.bids} bid`, onClick: () => toast.info("Xem lịch sử bid") },
+                { label: `${a.bids || 0} bid`, onClick: () => toast.info("Xem lịch sử bid") },
                 { label: "Dừng", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã dừng" }); toast.warning("Đã dừng phiên"); } },
                 { label: "Gia hạn", onClick: () => toast.success("Đã gia hạn 2 giờ") },
                 { label: "Hủy", variant: "danger", onClick: () => { list.updateItem(a.id, { status: "Đã hủy" }); toast.error("Đã hủy"); } },
@@ -569,11 +602,17 @@ export const AdminCategories = () => {
   // ── Save ───────────────────────────────────────────────────────
   const save = async () => {
     try {
+      const imgUrl = form.imageUrl || form.image || "";
+      if (imgUrl) {
+        if (form.name) saveCategoryImage(form.name, imgUrl);
+        if (form.id) saveCategoryImage(form.id, imgUrl);
+      }
+
       if (modal === "add-parent") {
         await createCategory({
           name: form.name,
           description: form.description || "",
-          imageUrl: form.imageUrl || form.image || "",
+          imageUrl: imgUrl,
           isActive: form.status === "Hoạt động",
           parentCategoryId: null,
         });
@@ -581,7 +620,7 @@ export const AdminCategories = () => {
         await updateCategory(form.id, {
           name: form.name,
           description: form.description || "",
-          imageUrl: form.imageUrl || form.image || "",
+          imageUrl: imgUrl,
           isActive: form.status === "Hoạt động",
           parentCategoryId: null,
           rowVersion: form.rowVersion,
@@ -592,7 +631,7 @@ export const AdminCategories = () => {
         await createCategory({
           name: form.name,
           description: form.description || "",
-          imageUrl: form.imageUrl || form.image || "",
+          imageUrl: imgUrl,
           isActive: form.status === "Hoạt động",
           parentCategoryId: parent.categoryId || parent.id,
         });
@@ -602,7 +641,7 @@ export const AdminCategories = () => {
         await updateCategory(form.id, {
           name: form.name,
           description: form.description || "",
-          imageUrl: form.imageUrl || form.image || "",
+          imageUrl: imgUrl,
           isActive: form.status === "Hoạt động",
           parentCategoryId: parent.categoryId || parent.id,
           rowVersion: form.rowVersion,
@@ -737,7 +776,7 @@ export const AdminCategories = () => {
               <input
                 value={form.imageUrl || form.image || ""}
                 onChange={(e) => setForm({ ...form, imageUrl: e.target.value, image: e.target.value })}
-                placeholder="Nhập URL hình ảnh (https://...) hoặc chọn tệp tải ảnh..."
+                placeholder="Chọn hình ảnh cho danh mục"
                 style={{
                   flex: 1,
                   padding: '9px 12px',

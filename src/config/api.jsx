@@ -153,8 +153,18 @@ api.interceptors.response.use(
       }
     }
 
+    if (originalRequest?.skipErrorRedirect) {
+      return Promise.reject(error);
+    }
+
     if (status === 401) {
-      handleUnauthorized();
+      const isPublicPath =
+        originalRequest?.url?.includes('/categories') ||
+        originalRequest?.url?.includes('/products') ||
+        originalRequest?.url?.includes('/ecommerce');
+      if (!isPublicPath) {
+        handleUnauthorized();
+      }
     } else if (status && originalRequest) {
       redirectToHttpErrorPage(status, originalRequest);
     }
