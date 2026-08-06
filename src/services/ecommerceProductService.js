@@ -84,10 +84,12 @@ export async function getProducts(filters = {}) {
     // ignore
   }
 
-  // 2. Gọi API Public dự phòng GET /api/v1/products
+  // 2. Fallback GET /api/v1/products (giới hạn pageSize ≤ 20 tránh 400)
   try {
+    const safeParams = { ...params };
+    if (!safeParams.pageSize || safeParams.pageSize > 20) safeParams.pageSize = 20;
     const { data } = await api.get('/products', {
-      params: { pageSize: 100, ...params },
+      params: safeParams,
       ...buyerRequestConfig,
     });
     const paged = unwrapPagedList(data);
@@ -101,8 +103,8 @@ export async function getProducts(filters = {}) {
         pageSize: paged.pageSize ?? params.pageSize ?? 20,
       };
     }
-  } catch {
-    // ignore
+  } catch (err) {
+    logDevError('GET /products fallback', err);
   }
 
   return {

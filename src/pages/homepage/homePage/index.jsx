@@ -10,7 +10,7 @@ import { getProducts } from '../../../services/ecommerceProductService';
 import { useProductNavigate } from '../../../hooks/useProductNavigate';
 import './index.scss';
 
-const INITIAL_PAGE_SIZE = 48;
+const INITIAL_PAGE_SIZE = 24;
 const LOAD_MORE_SIZE = 12;
 
 export default function HomePage() {
