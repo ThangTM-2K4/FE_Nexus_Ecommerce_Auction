@@ -461,50 +461,104 @@
   }
 }
 
-/* Batch Apply Bar */
+/* BATCH APPLY BAR - Ultra-Modern Layout */
 .slr-cp__batch-bar {
   margin: 22px 0;
-  padding: 18px 22px;
-  background: linear-gradient(135deg, #f7f3fb 0%, #ede5f7 100%);
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #f7f3fc 0%, #ede5f7 100%);
   border: 1px solid rgba(107, 59, 167, 0.2);
-  border-radius: $radius-md;
+  border-radius: 12px;
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 4px 14px rgba(107, 59, 167, 0.05);
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  box-shadow: 0 4px 16px rgba(107, 59, 167, 0.06);
 
   .slr-cp__batch-title {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 700;
     color: $color-primary-dark;
     display: flex;
     align-items: center;
     gap: 8px;
+
+    .slr-cp__batch-icon {
+      color: $color-primary;
+      font-size: 15px;
+    }
   }
 
   .slr-cp__batch-inputs {
     display: flex;
     align-items: center;
     gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .slr-cp__batch-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .slr-cp__batch-currency {
+      position: absolute;
+      left: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      color: $color-primary;
+      pointer-events: none;
+      z-index: 2;
+    }
 
     input {
-      width: 220px !important;
+      width: 190px !important;
       height: 42px !important;
+      padding-left: 32px !important;
+      padding-right: 14px !important;
       font-size: 13px !important;
-      border: 1px solid rgba(107, 59, 167, 0.25) !important;
+      font-weight: 600 !important;
+      border: 1px solid rgba(107, 59, 167, 0.22) !important;
+      border-radius: 8px !important;
       background: #ffffff !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+      transition: $transition-fast !important;
 
       &:focus {
         border-color: $color-primary !important;
-        box-shadow: 0 0 0 3px rgba(107, 59, 167, 0.15) !important;
+        box-shadow: 0 0 0 3px rgba(107, 59, 167, 0.14) !important;
+        outline: none !important;
       }
     }
 
-    .slr-btn-create {
-      height: 42px;
-      padding: 0 22px;
-      font-size: 13px;
-      border-radius: $radius-sm;
+    /* Input without currency prefix (Kho hàng) */
+    &:nth-child(2) input {
+      padding-left: 14px !important;
+    }
+  }
+
+  .slr-cp__batch-btn {
+    height: 42px;
+    padding: 0 24px;
+    background: linear-gradient(135deg, #6b3ba7 0%, #523f77 100%);
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(107, 59, 167, 0.28);
+    transition: $transition-fast;
+    white-space: nowrap;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(107, 59, 167, 0.38);
+      background: linear-gradient(135deg, #7842ba 0%, #5b4685 100%);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 }

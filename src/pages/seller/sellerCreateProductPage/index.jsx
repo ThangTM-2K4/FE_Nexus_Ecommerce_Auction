@@ -1015,25 +1015,31 @@ export default function CreateProductPage() {
                       </div>
                     )}
 
-                    {/* BATCH APPLY BAR */}
+                    {/* BATCH APPLY BAR - Thiết kế Card ngang hiện đại */}
                     <div className="slr-cp__batch-bar">
                       <div className="slr-cp__batch-title">
-                        <FaBolt /> Áp dụng hàng loạt cho tất cả phân loại:
+                        <FaBolt className="slr-cp__batch-icon" />
+                        <span>Áp dụng hàng loạt cho tất cả phân loại:</span>
                       </div>
                       <div className="slr-cp__batch-inputs">
-                        <input
-                          type="number"
-                          placeholder="Giá bán chung (₫)..."
-                          value={batchPrice}
-                          onChange={(e) => setBatchPrice(e.target.value)}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Số lượng kho chung..."
-                          value={batchStock}
-                          onChange={(e) => setBatchStock(e.target.value)}
-                        />
-                        <button type="button" className="slr-btn-create" onClick={handleBatchApply}>
+                        <div className="slr-cp__batch-field">
+                          <span className="slr-cp__batch-currency">₫</span>
+                          <input
+                            type="number"
+                            placeholder="Giá bán chung..."
+                            value={batchPrice}
+                            onChange={(e) => setBatchPrice(e.target.value)}
+                          />
+                        </div>
+                        <div className="slr-cp__batch-field">
+                          <input
+                            type="number"
+                            placeholder="Số lượng kho chung..."
+                            value={batchStock}
+                            onChange={(e) => setBatchStock(e.target.value)}
+                          />
+                        </div>
+                        <button type="button" className="slr-cp__batch-btn" onClick={handleBatchApply}>
                           Áp dụng cho tất cả
                         </button>
                       </div>
