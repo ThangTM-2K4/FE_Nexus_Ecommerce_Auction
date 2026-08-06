@@ -73,7 +73,11 @@ export const calculateBuyerRank = (score) => {
 /** Chuẩn hoá response GET /reputation/me | /reputation/users/{id} */
 const normalizeApiReputation = (raw) => {
   if (!raw || typeof raw !== 'object') return null;
+  const sellerObj = raw.seller || raw.sellerProfile || {};
+  const buyerObj = raw.buyer || raw.buyerProfile || {};
+
   const score =
+    buyerObj.score ??
     raw.score ??
     raw.point ??
     raw.points ??
@@ -82,19 +86,33 @@ const normalizeApiReputation = (raw) => {
     raw.totalScore ??
     null;
   const rank =
+    buyerObj.rank ??
     raw.rank ??
     raw.tier ??
     raw.level ??
     raw.buyerRank ??
     null;
-  if (score == null && !rank) return null;
+
+  const sellerScore =
+    sellerObj.score ??
+    raw.sellerScore ??
+    raw.sellerPoint ??
+    null;
+  const sellerRank =
+    sellerObj.rank ??
+    raw.sellerRank ??
+    null;
+
   const numericScore = score != null ? Number(score) : 0;
+  const numericSellerScore = sellerScore != null ? Number(sellerScore) : null;
+
   return {
     score: numericScore,
     rank: rank || calculateBuyerRank(numericScore),
     totalSpent: raw.totalSpent ?? raw.spent ?? 0,
-    sellerScore: raw.sellerScore ?? raw.seller?.score ?? null,
-    sellerRank: raw.sellerRank ?? raw.seller?.rank ?? null,
+    sellerScore: numericSellerScore,
+    sellerRank: sellerRank || (numericSellerScore != null ? calculateSellerRank(numericSellerScore) : null),
+    raw,
   };
 };
 
@@ -102,6 +120,19 @@ const normalizeApiReputation = (raw) => {
 export const fetchMyReputation = async () => {
   const res = await api.get('/reputation/me', { skipErrorRedirect: true });
   return normalizeApiReputation(unwrap(res));
+};
+
+/** Lấy chính xác điểm Seller reputation score từ API /reputation/me */
+export const getSellerReputationScore = async () => {
+  try {
+    const rep = await fetchMyReputation();
+    if (rep?.sellerScore != null) {
+      return Number(rep.sellerScore);
+    }
+  } catch (err) {
+    console.warn('[reputationService] fetchMyReputation failed:', err);
+  }
+  return null;
 };
 
 /** GET /reputation/users/{userId} — điểm uy tín công khai */

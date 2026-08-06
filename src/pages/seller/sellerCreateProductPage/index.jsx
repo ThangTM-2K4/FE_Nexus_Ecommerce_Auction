@@ -12,7 +12,7 @@ import {
 } from "../../../services/ecommerceProductService";
 import { getCategories } from "../../../services/adminCategoryService";
 import * as shippingService from "../../../services/shippingService";
-import { getUserReputation, calculateSellerScore } from "../../../services/reputationService";
+import { getUserReputation, calculateSellerScore, fetchMyReputation, getSellerReputationScore } from "../../../services/reputationService";
 import { fileToDataUrl } from "../../../utils/fileToDataUrl";
 import { dataUrlToFile } from "../../../utils/dataUrlToFile";
 import Select from "../../../components/common/select";
@@ -145,18 +145,30 @@ export default function CreateProductPage() {
     });
   }, [user?.id]);
 
-  // Kiểm tra Seller Eligibility (20 điểm uy tín) khi mở trang
+  // Kiểm tra Seller Eligibility (tối thiểu 20 điểm uy tín người bán) khi mở trang
   useEffect(() => {
     const checkEligibility = async () => {
       try {
-        const rep = await getUserReputation();
-        const score = rep?.confirmedScore ?? rep?.score ?? 0;
-        const sellerCalc = calculateSellerScore ? calculateSellerScore(rep) : score;
-        const finalScore = sellerCalc?.total ?? sellerCalc ?? score;
+        // 1. Ưu tiên lấy điểm Seller trực tiếp từ API /reputation/me
+        const apiRep = await fetchMyReputation();
+        let sellerPoint = apiRep?.sellerScore;
+
+        if (sellerPoint == null) {
+          // 2. Fallback sang getUserReputation
+          const rep = await getUserReputation();
+          sellerPoint = rep?.sellerProfile?.score ?? rep?.sellerScore;
+        }
+
+        if (sellerPoint == null) {
+          // 3. Fallback mặc định
+          sellerPoint = 20; // Nếu không đọc được từ API thì cho phép tạo, BE sẽ re-check qua gRPC
+        }
+
+        const finalScore = Number(sellerPoint);
         setSellerScore(finalScore);
         setSellerEligible(finalScore >= 20);
       } catch {
-        // Nếu không lấy được điểm, cho phép tiếp tục (backend sẽ kiểm tra lại)
+        // Nếu API lỗi, cho phép tiếp tục (backend gRPC sẽ kiểm tra lại)
         setSellerEligible(true);
         setSellerScore(null);
       } finally {
