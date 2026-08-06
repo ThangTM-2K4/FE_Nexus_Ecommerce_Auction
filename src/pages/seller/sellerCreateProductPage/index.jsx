@@ -884,22 +884,22 @@ export default function CreateProductPage() {
                   /* SẢN PHẨM NHIỀU LOẠI (BẢNG GIÁ BÁN & KHO HÀNG - ĐÃ XÓA SKU) */
                   <div className="slr-cp__variation-section">
                     
-                    {/* Gợi ý mẫu phân loại */}
-                    <div className="slr-cp__row" style={{ paddingTop: 0 }}>
-                      <label className="slr-cp__row-label" style={{ color: "#6b3ba7" }}>Gợi ý mẫu phân loại</label>
-                      <div className="slr-cp__row-body">
-                        <div className="slr-cp__suggestion-pills">
-                          {categorySuggestions.map((sug, sIdx) => (
-                            <button
-                              key={sIdx}
-                              type="button"
-                              className="slr-cp__pill-btn"
-                              onClick={() => handleApplySuggestion(sug)}
-                            >
-                              <FaPlus style={{ fontSize: 10 }} /> {sug.label} ({sug.options.join(", ")})
-                            </button>
-                          ))}
-                        </div>
+                    {/* Gợi ý mẫu phân loại - Thiết kế Card khung bo góc hiện đại */}
+                    <div className="slr-cp__suggestion-card">
+                      <div className="slr-cp__suggestion-header">
+                        <span>✨ Gợi ý phân loại nhanh:</span>
+                      </div>
+                      <div className="slr-cp__suggestion-pills">
+                        {categorySuggestions.map((sug, sIdx) => (
+                          <button
+                            key={sIdx}
+                            type="button"
+                            className="slr-cp__pill-btn"
+                            onClick={() => handleApplySuggestion(sug)}
+                          >
+                            <FaPlus style={{ fontSize: 10 }} /> {sug.label} ({sug.options.join(", ")})
+                          </button>
+                        ))}
                       </div>
                     </div>
 
