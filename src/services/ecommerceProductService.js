@@ -215,7 +215,7 @@ export async function createEcommerceProduct(payload) {
   if (isDev) {
     console.info('[ecommerceProductService] POST /ecommerce/products payload', payload);
   }
-  const { data } = await api.post('/ecommerce/products', payload);
+  const { data } = await api.post('/ecommerce/products', payload, { skipErrorRedirect: true });
   const result = unwrapData(data);
   if (isDev) {
     console.info('[ecommerceProductService] POST /ecommerce/products response', result);
@@ -230,7 +230,7 @@ export async function createEcommerceProduct(payload) {
 export async function uploadProductImage(file) {
   const fd = new FormData();
   fd.append('file', file);
-  const response = await api.post('/catalog/uploads/product', fd, MULTIPART);
+  const response = await api.post('/catalog/uploads/product', fd, { ...MULTIPART, skipErrorRedirect: true });
   const url = extractUploadUrl(response);
   const key = normalizeUploadKey(extractUploadKey(response) || url);
   if (!url && !key) {
@@ -244,7 +244,7 @@ export async function uploadProductImage(file) {
  */
 export async function attachProductImage(productId, imageData, rowVersion) {
   const headers = { 'If-Match': rowVersion || '*' };
-  const { data } = await api.post(`/ecommerce/products/${productId}/images`, imageData, { headers });
+  const { data } = await api.post(`/ecommerce/products/${productId}/images`, imageData, { headers, skipErrorRedirect: true });
   return unwrapData(data);
 }
 
@@ -253,7 +253,7 @@ export async function attachProductImage(productId, imageData, rowVersion) {
  */
 export async function createProductSku(productId, skuData, rowVersion) {
   const headers = { 'If-Match': rowVersion || '*' };
-  const { data } = await api.post(`/ecommerce/products/${productId}/skus`, skuData, { headers });
+  const { data } = await api.post(`/ecommerce/products/${productId}/skus`, skuData, { headers, skipErrorRedirect: true });
   return unwrapData(data);
 }
 
@@ -300,6 +300,7 @@ export async function submitProductForReview(productId, rowVersion) {
           'X-Operation-Key': key,
           'X-Idempotency-Key': key,
         },
+        skipErrorRedirect: true,
       }
     );
 

@@ -11,7 +11,7 @@ function formatNow() {
   });
 }
 
-export default function SellerRealtimeClock({ label = "Cập nhật", inline = false, tickMs = 30000 }) {
+export default function SellerRealtimeClock({ label = "Cập nhật", inline = false, tickMs = 30000, onRefresh, showRefresh = true }) {
   const [displayDate, setDisplayDate] = useState(formatNow);
 
   useEffect(() => {
@@ -19,18 +19,23 @@ export default function SellerRealtimeClock({ label = "Cập nhật", inline = f
     return () => clearInterval(id);
   }, [tickMs]);
 
-  const refresh = () => setDisplayDate(formatNow());
+  const handleRefresh = () => {
+    setDisplayDate(formatNow());
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
 
-  const refreshBtn = (
+  const refreshBtn = showRefresh ? (
     <button
       type="button"
       className={`slr-date-refresh${inline ? " slr-date-refresh--sm" : ""}`}
-      onClick={refresh}
-      title="Làm mới thời gian"
+      onClick={handleRefresh}
+      title="Làm mới thời gian và dữ liệu"
     >
       {inline ? "⟳" : "⟳ Làm mới"}
     </button>
-  );
+  ) : null;
 
   return (
     <>

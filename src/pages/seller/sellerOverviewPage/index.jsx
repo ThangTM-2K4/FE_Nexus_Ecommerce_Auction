@@ -257,28 +257,7 @@ export default function OverviewPage() {
             <p>Theo dõi doanh thu, đơn hàng và khách hàng theo thời gian thực.</p>
           </div>
           <div className="slr-overview-hero__toolbar">
-            <SellerRealtimeClock label="Cập nhật" />
-            <button
-              type="button"
-              className="slr-btn-plain"
-              onClick={loadData}
-              disabled={refreshing}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                border: "1px solid rgba(255, 255, 255, 0.25)",
-                background: "rgba(255, 255, 255, 0.12)",
-                color: "#fff",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              {refreshing ? "↻ Đang tải..." : "↻ Làm mới"}
-            </button>
+            <SellerRealtimeClock label="Cập nhật" onRefresh={loadData} />
             <Link to="/seller-hub/products/create" className="slr-btn-create">
               + Tạo sản phẩm
             </Link>
