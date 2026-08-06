@@ -19,6 +19,12 @@ const resolveImageUrl = (img) => {
   return '';
 };
 
+/** Tạo UUID dùng cho operationKey / idempotencyKey */
+const generateKey = () =>
+  typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `key-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
 const mapAdminProductItem = (p) => {
   const priceText = p.minPrice === p.maxPrice
     ? `${Number(p.minPrice || p.price || 0).toLocaleString('vi-VN')} ₫`
@@ -92,7 +98,8 @@ const mapAdminProductItem = (p) => {
 };
 
 /**
- * 1. Lấy danh sách sản phẩm quản trị GET /api/v1/admin/products
+ * 1. Lấy danh sách sản phẩm quản trị
+ *    Chỉ gọi endpoint thực sự tồn tại: /admin/products/review-queue, /admin/products
  */
 export async function getAdminProducts(params = {}) {
   const map = new Map();
@@ -113,30 +120,27 @@ export async function getAdminProducts(params = {}) {
     // ignore
   }
 
-  // 2. Tải từ /staff/products và /admin/products
-  const listEndpoints = ['/staff/products', '/admin/products', '/staff/products/review-queue'];
-  for (const ep of listEndpoints) {
-    try {
-      const { data } = await api.get(ep, {
-        params: { pageSize: 100, ...params },
-        skipErrorRedirect: true,
-      });
-      const paged = unwrapPagedList(data);
-      const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
-      (Array.isArray(rawItems) ? rawItems : []).forEach(p => {
-        const mapped = mapAdminProductItem(p);
-        map.set(String(mapped.id).toLowerCase(), mapped);
-      });
-    } catch {
-      // ignore
-    }
+  // 2. Tải từ /admin/products (endpoint duy nhất tồn tại cho admin listing)
+  try {
+    const { data } = await api.get('/admin/products', {
+      params: { pageSize: 100, ...params },
+      skipErrorRedirect: true,
+    });
+    const paged = unwrapPagedList(data);
+    const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+    (Array.isArray(rawItems) ? rawItems : []).forEach(p => {
+      const mapped = mapAdminProductItem(p);
+      map.set(String(mapped.id).toLowerCase(), mapped);
+    });
+  } catch {
+    // ignore
   }
 
-  // 3. Fallback sang /products
+  // 3. Fallback sang /products nếu không lấy được gì
   if (map.size === 0) {
     try {
       const { data } = await api.get('/products', {
-        params: { pageSize: 100, ...params },
+        params: { pageSize: 100, salesChannel: 'ECOMMERCE', ...params },
         skipErrorRedirect: true,
       });
       const paged = unwrapPagedList(data);
@@ -204,19 +208,30 @@ export async function getAdminProductReviewDetail(productId) {
 
 /**
  * 4. Phê duyệt sản phẩm POST /api/v1/admin/products/{productId}/approve
+ *
+ * Backend ApproveModerationApiRequest yêu cầu:
+ *   submissionVersion (int), snapshotHash (string), reason? (string),
+ *   operationKey (string), idempotencyKey (string), callerPayloadHash? (string)
  */
 export async function approveAdminProduct(productId) {
-  // 1. Đảm bảo nộp duyệt trước (nếu sản phẩm đang ở DRAFT/CREATED)
+  // Bước 1: Đảm bảo nộp duyệt trước (nếu sản phẩm đang ở DRAFT/CREATED)
   try {
-    const key = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `key-${Date.now()}`;
+    const submitKey = generateKey();
     await api.post(`/ecommerce/products/${productId}/submit-review`, {
-      operationKey: key,
-      idempotencyKey: key,
-    }, { skipErrorRedirect: true });
+      operationKey: submitKey,
+      idempotencyKey: submitKey,
+    }, {
+      headers: {
+        'X-Operation-Key': submitKey,
+        'X-Idempotency-Key': submitKey,
+      },
+      skipErrorRedirect: true,
+    });
   } catch {
-    /* ignore */
+    /* ignore - sản phẩm có thể đã ở PENDING_MANUAL_REVIEW */
   }
 
+  // Bước 2: Lấy review-detail để có submissionVersion & snapshotHash chính xác
   let submissionVersion = 1;
   let snapshotHash = "";
   let rowVersion;
@@ -233,85 +248,123 @@ export async function approveAdminProduct(productId) {
     /* ignore */
   }
 
+  // Bước 3: Gửi approve đúng API contract — dùng "reason" (không phải "note")
+  const opKey = generateKey();
   const body = {
     submissionVersion: Number(submissionVersion) || 1,
     snapshotHash: String(snapshotHash || "0000000000000000000000000000000000000000000000000000000000000000"),
-    note: "Đã duyệt bởi Admin/Staff",
+    reason: "Đã duyệt bởi Admin/Staff",
+    operationKey: opKey,
+    idempotencyKey: opKey,
   };
 
   if (rowVersion) {
     body.rowVersion = rowVersion;
   }
 
-  try {
-    const { data } = await api.post(`/staff/products/${productId}/approve`, body, { skipErrorRedirect: true });
-    return unwrapData(data);
-  } catch {
-    /* ignore */
-  }
-
-  try {
-    const { data } = await api.post(`/admin/products/${productId}/approve`, body, { skipErrorRedirect: true });
-    return unwrapData(data);
-  } catch {
-    /* ignore */
-  }
-
-  try {
-    const { data: patchData } = await api.patch(`/ecommerce/products/${productId}/status`, { status: 'ACTIVE' }, { skipErrorRedirect: true });
-    return unwrapData(patchData);
-  } catch {
-    /* ignore */
-  }
-
-  return { id: productId, status: 'APPROVED', moderationStatus: 'APPROVED' };
+  // Gọi endpoint đúng: /admin/products/{id}/approve (KHÔNG gọi /staff/products — không tồn tại)
+  const { data } = await api.post(`/admin/products/${productId}/approve`, body, {
+    headers: {
+      'X-Operation-Key': opKey,
+      'X-Idempotency-Key': opKey,
+    },
+    skipErrorRedirect: true,
+  });
+  return unwrapData(data);
 }
 
 /**
  * 5. Yêu cầu sửa đổi sản phẩm POST /api/v1/admin/products/{productId}/request-changes
+ *
+ * Backend ModerationActionApiRequest yêu cầu:
+ *   submissionVersion (int), snapshotHash (string), reason (string),
+ *   operationKey (string), idempotencyKey (string)
  */
 export async function requestProductChanges(productId, feedback) {
+  let submissionVersion = 1;
+  let snapshotHash = "";
+  let rowVersion;
+
   try {
-    const { data } = await api.post(`/admin/products/${productId}/request-changes`, { feedback }, { skipErrorRedirect: true });
-    return unwrapData(data);
+    const detail = await getAdminProductReviewDetail(productId);
+    const detailData = unwrapData(detail) || detail;
+    if (detailData) {
+      if (detailData.submissionVersion) submissionVersion = Number(detailData.submissionVersion) || 1;
+      snapshotHash = detailData.snapshotHash || detailData.productSnapshotHash || "";
+      if (detailData.rowVersion) rowVersion = detailData.rowVersion;
+    }
   } catch {
-    return { id: productId, status: "CHANGES_REQUESTED", feedback };
+    /* ignore */
   }
+
+  const opKey = generateKey();
+  const body = {
+    submissionVersion: Number(submissionVersion) || 1,
+    snapshotHash: String(snapshotHash || "0000000000000000000000000000000000000000000000000000000000000000"),
+    reason: feedback || "Yêu cầu chỉnh sửa bởi Admin/Staff",
+    operationKey: opKey,
+    idempotencyKey: opKey,
+  };
+
+  if (rowVersion) {
+    body.rowVersion = rowVersion;
+  }
+
+  const { data } = await api.post(`/admin/products/${productId}/request-changes`, body, {
+    headers: {
+      'X-Operation-Key': opKey,
+      'X-Idempotency-Key': opKey,
+    },
+    skipErrorRedirect: true,
+  });
+  return unwrapData(data);
 }
 
 /**
- * 6. Từ chối sản phẩm — Hỗ trợ cả Staff và Admin API
+ * 6. Từ chối sản phẩm POST /api/v1/admin/products/{productId}/reject
+ *
+ * Backend ModerationActionApiRequest yêu cầu:
+ *   submissionVersion (int), snapshotHash (string), reason (string),
+ *   operationKey (string), idempotencyKey (string)
  */
 export async function rejectAdminProduct(productId, reason) {
-  const body = { reason: reason || "Bị từ chối bởi Staff/Admin" };
+  // Lấy review-detail để có submissionVersion & snapshotHash chính xác
+  let submissionVersion = 1;
+  let snapshotHash = "";
+  let rowVersion;
 
   try {
-    const { data } = await api.post(`/staff/products/${productId}/reject`, body, { skipErrorRedirect: true });
-    return unwrapData(data);
+    const detail = await getAdminProductReviewDetail(productId);
+    const detailData = unwrapData(detail) || detail;
+    if (detailData) {
+      if (detailData.submissionVersion) submissionVersion = Number(detailData.submissionVersion) || 1;
+      snapshotHash = detailData.snapshotHash || detailData.productSnapshotHash || "";
+      if (detailData.rowVersion) rowVersion = detailData.rowVersion;
+    }
   } catch {
     /* ignore */
   }
 
-  try {
-    const { data } = await api.post(`/admin/products/${productId}/reject`, body, { skipErrorRedirect: true });
-    return unwrapData(data);
-  } catch {
-    /* ignore */
+  const opKey = generateKey();
+  const body = {
+    submissionVersion: Number(submissionVersion) || 1,
+    snapshotHash: String(snapshotHash || "0000000000000000000000000000000000000000000000000000000000000000"),
+    reason: reason || "Bị từ chối bởi Staff/Admin",
+    operationKey: opKey,
+    idempotencyKey: opKey,
+  };
+
+  if (rowVersion) {
+    body.rowVersion = rowVersion;
   }
 
-  try {
-    const { data } = await api.post(`/ecommerce/products/${productId}/reject`, body, { skipErrorRedirect: true });
-    return unwrapData(data);
-  } catch {
-    /* ignore */
-  }
-
-  try {
-    const { data: patchData } = await api.patch(`/ecommerce/products/${productId}/status`, {
-      status: 'REJECTED',
-    }, { skipErrorRedirect: true });
-    return unwrapData(patchData);
-  } catch {
-    return { id: productId, status: "REJECTED", reason };
-  }
+  // Gọi endpoint đúng: /admin/products/{id}/reject (KHÔNG gọi /staff/products — không tồn tại)
+  const { data } = await api.post(`/admin/products/${productId}/reject`, body, {
+    headers: {
+      'X-Operation-Key': opKey,
+      'X-Idempotency-Key': opKey,
+    },
+    skipErrorRedirect: true,
+  });
+  return unwrapData(data);
 }

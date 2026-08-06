@@ -12,6 +12,7 @@ import {
 } from "../../../services/ecommerceProductService";
 import { getCategories } from "../../../services/adminCategoryService";
 import * as shippingService from "../../../services/shippingService";
+import { getUserReputation, calculateSellerScore } from "../../../services/reputationService";
 import { fileToDataUrl } from "../../../utils/fileToDataUrl";
 import { dataUrlToFile } from "../../../utils/dataUrlToFile";
 import Select from "../../../components/common/select";
@@ -70,6 +71,9 @@ export default function CreateProductPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitStep, setSubmitStep] = useState("");
   const [draftProductId, setDraftProductId] = useState(null);
+  const [sellerEligible, setSellerEligible] = useState(true);
+  const [sellerScore, setSellerScore] = useState(null);
+  const [eligibilityChecking, setEligibilityChecking] = useState(true);
   const [shippingOptions, setShippingOptions] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(true);
@@ -140,6 +144,27 @@ export default function CreateProductPage() {
       setShippingLoading(false);
     });
   }, [user?.id]);
+
+  // Kiểm tra Seller Eligibility (20 điểm uy tín) khi mở trang
+  useEffect(() => {
+    const checkEligibility = async () => {
+      try {
+        const rep = await getUserReputation();
+        const score = rep?.confirmedScore ?? rep?.score ?? 0;
+        const sellerCalc = calculateSellerScore ? calculateSellerScore(rep) : score;
+        const finalScore = sellerCalc?.total ?? sellerCalc ?? score;
+        setSellerScore(finalScore);
+        setSellerEligible(finalScore >= 20);
+      } catch {
+        // Nếu không lấy được điểm, cho phép tiếp tục (backend sẽ kiểm tra lại)
+        setSellerEligible(true);
+        setSellerScore(null);
+      } finally {
+        setEligibilityChecking(false);
+      }
+    };
+    checkEligibility();
+  }, []);
 
   const getCategoryTypeKey = () => {
     const selectedObj = categoryOptions.find((c) => c.value === form.category);
@@ -543,13 +568,17 @@ export default function CreateProductPage() {
         for (let i = 0; i < imagesToUpload.length; i += 1) {
           try {
             const img = imagesToUpload[i];
-            await attachProductImage(productId, {
+            const attachResult = await attachProductImage(productId, {
               imageKey: img.storageObjectKey,
               imageUrl: img.imageUrl,
               isCover: img.isPrimary,
               isPrimary: img.isPrimary,
               sortOrder: img.sortOrder,
             }, rowVersion);
+            // Cập nhật rowVersion sau mỗi lần gắn ảnh để tránh 412 Precondition Failed
+            if (attachResult?.rowVersion) {
+              rowVersion = attachResult.rowVersion;
+            }
           } catch (imgErr) {
             console.warn("Upload image warning:", imgErr);
           }
@@ -613,6 +642,58 @@ export default function CreateProductPage() {
       setSubmitStep("");
     }
   };
+
+  if (eligibilityChecking) {
+    return (
+      <div className="slr-page slr-create-product">
+        <div style={{ padding: "40px 20px", textAlign: "center", color: "#888" }}>
+          Đang kiểm tra điều kiện bán hàng...
+        </div>
+      </div>
+    );
+  }
+
+  if (!sellerEligible) {
+    return (
+      <div className="slr-page slr-create-product">
+        <div style={{
+          maxWidth: 600,
+          margin: "60px auto",
+          padding: "32px",
+          background: "linear-gradient(135deg, #fff5f5, #ffe0e0)",
+          borderRadius: 16,
+          border: "1px solid #ffa0a0",
+          textAlign: "center",
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+          <h2 style={{ color: "#d32f2f", marginBottom: 12, fontSize: 20 }}>
+            Chưa đủ điều kiện tạo sản phẩm
+          </h2>
+          <p style={{ color: "#666", marginBottom: 16, lineHeight: 1.6 }}>
+            Bạn cần tối thiểu <strong>20 điểm uy tín</strong> để tạo sản phẩm trên sàn.
+            Điểm hiện tại của bạn: <strong style={{ color: "#d32f2f" }}>{sellerScore ?? 0} điểm</strong>.
+          </p>
+          <p style={{ color: "#888", fontSize: 14, marginBottom: 24 }}>
+            Hãy hoàn thiện hồ sơ shop, xác minh danh tính, và tham gia hoạt động trên sàn để tích lũy điểm uy tín.
+          </p>
+          <Link
+            to="/seller-hub/shop-rating"
+            style={{
+              display: "inline-block",
+              padding: "12px 32px",
+              background: "linear-gradient(135deg, #ff6b35, #f7c948)",
+              color: "#fff",
+              borderRadius: 8,
+              textDecoration: "none",
+              fontWeight: 600,
+            }}
+          >
+            Xem điểm uy tín
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="slr-page slr-create-product">
