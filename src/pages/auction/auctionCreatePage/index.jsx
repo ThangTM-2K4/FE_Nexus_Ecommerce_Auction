@@ -13,8 +13,7 @@ import {
 import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
-import { createAuctionProposal } from "../../../services/auctionProposalService";
-import { createAuction } from "../../../services/auctionService";
+import { createAuctionApplication } from "../../../services/auctionProposalService";
 import { getCategories } from "../../../services/adminCategoryService";
 import Select from "../../../components/common/select";
 import { auctionImages } from "../../../data/auctionImages";
@@ -62,7 +61,9 @@ export default function AuctionCreatePage() {
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState(initialForm);
   const [previews, setPreviews] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [documentFiles, setDocumentFiles] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -76,44 +77,49 @@ export default function AuctionCreatePage() {
       toast.error("Tối đa 5 ảnh sản phẩm");
       return;
     }
-
     const newPreviews = files.map((file) => ({
       id: `${file.name}-${Date.now()}`,
       url: URL.createObjectURL(file),
       name: file.name,
+      file,
     }));
-
     setPreviews((prev) => [...prev, ...newPreviews]);
+    setImageFiles((prev) => [...prev, ...files]);
   };
 
   const removeImage = (id) => {
-    setPreviews((prev) => {
-      const target = prev.find((p) => p.id === id);
-      if (target) URL.revokeObjectURL(target.url);
-      return prev.filter((p) => p.id !== id);
+    const target = previews.find((p) => p.id === id);
+    if (target) URL.revokeObjectURL(target.url);
+    setPreviews((prev) => prev.filter((p) => p.id !== id));
+    setImageFiles((prev) => {
+      const idx = previews.findIndex((p) => p.id === id);
+      return prev.filter((_, i) => i !== idx);
     });
   };
 
   const handleDocumentChange = (e) => {
     const files = Array.from(e.target.files || []);
     const availableSlots = 3 - documents.length;
-
     if (files.length > availableSlots) {
       toast.error("Tối đa 3 giấy tờ liên quan");
     }
-
+    const slicedFiles = files.slice(0, Math.max(0, availableSlots));
     setDocuments((prev) => [
       ...prev,
-      ...files.slice(0, Math.max(0, availableSlots)).map((file) => ({
+      ...slicedFiles.map((file) => ({
         id: [file.name, Date.now(), Math.random().toString(16).slice(2)].join("-"),
         name: file.name,
+        file,
       })),
     ]);
+    setDocumentFiles((prev) => [...prev, ...slicedFiles]);
     e.target.value = "";
   };
 
   const removeDocument = (id) => {
+    const idx = documents.findIndex((d) => d.id === id);
     setDocuments((prev) => prev.filter((document) => document.id !== id));
+    setDocumentFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const validateForm = () => {
@@ -156,46 +162,38 @@ export default function AuctionCreatePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
       toast.error("Vui lòng kiểm tra lại thông tin");
       return;
     }
-
     try {
       setLoading(true);
-      const newProposal = {
-        id: `DX-${Date.now().toString().slice(-4)}`,
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        startingPrice: Number(formData.startPrice) || 0,
-        bidIncrement: Number(formData.bidIncrement) || 500000,
-        depositAmount: Number(formData.reservePrice || 1000000),
-        startTime: formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString(),
-        endTime: formData.endDate ? new Date(formData.endDate).toISOString() : new Date(Date.now() + 86400000 * 3).toISOString(),
-        categoryName: formData.category || "Đồng hồ",
-        image: previews[0]?.url || "/images/auction/default.png",
-        status: { label: "Chờ duyệt", type: "upcoming", color: "orange" },
-        createdAt: new Date().toISOString(),
-      };
 
-      try {
-        await createAuctionProposal({
-          title: newProposal.title,
-          description: newProposal.description,
-          startingPrice: newProposal.startingPrice,
-          bidIncrement: newProposal.bidIncrement,
-          depositAmount: newProposal.depositAmount,
-        });
-      } catch {}
+      // Xây dựng multipart/form-data đúng spec API
+      const fd = new FormData();
+      fd.append('productName', formData.title.trim());
+      fd.append('description', formData.description.trim());
+      fd.append('condition', formData.condition || 'GOOD');
+      fd.append('categoryId', formData.category || '');
+      fd.append('brand', formData.brand.trim());
+      fd.append('startingPrice', String(Number(formData.startPrice) || 0));
+      fd.append('bidIncrement', String(Number(formData.bidIncrement) || 500000));
+      fd.append('depositAmount', String(Number(formData.reservePrice) || 1000000));
+      if (formData.startDate) fd.append('scheduledStartUtc', new Date(formData.startDate).toISOString());
+      if (formData.endDate) fd.append('scheduledEndUtc', new Date(formData.endDate).toISOString());
 
-      const existing = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
-      localStorage.setItem("auc_my_proposals", JSON.stringify([newProposal, ...existing]));
+      // Append ảnh thật
+      imageFiles.forEach((file) => fd.append('images', file));
+      // Append tài liệu thật
+      documentFiles.forEach((file) => fd.append('documents', file));
 
-      toast.success("🎉 Đã gửi đề xuất phiên đấu giá thành công! Đang chờ Admin duyệt.");
-      setTimeout(() => navigate("/auction/seller"), 800);
-    } catch {
-      toast.error("Tạo đề xuất thất bại. Vui lòng thử lại!");
+      await createAuctionApplication(fd);
+
+      toast.success("🎉 Đã gửi hồ sơ đấu giá thành công! Đang chờ Admin duyệt.");
+      setTimeout(() => navigate('/auction/seller'), 800);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Tạo đề xuất thất bại. Vui lòng thử lại!";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

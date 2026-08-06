@@ -281,9 +281,6 @@ function RegisterPage() {
                       onChange={handleChange}
                       className={errors.password ? "input-error" : ""}
                     />
-                    <span className="input-icon input-icon--left" aria-hidden="true">
-                      <FaLock />
-                    </span>
                     <button
                       type="button"
                       className="eye-btn"
@@ -346,9 +343,6 @@ function RegisterPage() {
                       onChange={handleChange}
                       className={errors.confirmPassword ? "input-error" : ""}
                     />
-                    <span className="input-icon input-icon--left" aria-hidden="true">
-                      <FaLock />
-                    </span>
                     <button
                       type="button"
                       className="eye-btn"
