@@ -346,7 +346,7 @@ export async function updateProductStatus(productId, status) {
  */
 export async function getProductModeration(productId) {
   try {
-    const { data } = await api.get(`/ecommerce/products/${productId}/moderation`);
+    const { data } = await api.get(`/ecommerce/products/${productId}/moderation`, { skipErrorRedirect: true });
     return unwrapData(data);
   } catch (err) {
     return null;

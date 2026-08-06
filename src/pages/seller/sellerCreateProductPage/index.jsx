@@ -257,6 +257,7 @@ export default function CreateProductPage() {
         return next;
       });
       toast.success(`Đã thêm ${files.length} ảnh sản phẩm`);
+      if (errors.images) setErrors((prev) => ({ ...prev, images: null }));
     } catch (err) {
       toast.error(err.message || "Tải ảnh lên thất bại");
     }
@@ -328,20 +329,31 @@ export default function CreateProductPage() {
     const list1 = g1Opts.length > 0 ? g1Opts : ["Tùy chọn A", "Tùy chọn B"];
     const list2 = useG2 && g2Opts.length > 0 ? g2Opts : [null];
 
-    const newRows = [];
-    list1.forEach((v1) => {
-      list2.forEach((v2) => {
-        const skuAuto = `SKU-${v1}${v2 ? `-${v2}` : ""}`.toUpperCase().replace(/\s+/g, "-");
-        newRows.push({
-          val1: v1,
-          val2: v2,
-          price: form.price || "",
-          stock: form.stock || "",
-          sku: skuAuto,
+    setVariationRows((prev) => {
+      // Build a lookup from existing rows to preserve user-entered data
+      const existingMap = {};
+      prev.forEach((r) => {
+        const key = `${r.val1}||${r.val2 ?? ""}`;
+        existingMap[key] = r;
+      });
+
+      const newRows = [];
+      list1.forEach((v1) => {
+        list2.forEach((v2) => {
+          const key = `${v1}||${v2 ?? ""}`;
+          const existing = existingMap[key];
+          const skuAuto = `SKU-${v1}${v2 ? `-${v2}` : ""}`.toUpperCase().replace(/\s+/g, "-");
+          newRows.push({
+            val1: v1,
+            val2: v2,
+            price: existing?.price ?? (form.price || ""),
+            stock: existing?.stock ?? (form.stock || ""),
+            sku: existing?.sku ?? skuAuto,
+          });
         });
       });
+      return newRows;
     });
-    setVariationRows(newRows);
   };
 
   const handleBatchApply = () => {
@@ -374,7 +386,7 @@ export default function CreateProductPage() {
         variationRows.every((r) => String(r.price).trim() !== "" && String(r.stock).trim() !== "");
 
   const tips = [
-    { label: "Tên sản phẩm từ 25~120 kí tự", done: form.name.trim().length >= 25 },
+    { label: "Tên sản phẩm từ 15~120 kí tự", done: form.name.trim().length >= 15 },
     { label: "Chọn Ngành hàng phù hợp", done: !!form.category },
     { label: "Mô tả chi tiết sản phẩm", done: form.description.trim().length > 0 },
     { label: "Thêm ít nhất 1 hình ảnh sản phẩm", done: filledImages.length >= 1 },
@@ -383,7 +395,19 @@ export default function CreateProductPage() {
 
   const validate = () => {
     const next = {};
-    if (!form.name.trim()) next.name = "Vui lòng nhập tên sản phẩm";
+    if (!form.name.trim()) {
+      next.name = "Vui lòng nhập tên sản phẩm";
+    } else if (form.name.trim().length < 15) {
+      next.name = "Tên sản phẩm phải từ 15 đến 120 ký tự";
+    }
+
+    if (!form.description.trim()) {
+      next.description = "Vui lòng nhập mô tả sản phẩm";
+    }
+
+    if (filledImages.length < 1) {
+      next.images = "Vui lòng thêm ít nhất 1 hình ảnh sản phẩm";
+    }
 
     if (productTypeMode === "single") {
       if (!form.price.trim()) next.price = "Vui lòng nhập giá bán";
@@ -404,8 +428,11 @@ export default function CreateProductPage() {
     }
 
     setErrors(next);
-    if (next.name) setActiveTab("basic");
-    else if (next.price || next.stock) setActiveTab("sales");
+    if (next.name || next.description) {
+      setActiveTab("basic");
+    } else if (next.images || next.price || next.stock) {
+      setActiveTab("sales");
+    }
     return Object.keys(next).length === 0;
   };
 
@@ -705,7 +732,9 @@ export default function CreateProductPage() {
                       value={form.description}
                       onChange={handleChange}
                       placeholder="Vui lòng nhập chi tiết mô tả sản phẩm..."
+                      className={errors.description ? "input-error" : ""}
                     />
+                    {errors.description && <span className="field-error">{errors.description}</span>}
                     <span className="slr-cp__counter slr-cp__counter--block">
                       {form.description.length}/5000 ký tự
                     </span>
@@ -845,6 +874,7 @@ export default function CreateProductPage() {
                     <small className="slr-create-image-hint">
                       Đã chọn {filledImages.length}/{MAX_IMAGES} ảnh (tối thiểu 1 hình ảnh)
                     </small>
+                    {errors.images && <span className="field-error">{errors.images}</span>}
                   </div>
                 </div>
 
