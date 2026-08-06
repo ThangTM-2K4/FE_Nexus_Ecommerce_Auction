@@ -1,5 +1,4 @@
 import api from '../config/api';
-import { extractUploadKey, normalizeUploadKey } from './uploadResponse';
 import { getCurrentUser, updateSessionUser } from './authService';
 
 const profileKey = (userId) => `profile_${userId}`;
@@ -24,64 +23,14 @@ const truthy = (...vals) => vals.some((v) => v === true || v === 'true');
 
 const unwrap = (res) => res?.data?.data ?? res?.data ?? null;
 
-// Backend trả giới tính dạng "Nam"/"Nữ"/"Male"/"Female"; Select ở hồ sơ dùng
-// value 'male'/'female'/'other'. Chuẩn hoá để hiển thị đúng (bug giới tính rỗng).
-const normalizeGender = (g) => {
-  const v = String(g ?? '').trim().toLowerCase();
-  if (!v) return '';
-  if (['male', 'm', 'nam'].includes(v)) return 'male';
-  if (['female', 'f', 'nữ', 'nu'].includes(v)) return 'female';
-  // Chỉ còn 2 giới tính Nam/Nữ — giá trị khác coi như chưa chọn.
-  return '';
-};
-
-// getMe hiện trả kèm điểm uy tín. Backend chưa cố định tên field nên dò nhiều
-// dạng khả dĩ; trả về null nếu không có để phần uy tín tự tính (fallback mock).
-const pickReputation = (src) => {
-  if (!src) return null;
-  if (src.reputation && typeof src.reputation === 'object') {
-    const r = src.reputation;
-    return {
-      score: r.score ?? r.point ?? r.points ?? r.reputationScore ?? null,
-      rank: r.rank ?? r.tier ?? r.level ?? null,
-    };
-  }
-  const score =
-    src.reputationScore ?? src.reputationPoint ?? src.reputationPoints ?? src.reputation ?? null;
-  const rank = src.reputationRank ?? src.reputationTier ?? null;
-  if (score == null && rank == null) return null;
-  return { score, rank };
-};
-
-// Lấy hồ sơ xác minh CCCD thật từ endpoint riêng. Trả cả object (trạng thái +
-// toàn bộ thông tin CCCD) để hiển thị lại lên giao diện, không chỉ mỗi status.
-const fetchIdentity = async () => {
+// Lấy trạng thái xác minh CMND thật từ endpoint riêng
+const fetchIdentityStatus = async () => {
   try {
-    return unwrap(
-      await api.get('/identity-verifications/me', { skipErrorRedirect: true })
-    );
-  } catch (err) {
-    console.error('[profileService] identity-verifications/me (optional):', err);
+    const iv = unwrap(await api.get('/identity-verifications/me'));
+    return iv?.status ? String(iv.status).toUpperCase() : null;
+  } catch {
     return null; // chưa nộp / 404
   }
-};
-
-// Đổi tên field từ /identity-verifications/me sang các field CCCD dùng trong profile.
-// LƯU Ý: KHÔNG lấy ảnh (identityFrontImageUrl/identityBackImageUrl) — chúng là URL
-// nội bộ backend (http://localhost:8081/...) trình duyệt KHÔNG tải được → vỡ ảnh.
-// Ảnh CCCD cũng không cần hiển thị lại; chỉ đồng bộ thông tin chữ.
-const identityToCccd = (iv) => {
-  if (!iv) return null;
-  return {
-    cccdFullName: iv.fullName || '',
-    cccdNumber: iv.identityNumber || '',
-    cccdGender: iv.gender || '',
-    cccdDateOfBirth: iv.dateOfBirth || '',
-    cccdIssueDate: iv.issueDate || '',
-    cccdExpiryDate: iv.expiryDate || '',
-    cccdIssuePlace: iv.issuePlace || '',
-    cccdAddress: iv.permanentAddress || '',
-  };
 };
 
 const buildProfile = (src, identityStatus) => ({
@@ -91,7 +40,7 @@ const buildProfile = (src, identityStatus) => ({
   email: src.email || '',
   phone: src.phone || src.phoneNumber || '',
   dateOfBirth: src.dateOfBirth || '',
-  gender: normalizeGender(src.gender),
+  gender: src.gender || '',
   address: src.address || '',
   // Đọc cờ thật từ /users/me, chấp nhận nhiều tên field backend có thể dùng
   isEmailVerified: truthy(src.isEmailVerified, src.emailVerified, src.emailConfirmed, src.isEmailConfirmed),
@@ -119,11 +68,6 @@ const buildProfile = (src, identityStatus) => ({
   cccdAddress: src.cccdAddress || '',
   cccdFrontImageUrl: src.cccdFrontImageUrl || '',
   cccdBackImageUrl: src.cccdBackImageUrl || '',
-  // Key ảnh đã upload lên server (để nộp lại hồ sơ mà không cần upload lại)
-  cccdFrontImageKey: src.cccdFrontImageKey || '',
-  cccdBackImageKey: src.cccdBackImageKey || '',
-  // Điểm uy tín backend trả kèm getMe (null nếu chưa có → tự tính ở reputationService)
-  reputation: pickReputation(src),
 });
 
 export const getProfile = async (userId) => {
@@ -142,34 +86,16 @@ export const getProfile = async (userId) => {
   // apiUser sau cùng để dữ liệu backend luôn thắng.
   const src = { ...(storedProfile || {}), ...(sessionUser || {}), ...(apiUser || {}) };
 
-  // fullName/gender/dateOfBirth/phone GIỜ do backend sở hữu: khi người dùng xác minh
-  // CCCD, backend cập nhật các field này và getMe trả về giá trị mới -> API PHẢI thắng,
-  // nếu không hồ sơ web vẫn kẹt ở dữ liệu cũ (bug đã báo). Chỉ dùng bản local khi API
-  // bỏ trống field. Riêng `username` backend không trả/không lưu -> giữ ưu tiên local.
-  const isEmpty = (v) => v === undefined || v === null || v === '';
-  const apiVal = (k) => {
-    if (!apiUser) return undefined;
-    if (k === 'phone') return apiUser.phone ?? apiUser.phoneNumber;
-    return apiUser[k];
-  };
+  // Các field người dùng tự chỉnh nhưng backend không lưu (UpdateProfileRequest chỉ có
+  // phoneNumber/address/newEmail) -> ưu tiên bản đã lưu local để không bị ghi đè khi reload.
+  const LOCAL_OWNED = ['fullName', 'username', 'gender', 'dateOfBirth', 'phone'];
   if (storedProfile) {
-    if (storedProfile.username) src.username = storedProfile.username;
-    ['fullName', 'gender', 'dateOfBirth', 'phone'].forEach((k) => {
-      if (isEmpty(apiVal(k)) && !isEmpty(storedProfile[k])) src[k] = storedProfile[k];
+    LOCAL_OWNED.forEach((k) => {
+      if (storedProfile[k] !== undefined && storedProfile[k] !== '') src[k] = storedProfile[k];
     });
   }
 
-  const identity = await fetchIdentity();
-  let identityStatus = identity?.status ? String(identity.status).toUpperCase() : null;
-
-  // Thông tin CCCD từ hồ sơ xác minh (API) là nguồn thật để hiển thị lại lên giao
-  // diện (họ tên, số CCCD, giới tính, ngày sinh...). API thắng khi có giá trị.
-  const identityCccd = identityToCccd(identity);
-  if (identityCccd) {
-    Object.entries(identityCccd).forEach(([k, v]) => {
-      if (v) src[k] = v;
-    });
-  }
+  let identityStatus = await fetchIdentityStatus();
 
   // Backend chưa có API cho staff duyệt CCCD — quyết định duyệt/từ chối của
   // staff lưu local phải thắng trạng thái PENDING (hoặc chưa nộp) từ API.
@@ -231,7 +157,8 @@ export const markPhoneVerified = async (userId, phoneNumber) => {
 };
 
 // ── UPLOADS ── (ảnh đại diện + ảnh CCCD)
-// Avatar: POST/DELETE /users/me/avatar — Identity: POST /uploads/identity
+// Swagger user-service: POST /users/me/avatar và /uploads/identity, multipart field `file`.
+// Base URL nằm trong .env (VITE_API_BASE_URL) — chỉ dùng path tương đối, KHÔNG hardcode host.
 // Content-Type để undefined -> trình duyệt tự set multipart + boundary.
 const MULTIPART = { headers: { 'Content-Type': undefined } };
 
@@ -239,16 +166,13 @@ const MULTIPART = { headers: { 'Content-Type': undefined } };
 const extractUploadUrl = (res) => {
   const d = res?.data?.data ?? res?.data ?? {};
   if (typeof d === 'string') return d;
-  return d.url || d.fileUrl || d.imageUrl || d.avatarUrl || d.avatar || d.key || d.fileKey || '';
+  return d.url || d.fileUrl || d.imageUrl || d.avatarUrl || d.key || d.fileKey || '';
 };
 
 export const uploadAvatar = async (userId, file) => {
   const fd = new FormData();
   fd.append('file', file);
-  const res = await api.post('/users/me/avatar', fd, {
-    ...MULTIPART,
-    skipErrorRedirect: true,
-  });
+  const res = await api.post('/users/me/avatar', fd, MULTIPART);
   const url = extractUploadUrl(res);
 
   const current = await getProfile(userId);
@@ -258,21 +182,12 @@ export const uploadAvatar = async (userId, file) => {
   return updated;
 };
 
-export const deleteAvatar = async (userId) => {
-  await api.delete('/users/me/avatar', { skipErrorRedirect: true });
-  const current = await getProfile(userId);
-  const updated = { ...current, avatar: null };
-  saveProfile(userId, updated);
-  updateSessionUser({ avatar: null });
-  return updated;
-};
-
 // Trả về URL/key ảnh CCCD đã upload để nộp kèm hồ sơ xác minh.
 export const uploadIdentityImage = async (file) => {
   const fd = new FormData();
   fd.append('file', file);
   const res = await api.post('/uploads/identity', fd, MULTIPART);
-  return extractUploadKey(res);
+  return extractUploadUrl(res);
 };
 
 // ── EMAIL ── (xác thực khi đăng ký; ở đây cho gửi lại + nhập OTP)
@@ -320,13 +235,10 @@ export const submitIdentityVerification = async (
     expiryDate,
     issuePlace,
     permanentAddress,
-    frontImageKey,
-    backImageKey,
+    frontImageUrl,
+    backImageUrl,
   }
 ) => {
-  // Contract backend (SubmitIdentityVerificationRequest) dùng frontImageKey/backImageKey
-  // — là KEY ảnh trả về từ POST /uploads/identity, KHÔNG phải base64/URL. Gửi sai tên
-  // field trước đây khiến ảnh (và cả hồ sơ) không lưu được vào database.
   await api.post('/identity-verifications', {
     fullName,
     gender,
@@ -336,18 +248,10 @@ export const submitIdentityVerification = async (
     expiryDate,
     issuePlace,
     permanentAddress,
-    frontImageKey: normalizeUploadKey(frontImageKey),
-    backImageKey: normalizeUploadKey(backImageKey),
+    frontImageUrl,
+    backImageUrl,
   });
-  // Backend cập nhật fullName/gender/dateOfBirth từ CCCD -> đọc lại getMe rồi đồng bộ
-  // vào session để header/lời chào cũng hiển thị thông tin mới ngay, không chỉ trang hồ sơ.
-  const profile = await getProfile(userId);
-  updateSessionUser({
-    fullName: profile.fullName,
-    gender: profile.gender,
-    dateOfBirth: profile.dateOfBirth,
-  });
-  return profile;
+  return getProfile(userId);
 };
 
 // ── THÔNG TIN CÁ NHÂN / CCCD ── (trang "Thông tin cá nhân")
@@ -364,12 +268,8 @@ export const updateCccdInfo = async (
     cccdExpiryDate = '',
     cccdIssuePlace = '',
     cccdAddress,
-    // cccdFrontImageUrl/BackImageUrl = ảnh xem trước (base64/URL hiển thị được).
-    // cccdFrontImageKey/BackImageKey = key server (dùng khi nộp hồ sơ, KHÔNG hiển thị).
     cccdFrontImageUrl = '',
     cccdBackImageUrl = '',
-    cccdFrontImageKey = '',
-    cccdBackImageKey = '',
   }
 ) => {
   if (cccdAddress?.trim()) {
@@ -390,8 +290,6 @@ export const updateCccdInfo = async (
     cccdAddress,
     cccdFrontImageUrl,
     cccdBackImageUrl,
-    cccdFrontImageKey,
-    cccdBackImageKey,
   });
 };
 

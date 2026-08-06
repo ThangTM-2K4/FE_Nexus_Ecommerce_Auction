@@ -1,15 +1,27 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { checkSellerPreconditions } from '../../../services/sellerService';
 import * as reputationService from '../../../services/reputationService';
 
 export default function BecomeSellerSection({ profile, application }) {
-  const { user, isApprovedSeller } = useAuth();
+  const { user, isApprovedSeller, isSellerMode, switchAccountMode } = useAuth();
+  const navigate = useNavigate();
   const checks = checkSellerPreconditions(profile);
   const allMet = checks.emailVerified && checks.phoneVerified && checks.bankAccountAdded;
   const [buyerScore, setBuyerScore] = useState(0);
   const [scoreLoading, setScoreLoading] = useState(true);
+
+  const handleOpenSellerHub = async () => {
+    if (!isSellerMode) {
+      try {
+        await switchAccountMode('SELLER');
+      } catch {
+        /* ignore */
+      }
+    }
+    navigate('/seller-hub/overview');
+  };
 
   useEffect(() => {
     if (!user?.id || !profile) return;
@@ -31,7 +43,13 @@ export default function BecomeSellerSection({ profile, application }) {
         <div className="profile-seller-approved">
           <span className="profile-badge verified">✓ Người bán đã được phê duyệt</span>
           <p>Bạn có thể truy cập Kênh Người Bán để quản lý cửa hàng và phiên đấu giá.</p>
-          <Link to="/seller" className="profile-btn profile-btn--primary">Mở Kênh Người Bán</Link>
+          <button
+            type="button"
+            className="profile-btn profile-btn--primary"
+            onClick={handleOpenSellerHub}
+          >
+            Mở Kênh Người Bán
+          </button>
         </div>
       </section>
     );

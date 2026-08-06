@@ -237,8 +237,19 @@ function FileInput({ label, name, form, setForm, required, error, hint }) {
 }
 
 export default function BecomeSellerPage() {
-  const { user, refreshUser, updateUser } = useAuth();
+  const { user, refreshUser, updateUser, isApprovedSeller, isSellerMode, switchAccountMode } = useAuth();
   const navigate = useNavigate();
+
+  const handleOpenSellerHub = async () => {
+    if (!isSellerMode) {
+      try {
+        await switchAccountMode("SELLER");
+      } catch {
+        /* ignore */
+      }
+    }
+    navigate("/seller-hub/overview");
+  };
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(initialForm);
   const [pickupAddr, setPickupAddr] = useState(emptyAddr);
@@ -428,7 +439,7 @@ export default function BecomeSellerPage() {
     );
   }
 
-  if (user?.sellerStatus === "APPROVED") {
+  if (user?.sellerStatus === "APPROVED" || isApprovedSeller) {
     return (
       <div className="become-seller-page">
         <Header />
@@ -444,9 +455,13 @@ export default function BecomeSellerPage() {
               Tài khoản của bạn đã được phê duyệt. Truy cập Kênh Người Bán để
               bắt đầu.
             </p>
-            <Link to="/seller-hub/overview" className="seller-submit-btn">
+            <button
+              type="button"
+              className="seller-submit-btn"
+              onClick={handleOpenSellerHub}
+            >
               Mở Kênh Người Bán
-            </Link>
+            </button>
           </div>
         </main>
         <Footer />
