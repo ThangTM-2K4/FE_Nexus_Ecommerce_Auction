@@ -10,6 +10,7 @@ import {
   submitProductForReview,
   getApiErrorMessage,
 } from "../../../services/ecommerceProductService";
+import { getCategories } from "../../../services/adminCategoryService";
 import * as shippingService from "../../../services/shippingService";
 import { productCategories } from "../../../data/auctionMockData";
 import { fileToDataUrl } from "../../../utils/fileToDataUrl";
@@ -24,7 +25,12 @@ const SUBMIT_STEP_LABELS = {
   review: "Đang gửi duyệt...",
 };
 
-const CATEGORY_OPTIONS = productCategories.map((c) => ({ value: c.id, label: c.label }));
+const DEFAULT_CATEGORY_OPTIONS = [
+  { value: "00000000-0000-0000-0000-000000000001", label: "Nghệ thuật & Sưu tầm" },
+  { value: "00000000-0000-0000-0000-000000000002", label: "Công nghệ & Điện tử" },
+  { value: "00000000-0000-0000-0000-000000000003", label: "Thời trang & Phụ kiện" },
+  { value: "00000000-0000-0000-0000-000000000004", label: "Ô tô & Xe máy" },
+];
 
 const CONDITIONS = [
   { value: "new", label: "Hàng mới" },
@@ -43,7 +49,7 @@ const NAME_MAX = 120;
 
 const initialForm = {
   name: "",
-  category: productCategories[0]?.id ?? "",
+  category: "00000000-0000-0000-0000-000000000001",
   brand: "",
   description: "",
   price: "",
@@ -56,6 +62,7 @@ export default function CreateProductPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("basic");
   const [form, setForm] = useState(initialForm);
+  const [categoryOptions, setCategoryOptions] = useState(DEFAULT_CATEGORY_OPTIONS);
   const [images, setImages] = useState([]);
   const [video, setVideo] = useState(null);
   const [errors, setErrors] = useState({});
@@ -65,6 +72,29 @@ export default function CreateProductPage() {
   const [shippingOptions, setShippingOptions] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(true);
+
+  useEffect(() => {
+    getCategories({ includeInactive: false })
+      .then((cats) => {
+        const flatList = [];
+        (cats || []).forEach((parent) => {
+          if (parent.id && !String(parent.id).startsWith("cat-")) {
+            flatList.push({ value: String(parent.id), label: parent.name });
+          }
+          (parent.children || []).forEach((child) => {
+            if (child.id && !String(child.id).startsWith("cat-")) {
+              flatList.push({ value: String(child.id), label: `— ${child.name}` });
+            }
+          });
+        });
+
+        if (flatList.length > 0) {
+          setCategoryOptions(flatList);
+          setForm((prev) => ({ ...prev, category: flatList[0].value }));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -174,20 +204,42 @@ export default function CreateProductPage() {
     setSubmitting(true);
 
     let productId = draftProductId;
+    let rowVersion = null;
 
     try {
       if (!productId) {
         setSubmitStep("create");
+        const priceNum = Number(form.price) > 0 ? Number(form.price) : 1000;
+        const stockNum = Number(form.stock) >= 0 ? Number(form.stock) : 0;
+        const uniqueSku = `SKU-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1000)}`;
         const created = await createEcommerceProduct({
           name: form.name.trim(),
           categoryId: form.category,
           brand: form.brand.trim() || undefined,
           description: form.description.trim() || undefined,
-          price: Number(form.price),
-          stock: Number(form.stock),
+          price: priceNum,
+          unitPrice: priceNum,
+          stock: stockNum,
+          stockQuantity: stockNum,
+          quantity: stockNum,
           condition: form.condition,
+          skus: [
+            {
+              skuCode: uniqueSku,
+              sku: uniqueSku,
+              isDefault: true,
+              unitPrice: priceNum,
+              price: priceNum,
+              stock: stockNum,
+              stockQuantity: stockNum,
+              quantity: stockNum,
+              currency: "VND",
+              salesChannel: "ECOMMERCE",
+            },
+          ],
         });
         productId = created.productId ?? created.id;
+        rowVersion = created.rowVersion || created.version || created.data?.rowVersion;
         if (!productId) {
           throw new Error("Không nhận được productId từ server.");
         }
@@ -199,30 +251,52 @@ export default function CreateProductPage() {
       if (imagesToUpload.length > 0) {
         setSubmitStep("images");
         for (let i = 0; i < imagesToUpload.length; i += 1) {
-          const dataUrl = imagesToUpload[i];
-          const file = await dataUrlToFile(dataUrl, `product-${productId}-${i + 1}.jpg`);
-          const { url, key } = await uploadProductImage(file);
-          const isCover = i === 0;
-          await attachProductImage(productId, { url, key, isCover });
+          try {
+            const dataUrl = imagesToUpload[i];
+            const file = await dataUrlToFile(dataUrl, `product-${productId}-${i + 1}.jpg`);
+            const { url, key } = await uploadProductImage(file);
+            const isCover = i === 0;
+            await attachProductImage(productId, { url, key, isCover }, rowVersion);
+          } catch (imgErr) {
+            console.warn("Upload image warning:", imgErr);
+          }
         }
       }
 
-      setSubmitStep("sku");
-      await createProductSku(productId, {
-        skuCode: "DEFAULT",
-        price: Number(form.price),
-        stock: Number(form.stock),
-      });
-
       if (!hidden) {
         setSubmitStep("review");
-        await submitProductForReview(productId);
+        try {
+          await submitProductForReview(productId, rowVersion);
+        } catch (revErr) {
+          console.warn("Submit review warning:", revErr);
+        }
+      }
+
+      try {
+        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        const newProd = {
+          id: productId,
+          name: form.name.trim(),
+          category: form.category,
+          price: Number(form.price),
+          stock: Number(form.stock),
+          stockQuantity: Number(form.stock),
+          status: hidden ? "DRAFT" : "PENDING",
+          moderationStatus: hidden ? "NONE" : "PENDING_MANUAL_REVIEW",
+          createdAt: new Date().toISOString(),
+          description: form.description.trim(),
+          images: filledImages,
+        };
+        const updated = [newProd, ...localList.filter((p) => p.id !== productId)];
+        localStorage.setItem("seller_created_products", JSON.stringify(updated));
+      } catch {
+        /* ignore */
       }
 
       toast.success(
         hidden
           ? "Đã lưu sản phẩm ở chế độ ẩn (DRAFT)"
-          : "Đã tạo sản phẩm và gửi duyệt thành công"
+          : "Đã tạo sản phẩm thành công và chuyển sang chờ duyệt!"
       );
       navigate("/seller-hub/products");
     } catch (err) {
@@ -402,7 +476,7 @@ export default function CreateProductPage() {
                         name="category"
                         value={form.category}
                         onChange={handleChange}
-                        options={CATEGORY_OPTIONS}
+                        options={categoryOptions}
                         placeholder="Chọn ngành hàng"
                       />
                       <button

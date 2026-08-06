@@ -91,9 +91,9 @@ export async function getProducts(filters = {}) {
 }
 
 /**
- * Chi tiết sản phẩm phía khách mua — GET /ecommerce/products/{productId}
+ * Chi tiết sản phẩm — GET /ecommerce/products/{productId}?scope=management
  */
-export async function getProductById(productId) {
+export async function getProductById(productId, scope = 'management') {
   if (!productId) {
     return {
       ok: false,
@@ -104,17 +104,15 @@ export async function getProductById(productId) {
   }
 
   const path = `${BUYER_LIST_PATH}/${productId}`;
-  logDevRequest('GET', path);
 
   try {
-    const { data } = await api.get(path, buyerRequestConfig);
+    const { data } = await api.get(path, { params: { scope } });
     return {
       ok: true,
       data: unwrapData(data),
       status: 200,
     };
   } catch (error) {
-    logDevError('getProductById failed', error);
     return {
       ok: false,
       data: null,
@@ -163,32 +161,74 @@ export async function uploadProductImage(file) {
 /**
  * Gắn ảnh vào sản phẩm — POST /ecommerce/products/{productId}/images
  */
-export async function attachProductImage(productId, imageData) {
-  const { data } = await api.post(`/ecommerce/products/${productId}/images`, imageData);
+export async function attachProductImage(productId, imageData, rowVersion) {
+  const headers = { 'If-Match': rowVersion || '*' };
+  const { data } = await api.post(`/ecommerce/products/${productId}/images`, imageData, { headers });
   return unwrapData(data);
 }
 
 /**
  * Tạo SKU — POST /ecommerce/products/{productId}/skus
  */
-export async function createProductSku(productId, skuData) {
-  const { data } = await api.post(`/ecommerce/products/${productId}/skus`, skuData);
+export async function createProductSku(productId, skuData, rowVersion) {
+  const headers = { 'If-Match': rowVersion || '*' };
+  const { data } = await api.post(`/ecommerce/products/${productId}/skus`, skuData, { headers });
   return unwrapData(data);
 }
 
 /**
  * Gửi duyệt — POST /ecommerce/products/{productId}/submit-review
  */
-export async function submitProductForReview(productId) {
-  const { data } = await api.post(`/ecommerce/products/${productId}/submit-review`);
+export async function submitProductForReview(productId, rowVersion) {
+  // 1. Check moderation
+  const moderation = await getProductModeration(productId);
+  const status = moderation?.moderationStatus || moderation?.data?.moderationStatus;
+
+  if (status === "PENDING_MANUAL_REVIEW") {
+    throw new Error("Sản phẩm đang chờ duyệt");
+  }
+
+  if (status === "APPROVED") {
+    throw new Error("Sản phẩm đã được duyệt");
+  }
+
+  const finalRowVersion =
+    rowVersion ||
+    moderation?.rowVersion ||
+    moderation?.data?.rowVersion ||
+    null;
+
+  // 2. Submit
+  const key =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `key-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+  const { data } = await api.post(
+    `/ecommerce/products/${productId}/submit-review`,
+    {
+      rowVersion: finalRowVersion,
+      operationKey: key,
+      idempotencyKey: key,
+      callerPayloadHash: null,
+    },
+    {
+      headers: {
+        'If-Match': finalRowVersion || '*',
+        'X-Operation-Key': key,
+        'X-Idempotency-Key': key,
+      },
+    }
+  );
+
   return unwrapData(data);
 }
 
 /**
- * Danh sách sản phẩm của seller — GET /seller/products
+ * Danh sách sản phẩm của seller — GET /seller/products?scope=management
  */
 export async function getMyEcommerceProducts(params = {}) {
-  const { data } = await api.get('/seller/products', { params });
+  const { data } = await api.get('/seller/products', { params: { scope: 'management', ...params } });
   const paged = unwrapPagedList(data);
   return {
     ...paged,
@@ -216,8 +256,12 @@ export async function updateProductStatus(productId, status) {
  * Trạng thái kiểm duyệt — GET /ecommerce/products/{productId}/moderation
  */
 export async function getProductModeration(productId) {
-  const { data } = await api.get(`/ecommerce/products/${productId}/moderation`);
-  return unwrapData(data);
+  try {
+    const { data } = await api.get(`/ecommerce/products/${productId}/moderation`);
+    return unwrapData(data);
+  } catch (err) {
+    return null;
+  }
 }
 
 const normalizeStatus = (status) => {
@@ -237,14 +281,48 @@ export function mapSellerProductToUi(item) {
       ? [item.imageUrl]
       : [];
 
+  const rawStatus = String(item.status || item.moderationStatus || '').toUpperCase();
+
+  const moderationStatus =
+    item.moderationStatus ||
+    item.moderation_status ||
+    item.moderation?.status ||
+    item.reviewStatus ||
+    item.approvalStatus ||
+    (rawStatus.includes('PENDING') || rawStatus.includes('REVIEW') || rawStatus.includes('CHỜ')
+      ? 'PENDING_MANUAL_REVIEW'
+      : 'NONE');
+
+  const stock =
+    item.stockQuantity ??
+    item.stock ??
+    item.totalStock ??
+    item.quantity ??
+    item.availableStock ??
+    item.skus?.[0]?.stockQuantity ??
+    item.skus?.[0]?.stock ??
+    item.skus?.[0]?.quantity ??
+    0;
+
+  const price =
+    item.price ??
+    item.unitPrice ??
+    item.sellingPrice ??
+    item.minPrice ??
+    item.skus?.[0]?.unitPrice ??
+    item.skus?.[0]?.price ??
+    0;
+
   return {
     id: item.id ?? item.productId,
     name: item.name ?? item.title ?? '',
     category: item.categoryId ?? item.category ?? '',
     brand: item.brand ?? '',
-    price: item.price ?? item.minPrice ?? item.skus?.[0]?.price ?? 0,
-    stock: item.stock ?? item.totalStock ?? item.skus?.[0]?.stock ?? 0,
-    status: normalizeStatus(item.status ?? item.moderationStatus),
+    price,
+    stock,
+    status: normalizeStatus(item.status ?? moderationStatus),
+    moderationStatus,
+    rowVersion: item.rowVersion ?? item.version ?? null,
     images,
     description: item.description ?? '',
     createdAt: item.createdAt,

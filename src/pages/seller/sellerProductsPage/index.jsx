@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { useAuth } from "../../../context/AuthContext";
-import { getMyEcommerceProducts } from "../../../services/ecommerceProductService";
+import { getMyEcommerceProducts, submitProductForReview, getApiErrorMessage } from "../../../services/ecommerceProductService";
 import { productCategories } from "../../../data/auctionMockData";
 
 const STATUS_LABELS = {
@@ -18,26 +19,104 @@ export default function ProductsPage() {
   const [myProducts, setMyProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
+  const fetchProducts = async () => {
     setLoading(true);
-    getMyEcommerceProducts()
-      .then((res) => setMyProducts(res.items || []))
-      .catch(() => setMyProducts([]))
-      .finally(() => setLoading(false));
+    try {
+      const res = await getMyEcommerceProducts();
+      let list = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.items)
+        ? res.items
+        : Array.isArray(res?.products)
+        ? res.products
+        : [];
+
+      // Nạp thông tin kiểm duyệt thời gian thực cho từng sản phẩm
+      const enrichedList = await Promise.all(
+        list.map(async (p) => {
+          try {
+            const modData = await getProductModeration(p.id);
+            if (modData) {
+              return {
+                ...p,
+                moderationStatus: modData.moderationStatus || p.moderationStatus || "NONE",
+                rowVersion: modData.rowVersion || p.rowVersion,
+              };
+            }
+          } catch {
+            /* ignore */
+          }
+          return p;
+        })
+      );
+
+      setMyProducts(enrichedList);
+    } catch {
+      setMyProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, [user?.id]);
 
   const stats = useMemo(() => {
     const total = myProducts.length;
-    const active = myProducts.filter((p) => p.status === "APPROVED").length;
+    const active = myProducts.filter((p) => {
+      const st = String(p.status || "").toUpperCase();
+      const mod = String(p.moderationStatus || "").toUpperCase();
+      return st === "APPROVED" || st === "ACTIVE" || mod === "APPROVED";
+    }).length;
     const outOfStock = myProducts.filter((p) => Number(p.stock) === 0).length;
-    const pending = myProducts.filter((p) => p.status === "PENDING").length;
-    const draftOrRejected = myProducts.filter((p) => p.status === "DRAFT" || p.status === "REJECTED").length;
+    const pending = myProducts.filter((p) => {
+      const st = String(p.status || "").toUpperCase();
+      const mod = String(p.moderationStatus || "").toUpperCase();
+      return st.includes("PENDING") || mod === "PENDING_MANUAL_REVIEW";
+    }).length;
+    const draftOrRejected = myProducts.filter((p) => {
+      const st = String(p.status || "").toUpperCase();
+      const mod = String(p.moderationStatus || "").toUpperCase();
+      return st === "DRAFT" || mod === "REJECTED";
+    }).length;
     return { total, active, outOfStock, pending, draftOrRejected };
   }, [myProducts]);
+
+  const handleSubmitReview = async (product) => {
+    // Bước 1: GET /api/v1/ecommerce/products/{productId}/moderation
+    const modData = await getProductModeration(product.id);
+    const modStatus = modData?.moderationStatus || product.moderationStatus || "NONE";
+    const rowVersion = modData?.rowVersion || product.rowVersion || null;
+
+    // Bước 2: FE kiểm tra trạng thái
+    if (modStatus === "PENDING_MANUAL_REVIEW") {
+      toast.info("Sản phẩm đang chờ duyệt");
+      await fetchProducts();
+      return;
+    }
+    if (modStatus === "APPROVED") {
+      toast.info("Sản phẩm đã được duyệt");
+      await fetchProducts();
+      return;
+    }
+
+    // Bước 3: Submit (khi chưa submit)
+    try {
+      await submitProductForReview(product.id, rowVersion);
+      toast.success("Gửi duyệt thành công");
+      await fetchProducts();
+    } catch (err) {
+      const is409 = err?.response?.status === 409 || err?.status === 409;
+      const msg = getApiErrorMessage(err, "");
+      if (is409 || /moderation is active|already approved/i.test(msg)) {
+        toast.info("Sản phẩm đang chờ duyệt");
+        await fetchProducts();
+      } else {
+        toast.error(msg || "Không thể gửi duyệt sản phẩm");
+      }
+    }
+  };
 
   return (
     <div className="slr-page">
@@ -71,7 +150,7 @@ export default function ProductsPage() {
           ) : myProducts.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 20px", color: "#666" }}>
               <p style={{ marginBottom: "16px", fontSize: "15px" }}>Bạn chưa có sản phẩm nào trên hệ thống.</p>
-              <Link to="/seller-hub/products/create" className="slr-btn-create" style={{ display: "inline-block" }}>
+              <Link to="/seller-hub/products/create" className="slr-btn-create" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                 + Đăng bán sản phẩm đầu tiên
               </Link>
             </div>
@@ -85,12 +164,31 @@ export default function ProductsPage() {
                     <th>Mã sản phẩm</th>
                     <th>Giá bán</th>
                     <th>Tồn kho</th>
-                    <th>Trạng thái</th>
+                    <th>Trạng thái & Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {myProducts.map((p) => {
                     const category = productCategories.find((c) => c.id === p.category);
+                    const modStatus = p.moderationStatus || "NONE";
+                    const isSubmittingDisabled =
+                      modStatus === "PENDING_MANUAL_REVIEW" ||
+                      modStatus === "APPROVED";
+
+                    let buttonText = "Gửi duyệt";
+                    let badgeLabel = STATUS_LABELS[p.status] || p.status || "Đang ẩn";
+
+                    if (modStatus === "PENDING_MANUAL_REVIEW") {
+                      buttonText = "Đang chờ duyệt";
+                      badgeLabel = "Chờ duyệt";
+                    } else if (modStatus === "APPROVED") {
+                      buttonText = "Đã duyệt";
+                      badgeLabel = "Đã duyệt";
+                    } else if (modStatus === "REJECTED") {
+                      buttonText = "Gửi lại duyệt";
+                      badgeLabel = "Bị từ chối";
+                    }
+
                     return (
                       <tr key={p.id}>
                         <td>
@@ -106,9 +204,29 @@ export default function ProductsPage() {
                         <td style={{ fontWeight: 600, color: "#6b3ba7" }}>{Number(p.price || 0).toLocaleString("vi-VN")}đ</td>
                         <td className={Number(p.stock) === 0 ? "warn" : ""}>{p.stock}</td>
                         <td>
-                          <span className={`slr-badge slr-badge--${(p.status || "DRAFT").toLowerCase()}`}>
-                            {STATUS_LABELS[p.status] || p.status}
-                          </span>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                            <span className={`slr-badge slr-badge--${(modStatus === "PENDING_MANUAL_REVIEW" ? "pending" : (p.status || "DRAFT")).toLowerCase()}`}>
+                              {badgeLabel}
+                            </span>
+                            <button
+                              type="button"
+                              className="slr-btn-create"
+                              disabled={isSubmittingDisabled}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                height: "28px",
+                                padding: "0 10px",
+                                fontSize: "11px",
+                                opacity: isSubmittingDisabled ? 0.65 : 1,
+                                cursor: isSubmittingDisabled ? "not-allowed" : "pointer",
+                              }}
+                              onClick={() => handleSubmitReview(p)}
+                            >
+                              {buttonText}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

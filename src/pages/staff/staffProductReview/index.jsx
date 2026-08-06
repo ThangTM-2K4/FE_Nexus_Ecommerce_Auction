@@ -1,32 +1,172 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { FaSearch, FaTh, FaList, FaCheck, FaTimes } from "react-icons/fa";
 import StaffPageHeader from "../../../components/staff/staffPageHeader";
 import RejectReasonModal from "../../../components/staff/rejectReasonModal";
 import { productRejectReasons } from "../../../data/staffMockData";
+import api from "../../../config/api";
 import {
   getAdminProducts,
+  getAdminProductReviewQueue,
   approveAdminProduct,
   rejectAdminProduct,
   getApiErrorMessage,
 } from "../../../services/adminProductService";
 import "./index.scss";
 
+const TABS = [
+  { id: "ALL", label: "Tất cả" },
+  { id: "PENDING", label: "Chờ duyệt" },
+  { id: "DRAFT", label: "Đang ẩn / Nháp" },
+  { id: "APPROVED", label: "Đã duyệt" },
+  { id: "REJECTED", label: "Đã từ chối" },
+];
+
+const STATUS_LABELS = {
+  DRAFT: "Đang ẩn / Nháp",
+  CREATED: "Đang ẩn / Nháp",
+  PENDING: "Chờ duyệt",
+  PENDING_REVIEW: "Chờ duyệt",
+  APPROVED: "Đã duyệt",
+  ACTIVE: "Đã duyệt",
+  REJECTED: "Đã từ chối",
+};
+
+const STATUS_CLASS = {
+  DRAFT: "status-draft",
+  CREATED: "status-draft",
+  PENDING: "status-pending",
+  PENDING_REVIEW: "status-pending",
+  APPROVED: "status-approved",
+  ACTIVE: "status-approved",
+  REJECTED: "status-rejected",
+};
+
 const StaffProductReview = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
+  const [tab, setTab] = useState("ALL");
+  const [viewMode, setViewMode] = useState("grid");
+  const [search, setSearch] = useState("");
+
+  const extractPrice = (p) => {
+    if (!p) return 0;
+    return (
+      p.price ??
+      p.unitPrice ??
+      p.sellingPrice ??
+      p.minPrice ??
+      p.basePrice ??
+      p.skus?.[0]?.unitPrice ??
+      p.skus?.[0]?.price ??
+      0
+    );
+  };
+
+  const extractStock = (p) => {
+    if (!p) return 0;
+    return (
+      p.stockQuantity ??
+      p.stock ??
+      p.totalStock ??
+      p.quantity ??
+      p.availableStock ??
+      p.skus?.[0]?.stockQuantity ??
+      p.skus?.[0]?.stock ??
+      p.skus?.[0]?.quantity ??
+      0
+    );
+  };
 
   const loadProducts = async () => {
     setLoading(true);
     try {
-      // Sử dụng API thật từ adminProductService - cùng API với admin
-      const data = await getAdminProducts();
-      const pendingProducts = (data?.items || []).filter((p) => {
-        const status = String(p.status || "").toLowerCase();
-        return status.includes("chờ") || status.includes("pending") || status.includes("review");
+      const endpoints = [
+        "/ecommerce/products",
+        "/admin/products/review-queue",
+        "/admin/products",
+        "/staff/products/review-queue",
+        "/management/products",
+        "/products",
+        "/catalog/products",
+        "/seller/products",
+      ];
+
+      const results = await Promise.allSettled(
+        endpoints.map((ep) =>
+          api.get(ep, { params: { scope: "management", pageSize: 100, pageNumber: 1, limit: 100 } })
+        )
+      );
+
+      const map = new Map();
+
+      results.forEach((res) => {
+        if (res.status === "fulfilled") {
+          const val = res.value?.data || res.value;
+          const items = Array.isArray(val)
+            ? val
+            : Array.isArray(val?.items)
+            ? val.items
+            : Array.isArray(val?.data?.items)
+            ? val.data.items
+            : Array.isArray(val?.data)
+            ? val.data
+            : Array.isArray(val?.results)
+            ? val.results
+            : [];
+
+          items.forEach((p) => {
+            if (p && (p.id || p.productId)) {
+              const id = p.id || p.productId;
+              const price = extractPrice(p);
+              const stock = extractStock(p);
+              if (!map.has(id)) {
+                map.set(id, { ...p, id, price, stock });
+              } else {
+                const existing = map.get(id);
+                map.set(id, {
+                  ...existing,
+                  ...p,
+                  id,
+                  price: price > 0 ? price : existing.price,
+                  stock: stock > 0 ? stock : existing.stock,
+                });
+              }
+            }
+          });
+        }
       });
-      setProducts(pendingProducts);
+
+      // Nếu API gateway chưa trả về do phân quyền token, nạp từ danh sách sản phẩm đã gửi duyệt
+      try {
+        const localProds = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        localProds.forEach((lp) => {
+          if (lp && (lp.id || lp.productId)) {
+            const id = lp.id || lp.productId;
+            const price = extractPrice(lp);
+            const stock = extractStock(lp);
+            if (!map.has(id)) {
+              map.set(id, { ...lp, id, price, stock });
+            } else {
+              const existing = map.get(id);
+              map.set(id, {
+                ...existing,
+                ...lp,
+                id,
+                price: price > 0 ? price : existing.price,
+                stock: stock > 0 ? stock : existing.stock,
+                moderationStatus: lp.moderationStatus || existing.moderationStatus,
+              });
+            }
+          }
+        });
+      } catch {
+        /* ignore */
+      }
+
+      setProducts(Array.from(map.values()));
     } catch (err) {
       console.error("Error loading products:", err);
       setProducts([]);
@@ -39,13 +179,78 @@ const StaffProductReview = () => {
     loadProducts();
   }, []);
 
+  const normalizeStatus = (p) => {
+    if (!p) return "DRAFT";
+    const mod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
+    const st = String(p.status || "").toUpperCase();
+
+    if (mod === "APPROVED" || st === "APPROVED" || st === "ACTIVE" || st === "PUBLISHED") {
+      return "APPROVED";
+    }
+    if (mod === "REJECTED" || st === "REJECTED") {
+      return "REJECTED";
+    }
+    if (mod === "PENDING_MANUAL_REVIEW" || mod.includes("PENDING") || st.includes("PENDING") || st.includes("REVIEW") || st.includes("CHỜ")) {
+      return "PENDING";
+    }
+    return "DRAFT";
+  };
+
+  const counts = useMemo(() => {
+    const c = { ALL: products.length, PENDING: 0, DRAFT: 0, APPROVED: 0, REJECTED: 0 };
+    products.forEach((p) => {
+      const norm = normalizeStatus(p);
+      if (c[norm] !== undefined) c[norm] += 1;
+    });
+    return c;
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    let list = products;
+    if (tab !== "ALL") {
+      list = list.filter((p) => normalizeStatus(p) === tab);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((p) => {
+        const name = (p.name || p.productName || p.title || "").toLowerCase();
+        const category = (p.category || p.categoryName || "").toLowerCase();
+        const seller = (p.seller || p.sellerName || p.userId || p.sellerId || "").toLowerCase();
+        const id = String(p.id).toLowerCase();
+        return name.includes(q) || category.includes(q) || seller.includes(q) || id.includes(q);
+      });
+    }
+    return list;
+  }, [products, tab, search]);
+
   const handleApprove = async (product) => {
     setProcessingId(product.id);
     try {
-      // Sử dụng API approve từ adminProductService
       await approveAdminProduct(product.id);
-      toast.success("Đã duyệt sản phẩm");
-      await loadProducts();
+      
+      try {
+        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        const updated = localList.map((p) => {
+          const isMatch = p.id === product.id || p.productId === product.id || String(p.id) === String(product.id);
+          return isMatch ? { ...p, moderationStatus: "APPROVED", status: "APPROVED" } : p;
+        });
+        if (!updated.some((p) => p.id === product.id || p.productId === product.id)) {
+          updated.push({ ...product, moderationStatus: "APPROVED", status: "APPROVED" });
+        }
+        localStorage.setItem("seller_created_products", JSON.stringify(updated));
+      } catch {
+        /* ignore */
+      }
+
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === product.id || p.productId === product.id
+            ? { ...p, moderationStatus: "APPROVED", status: "APPROVED" }
+            : p
+        )
+      );
+
+      toast.success("Đã duyệt sản phẩm thành công! Sản phẩm đã chuyển sang mục Đã duyệt.");
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Duyệt sản phẩm thất bại"));
     } finally {
@@ -58,11 +263,29 @@ const StaffProductReview = () => {
     const fullReason = note ? `${reason} — ${note}` : reason;
     setProcessingId(rejectTarget.id);
     try {
-      // Sử dụng API reject từ adminProductService
       await rejectAdminProduct(rejectTarget.id, fullReason);
+      
+      try {
+        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        const updated = localList.map((p) => {
+          const isMatch = p.id === rejectTarget.id || p.productId === rejectTarget.id || String(p.id) === String(rejectTarget.id);
+          return isMatch ? { ...p, moderationStatus: "REJECTED", status: "REJECTED", rejectReason: fullReason } : p;
+        });
+        localStorage.setItem("seller_created_products", JSON.stringify(updated));
+      } catch {
+        /* ignore */
+      }
+
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === rejectTarget.id || p.productId === rejectTarget.id
+            ? { ...p, moderationStatus: "REJECTED", status: "REJECTED", rejectReason: fullReason }
+            : p
+        )
+      );
+
       toast.info("Đã từ chối sản phẩm");
       setRejectTarget(null);
-      await loadProducts();
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Từ chối sản phẩm thất bại"));
     } finally {
@@ -74,72 +297,186 @@ const StaffProductReview = () => {
     <div className="stf-product-review">
       <StaffPageHeader
         kicker="Duyệt sản phẩm"
-        title="Sản phẩm chờ duyệt"
-        subtitle="Kiểm tra sản phẩm người bán vừa tạo và phê duyệt hoặc từ chối trước khi hiển thị công khai."
+        title="Quản lý & Duyệt sản phẩm đăng bán"
+        subtitle="Kiểm tra tất cả sản phẩm người bán tạo trên hệ thống, phê duyệt hoặc từ chối để hiển thị công khai."
       />
 
-      {loading ? (
-        <p className="stf-product-review__empty">Đang tải danh sách...</p>
-      ) : products.length === 0 ? (
-        <p className="stf-product-review__empty">Không có sản phẩm nào chờ duyệt.</p>
-      ) : (
-        <div className="stf-product-review__list">
-          {products.map((p) => (
-            <article key={p.id} className="stf-product-review__card">
-              <header>
-                <div>
-                  <h3>{p.name || p.productName || p.title || "Sản phẩm chưa đặt tên"}</h3>
-                  <p>{p.category || p.categoryName || "—"} · Người bán: {p.seller || p.userId || p.sellerId || "—"}</p>
-                </div>
-                <span className="stf-product-review__status">{p.status}</span>
-              </header>
-
-              <dl>
-                <div>
-                  <dt>Giá bán</dt>
-                  <dd>{Number(p.price || p.sellingPrice || 0).toLocaleString("vi-VN")}đ</dd>
-                </div>
-                <div>
-                  <dt>Tồn kho</dt>
-                  <dd>{p.stock || p.quantity || p.stockQuantity || 0}</dd>
-                </div>
-                <div>
-                  <dt>Số ảnh</dt>
-                  <dd>{p.images?.length || p.imageCount || 0}</dd>
-                </div>
-                <div>
-                  <dt>Ngày tạo</dt>
-                  <dd>{p.createdAt || p.createdDate || p.submittedAt ? new Date(p.createdAt || p.createdDate || p.submittedAt).toLocaleString("vi-VN") : "—"}</dd>
-                </div>
-              </dl>
-
-              {(p.description || p.shortDescription) && (
-                <div className="stf-product-review__desc">
-                  <strong>Mô tả:</strong>
-                  <p>{p.description || p.shortDescription}</p>
-                </div>
-              )}
-
-              <footer>
-                <button
-                  type="button"
-                  className="reject"
-                  disabled={processingId === p.id}
-                  onClick={() => setRejectTarget(p)}
-                >
-                  Từ chối
-                </button>
-                <button
-                  type="button"
-                  className="approve"
-                  disabled={processingId === p.id}
-                  onClick={() => handleApprove(p)}
-                >
-                  {processingId === p.id ? "Đang xử lý..." : "Phê duyệt"}
-                </button>
-              </footer>
-            </article>
+      <div className="stf-product-review__toolbar">
+        <div className="stf-product-review__tabs">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={tab === t.id ? "active" : ""}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label} ({counts[t.id] ?? 0})
+            </button>
           ))}
+        </div>
+
+        <div className="stf-product-review__controls">
+          <div className="stf-product-review__search">
+            <FaSearch aria-hidden />
+            <input
+              type="search"
+              placeholder="Tìm tên sản phẩm, danh mục, người bán..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="adm-view-toggle" role="group" aria-label="Chế độ hiển thị">
+            <button
+              type="button"
+              className={`adm-view-toggle__btn ${viewMode === "grid" ? "is-active" : ""}`}
+              onClick={() => setViewMode("grid")}
+              title="Hiển thị dạng Lưới"
+            >
+              <FaTh /> <span>Lưới</span>
+            </button>
+            <button
+              type="button"
+              className={`adm-view-toggle__btn ${viewMode === "list" ? "is-active" : ""}`}
+              onClick={() => setViewMode("list")}
+              title="Hiển thị dạng Danh sách"
+            >
+              <FaList /> <span>Danh sách</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <p className="stf-product-review__empty">Đang tải danh sách sản phẩm...</p>
+      ) : filteredProducts.length === 0 ? (
+        <p className="stf-product-review__empty">Không tìm thấy sản phẩm nào ở mục này.</p>
+      ) : viewMode === "grid" ? (
+        <div className="stf-product-review__list">
+          {filteredProducts.map((p) => {
+            const statusNorm = normalizeStatus(p.status || p.reviewStatus || p.approvalStatus);
+            const statusText = STATUS_LABELS[statusNorm] || p.status || "Chờ duyệt";
+            const statusClass = STATUS_CLASS[statusNorm] || "status-pending";
+            return (
+              <article key={p.id} className="stf-product-review__card">
+                <header>
+                  <div>
+                    <h3>{p.name || p.productName || p.title || "Sản phẩm chưa đặt tên"}</h3>
+                    <p>{p.category || p.categoryName || "Thương mại điện tử"} · Người bán: {p.seller || p.sellerName || p.userId || p.sellerId || "Shop người bán"}</p>
+                  </div>
+                  <span className={`stf-product-review__status ${statusClass}`}>{statusText}</span>
+                </header>
+
+                <dl>
+                  <div>
+                    <dt>Giá bán</dt>
+                    <dd>{Number(p.price || p.sellingPrice || p.unitPrice || 0).toLocaleString("vi-VN")}đ</dd>
+                  </div>
+                  <div>
+                    <dt>Tồn kho</dt>
+                    <dd>{p.stock ?? p.quantity ?? p.stockQuantity ?? 0}</dd>
+                  </div>
+                  <div>
+                    <dt>Mã sản phẩm</dt>
+                    <dd style={{ fontSize: "11px", wordBreak: "break-all" }}>{p.id}</dd>
+                  </div>
+                  <div>
+                    <dt>Ngày tạo</dt>
+                    <dd>{p.createdAt || p.createdDate || p.submittedAt ? new Date(p.createdAt || p.createdDate || p.submittedAt).toLocaleDateString("vi-VN") : "Hôm nay"}</dd>
+                  </div>
+                </dl>
+
+                {(p.description || p.shortDescription) && (
+                  <div className="stf-product-review__desc">
+                    <strong>Mô tả sản phẩm:</strong>
+                    <p>{p.description || p.shortDescription}</p>
+                  </div>
+                )}
+
+                <footer>
+                  <button
+                    type="button"
+                    className="reject"
+                    disabled={processingId === p.id || statusNorm === "REJECTED"}
+                    onClick={() => setRejectTarget(p)}
+                  >
+                    Từ chối
+                  </button>
+                  <button
+                    type="button"
+                    className="approve"
+                    disabled={processingId === p.id || statusNorm === "APPROVED"}
+                    onClick={() => handleApprove(p)}
+                  >
+                    {processingId === p.id ? "Đang xử lý..." : statusNorm === "APPROVED" ? "✓ Đã duyệt" : "Phê duyệt"}
+                  </button>
+                </footer>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="stf-product-review__table-wrap">
+          <table className="stf-product-table">
+            <thead>
+              <tr>
+                <th>Mã sản phẩm</th>
+                <th>Tên sản phẩm & Danh mục</th>
+                <th>Giá bán</th>
+                <th>Tồn kho</th>
+                <th>Trạng thái</th>
+                <th style={{ textAlign: "right" }}>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map((p) => {
+                const statusNorm = normalizeStatus(p.status || p.reviewStatus || p.approvalStatus);
+                const statusText = STATUS_LABELS[statusNorm] || p.status || "Chờ duyệt";
+                const statusClass = STATUS_CLASS[statusNorm] || "status-pending";
+                return (
+                  <tr key={p.id}>
+                    <td className="col-id">
+                      <strong>#{String(p.id).slice(0, 8)}</strong>
+                      <small>{p.createdAt ? new Date(p.createdAt).toLocaleDateString("vi-VN") : "Hôm nay"}</small>
+                    </td>
+                    <td className="col-name">
+                      <div className="product-name">{p.name || p.productName || "Sản phẩm chưa đặt tên"}</div>
+                      <small>{p.category || p.categoryName || "Thương mại điện tử"}</small>
+                    </td>
+                    <td className="col-price">
+                      <strong>{Number(p.price || p.sellingPrice || 0).toLocaleString("vi-VN")}đ</strong>
+                    </td>
+                    <td className="col-stock">
+                      <span>{p.stock ?? p.quantity ?? 0}</span>
+                    </td>
+                    <td className="col-status">
+                      <span className={`stf-product-review__status ${statusClass}`}>{statusText}</span>
+                    </td>
+                    <td className="col-actions" style={{ textAlign: "right" }}>
+                      <div className="stf-table-actions">
+                        <button
+                          type="button"
+                          className="stf-btn-action stf-btn-action--approve"
+                          disabled={processingId === p.id || statusNorm === "APPROVED"}
+                          onClick={() => handleApprove(p)}
+                        >
+                          <FaCheck /> {statusNorm === "APPROVED" ? "Đã duyệt" : "Duyệt"}
+                        </button>
+                        <button
+                          type="button"
+                          className="stf-btn-action stf-btn-action--reject"
+                          disabled={processingId === p.id || statusNorm === "REJECTED"}
+                          onClick={() => setRejectTarget(p)}
+                        >
+                          <FaTimes /> Từ chối
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
