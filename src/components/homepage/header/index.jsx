@@ -84,10 +84,16 @@ export default function Header() {
   };
 
   const handleGoToSellerHub = async () => {
-    if (!isSellerMode) {
-      await switchAccountMode("SELLER");
+    if (isApprovedSeller) {
+      if (!isSellerMode) {
+        await switchAccountMode("SELLER");
+      }
+      navigate("/seller-hub/overview");
+    } else if (isAuthenticated) {
+      navigate("/profile/become-seller");
+    } else {
+      navigate("/login?redirect=/seller-hub/overview");
     }
-    navigate("/seller-hub/overview");
   };
 
   const closeDropdowns = () => {
@@ -100,17 +106,13 @@ export default function Header() {
       <div className="header-topbar" aria-label="Secondary navigation">
         <div className="header-shell header-topbar-shell">
           <nav className="header-topbar-group" aria-label="Seller services">
-            {isApprovedSeller ? (
-              <button
-                type="button"
-                className="header-topbar-link-btn"
-                onClick={handleGoToSellerHub}
-              >
-                Kênh Người Bán
-              </button>
-            ) : (
-              <a href="#seller-center">Kênh Người Bán</a>
-            )}
+            <button
+              type="button"
+              className="header-topbar-link-btn"
+              onClick={handleGoToSellerHub}
+            >
+              Kênh Người Bán
+            </button>
             {!isApprovedSeller && !isAdminOrStaff && (
               <Link
                 to={isAuthenticated ? "/profile/become-seller" : "/register"}

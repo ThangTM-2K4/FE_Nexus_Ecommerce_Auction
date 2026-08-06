@@ -100,7 +100,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   const isAuthenticated = Boolean(user?.id);
-  const isApprovedSeller = user?.sellerStatus === 'APPROVED';
+  const isApprovedSeller =
+    user?.sellerStatus === 'APPROVED' ||
+    user?.isSeller === true ||
+    user?.role === 'SELLER' ||
+    user?.roleCode === 'SELLER' ||
+    user?.roleName === 'SELLER' ||
+    (Array.isArray(user?.roles) && user.roles.includes('SELLER')) ||
+    Boolean(user?.sellerId);
   const currentMode = user?.currentMode || 'BUYER';
   const isBuyerMode = currentMode === 'BUYER';
   const isSellerMode = currentMode === 'SELLER';
