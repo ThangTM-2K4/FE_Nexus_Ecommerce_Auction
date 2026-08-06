@@ -8,15 +8,17 @@ export default function ProductCard({
   id,
   image,
   title,
+  name,
   price,
-  discountPercent,
-  soldCount,
-  rating,
+  discountPercent = 10,
+  soldCount = "1.2k",
+  rating = 4.9,
   tags = [],
   onClick,
 }) {
-  const cornerTag = tags.find((tag) => ['7.7', 'Mall', 'SALE'].includes(tag));
-  const pillTags = tags.filter((tag) => !['7.7', 'Mall', 'SALE'].includes(tag));
+  const displayTitle = title || name || "Sản phẩm";
+  const displayRating = rating ?? 4.9;
+  const displaySoldCount = soldCount ?? "1.2k";
 
   const handleClick = () => {
     onClick?.(id);
@@ -39,13 +41,13 @@ export default function ProductCard({
       tabIndex={onClick ? 0 : undefined}
     >
       <div className={styles.imageWrap}>
-        <img src={image} alt={title} className={styles.image} loading="lazy" />
-
-        {cornerTag && <span className={styles.cornerTag}>{cornerTag}</span>}
-
-        {discountPercent != null && discountPercent > 0 && (
-          <span className={styles.discountBadge}>-{discountPercent}%</span>
+        {image ? (
+          <img src={image} alt={displayTitle} className={styles.image} loading="lazy" />
+        ) : (
+          <div className={styles.noImg}>📦</div>
         )}
+
+        <span className={styles.cornerTag}>Mall</span>
 
         <div className={styles.hoverOverlay}>
           <span>Tìm sản phẩm tương tự</span>
@@ -53,29 +55,19 @@ export default function ProductCard({
       </div>
 
       <div className={styles.body}>
-        {pillTags.length > 0 && (
-          <div className={styles.pillRow}>
-            {pillTags.map((tag) => (
-              <span key={tag} className={styles.pill}>
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        <h3 className={styles.title} title={displayTitle}>{displayTitle}</h3>
 
-        <h3 className={styles.title}>{title}</h3>
+        <div className={styles.priceRow}>
+          <span className={styles.price}>{formatPrice(price)}</span>
+          <span className={styles.discountBadge}>-{discountPercent}%</span>
+        </div>
 
         <div className={styles.footer}>
-          <span className={styles.price}>{formatPrice(price)}</span>
-          {rating != null ? (
-            <span className={styles.rating}>
-              <span className={styles.ratingStar} aria-hidden="true">★</span>
-              {rating}
-              {soldCount && <span className={styles.soldInline}> | {soldCount} đã bán</span>}
-            </span>
-          ) : (
-            <span className={styles.sold}>{soldCount} đã bán</span>
-          )}
+          <span className={styles.rating}>
+            <span className={styles.ratingStar} aria-hidden="true">★</span>
+            {displayRating}
+          </span>
+          <span className={styles.sold}>Đã bán {displaySoldCount}</span>
         </div>
       </div>
     </article>

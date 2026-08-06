@@ -12,6 +12,7 @@ import {
   rejectAdminProduct,
   getApiErrorMessage,
 } from "../../../services/adminProductService";
+import { getProductModeration } from "../../../services/ecommerceProductService";
 import "./index.scss";
 
 const TABS = [
@@ -83,92 +84,10 @@ const StaffProductReview = () => {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const endpoints = [
-        "/ecommerce/products",
-        "/admin/products/review-queue",
-        "/admin/products",
-        "/staff/products/review-queue",
-        "/management/products",
-        "/products",
-        "/catalog/products",
-        "/seller/products",
-      ];
-
-      const results = await Promise.allSettled(
-        endpoints.map((ep) =>
-          api.get(ep, { params: { scope: "management", pageSize: 100, pageNumber: 1, limit: 100 } })
-        )
-      );
-
-      const map = new Map();
-
-      results.forEach((res) => {
-        if (res.status === "fulfilled") {
-          const val = res.value?.data || res.value;
-          const items = Array.isArray(val)
-            ? val
-            : Array.isArray(val?.items)
-            ? val.items
-            : Array.isArray(val?.data?.items)
-            ? val.data.items
-            : Array.isArray(val?.data)
-            ? val.data
-            : Array.isArray(val?.results)
-            ? val.results
-            : [];
-
-          items.forEach((p) => {
-            if (p && (p.id || p.productId)) {
-              const id = p.id || p.productId;
-              const price = extractPrice(p);
-              const stock = extractStock(p);
-              if (!map.has(id)) {
-                map.set(id, { ...p, id, price, stock });
-              } else {
-                const existing = map.get(id);
-                map.set(id, {
-                  ...existing,
-                  ...p,
-                  id,
-                  price: price > 0 ? price : existing.price,
-                  stock: stock > 0 ? stock : existing.stock,
-                });
-              }
-            }
-          });
-        }
-      });
-
-      // Nếu API gateway chưa trả về do phân quyền token, nạp từ danh sách sản phẩm đã gửi duyệt
-      try {
-        const localProds = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
-        localProds.forEach((lp) => {
-          if (lp && (lp.id || lp.productId)) {
-            const id = lp.id || lp.productId;
-            const price = extractPrice(lp);
-            const stock = extractStock(lp);
-            if (!map.has(id)) {
-              map.set(id, { ...lp, id, price, stock });
-            } else {
-              const existing = map.get(id);
-              map.set(id, {
-                ...existing,
-                ...lp,
-                id,
-                price: price > 0 ? price : existing.price,
-                stock: stock > 0 ? stock : existing.stock,
-                moderationStatus: lp.moderationStatus || existing.moderationStatus,
-              });
-            }
-          }
-        });
-      } catch {
-        /* ignore */
-      }
-
-      setProducts(Array.from(map.values()));
+      const res = await getAdminProducts();
+      setProducts(res?.items || []);
     } catch (err) {
-      console.error("Error loading products:", err);
+      console.error("Error loading products for staff:", err);
       setProducts([]);
     } finally {
       setLoading(false);
@@ -177,6 +96,17 @@ const StaffProductReview = () => {
 
   useEffect(() => {
     loadProducts();
+
+    const handleStorageChange = (e) => {
+      if (!e.key || e.key === "seller_created_products") {
+        loadProducts();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   const normalizeStatus = (p) => {
@@ -308,7 +238,10 @@ const StaffProductReview = () => {
               key={t.id}
               type="button"
               className={tab === t.id ? "active" : ""}
-              onClick={() => setTab(t.id)}
+              onClick={() => {
+                setTab(t.id);
+                loadProducts();
+              }}
             >
               {t.label} ({counts[t.id] ?? 0})
             </button>

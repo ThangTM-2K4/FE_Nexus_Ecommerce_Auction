@@ -12,7 +12,6 @@ import RegisterVerifyOtpPage from "./pages/auth/registerVerifyOtp";
 import TermsPage from "./pages/auth/termsPage";
 
 import HomePage from "./pages/homepage/homePage";
-import ProductListPage from "./pages/homepage/productListPage";
 import ProductDetailPage from "./pages/productDetailPage";
 import ShopProfilePage from "./pages/shop/shopProfilePage";
 import CartPage from "./pages/cartPage";
@@ -81,6 +80,8 @@ import Error503Page from "./pages/errors/503";
 import AuctionIntroTestPage from "./pages/auctionIntroTest";
 import SiteChatWidget from "./chat";
 
+import SearchPage from "./pages/searchPage";
+
 function App() {
   return (
     <>
@@ -110,7 +111,7 @@ function App() {
     <Route path="/home" element={<HomePage />} />
     <Route path="/homepage" element={<HomePage />} />
     <Route path="/homePage" element={<HomePage />} />
-    <Route path="/products" element={<ProductListPage />} />
+    <Route path="/search" element={<SearchPage />} />
     <Route path="/product/:id" element={<ProductDetailPage />} />
     <Route path="/shop/:shopId" element={<ShopProfilePage />} />
 

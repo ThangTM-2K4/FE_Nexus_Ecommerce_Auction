@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import Header from '../../../components/homepage/header';
 import Footer from '../../../components/homepage/footer';
 import HeroSection from '../../../components/homepage/heroSection';
@@ -15,7 +14,6 @@ const INITIAL_PAGE_SIZE = 48;
 const LOAD_MORE_SIZE = 12;
 
 export default function HomePage() {
-  const { t } = useTranslation();
   const { handleProductClick } = useProductNavigate();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -45,7 +43,7 @@ export default function HomePage() {
         setProducts((productResult.items || []).map(mapProductListItem).filter(Boolean));
       } else {
         setProducts([]);
-        setLoadError(productResult.error || t('home.loadError'));
+        setLoadError(productResult.error || 'Không tải được sản phẩm');
       }
 
       setLoading(false);
@@ -129,57 +127,49 @@ export default function HomePage() {
 
           <CategoryGrid
             categories={categoriesWithClick}
-            title={t('home.featuredCategories')}
+            title="DANH MỤC NỔI BẬT"
           />
 
           <div id="product-section">
             {selectedCategory && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 0 10px 0', padding: '10px 16px', background: '#f8f4ff', borderRadius: '8px', border: '1px solid #e2d5f7' }}>
                 <span style={{ fontSize: '15px', color: '#5b21b6', fontWeight: 600 }}>
-                  📂 {t('home.filteringBy')} <strong>{selectedCategory.name}</strong>
+                  📂 Đang lọc theo danh mục: <strong>{selectedCategory.name}</strong>
                 </span>
                 <button
                   type="button"
                   onClick={handleResetCategory}
                   style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                 >
-                  ✕ {t('home.clearFilter')}
+                  ✕ Xem tất cả sản phẩm
                 </button>
               </div>
             )}
 
             {loading ? (
-              <p style={{ textAlign: 'center', padding: '3rem 0', color: '#666', fontSize: '15px' }}>
-                ⏳ {t('home.loadingProducts')}
-              </p>
+              <p style={{ textAlign: 'center', padding: '3rem 0', color: '#666', fontSize: '15px' }}>⏳ Đang tải sản phẩm từ hệ thống...</p>
             ) : products.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 1rem', background: '#fafafa', borderRadius: '12px', margin: '20px 0', border: '1px dashed #d9d9d9' }}>
                 <div style={{ fontSize: '42px', marginBottom: '12px' }}>📦</div>
                 <h4 style={{ fontSize: '16px', color: '#333', marginBottom: '8px', fontWeight: 600 }}>
-                  {t('home.emptyCategoryTitle', {
-                    name: selectedCategory?.name || t('home.thisCategory'),
-                  })}
+                  Chưa có sản phẩm nào thuộc danh mục "{selectedCategory?.name || 'này'}"
                 </h4>
                 <p style={{ fontSize: '14px', color: '#666', marginBottom: '16px' }}>
-                  {t('home.emptyCategoryDesc')}
+                  Vui lòng chọn danh mục khác hoặc xem toàn bộ danh sách sản phẩm trên hệ thống.
                 </p>
                 <button
                   type="button"
                   onClick={handleResetCategory}
                   style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}
                 >
-                  {t('home.viewAllProducts')}
+                  Xem tất cả sản phẩm toàn sàn
                 </button>
               </div>
             ) : (
               <ProductGrid
                 products={products}
                 extraProducts={extraProducts}
-                title={
-                  selectedCategory
-                    ? t('home.productsInCategory', { name: selectedCategory.name.toUpperCase() })
-                    : t('home.todayPicks')
-                }
+                title={selectedCategory ? `SẢN PHẨM: ${selectedCategory.name.toUpperCase()}` : "TẤT CẢ SẢN PHẨM"}
                 columns={6}
                 rows={8}
                 onLoadMore={handleLoadMore}

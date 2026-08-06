@@ -4,9 +4,15 @@ import { toast } from "react-toastify";
 import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { useAuth } from "../../../context/AuthContext";
-import { getMyEcommerceProducts, submitProductForReview, getApiErrorMessage } from "../../../services/ecommerceProductService";
+import api from "../../../config/api";
+import {
+  getMyEcommerceProducts,
+  submitProductForReview,
+  getProductModeration,
+  mapSellerProductToUi,
+  getApiErrorMessage,
+} from "../../../services/ecommerceProductService";
 import { productCategories } from "../../../data/auctionMockData";
-import { getCategories, getCategoryLabel } from "../../../services/categoryService";
 
 const STATUS_LABELS = {
   DRAFT: "Đang ẩn",
@@ -19,84 +25,157 @@ export default function ProductsPage() {
   const { user } = useAuth();
   const [myProducts, setMyProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
-
-  useEffect(() => {
-    getCategories().then((res) => {
-      if (res?.ok) setCategories(res.items || []);
-    }).catch(() => {});
-  }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await getMyEcommerceProducts();
-      let list = Array.isArray(res)
-        ? res
-        : Array.isArray(res?.items)
-        ? res.items
-        : Array.isArray(res?.products)
-        ? res.products
-        : [];
+      const endpoints = [
+        "/seller/products",
+        "/ecommerce/products",
+      ];
 
-      // Merge items from localStorage so newly created items, stock, and moderationStatus are preserved
-      try {
-        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
-        const map = new Map();
-        list.forEach((p) => {
-          if (p && (p.id || p.productId)) {
-            const id = String(p.id || p.productId);
-            map.set(id, { ...p, id });
-          }
-        });
-        localList.forEach((lp) => {
-          if (lp && (lp.id || lp.productId)) {
-            const id = String(lp.id || lp.productId);
-            const stockVal = Number(lp.stockQuantity ?? lp.stock ?? 0);
-            if (!map.has(id)) {
-              map.set(id, {
-                ...lp,
-                id,
-                stock: stockVal,
-                stockQuantity: stockVal,
-                moderationStatus: lp.moderationStatus || "NONE",
-              });
-            } else {
-              const existing = map.get(id);
-              const mergedStock = stockVal > 0 ? stockVal : Number(existing.stockQuantity ?? existing.stock ?? 0);
-              const mergedMod = lp.moderationStatus && lp.moderationStatus !== "NONE" ? lp.moderationStatus : existing.moderationStatus;
-              map.set(id, {
-                ...existing,
-                ...lp,
-                id,
-                stock: mergedStock,
-                stockQuantity: mergedStock,
-                moderationStatus: mergedMod || "NONE",
-              });
+      const results = await Promise.allSettled(
+        endpoints.map((ep) =>
+          api.get(ep, { params: { pageSize: 100, pageNumber: 1 }, skipErrorRedirect: true })
+        )
+      );
+
+      const map = new Map();
+
+      results.forEach((res) => {
+        if (res.status === "fulfilled") {
+          const val = res.value?.data || res.value;
+          const items = Array.isArray(val)
+            ? val
+            : Array.isArray(val?.items)
+            ? val.items
+            : Array.isArray(val?.data?.items)
+            ? val.data.items
+            : Array.isArray(val?.data)
+            ? val.data
+            : Array.isArray(val?.results)
+            ? val.results
+            : [];
+
+          items.forEach((item) => {
+            if (item && (item.id || item.productId)) {
+              const mapped = mapSellerProductToUi(item);
+              if (mapped && mapped.id) {
+                const key = String(mapped.id).toLowerCase();
+                if (!map.has(key)) {
+                  map.set(key, mapped);
+                } else {
+                  const existing = map.get(key);
+                  map.set(key, {
+                    ...existing,
+                    ...mapped,
+                    id: mapped.id,
+                  });
+                }
+              }
             }
-          }
-        });
-        list = Array.from(map.values());
-      } catch {
-        /* ignore */
-      }
+          });
+        }
+      });
 
-      // Nạp thông tin kiểm duyệt thời gian thực cho từng sản phẩm
+      let list = Array.from(map.values());
+
+      // Nạp thông tin kiểm duyệt & ảnh thời gian thực cho từng sản phẩm
       const enrichedList = await Promise.all(
         list.map(async (p) => {
+          let updated = { ...p };
+
+          // Nạp chi tiết để lấy ảnh đầy đủ từ CSDL catalog.ProductImages nếu danh sách tổng chưa trả về ảnh
+          if (!updated.images || updated.images.length === 0) {
+            // 1. Thử các API lấy danh sách ảnh sản phẩm trực tiếp từ CSDL
+            const productIdStr = String(p.id || p.productId || "");
+            const imageEndpoints = [
+              `/ecommerce/products/${productIdStr}/images`,
+              `/products/${productIdStr}/images`,
+              `/catalog/products/${productIdStr}/images`,
+              `/ecommerce/products/${productIdStr.toUpperCase()}/images`,
+            ];
+
+            for (const ep of imageEndpoints) {
+              try {
+                const res = await api.get(ep, { skipErrorRedirect: true });
+                const val = res?.data?.data || res?.data?.items || res?.data || res;
+                const rawImgs = Array.isArray(val) ? val : Array.isArray(val?.items) ? val.items : [];
+                if (rawImgs.length > 0) {
+                  const mappedImgs = rawImgs.map(resolveImageUrl).filter(Boolean);
+                  if (mappedImgs.length > 0) {
+                    updated.images = mappedImgs;
+                    break;
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+
+            // 2. Thử gọi API review-detail nếu vẫn chưa có ảnh: GET /admin/products/{id}/review-detail
+            if (!updated.images || updated.images.length === 0) {
+              try {
+                const { data: revRes } = await api.get(`/admin/products/${p.id}/review-detail`, { skipErrorRedirect: true });
+                const revData = revRes?.data || revRes;
+                if (revData) {
+                  const revImgs = Array.isArray(revData.images)
+                    ? revData.images
+                    : Array.isArray(revData.productImages)
+                      ? revData.productImages
+                      : [revData.imageUrl || revData.primaryImageUrl || revData.coverImageUrl || revData.imageKey || revData.storageObjectKey].filter(Boolean);
+                  const mappedImgs = revImgs.map(resolveImageUrl).filter(Boolean);
+                  if (mappedImgs.length > 0) {
+                    updated.images = mappedImgs;
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+
+            // 3. Thử gọi API chi tiết sản phẩm: GET /ecommerce/products/{id}
+            if (!updated.images || updated.images.length === 0) {
+              try {
+                const { data } = await api.get(`/ecommerce/products/${p.id}`, { skipErrorRedirect: true });
+                const detail = data?.data || data;
+                if (detail) {
+                  const mappedDetail = mapSellerProductToUi(detail);
+                  if (mappedDetail && mappedDetail.images && mappedDetail.images.length > 0) {
+                    updated.images = mappedDetail.images;
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+
+            // 4. Lấy từ Cache LocalStorage làm phương án dự phòng tức thì khi Backend C# chưa kích hoạt ảnh công khai
+            if (!updated.images || updated.images.length === 0) {
+              try {
+                const cachedMap = JSON.parse(localStorage.getItem("seller_product_images_map") || "{}");
+                const cachedUrls = cachedMap[p.id];
+                if (Array.isArray(cachedUrls) && cachedUrls.length > 0) {
+                  updated.images = cachedUrls.map(resolveImageUrl).filter(Boolean);
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+          }
+
+          // Nạp thông tin kiểm duyệt
           try {
             const modData = await getProductModeration(p.id);
             if (modData && modData.moderationStatus && modData.moderationStatus !== "NONE") {
-              return {
-                ...p,
-                moderationStatus: modData.moderationStatus,
-                rowVersion: modData.rowVersion || p.rowVersion,
-              };
+              updated.moderationStatus = modData.moderationStatus;
+              updated.rowVersion = modData.rowVersion || updated.rowVersion;
             }
           } catch {
             /* ignore */
           }
-          return p;
+
+          return updated;
         })
       );
 
@@ -225,21 +304,18 @@ export default function ProductsPage() {
                 <tbody>
                   {myProducts.map((p) => {
                     const category = productCategories.find((c) => c.id === p.category);
-                    const categoryName = p.name || getCategoryLabel(categories, p.category) || category?.label || "Sản phẩm";
-                    const rawMod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
                     const rawSt = String(p.status || "").toUpperCase();
+                    const rawMod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
 
-                    let effectiveModStatus = "NONE";
-                    if (rawMod === "APPROVED" || rawSt === "APPROVED" || rawSt === "ACTIVE" || rawSt === "PUBLISHED") {
+                    let effectiveModStatus = "DRAFT";
+                    if (rawSt === "ACTIVE" || rawSt === "APPROVED" || rawMod === "APPROVED" || rawSt === "PUBLISHED") {
                       effectiveModStatus = "APPROVED";
-                    } else if (rawMod === "REJECTED" || rawSt === "REJECTED") {
+                    } else if (rawSt === "REJECTED" || rawMod === "REJECTED") {
                       effectiveModStatus = "REJECTED";
                     } else if (
-                      rawMod === "PENDING_MANUAL_REVIEW" ||
-                      rawMod.includes("PENDING") ||
-                      rawSt.includes("PENDING") ||
-                      rawSt.includes("REVIEW") ||
-                      rawSt.includes("CHỜ")
+                      rawSt === "PENDING_REVIEW" ||
+                      rawSt === "PENDING" ||
+                      rawMod === "PENDING_MANUAL_REVIEW"
                     ) {
                       effectiveModStatus = "PENDING_MANUAL_REVIEW";
                     }
@@ -249,12 +325,12 @@ export default function ProductsPage() {
                       effectiveModStatus === "APPROVED";
 
                     let buttonText = "Gửi duyệt";
-                    let badgeLabel = "Đang ẩn";
+                    let badgeLabel = "Đang ẩn / Nháp";
                     let badgeClass = "draft";
 
                     if (effectiveModStatus === "APPROVED") {
                       buttonText = "Đã duyệt";
-                      badgeLabel = "Đã duyệt";
+                      badgeLabel = "Đang bán";
                       badgeClass = "approved";
                     } else if (effectiveModStatus === "PENDING_MANUAL_REVIEW") {
                       buttonText = "Đang chờ duyệt";
@@ -265,6 +341,7 @@ export default function ProductsPage() {
                       badgeLabel = "Bị từ chối";
                       badgeClass = "rejected";
                     }
+
                     return (
                       <tr key={p.id}>
                         <td>
@@ -273,7 +350,7 @@ export default function ProductsPage() {
                           </div>
                         </td>
                         <td>
-                          <strong>{categoryName}</strong>
+                          <strong>{p.name || p.productName || category?.label || "Sản phẩm"}</strong>
                           {p.brand && <div style={{ fontSize: "12px", color: "#888" }}>Thương hiệu: {p.brand}</div>}
                         </td>
                         <td style={{ fontSize: "12px", color: "#555" }}>{p.id}</td>

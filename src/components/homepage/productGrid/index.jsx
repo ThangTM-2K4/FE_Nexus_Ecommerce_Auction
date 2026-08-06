@@ -10,7 +10,7 @@ const DEFAULT_PAGE_SIZE = 48;
  */
 export default function ProductGrid({
   products = [],
-  title = 'GỢI Ý HÔM NAY',
+  title = 'TẤT CẢ SẢN PHẨM',
   columns = 6,
   rows = 8,
   isLoggedIn = false,

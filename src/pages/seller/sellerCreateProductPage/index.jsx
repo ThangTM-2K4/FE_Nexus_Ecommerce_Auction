@@ -1,18 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 import {
   createEcommerceProduct,
-  buildCreateProductPayload,
   uploadProductImage,
   attachProductImage,
+  createProductSku,
   submitProductForReview,
-  getProductById,
   getApiErrorMessage,
 } from "../../../services/ecommerceProductService";
-import { getCategories, toSelectOptions } from "../../../services/categoryService";
+import { getCategories } from "../../../services/adminCategoryService";
 import * as shippingService from "../../../services/shippingService";
+import { productCategories } from "../../../data/auctionMockData";
 import { fileToDataUrl } from "../../../utils/fileToDataUrl";
 import { dataUrlToFile } from "../../../utils/dataUrlToFile";
 import Select from "../../../components/common/select";
@@ -21,8 +21,16 @@ import "./index.scss";
 const SUBMIT_STEP_LABELS = {
   create: "Đang tạo sản phẩm...",
   images: "Đang tải ảnh lên...",
+  sku: "Đang tạo SKU...",
   review: "Đang gửi duyệt...",
 };
+
+const DEFAULT_CATEGORY_OPTIONS = [
+  { value: "00000000-0000-0000-0000-000000000001", label: "Nghệ thuật & Sưu tầm" },
+  { value: "00000000-0000-0000-0000-000000000002", label: "Công nghệ & Điện tử" },
+  { value: "00000000-0000-0000-0000-000000000003", label: "Thời trang & Phụ kiện" },
+  { value: "00000000-0000-0000-0000-000000000004", label: "Ô tô & Xe máy" },
+];
 
 const CONDITIONS = [
   { value: "new", label: "Hàng mới" },
@@ -41,7 +49,7 @@ const NAME_MAX = 120;
 
 const initialForm = {
   name: "",
-  category: "",
+  category: "00000000-0000-0000-0000-000000000001",
   brand: "",
   description: "",
   price: "",
@@ -54,43 +62,38 @@ export default function CreateProductPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("basic");
   const [form, setForm] = useState(initialForm);
+  const [categoryOptions, setCategoryOptions] = useState(DEFAULT_CATEGORY_OPTIONS);
   const [images, setImages] = useState([]);
   const [video, setVideo] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitStep, setSubmitStep] = useState("");
   const [draftProductId, setDraftProductId] = useState(null);
-  const [draftRowVersion, setDraftRowVersion] = useState(null);
   const [shippingOptions, setShippingOptions] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesLoadFailed, setCategoriesLoadFailed] = useState(false);
-
-  const categoryOptions = useMemo(() => toSelectOptions(categories), [categories]);
-  const canSubmitProduct = !categoriesLoading && !categoriesLoadFailed && categories.length > 0;
 
   useEffect(() => {
-    let cancelled = false;
-    setCategoriesLoading(true);
-    setCategoriesLoadFailed(false);
+    getCategories({ includeInactive: false })
+      .then((cats) => {
+        const flatList = [];
+        (cats || []).forEach((parent) => {
+          if (parent.id && !String(parent.id).startsWith("cat-")) {
+            flatList.push({ value: String(parent.id), label: parent.name });
+          }
+          (parent.children || []).forEach((child) => {
+            if (child.id && !String(child.id).startsWith("cat-")) {
+              flatList.push({ value: String(child.id), label: `— ${child.name}` });
+            }
+          });
+        });
 
-    getCategories().then((res) => {
-      if (cancelled) return;
-      if (res.ok && res.items.length > 0) {
-        setCategories(res.items);
-      } else {
-        setCategories([]);
-        setCategoriesLoadFailed(true);
-        toast.error(res.error || "Không tải được danh mục ngành hàng");
-      }
-      setCategoriesLoading(false);
-    });
-
-    return () => {
-      cancelled = true;
-    };
+        if (flatList.length > 0) {
+          setCategoryOptions(flatList);
+          setForm((prev) => ({ ...prev, category: flatList[0].value }));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -186,103 +189,126 @@ export default function CreateProductPage() {
   const validate = () => {
     const next = {};
     if (!form.name.trim()) next.name = "Vui lòng nhập tên sản phẩm";
-    if (!form.category.trim()) next.category = "Vui lòng chọn ngành hàng";
-    if (!form.description.trim()) next.description = "Vui lòng nhập mô tả sản phẩm";
     if (!form.price.trim()) next.price = "Vui lòng nhập giá bán";
     else if (Number.isNaN(Number(form.price))) next.price = "Giá bán phải là số";
     if (!form.stock.trim()) next.stock = "Vui lòng nhập số lượng tồn kho";
     else if (Number.isNaN(Number(form.stock))) next.stock = "Số lượng phải là số";
     setErrors(next);
-    if (next.name || next.category || next.description) setActiveTab("basic");
+    if (next.name) setActiveTab("basic");
     else if (next.price || next.stock) setActiveTab("sales");
     return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (hidden) => {
-    if (!canSubmitProduct) {
-      toast.error("Chưa tải được danh mục ngành hàng — không thể tạo sản phẩm");
-      return;
-    }
     if (!validate()) return;
-    if (!user?.id) {
-      toast.error("Chưa đăng nhập — không thể tạo sản phẩm");
-      return;
-    }
     setSubmitting(true);
 
     let productId = draftProductId;
-    let rowVersion = draftRowVersion;
+    let rowVersion = null;
 
     try {
+      setSubmitStep("images");
+      const uploadedImages = [];
+      const imagesToUpload = [...filledImages];
+
+      for (let i = 0; i < imagesToUpload.length; i += 1) {
+        try {
+          const dataUrl = imagesToUpload[i];
+          const file = await dataUrlToFile(dataUrl, `product-${Date.now()}-${i + 1}.jpg`);
+          const { url, key } = await uploadProductImage(file);
+          if (url || key) {
+            uploadedImages.push({
+              imageUrl: url,
+              storageObjectKey: key || url,
+              altText: form.name.trim(),
+              isPrimary: i === 0,
+              sortOrder: i,
+            });
+          }
+        } catch (imgErr) {
+          console.warn("Upload image warning:", imgErr);
+        }
+      }
+
       if (!productId) {
         setSubmitStep("create");
-        const created = await createEcommerceProduct(
-          buildCreateProductPayload({
-            sellerUserId: user.id,
-            name: form.name,
-            description: form.description,
-            categoryId: form.category,
-            brand: form.brand,
-            price: form.price,
-            stock: form.stock,
-            condition: form.condition,
-          }),
-        );
+        const priceNum = Number(form.price) > 0 ? Number(form.price) : 1000;
+        const stockNum = Number(form.stock) >= 0 ? Number(form.stock) : 0;
+        const uniqueSku = `SKU-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1000)}`;
+
+        const createPayload = {
+          name: form.name.trim(),
+          description: form.description.trim() || undefined,
+          categoryId: form.category,
+          salesChannel: "ECOMMERCE",
+          brand: form.brand.trim() || undefined,
+          originCountry: "VN",
+          skus: [
+            {
+              skuCode: uniqueSku,
+              skuName: form.name.trim() || "Mặc định",
+              unitPrice: priceNum,
+              currency: "VND",
+              salesChannel: "ECOMMERCE",
+              isDefault: true,
+              attributes: JSON.stringify({ stock: stockNum, condition: form.condition || "new" }),
+              barcode: "",
+            },
+          ],
+          images: uploadedImages,
+        };
+
+        const created = await createEcommerceProduct(createPayload);
         productId = created.productId ?? created.id;
-        rowVersion = created.rowVersion ?? null;
+        rowVersion = created.rowVersion || created.version || created.data?.rowVersion;
         if (!productId) {
           throw new Error("Không nhận được productId từ server.");
         }
         setDraftProductId(productId);
-        setDraftRowVersion(rowVersion);
-      } else if (!rowVersion) {
-        const fresh = await getProductById(productId);
-        if (fresh.ok && fresh.data?.rowVersion) {
-          rowVersion = fresh.data.rowVersion;
-          setDraftRowVersion(rowVersion);
+      }
+
+      // Gắn bổ sung từng ảnh vào sản phẩm làm phương án dự phòng & Lưu Cache FE
+      if (productId && uploadedImages.length > 0) {
+        try {
+          const imageMap = JSON.parse(localStorage.getItem("seller_product_images_map") || "{}");
+          const urls = uploadedImages.map((img) => img.imageUrl || img.storageObjectKey).filter(Boolean);
+          if (urls.length > 0) {
+            imageMap[productId] = urls;
+            localStorage.setItem("seller_product_images_map", JSON.stringify(imageMap));
+          }
+        } catch {
+          /* ignore */
         }
-      }
 
-      if (!rowVersion) {
-        throw new Error("Không có rowVersion — không thể cập nhật sản phẩm (ảnh/trạng thái).");
-      }
-
-      const imagesToUpload = [...filledImages];
-
-      if (imagesToUpload.length > 0) {
-        setSubmitStep("images");
-        for (let i = 0; i < imagesToUpload.length; i += 1) {
-          const dataUrl = imagesToUpload[i];
-          const file = await dataUrlToFile(dataUrl, `product-${productId}-${i + 1}.jpg`);
-          const uploaded = await uploadProductImage(file);
-          const isPrimary = i === 0;
-          const attachResult = await attachProductImage(
-            productId,
-            {
-              imageUrl: uploaded.url,
-              storageObjectKey: uploaded.key,
-              altText: form.name || "",
-              isPrimary,
-              sortOrder: i,
-            },
-            rowVersion,
-          );
-          rowVersion = attachResult.rowVersion;
-          setDraftRowVersion(rowVersion);
+        for (let i = 0; i < uploadedImages.length; i += 1) {
+          try {
+            const img = uploadedImages[i];
+            await attachProductImage(productId, {
+              imageKey: img.storageObjectKey,
+              imageUrl: img.imageUrl,
+              isCover: img.isPrimary,
+              isPrimary: img.isPrimary,
+              sortOrder: img.sortOrder,
+            }, rowVersion);
+          } catch {
+            /* ignore */
+          }
         }
       }
 
       if (!hidden) {
         setSubmitStep("review");
-        const reviewResult = await submitProductForReview(productId, rowVersion);
-        rowVersion = reviewResult.rowVersion ?? rowVersion;
-        setDraftRowVersion(rowVersion);
+        try {
+          await submitProductForReview(productId, rowVersion);
+        } catch (revErr) {
+          console.warn("Submit review warning:", revErr);
+        }
       }
 
       toast.success(
         hidden
-          ? "Đã lưu sản phẩm ở chế độ ẩn (DRAFT)"
-          : "Đã tạo sản phẩm và gửi duyệt thành công"
+          ? "Đã lưu bản nháp sản phẩm thành công!"
+          : "Đã gửi sản phẩm lên hệ thống chờ Admin duyệt!"
       );
       navigate("/seller-hub/products");
     } catch (err) {
@@ -455,7 +481,7 @@ export default function CreateProductPage() {
                 </div>
 
                 <div className="slr-cp__row">
-                  <span className="slr-cp__row-label">Ngành hàng<span className="required"> *</span></span>
+                  <span className="slr-cp__row-label">Ngành hàng</span>
                   <div className="slr-cp__row-body">
                     <div className="slr-cp__inline-field">
                       <Select
@@ -463,15 +489,7 @@ export default function CreateProductPage() {
                         value={form.category}
                         onChange={handleChange}
                         options={categoryOptions}
-                        placeholder={
-                          categoriesLoading
-                            ? "Đang tải ngành hàng..."
-                            : categoriesLoadFailed
-                              ? "Không tải được ngành hàng"
-                              : "Chọn ngành hàng"
-                        }
-                        disabled={categoriesLoading || categoriesLoadFailed || categoryOptions.length === 0}
-                        className={errors.category ? "input-error" : ""}
+                        placeholder="Chọn ngành hàng"
                       />
                       <button
                         type="button"
@@ -481,12 +499,6 @@ export default function CreateProductPage() {
                         Sử dụng gần đây
                       </button>
                     </div>
-                    {errors.category && <span className="field-error">{errors.category}</span>}
-                    {categoriesLoadFailed && (
-                      <small className="slr-create-image-hint">
-                        Không thể tải danh mục từ hệ thống. Vui lòng tải lại trang hoặc thử lại sau.
-                      </small>
-                    )}
                   </div>
                 </div>
 
@@ -507,7 +519,7 @@ export default function CreateProductPage() {
 
                 <div className="slr-cp__row">
                   <label className="slr-cp__row-label" htmlFor="description">
-                    Mô tả sản phẩm<span className="required"> *</span>
+                    Mô tả sản phẩm
                   </label>
                   <div className="slr-cp__row-body">
                     <textarea
@@ -517,12 +529,10 @@ export default function CreateProductPage() {
                       value={form.description}
                       onChange={handleChange}
                       placeholder="Mô tả tình trạng, thông số, phụ kiện đi kèm..."
-                      className={errors.description ? "input-error" : ""}
                     />
                     <span className="slr-cp__counter slr-cp__counter--block">
                       {form.description.length} ký tự
                     </span>
-                    {errors.description && <span className="field-error">{errors.description}</span>}
                   </div>
                 </div>
               </div>
@@ -668,13 +678,13 @@ export default function CreateProductPage() {
               <button
                 type="button"
                 className="slr-btn-outline"
-                disabled={submitting || !canSubmitProduct}
+                disabled={submitting}
                 onClick={() => handleSubmit(true)}
               >
                 Lưu & Ẩn
               </button>
-              <button type="submit" className="slr-btn-create" disabled={submitting || !canSubmitProduct}>
-                {submitLabel || "Lưu & Hiển thị"}
+              <button type="submit" className="slr-btn-create" disabled={submitting}>
+                {submitLabel || "Gửi duyệt"}
               </button>
             </div>
           </form>

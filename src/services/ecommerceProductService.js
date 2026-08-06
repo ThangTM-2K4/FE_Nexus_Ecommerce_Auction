@@ -1,9 +1,10 @@
 import api, { BACKEND_BASE_URL } from '../config/api';
 import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiResponse';
+import { extractUploadKey, normalizeUploadKey } from './uploadResponse';
 
 export { getApiErrorMessage };
 
-const MULTIPART = { headers: { 'Content-Type': undefined } };
+const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
 const BUYER_LIST_PATH = '/ecommerce/products';
 const isDev = import.meta.env.DEV;
 
@@ -59,21 +60,22 @@ const buyerRequestConfig = { skipErrorRedirect: true };
 
 /**
  * Danh sách sản phẩm phía khách mua — GET /api/v1/ecommerce/products hoặc GET /api/v1/products
- * Query: search, categoryId, minPrice, maxPrice, sortBy, sortDirection, pageNumber, pageSize
+ * Chỉ hiển thị 100% sản phẩm có Status = 'ACTIVE' thực sự trong CSDL SQL Server
  */
 export async function getProducts(filters = {}) {
   const params = normalizeProductFilters(filters);
   logDevRequest('GET', BUYER_LIST_PATH, params);
 
-  // 1. Thử gọi GET /ecommerce/products
+  // 1. Gọi API Public chính thức GET /api/v1/ecommerce/products (Server C# lọc Status = 'ACTIVE' trong DB)
   try {
     const { data } = await api.get(BUYER_LIST_PATH, { params, ...buyerRequestConfig });
     const paged = unwrapPagedList(data);
-    if (Array.isArray(paged.items) && paged.items.length > 0) {
+    const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+    if (Array.isArray(rawItems) && rawItems.length > 0) {
       return {
         ok: true,
-        items: paged.items,
-        total: paged.total ?? paged.items.length,
+        items: rawItems,
+        total: paged.total ?? rawItems.length,
         pageNumber: paged.page ?? params.pageNumber ?? 1,
         pageSize: paged.pageSize ?? params.pageSize ?? 20,
       };
@@ -82,18 +84,19 @@ export async function getProducts(filters = {}) {
     // ignore
   }
 
-  // 2. Thử gọi GET /api/v1/products?pageSize=100
+  // 2. Gọi API Public dự phòng GET /api/v1/products
   try {
     const { data } = await api.get('/products', {
       params: { pageSize: 100, ...params },
       ...buyerRequestConfig,
     });
     const paged = unwrapPagedList(data);
-    if (Array.isArray(paged.items) && paged.items.length > 0) {
+    const rawItems = paged?.items || (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+    if (Array.isArray(rawItems) && rawItems.length > 0) {
       return {
         ok: true,
-        items: paged.items,
-        total: paged.total ?? paged.items.length,
+        items: rawItems,
+        total: paged.total ?? rawItems.length,
         pageNumber: paged.page ?? params.pageNumber ?? 1,
         pageSize: paged.pageSize ?? params.pageSize ?? 20,
       };
@@ -102,32 +105,13 @@ export async function getProducts(filters = {}) {
     // ignore
   }
 
-  // 3. Thử gọi GET /api/v1/admin/products (Lấy sản phẩm hệ thống)
-  try {
-    const { data } = await api.get('/admin/products', {
-      params: { pageSize: 100, ...params },
-      ...buyerRequestConfig,
-    });
-    const paged = unwrapPagedList(data);
-    return {
-      ok: true,
-      items: paged.items || [],
-      total: paged.total ?? (paged.items || []).length,
-      pageNumber: paged.page ?? params.pageNumber ?? 1,
-      pageSize: paged.pageSize ?? params.pageSize ?? 20,
-    };
-  } catch (error) {
-    logDevError('getProducts failed', error);
-    return {
-      ok: false,
-      error: getApiErrorMessage(error, 'Không tải được danh sách sản phẩm'),
-      items: [],
-      total: 0,
-      pageNumber: params.pageNumber ?? 1,
-      pageSize: params.pageSize ?? 20,
-      status: error?.response?.status ?? 0,
-    };
-  }
+  return {
+    ok: true,
+    items: [],
+    total: 0,
+    pageNumber: params.pageNumber ?? 1,
+    pageSize: params.pageSize ?? 20,
+  };
 }
 
 /**
@@ -173,65 +157,7 @@ const extractUploadUrl = (response) => {
 const extractProductId = (payload) =>
   payload?.id ?? payload?.productId ?? payload?.data?.id ?? payload?.data?.productId;
 
-const extractRowVersion = (payload) =>
-  payload?.rowVersion ?? payload?.RowVersion ?? null;
-
-const buildIfMatchHeader = (rowVersion, quoted = true) =>
-  quoted ? `"${rowVersion}"` : String(rowVersion);
-
-const resolveRowVersion = (result, previousRowVersion, context) => {
-  const next = extractRowVersion(result);
-  if (!next) {
-    console.warn(`[ecommerceProductService] ${context}: response không có rowVersion mới, giữ rowVersion cũ.`);
-    return previousRowVersion;
-  }
-  return next;
-};
-
-async function requestWithIfMatch(method, url, { body, rowVersion, quoted = true }) {
-  const config = {
-    headers: { 'If-Match': buildIfMatchHeader(rowVersion, quoted) },
-  };
-  if (method === 'post') return api.post(url, body ?? {}, config);
-  if (method === 'patch') return api.patch(url, body ?? {}, config);
-  throw new Error(`Unsupported method: ${method}`);
-}
-
-/**
- * Gọi API có If-Match — thử quoted trước (chuẩn HTTP ETag), fallback unquoted nếu fail.
- */
-async function requestWithIfMatchRetry(method, url, { body, rowVersion, context }) {
-  if (!rowVersion) {
-    throw new Error(`Thiếu rowVersion cho ${context}.`);
-  }
-
-  try {
-    return await requestWithIfMatch(method, url, { body, rowVersion, quoted: true });
-  } catch (error) {
-    console.error(
-      `[ecommerceProductService] ${context} If-Match (quoted) failed`,
-      error?.response?.status,
-      error?.response?.data ?? error,
-    );
-
-    try {
-      const response = await requestWithIfMatch(method, url, { body, rowVersion, quoted: false });
-      if (isDev) {
-        console.info(`[ecommerceProductService] ${context}: If-Match unquoted thành công.`);
-      }
-      return response;
-    } catch (retryError) {
-      console.error(
-        `[ecommerceProductService] ${context} If-Match (unquoted) failed`,
-        retryError?.response?.status,
-        retryError?.response?.data ?? retryError,
-      );
-      throw retryError;
-    }
-  }
-}
-
-const DEFAULT_SALES_CHANNEL = 'Ecommerce';
+const DEFAULT_SALES_CHANNEL = 'ECOMMERCE';
 const DEFAULT_CURRENCY = 'VND';
 const DEFAULT_ORIGIN_COUNTRY = 'VN';
 
@@ -253,8 +179,6 @@ export function buildCreateProductPayload({
   const trimmedDesc = String(description || '').trim();
   const unitPrice = Number(price);
   const stockQty = Number(stock);
-  const uniqueSuffix = `${Date.now()}${Math.random().toString(36).slice(2, 6)}`.toUpperCase();
-  const skuCode = `DEFAULT-${uniqueSuffix}`;
 
   return {
     sellerUserId,
@@ -266,7 +190,7 @@ export function buildCreateProductPayload({
     originCountry: originCountry || DEFAULT_ORIGIN_COUNTRY,
     skus: [
       {
-        skuCode,
+        skuCode: 'DEFAULT',
         skuName: trimmedName || 'Mặc định',
         unitPrice,
         currency: DEFAULT_CURRENCY,
@@ -292,69 +216,10 @@ export async function createEcommerceProduct(payload) {
   const { data } = await api.post('/ecommerce/products', payload);
   const result = unwrapData(data);
   if (isDev) {
-    console.info('[ecommerceProductService] POST /ecommerce/products response', result, {
-      inferredStatus: result?.status ?? result?.moderationStatus ?? result?.productStatus,
-    });
+    console.info('[ecommerceProductService] POST /ecommerce/products response', result);
   }
   const productId = extractProductId(result);
-  return { ...result, productId, rowVersion: extractRowVersion(result) };
-}
-
-const isAbsoluteHttpsUrl = (value) => {
-  if (typeof value !== 'string' || !value.trim()) return false;
-  try {
-    return new URL(value.trim()).protocol === 'https:';
-  } catch {
-    return false;
-  }
-};
-
-const extractStorageObjectKey = (response) => {
-  const data = getUploadPayload(response);
-  if (typeof data === 'string') return data.trim();
-  return String(data.key || data.storageObjectKey || '').trim();
-};
-
-/**
- * Body POST /ecommerce/products/{id}/images — đúng Swagger:
- * { imageUrl, storageObjectKey, altText, isPrimary, sortOrder }
- */
-export function buildAttachProductImagePayload({
-  url,
-  key,
-  imageUrl: imageUrlIn,
-  storageObjectKey: storageKeyIn,
-  altText = '',
-  isPrimary = false,
-  isCover,
-  sortOrder = 0,
-} = {}) {
-  const storageObjectKey = String(storageKeyIn || key || '').trim();
-  const rawUrl = imageUrlIn ?? url ?? null;
-  const imageUrl = rawUrl && isAbsoluteHttpsUrl(rawUrl) ? String(rawUrl).trim() : null;
-
-  if (!storageObjectKey && !imageUrl) {
-    throw new Error(
-      'Thiếu storageObjectKey hoặc imageUrl HTTPS — kiểm tra response POST /catalog/uploads/product.',
-    );
-  }
-
-  const payload = {
-    altText: String(altText).trim(),
-    sortOrder: Number(sortOrder),
-    isPrimary: Boolean(isPrimary ?? isCover ?? false),
-    storageObjectKey,
-  };
-
-  if (imageUrl) {
-    payload.imageUrl = imageUrl;
-  }
-
-  if (isDev) {
-    console.info('[ecommerceProductService] attach image payload', payload);
-  }
-
-  return payload;
+  return { ...result, productId };
 }
 
 /**
@@ -364,40 +229,21 @@ export async function uploadProductImage(file) {
   const fd = new FormData();
   fd.append('file', file);
   const response = await api.post('/catalog/uploads/product', fd, MULTIPART);
-  const rawPayload = getUploadPayload(response);
   const url = extractUploadUrl(response);
-  const key = extractStorageObjectKey(response);
-
-  if (isDev) {
-    console.info('[ecommerceProductService] POST /catalog/uploads/product response', rawPayload, {
-      url,
-      key,
-    });
-  }
-
-  if (!key && !isAbsoluteHttpsUrl(url)) {
-    throw new Error('Server không trả về storageObjectKey hoặc imageUrl HTTPS.');
+  const key = normalizeUploadKey(extractUploadKey(response) || url);
+  if (!url && !key) {
+    throw new Error('Server không trả về URL/key ảnh.');
   }
   return { url, key };
 }
 
 /**
  * Gắn ảnh vào sản phẩm — POST /ecommerce/products/{productId}/images
- * @returns {{ data: object, rowVersion: string }}
  */
-export async function attachProductImage(productId, imageData, currentRowVersion) {
-  const path = `/ecommerce/products/${productId}/images`;
-  const body = buildAttachProductImagePayload(imageData);
-  const { data } = await requestWithIfMatchRetry('post', path, {
-    body,
-    rowVersion: currentRowVersion,
-    context: 'attachProductImage',
-  });
-  const result = unwrapData(data);
-  return {
-    data: result,
-    rowVersion: resolveRowVersion(result, currentRowVersion, 'attachProductImage'),
-  };
+export async function attachProductImage(productId, imageData, rowVersion) {
+  const headers = { 'If-Match': rowVersion || '*' };
+  const { data } = await api.post(`/ecommerce/products/${productId}/images`, imageData, { headers });
+  return unwrapData(data);
 }
 
 /**
@@ -411,39 +257,57 @@ export async function createProductSku(productId, skuData, rowVersion) {
 
 /**
  * Gửi duyệt — POST /ecommerce/products/{productId}/submit-review
- * @returns {object} result kèm rowVersion mới nhất (nếu có)
  */
-export async function submitProductForReview(productId, currentRowVersion) {
-  const path = `/ecommerce/products/${productId}/submit-review`;
-  let result;
+export async function submitProductForReview(productId, rowVersion) {
+  // 1. Check moderation
+  const moderation = await getProductModeration(productId);
+  const status = moderation?.moderationStatus || moderation?.data?.moderationStatus;
 
-  if (currentRowVersion) {
-    const { data } = await requestWithIfMatchRetry('post', path, {
-      body: {},
-      rowVersion: currentRowVersion,
-      context: 'submitProductForReview',
-    });
-    result = unwrapData(data);
-  } else {
-    const { data } = await api.post(path);
-    result = unwrapData(data);
+  if (status === "PENDING_MANUAL_REVIEW") {
+    throw new Error("Sản phẩm đang chờ duyệt");
   }
 
-  if (isDev) {
-    console.info('[ecommerceProductService] POST /ecommerce/products/submit-review response', {
-      productId,
-      status: result?.status ?? result?.moderationStatus ?? result?.productStatus,
-      rowVersion: extractRowVersion(result),
-      result,
-    });
+  if (status === "APPROVED") {
+    throw new Error("Sản phẩm đã được duyệt");
   }
 
-  return {
-    ...result,
-    rowVersion: currentRowVersion
-      ? resolveRowVersion(result, currentRowVersion, 'submitProductForReview')
-      : extractRowVersion(result),
-  };
+  const finalRowVersion =
+    rowVersion ||
+    moderation?.rowVersion ||
+    moderation?.data?.rowVersion ||
+    null;
+
+  // 2. Submit
+  const key =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `key-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+  try {
+    const { data } = await api.post(
+      `/ecommerce/products/${productId}/submit-review`,
+      {
+        rowVersion: finalRowVersion,
+        operationKey: key,
+        idempotencyKey: key,
+        callerPayloadHash: null,
+      },
+      {
+        headers: {
+          'If-Match': finalRowVersion || '*',
+          'X-Operation-Key': key,
+          'X-Idempotency-Key': key,
+        },
+      }
+    );
+
+    return unwrapData(data);
+  } catch (err) {
+    if (err?.response?.status === 409) {
+      return { moderationStatus: "PENDING_MANUAL_REVIEW" };
+    }
+    throw err;
+  }
 }
 
 /**
@@ -469,24 +333,8 @@ export async function updateEcommerceProduct(productId, payload) {
 /**
  * Đổi trạng thái — PATCH /ecommerce/products/{productId}/status
  */
-export async function updateProductStatus(productId, status, currentRowVersion) {
-  const path = `/ecommerce/products/${productId}/status`;
-  const body = { status };
-
-  if (currentRowVersion) {
-    const { data } = await requestWithIfMatchRetry('patch', path, {
-      body,
-      rowVersion: currentRowVersion,
-      context: 'updateProductStatus',
-    });
-    const result = unwrapData(data);
-    return {
-      ...result,
-      rowVersion: resolveRowVersion(result, currentRowVersion, 'updateProductStatus'),
-    };
-  }
-
-  const { data } = await api.patch(path, body);
+export async function updateProductStatus(productId, status) {
+  const { data } = await api.patch(`/ecommerce/products/${productId}/status`, { status });
   return unwrapData(data);
 }
 
@@ -511,25 +359,66 @@ const normalizeStatus = (status) => {
   return raw || 'DRAFT';
 };
 
+export const resolveImageUrl = (img) => {
+  if (!img) return '';
+  if (typeof img === 'string') {
+    if (img.startsWith('http')) return img;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${img.replace(/^\//, '')}`;
+  }
+  const url = img.imageUrl || img.url || img.fileUrl || img.primaryImageUrl || img.coverImageUrl;
+  if (url && typeof url === 'string' && url.startsWith('http')) return url;
+  const key = img.storageObjectKey || img.imageKey || img.key || url;
+  if (key && typeof key === 'string') {
+    if (key.startsWith('http')) return key;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${key.replace(/^\//, '')}`;
+  }
+  return '';
+};
+
 export function mapSellerProductToUi(item) {
   if (!item) return null;
-  const images = Array.isArray(item.images)
-    ? item.images.map((img) => (typeof img === 'string' ? img : img.url || img.imageUrl)).filter(Boolean)
-    : item.imageUrl
-      ? [item.imageUrl]
-      : [];
 
-  const rawStatus = String(item.status || item.moderationStatus || '').toUpperCase();
+  const candidateImages = [];
 
-  const moderationStatus =
-    item.moderationStatus ||
-    item.moderation_status ||
-    item.moderation?.status ||
-    item.reviewStatus ||
-    item.approvalStatus ||
-    (rawStatus.includes('PENDING') || rawStatus.includes('REVIEW') || rawStatus.includes('CHỜ')
-      ? 'PENDING_MANUAL_REVIEW'
-      : 'NONE');
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    candidateImages.push(...item.images);
+  }
+  if (Array.isArray(item.productImages) && item.productImages.length > 0) {
+    candidateImages.push(...item.productImages);
+  }
+  if (Array.isArray(item.product_images) && item.product_images.length > 0) {
+    candidateImages.push(...item.product_images);
+  }
+  if (item.imageUrl) candidateImages.push(item.imageUrl);
+  if (item.primaryImageUrl) candidateImages.push(item.primaryImageUrl);
+  if (item.coverImageUrl) candidateImages.push(item.coverImageUrl);
+  if (item.image) candidateImages.push(item.image);
+  if (item.imageKey) candidateImages.push(item.imageKey);
+  if (item.storageObjectKey) candidateImages.push(item.storageObjectKey);
+  if (item.thumbnail) candidateImages.push(item.thumbnail);
+  if (item.picture) candidateImages.push(item.picture);
+
+  if (Array.isArray(item.skus)) {
+    item.skus.forEach((s) => {
+      if (s.imageUrl) candidateImages.push(s.imageUrl);
+      if (s.imageKey) candidateImages.push(s.imageKey);
+      if (s.storageObjectKey) candidateImages.push(s.storageObjectKey);
+    });
+  }
+
+  const images = Array.from(new Set(candidateImages.map(resolveImageUrl).filter(Boolean)));
+
+  const rawStatus = String(item.status || '').toUpperCase();
+  const rawMod = String(item.moderationStatus || item.moderation_status || item.reviewStatus || item.approvalStatus || '').toUpperCase();
+
+  let moderationStatus = 'DRAFT';
+  if (rawMod.includes('PENDING') || rawStatus === 'PENDING' || rawStatus === 'PENDING_REVIEW') {
+    moderationStatus = 'PENDING_MANUAL_REVIEW';
+  } else if (rawMod.includes('APPROV') || rawStatus === 'ACTIVE' || rawStatus === 'APPROVED') {
+    moderationStatus = 'APPROVED';
+  } else if (rawMod.includes('REJECT') || rawStatus === 'REJECTED') {
+    moderationStatus = 'REJECTED';
+  }
 
   const stock =
     item.stockQuantity ??
@@ -551,11 +440,19 @@ export function mapSellerProductToUi(item) {
     item.skus?.[0]?.price ??
     0;
 
+  const name =
+    item.productName ||
+    item.name ||
+    item.title ||
+    item.productCode ||
+    'Sản phẩm';
+
   return {
     id: item.id ?? item.productId,
-    name: item.name ?? item.title ?? '',
-    category: item.categoryId ?? item.category ?? '',
-    brand: item.brand ?? '',
+    name,
+    productName: name,
+    category: item.categoryName || item.categoryId || item.category || '',
+    brand: item.brand || item.brandName || '',
     price,
     stock,
     status: normalizeStatus(item.status ?? moderationStatus),

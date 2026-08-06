@@ -1,66 +1,43 @@
 import "./index.scss";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../context/AuthContext";
 import { useCart } from "../../../context/CartContext";
 import * as notificationService from "../../../services/notificationService";
-import { getCategoryTree } from "../../../services/catalogService";
-import { buildProductListUrl, navigateProductTag } from "../../../utils/resolveProductTagNavigation";
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileDropdown from "./ProfileDropdown";
 import UserAvatar from "../../common/userAvatar";
 
-const QUICK_SEARCH_TAGS = [
-  { id: "iphone", labelKey: "header.tags.iphone", search: "iPhone 16 Pro" },
-  { id: "macbook", labelKey: "header.tags.macbook", search: "MacBook Air M3" },
-  { id: "romand", labelKey: "header.tags.romand", search: "Son Romand Juicy 24" },
-];
-
-const TREND_TAGS = [
-  {
-    id: "crocs",
-    labelKey: "header.tags.crocs",
-    search: "Dép Sục Crocs",
-    categoryKeywords: ["crocs", "dep", "giay", "giày"],
-  },
-  {
-    id: "ao-he",
-    labelKey: "header.tags.summerShirt",
-    search: "Áo Hè",
-    categoryKeywords: ["ao", "áo", "thoi trang", "thời trang", "fashion"],
-  },
-  {
-    id: "kinh",
-    labelKey: "header.tags.mirror",
-    search: "Kính Gương",
-    categoryKeywords: ["kinh", "kính", "phu kien", "phụ kiện"],
-  },
-];
-
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t, i18n } = useTranslation();
-  const currentRedirect = encodeURIComponent(location.pathname + location.search);
+  const currentRedirect = encodeURIComponent(
+    location.pathname + location.search,
+  );
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showLangMenu, setShowLangMenu] = useState(false);
+  const [language, setLanguage] = useState("vi");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [categories, setCategories] = useState([]);
-  const langMenuRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?keyword=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
   const {
     isAuthenticated,
     user,
     isApprovedSeller,
     isSellerMode,
+    isBuyerMode,
     switchAccountMode,
   } = useAuth();
   const { cartCount } = useCart();
 
+  // Xác định role để ẩn các mục chỉ dành cho người dùng thường
   const userRoles = (() => {
     const raw = [];
     if (user?.role) raw.push(user.role);
@@ -68,63 +45,42 @@ export default function Header() {
     if (user?.roleCode) raw.push(user.roleCode);
     if (Array.isArray(user?.roles)) raw.push(...user.roles);
     return raw
-      .map((r) => (typeof r === "string" ? r : r?.code ?? r?.name ?? ""))
+      .map((r) => (typeof r === "string" ? r : (r?.code ?? r?.name ?? "")))
       .filter(Boolean)
-      .map((s) => String(s).toUpperCase().replace(/^ROLE_/, ""));
+      .map((s) =>
+        String(s)
+          .toUpperCase()
+          .replace(/^ROLE_/, ""),
+      );
   })();
   const isAdmin = userRoles.some((r) => r === "ADMIN" || r === "SUPER_ADMIN");
-  const isStaffRole = userRoles.some((r) => r === "STAFF" || r === "SUPPORT_STAFF");
+  const isStaffRole = userRoles.some(
+    (r) => r === "STAFF" || r === "SUPPORT_STAFF",
+  );
   const isAdminOrStaff = isAdmin || isStaffRole;
   const profileVariant = isAdmin ? "admin" : isStaffRole ? "staff" : undefined;
 
-  const currentLang = i18n.language?.startsWith("en") ? "en" : "vi";
-
   useEffect(() => {
-    if (!user?.id) {
+    if (!isAuthenticated) {
       setUnreadCount(0);
       return;
     }
-    notificationService.getUnreadCount(user.id).then(setUnreadCount);
-  }, [user?.id, showNotifications]);
 
-  useEffect(() => {
-    getCategoryTree()
-      .then((items) => setCategories(Array.isArray(items) ? items : []))
-      .catch(() => setCategories([]));
-  }, []);
+    notificationService
+      .getUnreadCount()
+      .then(setUnreadCount)
+      .catch((error) => {
+        console.error(
+          "[Header] Failed to get unread notification count",
+          error,
+        );
 
-  useEffect(() => {
-    if (location.pathname === "/products") {
-      const params = new URLSearchParams(location.search);
-      setSearchQuery(params.get("search") || "");
-    }
-  }, [location.pathname, location.search]);
+        setUnreadCount(0);
+      });
+  }, [isAuthenticated, showNotifications]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (langMenuRef.current && !langMenuRef.current.contains(event.target)) {
-        setShowLangMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleLanguageSelect = (lang) => {
-    i18n.changeLanguage(lang);
-    setShowLangMenu(false);
-  };
-
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-    const keyword = searchQuery.trim();
-    if (!keyword) return;
-    const { pathname, search } = buildProductListUrl({ search: keyword });
-    navigate(`${pathname}${search}`);
-  };
-
-  const handleTagClick = (tag) => {
-    navigateProductTag(navigate, categories, tag);
+  const handleLanguageChange = () => {
+    setLanguage(language === "vi" ? "en" : "vi");
   };
 
   const handleGoToSellerHub = async () => {
@@ -139,12 +95,6 @@ export default function Header() {
     setShowProfile(false);
   };
 
-  const sellerLinkLabel = (() => {
-    if (user?.sellerStatus === "PENDING") return t("header.sellerPending");
-    if (user?.sellerStatus === "REJECTED") return t("header.sellerRejected");
-    return t("header.becomeSeller");
-  })();
-
   return (
     <header className="header" role="banner">
       <div className="header-topbar" aria-label="Secondary navigation">
@@ -156,72 +106,53 @@ export default function Header() {
                 className="header-topbar-link-btn"
                 onClick={handleGoToSellerHub}
               >
-                {t("header.sellerChannel")}
+                Kênh Người Bán
               </button>
             ) : (
-              <a href="#seller-center">{t("header.sellerChannel")}</a>
+              <a href="#seller-center">Kênh Người Bán</a>
             )}
             {!isApprovedSeller && !isAdminOrStaff && (
-              <Link to={isAuthenticated ? "/profile/become-seller" : "/register"}>
-                {sellerLinkLabel}
+              <Link
+                to={isAuthenticated ? "/profile/become-seller" : "/register"}
+              >
+                {user?.sellerStatus === "PENDING"
+                  ? "Đang chờ phê duyệt"
+                  : user?.sellerStatus === "REJECTED"
+                    ? "Đơn bị từ chối"
+                    : "Trở thành Người bán"}
               </Link>
             )}
-            <a href="#app">{t("header.downloadApp")}</a>
-            <a href="#connect">{t("header.connect")}</a>
+            <a href="#app">Tải ứng dụng</a>
+            <a href="#connect">Kết nối</a>
           </nav>
 
           <nav
             className="header-topbar-group header-topbar-group-right"
             aria-label="User account"
           >
-            <a href="#support">{t("header.support")}</a>
-
-            <div className="header-language-wrap" ref={langMenuRef}>
-              <button
-                type="button"
-                className="header-language"
-                onClick={() => setShowLangMenu((v) => !v)}
-                aria-expanded={showLangMenu}
-                aria-haspopup="listbox"
-                aria-label={t("header.language")}
-              >
-                {currentLang === "vi" ? "VIE" : "ENG"}
-              </button>
-              {showLangMenu && (
-                <ul className="header-language-menu" role="listbox">
-                  <li>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={currentLang === "vi"}
-                      className={currentLang === "vi" ? "active" : ""}
-                      onClick={() => handleLanguageSelect("vi")}
-                    >
-                      {t("header.langVi")}
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={currentLang === "en"}
-                      className={currentLang === "en" ? "active" : ""}
-                      onClick={() => handleLanguageSelect("en")}
-                    >
-                      {t("header.langEn")}
-                    </button>
-                  </li>
-                </ul>
-              )}
-            </div>
+            <a href="#support">Hỗ Trợ</a>
+            <button
+              type="button"
+              className="header-language"
+              onClick={handleLanguageChange}
+              aria-label={`Đổi ngôn ngữ — hiện tại ${language === "vi" ? "Tiếng Việt" : "English"}`}
+            >
+              {language === "vi" ? "VIE" : "ENG"}
+            </button>
 
             {!isAuthenticated ? (
               <>
-                <Link to={`/register?redirect=${currentRedirect}`} className="header-topbar-cta">
-                  {t("header.register")}
+                <Link
+                  to={`/register?redirect=${currentRedirect}`}
+                  className="header-topbar-cta"
+                >
+                  Đăng Ký
                 </Link>
-                <Link to={`/login?redirect=${currentRedirect}`} className="header-topbar-login">
-                  {t("header.login")}
+                <Link
+                  to={`/login?redirect=${currentRedirect}`}
+                  className="header-topbar-login"
+                >
+                  Đăng Nhập
                 </Link>
               </>
             ) : (
@@ -259,9 +190,10 @@ export default function Header() {
                     <NotificationDropdown
                       onClose={() => {
                         setShowNotifications(false);
-                        if (user?.id) {
-                          notificationService.getUnreadCount(user.id).then(setUnreadCount);
-                        }
+                        notificationService
+                          .getUnreadCount()
+                          .then(setUnreadCount)
+                          .catch(() => setUnreadCount(0));
                       }}
                     />
                   )}
@@ -290,7 +222,10 @@ export default function Header() {
                     )}
                   </button>
                   {showProfile && (
-                    <ProfileDropdown onClose={closeDropdowns} variant={profileVariant} />
+                    <ProfileDropdown
+                      onClose={closeDropdowns}
+                      variant={profileVariant}
+                    />
                   )}
                 </div>
               </div>
@@ -301,13 +236,21 @@ export default function Header() {
 
       <div className="header-main">
         <div className="header-shell header-main-shell">
-          <Link to="/" className="header-brand" aria-label="BidDoubleTk — Trang chủ">
+          <Link
+            to="/"
+            className="header-brand"
+            aria-label="BidDoubleTk — Trang chủ"
+          >
             <span className="header-brand-mark">
-              <img className="header-brand-image" src="/images/logo/logo.png" alt="BidDoubleTk" />
+              <img
+                className="header-brand-image"
+                src="/images/logo/logo.png"
+                alt="BidDoubleTk"
+              />
             </span>
             <span className="header-brand-text">
               <strong>BidDoubleTk</strong>
-              <small>{t("header.brandTagline")}</small>
+              <small>Thương Mại - Đấu Giá</small>
             </span>
           </Link>
 
@@ -315,11 +258,11 @@ export default function Header() {
             <form
               className="header-search"
               role="search"
-              aria-label={t("header.searchLabel")}
+              aria-label="Tìm kiếm sản phẩm"
               onSubmit={handleSearchSubmit}
             >
               <label htmlFor="search-input" className="sr-only">
-                {t("header.searchLabel")}
+                Tìm kiếm sản phẩm
               </label>
               <span className="header-search-icon" aria-hidden="true">
                 ⌕
@@ -327,22 +270,25 @@ export default function Header() {
               <input
                 id="search-input"
                 type="search"
-                name="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("header.searchPlaceholder")}
-                autoComplete="off"
+                placeholder="Tìm sản phẩm, thương hiệu, mã đấu giá..."
               />
-              <button type="submit">{t("header.searchSubmit")}</button>
+              <button type="submit">Tìm kiếm</button>
             </form>
 
             <nav className="header-actions" aria-label="Hành động chính">
               <Link
                 to="/cart"
                 className="header-cart"
-                aria-label={t("header.cartAria", { count: cartCount })}
+                aria-label={`Giỏ hàng — ${cartCount} sản phẩm`}
               >
-                <svg className="header-cart-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <svg
+                  className="header-cart-svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
                   <path
                     d="M6 6h15l-1.5 9H7.5L6 6Z"
                     stroke="currentColor"
@@ -359,7 +305,9 @@ export default function Header() {
                   <circle cx="18" cy="20" r="1.5" fill="currentColor" />
                 </svg>
                 {cartCount > 0 && (
-                  <span className="header-cart-badge">{cartCount > 99 ? "99+" : cartCount}</span>
+                  <span className="header-cart-badge">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
                 )}
               </Link>
 
@@ -370,12 +318,12 @@ export default function Header() {
               >
                 <span className="header-auction-live">
                   <span className="header-auction-dot" aria-hidden="true" />
-                  {t("header.auctionLive")}
+                  LIVE
                 </span>
                 <span className="header-auction-copy">
-                  <small>{t("header.auctionSoon")}</small>
+                  <small>Đấu giá ngay</small>
                   <strong>
-                    {t("header.auctionView")}
+                    Xem phiên
                     <span className="btn-cta-effect__arrow" aria-hidden="true">
                       {" "}
                       →
@@ -394,34 +342,13 @@ export default function Header() {
             <span className="header-pill-icon" aria-hidden="true">
               🔥
             </span>
-            <strong>{t("header.auctionHot")}</strong>
+            <strong>ĐẤU GIÁ HOT</strong>
           </Link>
 
           <div className="header-subnav-links">
-            {QUICK_SEARCH_TAGS.map((tag) => (
-              <button
-                key={tag.id}
-                type="button"
-                className="header-tag-btn"
-                onClick={() => handleTagClick(tag)}
-              >
-                {t(tag.labelKey)}
-              </button>
-            ))}
-          </div>
-
-          <div className="header-subnav-trending">
-            <span className="header-trending-label">{t("header.trendingLabel")}</span>
-            {TREND_TAGS.map((tag) => (
-              <button
-                key={tag.id}
-                type="button"
-                className="header-tag-btn header-tag-btn--muted"
-                onClick={() => handleTagClick(tag)}
-              >
-                {t(tag.labelKey)}
-              </button>
-            ))}
+            <a href="#iphone-16">iPhone 16 Pro – Giá từ 1k</a>
+            <a href="#macbook-air-m3">MacBook Air M3</a>
+            <a href="#son-romand">Son Romand Juicy 24</a>
           </div>
         </div>
       </nav>
