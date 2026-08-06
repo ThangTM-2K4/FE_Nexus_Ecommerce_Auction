@@ -397,38 +397,59 @@ export default function CreateProductPage() {
     let rowVersion = null;
 
     try {
+      setSubmitStep("images");
+      const uploadedImages = [];
+      const imagesToUpload = [...filledImages];
+
+      for (let i = 0; i < imagesToUpload.length; i += 1) {
+        try {
+          const dataUrl = imagesToUpload[i];
+          const file = await dataUrlToFile(dataUrl, `product-${Date.now()}-${i + 1}.jpg`);
+          const { url, key } = await uploadProductImage(file);
+          if (url || key) {
+            uploadedImages.push({
+              imageUrl: url,
+              storageObjectKey: key || url,
+              altText: form.name.trim(),
+              isPrimary: i === 0,
+              sortOrder: i,
+            });
+          }
+        } catch (imgErr) {
+          console.warn("Upload image warning:", imgErr);
+        }
+      }
+
       if (!productId) {
         setSubmitStep("create");
         const priceNum = Number(form.price) > 0 ? Number(form.price) : 1000;
         const stockNum = Number(form.stock) >= 0 ? Number(form.stock) : 0;
         const uniqueSku = productSku.trim() || `SKU-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1000)}`;
 
-        const created = await createEcommerceProduct({
+        const createPayload = {
           name: form.name.trim(),
-          categoryId: form.category,
-          brand: form.brand.trim() || detailFields.brand.trim() || undefined,
           description: form.description.trim() || undefined,
-          price: priceNum,
-          unitPrice: priceNum,
-          stock: stockNum,
-          stockQuantity: stockNum,
-          quantity: stockNum,
-          condition: form.condition,
+          categoryId: form.category,
+          salesChannel: "ECOMMERCE",
+          brand: form.brand.trim() || detailFields.brand.trim() || undefined,
+          originCountry: "VN",
           skus: [
             {
               skuCode: uniqueSku,
-              sku: uniqueSku,
-              isDefault: true,
+              skuName: form.name.trim() || "Mặc định",
               unitPrice: priceNum,
               price: priceNum,
-              stock: stockNum,
-              stockQuantity: stockNum,
-              quantity: stockNum,
               currency: "VND",
               salesChannel: "ECOMMERCE",
+              isDefault: true,
+              attributes: JSON.stringify({ stock: stockNum, condition: form.condition || "new" }),
+              barcode: "",
             },
           ],
-        });
+          images: uploadedImages,
+        };
+
+        const created = await createEcommerceProduct(createPayload);
         productId = created.productId ?? created.id;
         rowVersion = created.rowVersion || created.version || created.data?.rowVersion;
         if (!productId) {
@@ -437,17 +458,29 @@ export default function CreateProductPage() {
         setDraftProductId(productId);
       }
 
-      const imagesToUpload = [...filledImages];
+      // Gắn bổ sung từng ảnh vào sản phẩm làm phương án dự phòng & Lưu Cache FE
+      if (productId && uploadedImages.length > 0) {
+        try {
+          const imageMap = JSON.parse(localStorage.getItem("seller_product_images_map") || "{}");
+          const urls = uploadedImages.map((img) => img.imageUrl || img.storageObjectKey).filter(Boolean);
+          if (urls.length > 0) {
+            imageMap[productId] = urls;
+            localStorage.setItem("seller_product_images_map", JSON.stringify(imageMap));
+          }
+        } catch {
+          /* ignore */
+        }
 
-      if (imagesToUpload.length > 0) {
-        setSubmitStep("images");
-        for (let i = 0; i < imagesToUpload.length; i += 1) {
+        for (let i = 0; i < uploadedImages.length; i += 1) {
           try {
-            const dataUrl = imagesToUpload[i];
-            const file = await dataUrlToFile(dataUrl, `product-${productId}-${i + 1}.jpg`);
-            const { url, key } = await uploadProductImage(file);
-            const isCover = i === 0;
-            await attachProductImage(productId, { url, key, isCover }, rowVersion);
+            const img = uploadedImages[i];
+            await attachProductImage(productId, {
+              imageKey: img.storageObjectKey,
+              imageUrl: img.imageUrl,
+              isCover: img.isPrimary,
+              isPrimary: img.isPrimary,
+              sortOrder: img.sortOrder,
+            }, rowVersion);
           } catch (imgErr) {
             console.warn("Upload image warning:", imgErr);
           }

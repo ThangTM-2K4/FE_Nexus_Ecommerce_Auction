@@ -147,7 +147,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@include respond(mobile) {
   .arrow {
     width: 40px;
     height: 40px;

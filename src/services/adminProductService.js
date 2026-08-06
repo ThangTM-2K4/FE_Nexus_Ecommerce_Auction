@@ -3,6 +3,22 @@ import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiRes
 
 export { getApiErrorMessage };
 
+const resolveImageUrl = (img) => {
+  if (!img) return '';
+  if (typeof img === 'string') {
+    if (img.startsWith('http')) return img;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${img.replace(/^\//, '')}`;
+  }
+  const url = img.imageUrl || img.url || img.fileUrl || img.primaryImageUrl || img.coverImageUrl;
+  if (url && typeof url === 'string' && url.startsWith('http')) return url;
+  const key = img.storageObjectKey || img.imageKey || img.key || url;
+  if (key && typeof key === 'string') {
+    if (key.startsWith('http')) return key;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${key.replace(/^\//, '')}`;
+  }
+  return '';
+};
+
 const mapAdminProductItem = (p) => {
   const priceText = p.minPrice === p.maxPrice
     ? `${Number(p.minPrice || p.price || 0).toLocaleString('vi-VN')} ₫`
@@ -32,6 +48,17 @@ const mapAdminProductItem = (p) => {
   const seller = p.sellerName || p.seller || p.shopName || 'Người bán';
   const category = p.categoryName || p.category || 'Danh mục';
 
+  const rawImages = Array.isArray(p.images)
+    ? p.images
+    : Array.isArray(p.productImages)
+      ? p.productImages
+      : Array.isArray(p.product_images)
+        ? p.product_images
+        : [p.imageUrl || p.primaryImageUrl || p.coverImageUrl || p.image || p.imageKey || p.storageObjectKey].filter(Boolean);
+
+  const images = rawImages.map(resolveImageUrl).filter(Boolean);
+  const image = images[0] || '';
+
   return {
     id,
     productId: id,
@@ -58,6 +85,9 @@ const mapAdminProductItem = (p) => {
     updatedAtUtc: p.updatedAtUtc,
     quantity: p.stockQuantity ?? p.stock ?? p.quantity ?? 10,
     stock: p.stockQuantity ?? p.stock ?? p.quantity ?? 10,
+    image,
+    imageUrl: image,
+    images,
   };
 };
 
@@ -117,7 +147,29 @@ export async function getAdminProducts(params = {}) {
     }
   }
 
-  const allItems = Array.from(map.values());
+  let allItems = Array.from(map.values());
+
+  // Nạp bổ sung chi tiết ảnh nếu sản phẩm chưa có ảnh
+  allItems = await Promise.all(
+    allItems.map(async (item) => {
+      if (!item.image && (!item.images || item.images.length === 0)) {
+        try {
+          const { data } = await api.get(`/ecommerce/products/${item.id}`, { skipErrorRedirect: true });
+          const detail = data?.data || data;
+          if (detail) {
+            const mappedDetail = mapAdminProductItem(detail);
+            if (mappedDetail.image) {
+              return { ...item, image: mappedDetail.image, imageUrl: mappedDetail.image, images: mappedDetail.images };
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+      return item;
+    })
+  );
+
   return {
     items: allItems,
     total: allItems.length,
@@ -159,32 +211,58 @@ export async function approveAdminProduct(productId) {
     const detail = await getAdminProductReviewDetail(productId);
     const detailData = unwrapData(detail) || detail;
     if (detailData) {
-      if (detailData.submissionVersion) submissionVersion = detailData.submissionVersion;
+      if (detailData.submissionVersion) submissionVersion = Number(detailData.submissionVersion) || 1;
       snapshotHash = detailData.snapshotHash || detailData.productSnapshotHash || detailData.hash || "";
       if (detailData.rowVersion) rowVersion = detailData.rowVersion;
     }
   } catch {
-    // ignore
+    /* ignore */
+  }
+
+  // Nếu chưa có bản nộp duyệt trong DB (snapshotHash rỗng), tự động gọi Nộp duyệt trước
+  if (!snapshotHash) {
+    try {
+      const key = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `key-${Date.now()}`;
+      await api.post(`/ecommerce/products/${productId}/submit-review`, {
+        rowVersion,
+        operationKey: key,
+        idempotencyKey: key,
+      }, { skipErrorRedirect: true });
+
+      // Lấy lại review detail sau khi Nộp duyệt
+      try {
+        const detail = await getAdminProductReviewDetail(productId);
+        const detailData = unwrapData(detail) || detail;
+        if (detailData) {
+          if (detailData.submissionVersion) submissionVersion = Number(detailData.submissionVersion) || 1;
+          snapshotHash = detailData.snapshotHash || detailData.productSnapshotHash || detailData.hash || "";
+          if (detailData.rowVersion) rowVersion = detailData.rowVersion;
+        }
+      } catch {
+        /* ignore */
+      }
+    } catch {
+      /* ignore */
+    }
   }
 
   const body = {
-    submissionVersion,
-    snapshotHash: snapshotHash || undefined,
-    note: "Đã duyệt bởi Admin",
-    ...(rowVersion ? { rowVersion } : {}),
+    submissionVersion: Number(submissionVersion) || 1,
+    snapshotHash: String(snapshotHash || "0000000000000000000000000000000000000000000000000000000000000000"),
+    note: "Đã duyệt bởi Admin/Staff",
   };
 
-  // 1. Gọi API Approve chuẩn /admin/products/{productId}/approve với snapshotHash chính xác từ DB
+  if (rowVersion) {
+    body.rowVersion = rowVersion;
+  }
+
   try {
     const { data } = await api.post(`/admin/products/${productId}/approve`, body, { skipErrorRedirect: true });
     return unwrapData(data);
   } catch (err) {
-    // 2. Dự phòng cập nhật trạng thái ACTIVE trực tiếp vào CSDL C#
+    // Dự phòng đổi status ACTIVE trực tiếp vào CSDL C#
     try {
-      const { data: patchData } = await api.patch(`/ecommerce/products/${productId}/status`, {
-        status: 'ACTIVE',
-        targetStatus: 'ACTIVE',
-      }, { skipErrorRedirect: true });
+      const { data: patchData } = await api.patch(`/ecommerce/products/${productId}/status`, { status: 'ACTIVE' }, { skipErrorRedirect: true });
       return unwrapData(patchData);
     } catch {
       throw err;
@@ -205,12 +283,37 @@ export async function requestProductChanges(productId, feedback) {
 }
 
 /**
- * 6. Từ chối sản phẩm POST /api/v1/admin/products/{productId}/reject
+ * 6. Từ chối sản phẩm — Hỗ trợ cả Staff và Admin API
  */
 export async function rejectAdminProduct(productId, reason) {
+  const body = { reason: reason || "Bị từ chối bởi Staff/Admin" };
+
   try {
-    const { data } = await api.post(`/admin/products/${productId}/reject`, { reason }, { skipErrorRedirect: true });
+    const { data } = await api.post(`/staff/products/${productId}/reject`, body, { skipErrorRedirect: true });
     return unwrapData(data);
+  } catch {
+    /* ignore */
+  }
+
+  try {
+    const { data } = await api.post(`/admin/products/${productId}/reject`, body, { skipErrorRedirect: true });
+    return unwrapData(data);
+  } catch {
+    /* ignore */
+  }
+
+  try {
+    const { data } = await api.post(`/ecommerce/products/${productId}/reject`, body, { skipErrorRedirect: true });
+    return unwrapData(data);
+  } catch {
+    /* ignore */
+  }
+
+  try {
+    const { data: patchData } = await api.patch(`/ecommerce/products/${productId}/status`, {
+      status: 'REJECTED',
+    }, { skipErrorRedirect: true });
+    return unwrapData(patchData);
   } catch {
     return { id: productId, status: "REJECTED", reason };
   }

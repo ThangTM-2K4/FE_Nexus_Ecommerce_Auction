@@ -1,12 +1,11 @@
 @use '../../../styles/palette' as *;
 
 .card {
-  background: $surface;
-  border: 1px solid $border-soft;
-  border-radius: $radius-sm;
+  background: #fff;
+  border: 1.5px solid #d8b4fe;
+  border-radius: 10px;
   overflow: hidden;
-  padding: 5px;
-  aspect-ratio: 200 / 308;
+  padding: 0;
   display: flex;
   flex-direction: column;
   transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
@@ -14,15 +13,15 @@
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: $shadow-accent;
-    border-color: rgba($teal, 0.55);
+    box-shadow: 0 8px 20px rgba(107, 59, 167, 0.12);
+    border-color: #a855f7;
 
     .hoverOverlay {
       opacity: 1;
     }
 
     .image {
-      transform: scale(1.03);
+      transform: scale(1.04);
     }
   }
 }
@@ -31,9 +30,8 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: calc(#{$radius-sm} - 2px);
   overflow: hidden;
-  background: $surface-muted;
+  background: #faf5ff;
   flex-shrink: 0;
 }
 
@@ -44,117 +42,146 @@
   transition: transform $transition;
 }
 
-.cornerTag {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: $accent-dark;
-  color: $surface;
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 0 0 $radius-sm 0;
+.noImg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #cbd5e1;
 }
 
-.discountBadge {
+.cornerTag {
   position: absolute;
-  top: 0;
-  right: 0;
-  background: $color-danger;
-  color: $surface;
-  font-size: 0.62rem;
+  top: 6px;
+  left: 6px;
+  background: linear-gradient(135deg, #be185d, #ec4899);
+  color: #fff;
+  font-size: 10px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 0 0 0 $radius-sm;
+  padding: 2px 7px;
+  border-radius: 4px;
+  z-index: 2;
 }
 
 .hoverOverlay {
   position: absolute;
   inset: 0;
-  background: rgba($deep, 0.45);
-  color: $surface;
+  background: rgba(30, 27, 75, 0.55);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   opacity: 0;
   transition: opacity $transition-fast;
   text-align: center;
   padding: 8px;
+  z-index: 3;
 }
 
 .body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 6px 2px 2px;
+  padding: 10px 12px 12px;
   min-height: 0;
-}
-
-.pillRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 4px;
-}
-
-.pill {
-  font-size: 0.58rem;
-  font-weight: 600;
-  color: $accent-dark;
-  border: 1px solid rgba($accent, 0.45);
-  border-radius: $radius-pill;
-  padding: 1px 6px;
-  line-height: 1.4;
+  gap: 6px;
 }
 
 .title {
-  font-size: 0.78rem;
-  color: $ink;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1f2937;
   line-height: 1.4;
+  height: 36px;
+  overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  overflow: hidden;
-  flex: 1;
-  margin-bottom: 6px;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.price {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #6b3ba7;
+}
+
+.discountBadge {
+  font-size: 10px;
+  background: #fce7f3;
+  color: #be185d;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
 }
 
 .footer {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 4px;
   margin-top: auto;
-}
-
-.price {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: $navy;
-}
-
-.sold {
-  font-size: 0.65rem;
-  color: $ink-muted;
-  white-space: nowrap;
+  font-size: 0.7rem;
+  color: #6b7280;
 }
 
 .rating {
-  font-size: 0.65rem;
-  color: $ink-muted;
-  white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
+  font-weight: 600;
+  color: #d97706;
 }
 
 .ratingStar {
-  color: $live-red;
-  font-size: 0.72rem;
+  color: #ffce3d;
+  font-size: 0.75rem;
 }
 
-.soldInline {
-  color: $ink-muted;
+.sold {
+  font-size: 0.7rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+@include respond(tablet) {
+  .body {
+    padding: 8px 10px 10px;
+    gap: 4px;
+  }
+
+  .title {
+    font-size: 0.75rem;
+    height: 32px;
+  }
+
+  .price {
+    font-size: 0.85rem;
+  }
+
+  .footer {
+    font-size: 0.65rem;
+  }
+}
+
+@include respond(mobile-sm) {
+  .cornerTag {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+
+  .hoverOverlay {
+    font-size: 0.7rem;
+  }
 }

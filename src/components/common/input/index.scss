@@ -49,3 +49,14 @@
   font-weight: 500;
   color: $live-red;
 }
+
+@include respond(tablet) {
+  .common-input__field {
+    min-height: 44px;
+    font-size: 16px; // tránh zoom tự động trên iOS
+  }
+
+  .common-input__label {
+    font-size: 0.8rem;
+  }
+}
