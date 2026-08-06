@@ -31,14 +31,14 @@ export async function getUnreadCount() {
     .length;
 }
 
-// Giữ sẵn contract này.
-// Sau khi backend có API, chỉ cần bỏ lỗi và gọi api.patch().
 export async function markAsRead(notificationId) {
-  await api.patch(`/notifications/${notificationId}/read`);
+  const response = await api.patch(`/notifications/${notificationId}/read`);
+
+  return unwrapResponse(response);
 }
 
-// Giữ sẵn contract này.
-// Sau khi backend có API, chỉ cần bỏ lỗi và gọi api.patch().
 export async function markAllAsRead() {
-  await api.patch("/notifications/read-all");
+  const response = await api.patch("/notifications/read-all");
+
+  return unwrapResponse(response);
 }

@@ -93,12 +93,10 @@ export default function NotificationDropdown({ onClose }) {
         ),
       );
     } catch (error) {
-      console.error(
-        "[NotificationDropdown] Mark notification as read failed",
-        error,
-      );
+      console.error("[NotificationDropdown] Mark as read failed", error);
     }
   };
+
   const handleMarkAllRead = async () => {
     try {
       await notificationService.markAllAsRead();
@@ -111,10 +109,7 @@ export default function NotificationDropdown({ onClose }) {
         })),
       );
     } catch (error) {
-      console.error(
-        "[NotificationDropdown] Mark all notifications as read failed",
-        error,
-      );
+      console.error("[NotificationDropdown] Mark all as read failed", error);
     }
   };
 
@@ -157,7 +152,6 @@ export default function NotificationDropdown({ onClose }) {
             type="button"
             className="header-notif-mark-all"
             onClick={handleMarkAllRead}
-            disabled
             title="Backend chưa hỗ trợ đánh dấu tất cả đã đọc"
           >
             Đánh dấu tất cả đã đọc
@@ -217,7 +211,6 @@ export default function NotificationDropdown({ onClose }) {
                   type="button"
                   className="header-notif-read-btn"
                   onClick={() => handleMarkRead(item.id)}
-                  disabled
                   title="Backend chưa hỗ trợ đánh dấu đã đọc"
                 >
                   Đánh dấu đã đọc
