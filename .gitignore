@@ -44,3 +44,6 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+
+# Temporary Scratch Scripts
+scratch/
