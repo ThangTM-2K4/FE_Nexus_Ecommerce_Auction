@@ -1,6 +1,5 @@
 import api, { BACKEND_BASE_URL } from '../config/api';
 import { unwrapData, unwrapPagedList, getApiErrorMessage } from '../utils/apiResponse';
-import { extractUploadKey, normalizeUploadKey } from './uploadResponse';
 
 export { getApiErrorMessage };
 
@@ -312,40 +311,29 @@ const isAbsoluteHttpsUrl = (value) => {
   }
 };
 
-const extractCatalogProductUploadKey = (response) => {
+const extractStorageObjectKey = (response) => {
   const data = getUploadPayload(response);
-  if (typeof data === 'string') return normalizeUploadKey(data);
-  const raw =
-    data.catalogProductUploadKey
-    || data.storageObjectKey
-    || data.productUploadKey
-    || data.uploadKey
-    || data.key
-    || data.fileKey
-    || extractUploadKey(response)
-    || '';
-  return normalizeUploadKey(raw);
+  if (typeof data === 'string') return data.trim();
+  return String(data.key || data.storageObjectKey || '').trim();
 };
 
 /**
- * Map body gắn ảnh → POST /ecommerce/products/{id}/images (Swagger).
- * BE chấp nhận imageUrl (HTTPS) và/hoặc storageObjectKey (key từ catalog upload).
+ * Body POST /ecommerce/products/{id}/images — đúng Swagger:
+ * { imageUrl, storageObjectKey, altText, isPrimary, sortOrder }
  */
-export function buildAttachProductImagePayload(imageData = {}) {
-  const {
-    url,
-    key,
-    imageUrl: imageUrlIn,
-    storageObjectKey: storageKeyIn,
-    isCover,
-    isPrimary,
-    altText,
-    sortOrder,
-  } = imageData;
-
+export function buildAttachProductImagePayload({
+  url,
+  key,
+  imageUrl: imageUrlIn,
+  storageObjectKey: storageKeyIn,
+  altText = '',
+  isPrimary = false,
+  isCover,
+  sortOrder = 0,
+} = {}) {
   const storageObjectKey = String(storageKeyIn || key || '').trim();
-  const rawUrl = imageUrlIn || url || '';
-  const imageUrl = isAbsoluteHttpsUrl(rawUrl) ? rawUrl.trim() : '';
+  const rawUrl = imageUrlIn ?? url ?? null;
+  const imageUrl = rawUrl && isAbsoluteHttpsUrl(rawUrl) ? String(rawUrl).trim() : null;
 
   if (!storageObjectKey && !imageUrl) {
     throw new Error(
@@ -354,22 +342,14 @@ export function buildAttachProductImagePayload(imageData = {}) {
   }
 
   const payload = {
+    altText: String(altText).trim(),
+    sortOrder: Number(sortOrder),
     isPrimary: Boolean(isPrimary ?? isCover ?? false),
+    storageObjectKey,
   };
 
-  if (storageObjectKey) {
-    payload.storageObjectKey = storageObjectKey;
-  }
   if (imageUrl) {
     payload.imageUrl = imageUrl;
-  }
-
-  if (altText != null && String(altText).trim()) {
-    payload.altText = String(altText).trim();
-  }
-
-  if (sortOrder != null && !Number.isNaN(Number(sortOrder))) {
-    payload.sortOrder = Number(sortOrder);
   }
 
   if (isDev) {
@@ -388,7 +368,7 @@ export async function uploadProductImage(file) {
   const response = await api.post('/catalog/uploads/product', fd, MULTIPART);
   const rawPayload = getUploadPayload(response);
   const url = extractUploadUrl(response);
-  const key = extractCatalogProductUploadKey(response);
+  const key = extractStorageObjectKey(response);
 
   if (isDev) {
     console.info('[ecommerceProductService] POST /catalog/uploads/product response', rawPayload, {
@@ -398,7 +378,7 @@ export async function uploadProductImage(file) {
   }
 
   if (!key && !isAbsoluteHttpsUrl(url)) {
-    throw new Error('Server không trả về catalogProductUploadKey hoặc imageUrl HTTPS.');
+    throw new Error('Server không trả về storageObjectKey hoặc imageUrl HTTPS.');
   }
   return { url, key };
 }

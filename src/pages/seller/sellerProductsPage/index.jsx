@@ -5,10 +5,7 @@ import MiniStat from "../../../components/sellerdashboard/sellerMiniStat";
 import { useAuth } from "../../../context/AuthContext";
 import { getMyEcommerceProducts } from "../../../services/ecommerceProductService";
 import { productCategories } from "../../../data/auctionMockData";
-<<<<<<< HEAD
-=======
 import { getCategories, getCategoryLabel } from "../../../services/categoryService";
->>>>>>> develop
 
 const STATUS_LABELS = {
   DRAFT: "Đang ẩn",
@@ -21,8 +18,6 @@ export default function ProductsPage() {
   const { user } = useAuth();
   const [myProducts, setMyProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-<<<<<<< HEAD
-=======
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -30,7 +25,6 @@ export default function ProductsPage() {
       if (res?.ok) setCategories(res.items || []);
     }).catch(() => {});
   }, []);
->>>>>>> develop
 
   useEffect(() => {
     if (!user?.id) {

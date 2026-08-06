@@ -254,15 +254,15 @@ export default function CreateProductPage() {
         for (let i = 0; i < imagesToUpload.length; i += 1) {
           const dataUrl = imagesToUpload[i];
           const file = await dataUrlToFile(dataUrl, `product-${productId}-${i + 1}.jpg`);
-          const { url, key } = await uploadProductImage(file);
-          const isCover = i === 0;
+          const uploaded = await uploadProductImage(file);
+          const isPrimary = i === 0;
           const attachResult = await attachProductImage(
             productId,
             {
-              imageUrl: url,
-              storageObjectKey: key,
+              imageUrl: uploaded.url,
+              storageObjectKey: uploaded.key,
               altText: form.name || '',
-              isPrimary: isCover,
+              isPrimary,
               sortOrder: i,
             },
             rowVersion,
