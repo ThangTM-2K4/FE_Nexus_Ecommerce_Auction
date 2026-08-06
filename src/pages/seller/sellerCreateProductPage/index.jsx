@@ -331,11 +331,13 @@ export default function CreateProductPage() {
     const newRows = [];
     list1.forEach((v1) => {
       list2.forEach((v2) => {
+        const skuAuto = `SKU-${v1}${v2 ? `-${v2}` : ""}`.toUpperCase().replace(/\s+/g, "-");
         newRows.push({
           val1: v1,
           val2: v2,
           price: form.price || "",
           stock: form.stock || "",
+          sku: skuAuto,
         });
       });
     });
@@ -365,21 +367,42 @@ export default function CreateProductPage() {
     });
   };
 
+  const hasPriceAndStock =
+    productTypeMode === "single"
+      ? Boolean(form.price.trim() && form.stock.trim())
+      : variationRows.length > 0 &&
+        variationRows.every((r) => String(r.price).trim() !== "" && String(r.stock).trim() !== "");
+
   const tips = [
     { label: "Tên sản phẩm từ 25~120 kí tự", done: form.name.trim().length >= 25 },
     { label: "Chọn Ngành hàng phù hợp", done: !!form.category },
-    { label: "Mô tả chi tiết sản phẩm", done: form.description.trim().length >= 50 },
+    { label: "Mô tả chi tiết sản phẩm", done: form.description.trim().length > 0 },
     { label: "Thêm ít nhất 1 hình ảnh sản phẩm", done: filledImages.length >= 1 },
-    { label: "Nhập giá bán & số lượng kho", done: !!form.price && !!form.stock },
+    { label: "Nhập giá bán & số lượng kho", done: hasPriceAndStock },
   ];
 
   const validate = () => {
     const next = {};
     if (!form.name.trim()) next.name = "Vui lòng nhập tên sản phẩm";
-    if (!form.price.trim()) next.price = "Vui lòng nhập giá bán";
-    else if (Number.isNaN(Number(form.price))) next.price = "Giá bán phải là số";
-    if (!form.stock.trim()) next.stock = "Vui lòng nhập số lượng tồn kho";
-    else if (Number.isNaN(Number(form.stock))) next.stock = "Số lượng phải là số";
+
+    if (productTypeMode === "single") {
+      if (!form.price.trim()) next.price = "Vui lòng nhập giá bán";
+      else if (Number.isNaN(Number(form.price))) next.price = "Giá bán phải là số";
+      if (!form.stock.trim()) next.stock = "Vui lòng nhập số lượng tồn kho";
+      else if (Number.isNaN(Number(form.stock))) next.stock = "Số lượng phải là số";
+    } else {
+      if (variationRows.length === 0) {
+        next.price = "Vui lòng thêm ít nhất 1 phân loại sản phẩm";
+      } else {
+        const hasMissing = variationRows.some(
+          (r) => String(r.price).trim() === "" || String(r.stock).trim() === ""
+        );
+        if (hasMissing) {
+          next.price = "Vui lòng nhập đầy đủ giá bán & kho cho tất cả phân loại";
+        }
+      }
+    }
+
     setErrors(next);
     if (next.name) setActiveTab("basic");
     else if (next.price || next.stock) setActiveTab("sales");
@@ -419,9 +442,44 @@ export default function CreateProductPage() {
 
       if (!productId) {
         setSubmitStep("create");
-        const priceNum = Number(form.price) > 0 ? Number(form.price) : 1000;
-        const stockNum = Number(form.stock) >= 0 ? Number(form.stock) : 0;
+        const firstVarPrice = variationRows.length > 0 ? Number(variationRows[0].price) : 0;
+        const firstVarStock = variationRows.length > 0 ? Number(variationRows[0].stock) : 0;
+
+        const priceNum = productTypeMode === "single"
+          ? (Number(form.price) > 0 ? Number(form.price) : 1000)
+          : (firstVarPrice > 0 ? firstVarPrice : 1000);
+
+        const stockNum = productTypeMode === "single"
+          ? (Number(form.stock) >= 0 ? Number(form.stock) : 0)
+          : (firstVarStock >= 0 ? firstVarStock : 0);
+
         const uniqueSku = productSku.trim() || `SKU-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1000)}`;
+
+        const skusList = productTypeMode === "single"
+          ? [
+              {
+                skuCode: uniqueSku,
+                skuName: form.name.trim() || "Mặc định",
+                unitPrice: priceNum,
+                price: priceNum,
+                currency: "VND",
+                salesChannel: "ECOMMERCE",
+                isDefault: true,
+                attributes: { stock: stockNum, condition: form.condition || "new" },
+                barcode: "",
+              },
+            ]
+          : variationRows.map((r, idx) => ({
+              skuCode: r.sku?.trim() || `SKU-${idx + 1}-${Date.now().toString(36).toUpperCase()}`,
+              skuName: [r.val1, r.val2].filter(Boolean).join(" - ") || `Phân loại ${idx + 1}`,
+              unitPrice: Number(r.price) > 0 ? Number(r.price) : 1000,
+              price: Number(r.price) > 0 ? Number(r.price) : 1000,
+              currency: "VND",
+              salesChannel: "ECOMMERCE",
+              isDefault: idx === 0,
+              attributes: { stock: Number(r.stock) >= 0 ? Number(r.stock) : 0, condition: form.condition || "new" },
+              barcode: "",
+            }));
 
         const createPayload = {
           name: form.name.trim(),
@@ -430,19 +488,7 @@ export default function CreateProductPage() {
           salesChannel: "ECOMMERCE",
           brand: form.brand.trim() || undefined,
           originCountry: "VN",
-          skus: [
-            {
-              skuCode: uniqueSku,
-              skuName: form.name.trim() || "Mặc định",
-              unitPrice: priceNum,
-              price: priceNum,
-              currency: "VND",
-              salesChannel: "ECOMMERCE",
-              isDefault: true,
-              attributes: JSON.stringify({ stock: stockNum, condition: form.condition || "new" }),
-              barcode: "",
-            },
-          ],
+          skus: skusList,
           images: imagesToUpload,
         };
 
@@ -1045,9 +1091,9 @@ export default function CreateProductPage() {
                       </div>
                     </div>
 
-                    {/* BẢNG GIÁ BÁN & KHO HÀNG CHI TIẾT (ĐÃ XÓA CỘT SKU) */}
+                    {/* BẢNG PHÂN LOẠI SKU & GIÁ BÁN */}
                     <div className="slr-cp__row">
-                      <label className="slr-cp__row-label">Bảng giá & Số lượng tồn kho</label>
+                      <label className="slr-cp__row-label">Bảng phân loại SKU & Giá</label>
                       <div className="slr-cp__row-body">
                         <div className="slr-table-wrap">
                           <table className="slr-table">
@@ -1056,7 +1102,8 @@ export default function CreateProductPage() {
                                 <th>{group1Name || "Phân loại 1"}</th>
                                 {hasGroup2 && <th>{group2Name || "Phân loại 2"}</th>}
                                 <th>Giá bán (₫)<span className="required"> *</span></th>
-                                <th>Kho hàng (Số lượng)<span className="required"> *</span></th>
+                                <th>Kho hàng<span className="required"> *</span></th>
+                                <th>Mã SKU phân loại</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1070,16 +1117,25 @@ export default function CreateProductPage() {
                                       placeholder="Nhập giá bán ₫..."
                                       value={r.price}
                                       onChange={(e) => handleRowChange(idx, "price", e.target.value)}
-                                      style={{ width: "160px" }}
+                                      style={{ width: "140px" }}
                                     />
                                   </td>
                                   <td>
                                     <input
                                       type="number"
-                                      placeholder="Số lượng tồn..."
+                                      placeholder="Số lượng..."
                                       value={r.stock}
                                       onChange={(e) => handleRowChange(idx, "stock", e.target.value)}
-                                      style={{ width: "160px" }}
+                                      style={{ width: "120px" }}
+                                    />
+                                  </td>
+                                  <td>
+                                    <input
+                                      type="text"
+                                      placeholder="Mã SKU nội bộ..."
+                                      value={r.sku || ""}
+                                      onChange={(e) => handleRowChange(idx, "sku", e.target.value)}
+                                      style={{ width: "170px" }}
                                     />
                                   </td>
                                 </tr>
