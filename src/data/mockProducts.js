@@ -47,8 +47,41 @@ const DISCOUNTS = [18, 36, 45, 12, 28, 50, 22, null, 15, 33];
 const PRICES = [89000, 159000, 245000, 320000, 499000, 75000, 129000, 890000, 45000, 3200000];
 const SOLD = ['150k+', '25k+', '3k+', '99+', '7k+', '45k+', '12k+', '200k+', '8k+', '1k+'];
 
-/** 60 sản phẩm mock — hiển thị 48/lần, load more thêm 12 */
-export const mockProducts = Array.from({ length: 60 }, (_, i) => {
+export function getApprovedProductsForHome() {
+  try {
+    const raw = localStorage.getItem("seller_created_products") || "[]";
+    const list = JSON.parse(raw);
+    return list
+      .filter((p) => {
+        const mod = String(p.moderationStatus || "").toUpperCase();
+        const st = String(p.status || "").toUpperCase();
+        return mod === "APPROVED" || st === "APPROVED" || st === "ACTIVE" || st === "PUBLISHED";
+      })
+      .map((p, i) => {
+        const imgSrc =
+          (typeof p.images?.[0] === "string" ? p.images[0] : p.images?.[0]?.url) ||
+          (typeof p.image === "string" ? p.image : p.image?.url) ||
+          p.imageUrl ||
+          IMAGES[i % IMAGES.length];
+        return {
+          id: p.id || `p-approved-${i}`,
+          image: imgSrc,
+          images: p.images || [imgSrc],
+          title: p.name || p.title || "Sản phẩm mới",
+          price: Number(p.price || 0),
+          discountPercent: 0,
+          soldCount: "0 đã bán",
+          tags: ["Hàng Mới", "Shopee Mall"],
+          stock: Number(p.stockQuantity ?? p.stock ?? 0),
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
+/** 60 sản phẩm mock + sản phẩm đã duyệt — hiển thị 48/lần, load more thêm 12 */
+export const baseMockProducts = Array.from({ length: 60 }, (_, i) => {
   const price = PRICES[i % PRICES.length];
   const discountPercent = DISCOUNTS[i % DISCOUNTS.length];
 
@@ -62,6 +95,8 @@ export const mockProducts = Array.from({ length: 60 }, (_, i) => {
     tags: TAG_POOL[i % TAG_POOL.length],
   };
 });
+
+export const mockProducts = [...getApprovedProductsForHome(), ...baseMockProducts];
 
 /** Tạo thêm batch sản phẩm giả khi load more */
 export const generateMoreProducts = (startIndex, count = 12) =>

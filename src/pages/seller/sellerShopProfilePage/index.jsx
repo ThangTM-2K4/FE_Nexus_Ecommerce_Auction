@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 import * as shopService from "../../../services/shopService";
 import * as productService from "../../../services/productService";
+import { getMyEcommerceProducts } from "../../../services/ecommerceProductService";
 import PageHeader from "../../../components/sellerdashboard/sellerPageHeader";
 import { categoryStaffInfo, customerStats } from "../../../data/sellerMockData";
 import { fileToDataUrl } from "../../../utils/fileToDataUrl";
@@ -35,7 +36,11 @@ export default function ShopProfilePage() {
   const [myProducts, setMyProducts] = useState([]);
 
   const activeTabDef = TABS.find((t) => t.id === activeTab);
-  const approvedProducts = myProducts.filter((p) => p.status === "APPROVED");
+  const approvedProducts = myProducts.filter((p) => {
+    const mod = String(p.moderationStatus || "").toUpperCase();
+    const st = String(p.status || "").toUpperCase();
+    return mod === "APPROVED" || st === "APPROVED" || st === "ACTIVE" || st === "PUBLISHED";
+  });
 
   const closePreview = () => {
     setShowPreview(false);
@@ -48,7 +53,23 @@ export default function ShopProfilePage() {
       setProfile(data);
       setLoading(false);
     });
-    productService.getMyProducts(user.id).then(setMyProducts);
+
+    getMyEcommerceProducts()
+      .then((res) => {
+        const list = Array.isArray(res) ? res : res?.items || [];
+        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        const combined = [...list];
+        localList.forEach((lp) => {
+          if (lp && !combined.some((item) => String(item.id) === String(lp.id))) {
+            combined.push(lp);
+          }
+        });
+        setMyProducts(combined);
+      })
+      .catch(() => {
+        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        setMyProducts(localList);
+      });
   }, [user?.id, user]);
 
   const startEditing = () => {

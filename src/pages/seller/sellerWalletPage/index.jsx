@@ -178,22 +178,15 @@ export default function WalletPage() {
           <div>
             <h2>Tài khoản nhận tiền</h2>
             <p>
-              {user?.id
-                ? "Tài khoản từ đơn đăng ký seller và các tài khoản bạn thêm"
-                : "Đăng nhập để quản lý tài khoản ngân hàng"}
+              Tài khoản cố định từ đơn đăng ký seller dùng để rút tiền về
             </p>
           </div>
-          {user?.id && (
-            <button type="button" className="slr-btn-create slr-btn-create--outline" onClick={() => setShowAddBank(true)}>
-              + Thêm tài khoản
-            </button>
-          )}
         </header>
 
         <div className="slr-bank-cards">
           {!user?.id && (
             <div className="slr-wallet-empty-banks">
-              <p>Vui lòng đăng nhập để xem và quản lý tài khoản ngân hàng liên kết.</p>
+              <p>Vui lòng đăng nhập để xem tài khoản ngân hàng liên kết.</p>
               <Link to="/login" className="slr-btn-create">Đăng nhập</Link>
             </div>
           )}
@@ -201,12 +194,8 @@ export default function WalletPage() {
           {user?.id && bankAccounts.length === 0 && (
             <div className="slr-wallet-empty-banks">
               <p>
-                Chưa có tài khoản ngân hàng. Nếu bạn đã đăng ký seller, tài khoản từ đơn đăng ký sẽ hiển thị tại đây.
-                Hoặc thêm tài khoản mới để rút tiền.
+                Tài khoản ngân hàng cố định từ đơn đăng ký seller sẽ hiển thị tại đây.
               </p>
-              <button type="button" className="slr-btn-create" onClick={() => setShowAddBank(true)}>
-                + Thêm tài khoản
-              </button>
             </div>
           )}
 
@@ -235,14 +224,6 @@ export default function WalletPage() {
               )}
             </article>
           ))}
-
-          {user?.id && bankAccounts.length > 0 && (
-            <button type="button" className="slr-bank-card slr-bank-card--add" onClick={() => setShowAddBank(true)}>
-              <span>+</span>
-              <strong>Thêm tài khoản</strong>
-              <small>Liên kết TK mới</small>
-            </button>
-          )}
         </div>
       </section>
 

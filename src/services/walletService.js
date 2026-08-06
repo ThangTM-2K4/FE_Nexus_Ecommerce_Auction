@@ -197,21 +197,35 @@ export async function getMyWithdrawals(params = {}) {
 export const getWalletState = async () => {
   try {
     const realWallet = await getMyWallets();
-    if (realWallet?.wallets && realWallet.wallets.length > 0) {
-      const buyerWd = realWallet.wallets.find((w) => w.walletType === "BUYER");
-      const sellerWd = realWallet.wallets.find((w) => w.walletType === "SELLER");
+    const walletsList = Array.isArray(realWallet)
+      ? realWallet
+      : Array.isArray(realWallet?.wallets)
+      ? realWallet.wallets
+      : Array.isArray(realWallet?.items)
+      ? realWallet.items
+      : [];
 
-      const buyerAvailable = buyerWd?.availableBalance ?? 0;
-      const buyerPending = buyerWd?.pendingBalance ?? 0;
+    if (walletsList.length > 0) {
+      const buyerWd = walletsList.find((w) => String(w.walletType).toUpperCase() === "BUYER");
+      const sellerWd = walletsList.find((w) => String(w.walletType).toUpperCase() === "SELLER");
 
-      const sellerAvailable = sellerWd?.availableBalance ?? 0;
-      const sellerPending = sellerWd?.pendingBalance ?? 0;
+      const buyerAvailable = Number(buyerWd?.availableBalance ?? buyerWd?.balance ?? 0);
+      const buyerPending = Number(buyerWd?.pendingBalance ?? buyerWd?.frozenBalance ?? 0);
+
+      const sellerAvailable = Number(sellerWd?.availableBalance ?? sellerWd?.balance ?? 0);
+      const sellerPending = Number(sellerWd?.pendingBalance ?? sellerWd?.frozenBalance ?? 0);
 
       const totalAvailable = buyerAvailable + sellerAvailable;
       const totalPending = buyerPending + sellerPending;
 
-      const txns = await getMyWalletTransactions();
-      const wds = await getMyWithdrawals();
+      let txns = { items: [] };
+      let wds = { items: [] };
+      try {
+        txns = await getMyWalletTransactions();
+        wds = await getMyWithdrawals();
+      } catch {
+        /* ignore */
+      }
 
       return {
         walletStats: {
@@ -223,8 +237,8 @@ export const getWalletState = async () => {
           sellerPending,
           currency: (sellerWd || buyerWd)?.currency || "VND",
         },
-        transactions: txns.items || [],
-        withdrawals: wds.items || [],
+        transactions: Array.isArray(txns) ? txns : txns.items || [],
+        withdrawals: Array.isArray(wds) ? wds : wds.items || [],
       };
     }
   } catch (err) {

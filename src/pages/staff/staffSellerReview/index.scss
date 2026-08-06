@@ -1,4 +1,4 @@
-﻿@use "../../../styles/staff-variables" as *;
+@use "../../../styles/staff-variables" as *;
 
 .stf-seller-review {
   display: flex;
@@ -9,6 +9,14 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 14px;
+  }
+
+  &__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
   }
 
   &__tabs {
@@ -25,11 +33,51 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      transition: all 0.2s ease;
 
       &.active {
         background: linear-gradient(135deg, $color-primary, $color-accent-mid);
         color: #fff;
         border-color: transparent;
+        box-shadow: 0 2px 8px rgba($color-primary, 0.25);
+      }
+    }
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 14px;
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-md;
+    min-width: 240px;
+
+    svg {
+      color: $color-text-muted;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    input {
+      border: none;
+      background: none;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+      color: $color-text;
+
+      &::placeholder {
+        color: $color-text-muted;
       }
     }
   }
@@ -59,10 +107,11 @@
     flex-direction: column;
     gap: 16px;
 
-    header {
+    &-header {
       display: flex;
       justify-content: space-between;
       gap: 12px;
+      margin-bottom: 12px;
 
       h3 {
         font-size: 16px;
@@ -278,34 +327,6 @@
     }
   }
 
-  &__docs {
-    font-size: 13px;
-    margin-top: 14px;
-
-    strong {
-      display: block;
-      margin-bottom: 6px;
-      color: $color-text-secondary;
-    }
-
-    ul {
-      list-style: none;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 0;
-    }
-
-    li {
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: $color-bg;
-      border: 1px solid $color-border-light;
-      color: $color-text-muted;
-    }
-  }
-
   &__reject-box {
     background: rgba($color-danger, 0.06);
     border: 1px solid rgba($color-danger, 0.2);
@@ -348,5 +369,240 @@
         color: $color-danger;
       }
     }
+  }
+
+  /* BẢNG DANH SÁCH (TABLE VIEW) GIỐNG BÊN ADMIN */
+  &__table-wrap {
+    background: $color-bg-card;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-lg;
+    overflow-x: auto;
+    box-shadow: $shadow-sm;
+  }
+}
+
+/* CHẾ ĐỘ CHUYỂN ĐỔI VIEW TOGGLE BUTTON (GIỐNG ADMIN TOOLBAR) */
+.adm-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: $color-bg-card;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-md;
+  padding: 3px;
+  gap: 3px;
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border: none;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $color-text-muted;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+      font-size: 12px;
+    }
+
+    &:hover {
+      color: $color-primary;
+      background: rgba($color-primary, 0.06);
+    }
+
+    &.is-active {
+      background: linear-gradient(135deg, $color-primary-dark, $color-primary);
+      color: #12101A;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+  }
+}
+
+.stf-seller-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid $color-border-light;
+  }
+
+  th {
+    background: rgba($color-primary, 0.04);
+    font-size: 11px;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  tbody tr {
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba($color-primary, 0.02);
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  .col-id {
+    strong {
+      display: block;
+      color: $color-primary-dark;
+      font-weight: 700;
+    }
+
+    small {
+      color: $color-text-muted;
+      font-size: 11px;
+    }
+  }
+
+  .col-seller {
+    .seller-name {
+      font-weight: 700;
+      color: $color-primary-dark;
+    }
+
+    .seller-type-tag {
+      display: inline-block;
+      margin-top: 2px;
+      padding: 1px 6px;
+      background: rgba($color-accent, 0.1);
+      color: $color-primary;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+  }
+
+  .col-contact {
+    div {
+      color: $color-text;
+      font-weight: 500;
+    }
+
+    small {
+      color: $color-text-muted;
+      font-size: 11px;
+    }
+  }
+
+  .col-tax {
+    div {
+      color: $color-text;
+    }
+
+    small {
+      color: $color-text-muted;
+      font-size: 11px;
+    }
+  }
+}
+
+.stf-table-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stf-btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-bg-card;
+  font-size: 12px;
+  font-weight: 600;
+  color: $color-text;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  svg {
+    font-size: 11px;
+  }
+
+  &:hover {
+    border-color: $color-primary;
+    color: $color-primary;
+    background: rgba($color-primary, 0.05);
+  }
+
+  &--view {
+    color: $color-primary;
+    border-color: rgba($color-primary, 0.3);
+  }
+
+  &--approve {
+    background: linear-gradient(135deg, $color-primary, $color-accent-mid);
+    color: #fff;
+    border: none;
+
+    &:hover {
+      opacity: 0.9;
+      color: #fff;
+    }
+  }
+
+  &--reject {
+    color: $color-danger;
+    border-color: rgba($color-danger, 0.3);
+
+    &:hover {
+      background: $color-danger-bg;
+      border-color: $color-danger;
+      color: $color-danger;
+    }
+  }
+
+  &--plain {
+    background: transparent;
+    border: none;
+    color: $color-text-muted;
+
+    &:hover {
+      color: $color-text;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.stf-seller-detail-modal {
+  .common-modal {
+    max-width: 800px;
+    width: 90%;
+  }
+
+  .stf-seller-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .stf-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    width: 100%;
   }
 }
