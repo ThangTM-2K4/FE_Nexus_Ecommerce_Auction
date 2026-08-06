@@ -284,6 +284,9 @@ function LoginPage() {
                     onChange={handleChange}
                     className={errors.login ? "input-error" : ""}
                   />
+                  <span className="input-icon" aria-hidden="true">
+                    <FaUser />
+                  </span>
                 </div>
 
                 <div className="field-error">{errors.login || "\u00A0"}</div>
