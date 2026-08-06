@@ -162,13 +162,18 @@ const StaffProductReview = () => {
                 map.set(key, { ...p, id: realId, price, stock });
               } else {
                 const existing = map.get(key);
+                const keepModStatus = (existing.moderationStatus && existing.moderationStatus !== "NONE")
+                  ? existing.moderationStatus
+                  : (p.moderationStatus || p.status);
+                const keepStatus = existing.status || p.status || keepModStatus;
                 map.set(key, {
                   ...existing,
                   ...p,
                   id: realId,
                   price: price > 0 ? price : existing.price,
                   stock: stock > 0 ? stock : existing.stock,
-                  moderationStatus: existing.moderationStatus || p.moderationStatus,
+                  moderationStatus: keepModStatus,
+                  status: keepStatus,
                 });
               }
             }
@@ -187,8 +192,7 @@ const StaffProductReview = () => {
             if (
               modStatus &&
               modStatus !== "NONE" &&
-              modStatus !== "NOT_SUBMITTED" &&
-              modStatus !== "DRAFT"
+              modStatus !== "NOT_SUBMITTED"
             ) {
               return {
                 ...p,
@@ -234,13 +238,21 @@ const StaffProductReview = () => {
     const mod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
     const st = String(p.status || "").toUpperCase();
 
-    if (mod === "APPROVED" || st === "APPROVED" || st === "ACTIVE" || st === "PUBLISHED") {
+    if (mod === "APPROVED" || st === "APPROVED" || st === "ACTIVE" || st === "PUBLISHED" || st === "HOẠT ĐỘNG") {
       return "APPROVED";
     }
-    if (mod === "REJECTED" || st === "REJECTED") {
+    if (mod === "REJECTED" || st === "REJECTED" || st === "TỪ CHỐI") {
       return "REJECTED";
     }
-    if (mod === "PENDING_MANUAL_REVIEW" || mod.includes("PENDING") || st.includes("PENDING") || st.includes("REVIEW") || st.includes("CHỜ")) {
+    if (
+      mod === "PENDING_MANUAL_REVIEW" ||
+      mod.includes("PENDING") ||
+      mod.includes("SUBMIT") ||
+      st.includes("PENDING") ||
+      st.includes("SUBMIT") ||
+      st.includes("REVIEW") ||
+      st.includes("CHỜ")
+    ) {
       return "PENDING";
     }
     return "DRAFT";
