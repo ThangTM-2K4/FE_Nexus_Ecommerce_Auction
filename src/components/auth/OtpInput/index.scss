@@ -1,3 +1,5 @@
+@use '../../../styles/palette' as *;
+
 .otp-input-group {
   display: flex;
   justify-content: center;
@@ -34,7 +36,7 @@
   border-color: #ef4444;
 }
 
-@media (max-width: 420px) {
+@include respond(mobile-sm) {
   .otp-input-group {
     gap: 7px;
   }

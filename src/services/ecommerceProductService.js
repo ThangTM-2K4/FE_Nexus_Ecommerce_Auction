@@ -359,13 +359,54 @@ const normalizeStatus = (status) => {
   return raw || 'DRAFT';
 };
 
+export const resolveImageUrl = (img) => {
+  if (!img) return '';
+  if (typeof img === 'string') {
+    if (img.startsWith('http')) return img;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${img.replace(/^\//, '')}`;
+  }
+  const url = img.imageUrl || img.url || img.fileUrl || img.primaryImageUrl || img.coverImageUrl;
+  if (url && typeof url === 'string' && url.startsWith('http')) return url;
+  const key = img.storageObjectKey || img.imageKey || img.key || url;
+  if (key && typeof key === 'string') {
+    if (key.startsWith('http')) return key;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${key.replace(/^\//, '')}`;
+  }
+  return '';
+};
+
 export function mapSellerProductToUi(item) {
   if (!item) return null;
-  const images = Array.isArray(item.images)
-    ? item.images.map((img) => (typeof img === 'string' ? img : img.url || img.imageUrl || img.imageKey)).filter(Boolean)
-    : item.imageUrl || item.primaryImageUrl || item.coverImageUrl || item.image || item.imageKey
-      ? [item.imageUrl || item.primaryImageUrl || item.coverImageUrl || item.image || item.imageKey]
-      : [];
+
+  const candidateImages = [];
+
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    candidateImages.push(...item.images);
+  }
+  if (Array.isArray(item.productImages) && item.productImages.length > 0) {
+    candidateImages.push(...item.productImages);
+  }
+  if (Array.isArray(item.product_images) && item.product_images.length > 0) {
+    candidateImages.push(...item.product_images);
+  }
+  if (item.imageUrl) candidateImages.push(item.imageUrl);
+  if (item.primaryImageUrl) candidateImages.push(item.primaryImageUrl);
+  if (item.coverImageUrl) candidateImages.push(item.coverImageUrl);
+  if (item.image) candidateImages.push(item.image);
+  if (item.imageKey) candidateImages.push(item.imageKey);
+  if (item.storageObjectKey) candidateImages.push(item.storageObjectKey);
+  if (item.thumbnail) candidateImages.push(item.thumbnail);
+  if (item.picture) candidateImages.push(item.picture);
+
+  if (Array.isArray(item.skus)) {
+    item.skus.forEach((s) => {
+      if (s.imageUrl) candidateImages.push(s.imageUrl);
+      if (s.imageKey) candidateImages.push(s.imageKey);
+      if (s.storageObjectKey) candidateImages.push(s.storageObjectKey);
+    });
+  }
+
+  const images = Array.from(new Set(candidateImages.map(resolveImageUrl).filter(Boolean)));
 
   const rawStatus = String(item.status || '').toUpperCase();
   const rawMod = String(item.moderationStatus || item.moderation_status || item.reviewStatus || item.approvalStatus || '').toUpperCase();

@@ -29,7 +29,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@include respond(tablet-lg) {
   .side {
     flex-direction: row;
   }
@@ -37,5 +37,11 @@
   .banner {
     flex: 1;
     aspect-ratio: 398.34 / 115;
+  }
+}
+
+@include respond(mobile) {
+  .side {
+    gap: 4px;
   }
 }

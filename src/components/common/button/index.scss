@@ -52,3 +52,16 @@
     font-size: 0.82rem;
   }
 }
+
+@include respond(tablet) {
+  .common-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  .common-btn--sm {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+}

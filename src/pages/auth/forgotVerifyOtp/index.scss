@@ -228,3 +228,25 @@
   text-align: center;
   margin: 0 0 10px;
 }
+
+@include respond(tablet) {
+  .otp-card {
+    width: 100%;
+    padding: 28px 22px;
+    border-radius: $radius-lg;
+  }
+
+  .otp-card h1 {
+    font-size: 1.25rem;
+  }
+
+  .otp-card button {
+    min-height: 48px;
+  }
+}
+
+@include respond(mobile) {
+  .otp-card {
+    padding: 24px 18px;
+  }
+}

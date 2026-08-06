@@ -19,6 +19,14 @@ export default function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?keyword=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
   const {
     isAuthenticated,
     user,
@@ -251,6 +259,7 @@ export default function Header() {
               className="header-search"
               role="search"
               aria-label="Tìm kiếm sản phẩm"
+              onSubmit={handleSearchSubmit}
             >
               <label htmlFor="search-input" className="sr-only">
                 Tìm kiếm sản phẩm
@@ -261,6 +270,8 @@ export default function Header() {
               <input
                 id="search-input"
                 type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Tìm sản phẩm, thương hiệu, mã đấu giá..."
               />
               <button type="submit">Tìm kiếm</button>
@@ -338,13 +349,6 @@ export default function Header() {
             <a href="#iphone-16">iPhone 16 Pro – Giá từ 1k</a>
             <a href="#macbook-air-m3">MacBook Air M3</a>
             <a href="#son-romand">Son Romand Juicy 24</a>
-          </div>
-
-          <div className="header-subnav-trending">
-            <span className="header-trending-label">Xu hướng</span>
-            <a href="#crocs">Dép Sục Crocs</a>
-            <a href="#ao-he">Áo Hè</a>
-            <a href="#kinh-guong">Kính Gương</a>
           </div>
         </div>
       </nav>

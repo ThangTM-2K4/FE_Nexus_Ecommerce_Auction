@@ -70,8 +70,6 @@ export default function ProductsPage() {
                     ...existing,
                     ...mapped,
                     id: mapped.id,
-                    stock: mapped.stock > 0 ? mapped.stock : existing.stock,
-                    stockQuantity: mapped.stockQuantity > 0 ? mapped.stockQuantity : existing.stockQuantity,
                   });
                 }
               }
@@ -82,22 +80,102 @@ export default function ProductsPage() {
 
       let list = Array.from(map.values());
 
-      // Nạp thông tin kiểm duyệt thời gian thực cho từng sản phẩm
+      // Nạp thông tin kiểm duyệt & ảnh thời gian thực cho từng sản phẩm
       const enrichedList = await Promise.all(
         list.map(async (p) => {
+          let updated = { ...p };
+
+          // Nạp chi tiết để lấy ảnh đầy đủ từ CSDL catalog.ProductImages nếu danh sách tổng chưa trả về ảnh
+          if (!updated.images || updated.images.length === 0) {
+            // 1. Thử các API lấy danh sách ảnh sản phẩm trực tiếp từ CSDL
+            const productIdStr = String(p.id || p.productId || "");
+            const imageEndpoints = [
+              `/ecommerce/products/${productIdStr}/images`,
+              `/products/${productIdStr}/images`,
+              `/catalog/products/${productIdStr}/images`,
+              `/ecommerce/products/${productIdStr.toUpperCase()}/images`,
+            ];
+
+            for (const ep of imageEndpoints) {
+              try {
+                const res = await api.get(ep, { skipErrorRedirect: true });
+                const val = res?.data?.data || res?.data?.items || res?.data || res;
+                const rawImgs = Array.isArray(val) ? val : Array.isArray(val?.items) ? val.items : [];
+                if (rawImgs.length > 0) {
+                  const mappedImgs = rawImgs.map(resolveImageUrl).filter(Boolean);
+                  if (mappedImgs.length > 0) {
+                    updated.images = mappedImgs;
+                    break;
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+
+            // 2. Thử gọi API review-detail nếu vẫn chưa có ảnh: GET /admin/products/{id}/review-detail
+            if (!updated.images || updated.images.length === 0) {
+              try {
+                const { data: revRes } = await api.get(`/admin/products/${p.id}/review-detail`, { skipErrorRedirect: true });
+                const revData = revRes?.data || revRes;
+                if (revData) {
+                  const revImgs = Array.isArray(revData.images)
+                    ? revData.images
+                    : Array.isArray(revData.productImages)
+                      ? revData.productImages
+                      : [revData.imageUrl || revData.primaryImageUrl || revData.coverImageUrl || revData.imageKey || revData.storageObjectKey].filter(Boolean);
+                  const mappedImgs = revImgs.map(resolveImageUrl).filter(Boolean);
+                  if (mappedImgs.length > 0) {
+                    updated.images = mappedImgs;
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+
+            // 3. Thử gọi API chi tiết sản phẩm: GET /ecommerce/products/{id}
+            if (!updated.images || updated.images.length === 0) {
+              try {
+                const { data } = await api.get(`/ecommerce/products/${p.id}`, { skipErrorRedirect: true });
+                const detail = data?.data || data;
+                if (detail) {
+                  const mappedDetail = mapSellerProductToUi(detail);
+                  if (mappedDetail && mappedDetail.images && mappedDetail.images.length > 0) {
+                    updated.images = mappedDetail.images;
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+
+            // 4. Lấy từ Cache LocalStorage làm phương án dự phòng tức thì khi Backend C# chưa kích hoạt ảnh công khai
+            if (!updated.images || updated.images.length === 0) {
+              try {
+                const cachedMap = JSON.parse(localStorage.getItem("seller_product_images_map") || "{}");
+                const cachedUrls = cachedMap[p.id];
+                if (Array.isArray(cachedUrls) && cachedUrls.length > 0) {
+                  updated.images = cachedUrls.map(resolveImageUrl).filter(Boolean);
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+          }
+
+          // Nạp thông tin kiểm duyệt
           try {
             const modData = await getProductModeration(p.id);
             if (modData && modData.moderationStatus && modData.moderationStatus !== "NONE") {
-              return {
-                ...p,
-                moderationStatus: modData.moderationStatus,
-                rowVersion: modData.rowVersion || p.rowVersion,
-              };
+              updated.moderationStatus = modData.moderationStatus;
+              updated.rowVersion = modData.rowVersion || updated.rowVersion;
             }
           } catch {
             /* ignore */
           }
-          return p;
+
+          return updated;
         })
       );
 

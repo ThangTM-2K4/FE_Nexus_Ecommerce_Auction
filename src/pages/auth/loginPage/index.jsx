@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUser, FaLock } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import Lottie from "lottie-react";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 import {
@@ -14,6 +15,7 @@ import {
   sanitizeInternalRedirect,
 } from "../../../utils/httpErrorRedirect";
 import { toggleWatchlist } from "../../../components/auction/auctionCard";
+import loginAnimation from "../../../../public/lottie/login.json";
 import "./index.scss";
 
 
@@ -214,102 +216,151 @@ function LoginPage() {
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <button
-          type="button"
-          className="back-home-btn"
-          onClick={handleBackClick}
-        >
-          ← {backLabel}
-        </button>
+      <div className="login-page__bg-shape login-page__bg-shape--one" aria-hidden="true" />
+      <div className="login-page__bg-shape login-page__bg-shape--two" aria-hidden="true" />
 
-
-        <h1>Sàn Đấu Giá Điện Tử</h1>
-
-        <p className="subtitle">Hệ thống Đấu giá Thương mại Điện tử</p>
-
-        <p className="description">
-          Nền tảng đấu giá trực tuyến an toàn, minh bạch và hiệu quả
-        </p>
-
-        <form onSubmit={handleLogin}>
-          <div className="form-group">
-            <input
-              type="text"
-              name="login"
-              placeholder="Email hoặc Số điện thoại"
-              value={formData.login}
-              onChange={handleChange}
-              className={errors.login ? "input-error" : ""}
-            />
-
-            <div className="field-error">{errors.login || "\u00A0"}</div>
-          </div>
-
-          <div className="form-group">
-            <div className="password-wrapper">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Mật khẩu"
-                value={formData.password}
-                onChange={handleChange}
-                className={errors.password ? "input-error" : ""}
+      <div className="login-shell">
+        <div className="login-card">
+          <aside className="login-card__visual" aria-hidden="true">
+            <div className="login-card__brand">
+              <img
+                className="login-card__logo"
+                src="/images/logo/logo.png"
+                alt="BidDoubleTk"
               />
+              <div>
+                <strong>Project Nexus</strong>
+                <span>Thương mại · Đấu giá</span>
+              </div>
+            </div>
+
+            <div className="login-card__particles">
+              <span className="login-particle login-particle--plus">+</span>
+              <span className="login-particle login-particle--x">×</span>
+              <span className="login-particle login-particle--dot" />
+              <span className="login-particle login-particle--tri" />
+            </div>
+
+            <div className="login-card__blob" />
+
+            <div className="login-card__lottie">
+              <Lottie
+                animationData={loginAnimation}
+                loop
+                autoplay
+                className="login-lottie"
+                rendererSettings={{ preserveAspectRatio: "xMidYMid meet" }}
+              />
+            </div>
+          </aside>
+
+          <div className="login-card__form-panel">
+            <button
+              type="button"
+              className="back-home-btn"
+              onClick={handleBackClick}
+            >
+              ← {backLabel}
+            </button>
+
+            <div className="login-avatar">
+              <FaUser aria-hidden="true" />
+            </div>
+
+            <h1>Sàn Đấu Giá Điện Tử</h1>
+            <p className="subtitle">Hệ thống Đấu giá Thương mại Điện tử</p>
+            <p className="description">
+              Nền tảng đấu giá trực tuyến an toàn, minh bạch và hiệu quả
+            </p>
+
+            <form onSubmit={handleLogin}>
+              <div className="form-group">
+                <div className="input-with-icon">
+                  <input
+                    type="text"
+                    name="login"
+                    placeholder="Email hoặc Số điện thoại"
+                    value={formData.login}
+                    onChange={handleChange}
+                    className={errors.login ? "input-error" : ""}
+                  />
+                  <span className="input-icon" aria-hidden="true">
+                    <FaUser />
+                  </span>
+                </div>
+
+                <div className="field-error">{errors.login || "\u00A0"}</div>
+              </div>
+
+              <div className="form-group">
+                <div className="password-wrapper input-with-icon">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Mật khẩu"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={errors.password ? "input-error" : ""}
+                  />
+                  <span className="input-icon input-icon--left" aria-hidden="true">
+                    <FaLock />
+                  </span>
+
+                  <button
+                    type="button"
+                    className="eye-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+
+                <div className="field-error">{errors.password || "\u00A0"}</div>
+              </div>
 
               <button
                 type="button"
-                className="eye-btn"
-                onClick={() => setShowPassword(!showPassword)}
+                className="forgot-password"
+                onClick={() => navigate("/forgot-password")}
               >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                Quên mật khẩu?
               </button>
-            </div>
 
-            <div className="field-error">{errors.password || "\u00A0"}</div>
+              <button type="submit" className="login-btn" disabled={loading}>
+                {loading ? (
+                  <span className="spinner-text">⏳ Đang đăng nhập...</span>
+                ) : (
+                  "Đăng nhập"
+                )}
+              </button>
+
+              <div className="divider">HOẶC</div>
+
+              <button
+                type="button"
+                className="google-btn"
+                onClick={handleGoogleLogin}
+              >
+                <FcGoogle size={22} />
+                Đăng nhập bằng Google
+              </button>
+
+              <div className="register-link">
+                Chưa có tài khoản?
+                <span onClick={() => navigate("/register")}>Đăng ký ngay</span>
+              </div>
+
+              <div className="login-footer">
+                <p>© 2026 Hệ Thống Đấu Giá Thương Mại Điện Tử</p>
+                <p>An toàn • Minh bạch • Hiệu quả</p>
+                <p>
+                  Đây là sản phẩm học tập không phục vụ cho mục đích thương mại đời
+                  sống
+                </p>
+              </div>
+            </form>
           </div>
-
-          <button
-            type="button"
-            className="forgot-password"
-            onClick={() => navigate("/forgot-password")}
-          >
-            Quên mật khẩu?
-          </button>
-
-          <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? (
-              <span className="spinner-text">⏳ Đang đăng nhập...</span>
-            ) : (
-              "Đăng nhập"
-            )}
-          </button>
-
-          <div className="divider">HOẶC</div>
-
-          <button
-            type="button"
-            className="google-btn"
-            onClick={handleGoogleLogin}
-          >
-            <FcGoogle size={22} />
-            Đăng nhập bằng Google
-          </button>
-
-          <div className="register-link">
-            Chưa có tài khoản?
-            <span onClick={() => navigate("/register")}>Đăng ký ngay</span>
-          </div>
-
-          <div className="login-footer">
-            <p>© 2026 Hệ Thống Đấu Giá Thương Mại Điện Tử</p>
-            <p>An toàn • Minh bạch • Hiệu quả</p>
-            <p>
-              Đây là sản phẩm học tập không phục vụ cho mục đích thương mại đời
-              sống
-            </p>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

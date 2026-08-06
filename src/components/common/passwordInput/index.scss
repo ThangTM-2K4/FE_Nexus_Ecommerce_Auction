@@ -56,3 +56,16 @@
     color: $ink;
   }
 }
+
+@include respond(tablet) {
+  .common-password-input__field {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .common-password-input__toggle {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}

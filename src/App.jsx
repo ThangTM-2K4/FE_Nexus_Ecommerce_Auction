@@ -80,6 +80,8 @@ import Error503Page from "./pages/errors/503";
 import AuctionIntroTestPage from "./pages/auctionIntroTest";
 import SiteChatWidget from "./chat";
 
+import SearchPage from "./pages/searchPage";
+
 function App() {
   return (
     <>
@@ -109,6 +111,7 @@ function App() {
     <Route path="/home" element={<HomePage />} />
     <Route path="/homepage" element={<HomePage />} />
     <Route path="/homePage" element={<HomePage />} />
+    <Route path="/search" element={<SearchPage />} />
     <Route path="/product/:id" element={<ProductDetailPage />} />
     <Route path="/shop/:shopId" element={<ShopProfilePage />} />
 

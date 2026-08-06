@@ -283,7 +283,7 @@
   }
 }
 
-@media (max-width: 1100px) {
+@include respond(tablet-lg) {
   .footer-container {
     grid-template-columns: 1fr 1fr;
     gap: 1.25rem;
@@ -294,7 +294,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@include respond(mobile) {
   .footer-container {
     padding: 2.5rem 0 1.5rem;
     grid-template-columns: 1fr;
@@ -317,5 +317,21 @@
 
   .footer-regions {
     justify-content: center;
+  }
+}
+
+@include respond(tablet) {
+  .footer-shell {
+    width: calc(100% - 24px);
+  }
+
+  .footer {
+    margin-top: 3.5rem;
+  }
+}
+
+@include respond(desktop-lg) {
+  .footer-shell {
+    width: min(1240px, calc(100% - 48px));
   }
 }

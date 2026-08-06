@@ -69,3 +69,28 @@
   margin-bottom: 12px;
   text-align: left;
 }
+
+@include respond(tablet) {
+  .reset-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 28px 22px;
+  }
+
+  .reset-card h1 {
+    font-size: 1.35rem;
+    margin-bottom: 22px;
+  }
+
+  .reset-card input,
+  .reset-card button {
+    min-height: 48px;
+    font-size: 16px;
+  }
+}
+
+@include respond(mobile) {
+  .reset-card {
+    padding: 24px 18px;
+  }
+}
