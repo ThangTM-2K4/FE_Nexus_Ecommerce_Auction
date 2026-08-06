@@ -54,16 +54,22 @@ const StaffProductReview = () => {
 
   const extractPrice = (p) => {
     if (!p) return 0;
-    return (
-      p.price ??
+    if (typeof p.minPrice === "number" && p.minPrice > 0) return p.minPrice;
+    if (typeof p.price === "number" && p.price > 0) return p.price;
+    const raw =
+      p.minPrice ??
+      p.priceNum ??
       p.unitPrice ??
       p.sellingPrice ??
-      p.minPrice ??
       p.basePrice ??
       p.skus?.[0]?.unitPrice ??
       p.skus?.[0]?.price ??
-      0
-    );
+      p.price ??
+      0;
+    if (typeof raw === "number") return raw;
+    const cleaned = String(raw).replace(/[^0-9.]/g, "");
+    const num = Number(cleaned);
+    return Number.isNaN(num) ? 0 : num;
   };
 
   const extractStock = (p) => {
@@ -313,7 +319,7 @@ const StaffProductReview = () => {
                 <dl>
                   <div>
                     <dt>Giá bán</dt>
-                    <dd>{Number(p.price || p.sellingPrice || p.unitPrice || 0).toLocaleString("vi-VN")}đ</dd>
+                    <dd>{extractPrice(p).toLocaleString("vi-VN")}đ</dd>
                   </div>
                   <div>
                     <dt>Tồn kho</dt>
@@ -397,7 +403,7 @@ const StaffProductReview = () => {
                       </div>
                     </td>
                     <td className="col-price">
-                      <strong>{Number(p.price || p.sellingPrice || 0).toLocaleString("vi-VN")}đ</strong>
+                      <strong>{extractPrice(p).toLocaleString("vi-VN")}đ</strong>
                     </td>
                     <td className="col-stock">
                       <span>{p.stock ?? p.quantity ?? 0}</span>
