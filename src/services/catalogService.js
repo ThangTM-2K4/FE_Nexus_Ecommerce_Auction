@@ -154,8 +154,10 @@ const formatSoldCount = (value) => {
   return `${value}`;
 };
 
-export function mapProductDetailToUi(item, defaults = {}) {
-  if (!item) return defaults;
+export function mapProductDetailToUi(rawItem, defaults = {}) {
+  const item = rawItem?.data || rawItem;
+  if (!item || typeof item !== 'object') return defaults;
+
 
   const base = {
     gallery: [],
