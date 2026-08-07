@@ -208,8 +208,27 @@ export function mapProductDetailToUi(item, defaults = {}) {
       })
     : base.variants;
 
-  const categoryName = item.categoryName ?? item.category?.name ?? 'Danh mục';
+  const brandName = item.brandName || item.brand || 'Apple';
+  const categoryName = item.categoryName ?? item.category?.name ?? 'Điện Thoại & Phụ Kiện';
   const productTitle = item.name ?? item.title ?? base.title ?? 'Sản phẩm';
+  const sellerName = item.sellerName || item.shopName || item.seller || 'BidDoubleTk Official Store';
+
+  const shopObj = item.shop || {
+    id: item.sellerUserId || item.sellerId || 'shop-1',
+    name: sellerName,
+    avatar: item.sellerAvatarUrl || item.shopAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
+    badge: 'BidDoubleTk Mall',
+    isOnline: true,
+    lastOnline: 'Online vài phút trước',
+    stats: [
+      { label: 'Đánh Giá', value: '179,4k' },
+      { label: 'Sản Phẩm', value: '614' },
+      { label: 'Tỉ Lệ Phản Hồi', value: '100%' },
+      { label: 'Thời Gian Phản Hồi', value: 'trong vài giờ' },
+      { label: 'Tham Gia', value: '2 năm trước' },
+      { label: 'Người Theo Dõi', value: '976,5k' },
+    ],
+  };
 
   return {
     ...base,
@@ -235,12 +254,14 @@ export function mapProductDetailToUi(item, defaults = {}) {
     ],
     policies: base.policies,
     variants,
+    shop: shopObj,
     attributes: {
-      category: categoryName,
-      stock: String(item.stock ?? item.totalStock ?? base.stock ?? '—'),
-      warranty: item.warranty ?? base.attributes?.warranty ?? '—',
-      origin: item.origin ?? base.attributes?.origin ?? '—',
-      shipFrom: item.shipFrom ?? base.attributes?.shipFrom ?? '—',
+      category: `BidDoubleTk > ${categoryName} > ${productTitle}`,
+      brand: brandName,
+      stock: totalStock > 0 ? String(totalStock) : '100',
+      warranty: item.warranty || 'Bảo hành chính hãng 12 tháng',
+      origin: item.origin || 'Chính hãng',
+      shipFrom: item.shipFrom || item.address || 'TP. Hồ Chí Minh',
     },
     description: item.description ?? base.description ?? '',
     gallery,
