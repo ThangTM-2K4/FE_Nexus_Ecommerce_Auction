@@ -16,7 +16,7 @@ import {
 import { mockReviews } from '@/data/mockReviews';
 import { generateMoreProducts } from '@/data/mockProducts';
 import { mapProductDetailToUi } from '@/services/catalogService';
-import { getProductById } from '@/services/ecommerceProductService';
+import { getPublicProductDetail } from '@/services/ecommerceProductService';
 import { useProductNavigate } from '@/hooks/useProductNavigate';
 import './index.scss';
 
@@ -36,7 +36,7 @@ export default function ProductDetailPage() {
     setLoadError(null);
     setProduct(null);
 
-    getProductById(id).then((result) => {
+    getPublicProductDetail(id).then((result) => {
       if (cancelled) return;
 
       if (result.ok && result.data) {
