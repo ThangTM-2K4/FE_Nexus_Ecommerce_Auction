@@ -381,28 +381,29 @@ export const resolveImageUrl = (img) => {
 export function extractProductStock(item) {
   if (!item) return 0;
 
-  // 1. Kiểm tra thuộc tính trên root
-  if (item.stockQuantity != null && !isNaN(Number(item.stockQuantity))) return Number(item.stockQuantity);
-  if (item.stock != null && !isNaN(Number(item.stock))) return Number(item.stock);
-  if (item.totalStock != null && !isNaN(Number(item.totalStock))) return Number(item.totalStock);
-  if (item.quantity != null && !isNaN(Number(item.quantity))) return Number(item.quantity);
-  if (item.availableStock != null && !isNaN(Number(item.availableStock))) return Number(item.availableStock);
-
-  // 2. Kiểm tra mảng SKUs
+  // 1. Nếu có mảng skus, ưu tiên tính tổng tồn kho của tất cả SKUs
   if (Array.isArray(item.skus) && item.skus.length > 0) {
     let total = 0;
     let found = false;
 
     item.skus.forEach((s) => {
-      let skuStock = s.stockQuantity ?? s.stock ?? s.quantity;
+      let skuStock =
+        s.stockQuantity ??
+        s.stock ??
+        s.quantity ??
+        s.inventoryQuantity ??
+        s.availableQuantity;
 
       if (skuStock == null && s.attributes) {
         if (typeof s.attributes === 'object') {
-          skuStock = s.attributes.stock ?? s.attributes.stockQuantity;
+          skuStock =
+            s.attributes.stock ??
+            s.attributes.stockQuantity ??
+            s.attributes.quantity;
         } else if (typeof s.attributes === 'string') {
           try {
             const parsed = JSON.parse(s.attributes);
-            skuStock = parsed?.stock ?? parsed?.stockQuantity;
+            skuStock = parsed?.stock ?? parsed?.stockQuantity ?? parsed?.quantity;
           } catch {
             /* ignore */
           }
@@ -412,7 +413,7 @@ export function extractProductStock(item) {
       if (skuStock == null && s.attributesJson) {
         try {
           const parsed = JSON.parse(s.attributesJson);
-          skuStock = parsed?.stock ?? parsed?.stockQuantity;
+          skuStock = parsed?.stock ?? parsed?.stockQuantity ?? parsed?.quantity;
         } catch {
           /* ignore */
         }
@@ -424,7 +425,69 @@ export function extractProductStock(item) {
       }
     });
 
-    if (found) return total;
+    if (found && total > 0) return total;
+  }
+
+  // 2. Kiểm tra thuộc tính trên root (ưu tiên các giá trị > 0)
+  const rootCandidates = [
+    item.stockQuantity,
+    item.stock,
+    item.totalStock,
+    item.quantity,
+    item.availableStock,
+    item.inventoryQuantity,
+    item.availableQuantity,
+    item.details?.stock,
+    item.details?.stockQuantity,
+    item.details?.quantity,
+  ];
+
+  for (const val of rootCandidates) {
+    if (val != null && !isNaN(Number(val)) && Number(val) > 0) {
+      return Number(val);
+    }
+  }
+
+  // 3. Fallback tìm từ localStorage ("seller_created_products") theo id / productId / name
+  try {
+    const localList = JSON.parse(localStorage.getItem('seller_created_products') || '[]');
+    const targetId = String(item.id || item.productId || '').toLowerCase();
+    const targetName = (item.name || item.productName || item.title || '').trim().toLowerCase();
+
+    const matched = localList.find((p) => {
+      const pid = String(p.id || p.productId || '').toLowerCase();
+      const pname = (p.name || p.productName || p.title || '').trim().toLowerCase();
+      return (pid && pid === targetId) || (pname && targetName && pname === targetName);
+    });
+
+    if (matched) {
+      if (matched.stock != null && !isNaN(Number(matched.stock)) && Number(matched.stock) > 0) {
+        return Number(matched.stock);
+      }
+      if (matched.stockQuantity != null && !isNaN(Number(matched.stockQuantity)) && Number(matched.stockQuantity) > 0) {
+        return Number(matched.stockQuantity);
+      }
+      if (Array.isArray(matched.variationRows) && matched.variationRows.length > 0) {
+        const sum = matched.variationRows.reduce((acc, row) => acc + (Number(row.stock) || 0), 0);
+        if (sum > 0) return sum;
+      }
+      if (Array.isArray(matched.skus) && matched.skus.length > 0) {
+        const sum = matched.skus.reduce((acc, sku) => {
+          const sVal = sku.stock ?? sku.stockQuantity ?? sku.quantity ?? sku.attributes?.stock ?? 0;
+          return acc + (Number(sVal) || 0);
+        }, 0);
+        if (sum > 0) return sum;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+
+  // 4. Trả về giá trị root bất kỳ (dù bằng 0)
+  for (const val of rootCandidates) {
+    if (val != null && !isNaN(Number(val))) {
+      return Number(val);
+    }
   }
 
   return 0;

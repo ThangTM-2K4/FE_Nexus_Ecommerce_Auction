@@ -1,5 +1,6 @@
 import AdminStatusBadge from "../adminStatusBadge";
 import { formatDateTime } from "../../../utils/apiDisplay";
+import { extractProductStock } from "../../../services/ecommerceProductService";
 import "./index.scss";
 
 const initials = (name) =>
@@ -593,31 +594,36 @@ export const ShippingZoneItem = ({ zone }) => (
 // UNIFIED DEDICATED LIST ROW COMPONENTS
 // ==========================================
 
-export const ProductListRow = ({ product, actions = [] }) => (
-  <div className="adm-list-row adm-product-row">
-    <div className="adm-list-row__thumb">📦</div>
-    <div className="adm-list-row__col adm-list-row__col--main">
-      <strong className="adm-list-row__title" title={product.name}>{product.name}</strong>
-      <small className="adm-list-row__sub">{product.id} · {product.category} {product.brand ? `· ${product.brand}` : ""}</small>
-    </div>
-    <div className="adm-list-row__col adm-list-row__col--seller">
-      <span className="adm-list-row__label">Seller</span>
-      <span className="adm-list-row__val">{product.seller}</span>
-    </div>
-    <div className="adm-list-row__col adm-list-row__col--price">
-      <span className="adm-list-row__label">Giá & Tồn kho</span>
-      <span className="adm-list-row__val"><strong className="highlight">{product.price}</strong> · SL: {product.quantity}</span>
-    </div>
-    <div className="adm-list-row__col adm-list-row__col--status">
-      <AdminStatusBadge status={product.status} />
-    </div>
-    <div className="adm-list-row__actions">
-      {actions.map((a) => (
-        <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
-      ))}
-    </div>
-  </div>
-);
+export const ProductListRow = ({ product, actions = [] }) => {
+  const stockVal = extractProductStock(product);
+  return (
+    <article className="adm-list-row adm-list-row--product">
+      <div className="adm-list-row__thumb">
+        {product.image ? <img src={product.image} alt="" /> : "📦"}
+      </div>
+      <div className="adm-list-row__col adm-list-row__col--main">
+        <strong className="adm-list-row__title" title={product.name}>{product.name}</strong>
+        <small className="adm-list-row__sub">{product.id} · {product.category} {product.brand ? `· ${product.brand}` : ""}</small>
+      </div>
+      <div className="adm-list-row__col adm-list-row__col--seller">
+        <span className="adm-list-row__label">Seller</span>
+        <span className="adm-list-row__val">{product.seller}</span>
+      </div>
+      <div className="adm-list-row__col adm-list-row__col--price">
+        <span className="adm-list-row__label">Giá & Tồn kho</span>
+        <span className="adm-list-row__val"><strong className="highlight">{product.price}</strong> · SL: {stockVal}</span>
+      </div>
+      <div className="adm-list-row__col adm-list-row__col--status">
+        <AdminStatusBadge status={product.status} />
+      </div>
+      <div className="adm-list-row__actions">
+        {actions.map((a) => (
+          <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
+        ))}
+      </div>
+    </article>
+  );
+};
 
 export const AuctionListRow = ({ auction, actions = [] }) => {
   const isLive = auction.status === "Đang diễn ra" || auction.status === "Sắp kết thúc";
