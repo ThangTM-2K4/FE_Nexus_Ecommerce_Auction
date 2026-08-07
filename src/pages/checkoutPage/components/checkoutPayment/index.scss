@@ -1,98 +1,115 @@
-@use '../../../../styles/palette' as *;
-
-.checkout-payment {
-  background: $surface;
-  border: 1px solid $border-soft;
-  border-radius: $radius-md;
-  padding: 16px 20px;
-  box-shadow: $shadow-sm;
-}
-
-.checkout-payment__title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: $ink;
-  margin-bottom: 14px;
-}
-
-.checkout-payment__options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.checkout-payment-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   margin-bottom: 16px;
 }
 
-.checkout-payment__wallet-option {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 14px;
-  border: 1px solid $border-soft;
-  border-radius: $radius-sm;
-  background: $surface;
-  transition: all $transition-fast;
-
-  &.is-selected {
-    border-color: $accent-dark;
-    background: rgba($accent, 0.04);
-  }
+.checkout-payment-card__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 16px;
 }
 
-.checkout-payment__wallet-label {
+.checkout-payment-card__options {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
 }
 
-.checkout-payment__wallet-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: $ink;
+.checkout-payment-card__item {
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    border-color: #cbd5e0;
+  }
+
+  &.is-selected {
+    border-color: #000000;
+    background: #ffffff;
+    box-shadow: 0 0 0 1px #000000;
+  }
 }
 
-.checkout-payment__wallet-badge {
+.checkout-payment-card__item-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2d3748;
+  width: 100%;
+}
+
+.checkout-payment-card__icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.payment-icon-tag {
   font-size: 0.68rem;
   font-weight: 700;
-  color: $surface;
-  background: linear-gradient(135deg, $raspberry 0%, $indigo 100%);
+  padding: 2px 6px;
+  background: #edf2f7;
+  color: #4a5568;
+  border-radius: 4px;
+  border: 1px solid #cbd5e0;
+}
+
+.checkout-payment-card__badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #805ad5;
   padding: 2px 8px;
-  border-radius: $radius-pill;
+  border-radius: 999px;
 }
 
-.checkout-payment__wallet-info {
-  margin-top: 6px;
-  padding: 10px 12px;
-  border-radius: $radius-sm;
-  background: rgba($blush-pink, 0.2);
-  border: 1px solid rgba($raspberry, 0.2);
-  font-size: 0.84rem;
+.checkout-payment-card__wallet-info {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 0.85rem;
 }
 
-.checkout-payment__wallet-balance-row {
+.checkout-payment-card__balance-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: $ink;
-  margin-bottom: 6px;
+  color: #2d3748;
+  margin-bottom: 4px;
 
   strong {
-    color: $accent-dark;
+    color: #2b6cb0;
     font-size: 0.95rem;
     font-weight: 700;
   }
 }
 
-.checkout-payment__wallet-warn {
-  color: #c53030;
+.checkout-payment-card__warn {
+  color: #e53e3e;
   font-size: 0.78rem;
-  line-height: 1.4;
   margin-top: 4px;
+  line-height: 1.4;
 }
 
-.checkout-payment__wallet-success {
-  color: #276749;
+.checkout-payment-card__success {
+  color: #38a169;
   font-size: 0.78rem;
-  line-height: 1.4;
   margin-top: 4px;
+  line-height: 1.4;
 }
+
 

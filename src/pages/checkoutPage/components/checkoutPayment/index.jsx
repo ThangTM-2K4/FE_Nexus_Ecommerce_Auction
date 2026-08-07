@@ -7,8 +7,6 @@ import './index.scss';
 export default function CheckoutPayment({
   paymentMethod,
   onPaymentChange,
-  note,
-  onNoteChange,
   totalAmount = 0,
 }) {
   const [walletBalance, setWalletBalance] = useState(1500000);
@@ -34,27 +32,79 @@ export default function CheckoutPayment({
   const hasEnoughBalance = walletBalance >= totalAmount;
 
   return (
-    <section className="checkout-payment">
-      <h2 className="checkout-payment__title">Phương Thức Thanh Toán</h2>
-      <div className="checkout-payment__options">
-        <Radio
-          id="payment-cod"
-          name="payment-method"
-          value="cod"
-          label="Thanh toán khi nhận hàng (COD)"
-          checked={paymentMethod === 'cod'}
-          onChange={onPaymentChange}
-        />
-        <Radio
-          id="payment-transfer"
-          name="payment-method"
-          value="transfer"
-          label="Chuyển khoản / QR"
-          checked={paymentMethod === 'transfer'}
-          onChange={onPaymentChange}
-        />
+    <section className="checkout-payment-card">
+      <h2 className="checkout-payment-card__title">Phương thức thanh toán</h2>
+      <div className="checkout-payment-card__options">
+        {/* COD Option */}
+        <div
+          className={`checkout-payment-card__item ${paymentMethod === 'cod' ? 'is-selected' : ''}`}
+          onClick={() => onPaymentChange('cod')}
+        >
+          <Radio
+            id="payment-cod"
+            name="payment-method"
+            value="cod"
+            checked={paymentMethod === 'cod'}
+            onChange={onPaymentChange}
+            label={
+              <div className="checkout-payment-card__item-label">
+                <span>📦</span>
+                <span>Thanh toán khi nhận hàng (COD)</span>
+              </div>
+            }
+          />
+        </div>
 
-        <div className={`checkout-payment__wallet-option ${paymentMethod === 'nexus_wallet' ? 'is-selected' : ''}`}>
+        {/* Bank Transfer Option */}
+        <div
+          className={`checkout-payment-card__item ${paymentMethod === 'transfer' ? 'is-selected' : ''}`}
+          onClick={() => onPaymentChange('transfer')}
+        >
+          <Radio
+            id="payment-transfer"
+            name="payment-method"
+            value="transfer"
+            checked={paymentMethod === 'transfer'}
+            onChange={onPaymentChange}
+            label={
+              <div className="checkout-payment-card__item-label">
+                <span>🏦</span>
+                <span>Chuyển khoản qua ngân hàng / QR Code</span>
+              </div>
+            }
+          />
+        </div>
+
+        {/* VNPay Option */}
+        <div
+          className={`checkout-payment-card__item ${paymentMethod === 'vnpay' ? 'is-selected' : ''}`}
+          onClick={() => onPaymentChange('vnpay')}
+        >
+          <Radio
+            id="payment-vnpay"
+            name="payment-method"
+            value="vnpay"
+            checked={paymentMethod === 'vnpay'}
+            onChange={onPaymentChange}
+            label={
+              <div className="checkout-payment-card__item-label">
+                <span>💳</span>
+                <span>Thanh toán online qua cổng VNPay</span>
+                <span className="checkout-payment-card__icons">
+                  <span className="payment-icon-tag">ATM</span>
+                  <span className="payment-icon-tag">VISA</span>
+                  <span className="payment-icon-tag">MasterCard</span>
+                </span>
+              </div>
+            }
+          />
+        </div>
+
+        {/* Nexus Wallet Option */}
+        <div
+          className={`checkout-payment-card__item ${paymentMethod === 'nexus_wallet' ? 'is-selected' : ''}`}
+          onClick={() => onPaymentChange('nexus_wallet')}
+        >
           <Radio
             id="payment-nexus-wallet"
             name="payment-method"
@@ -62,25 +112,26 @@ export default function CheckoutPayment({
             checked={paymentMethod === 'nexus_wallet'}
             onChange={onPaymentChange}
             label={
-              <div className="checkout-payment__wallet-label">
-                <span className="checkout-payment__wallet-title">Thanh toán bằng Ví Nexus</span>
-                <span className="checkout-payment__wallet-badge">Khuyên dùng</span>
+              <div className="checkout-payment-card__item-label">
+                <span>👛</span>
+                <span>Thanh toán bằng Ví Nexus</span>
+                <span className="checkout-payment-card__badge">Khuyên dùng</span>
               </div>
             }
           />
           {paymentMethod === 'nexus_wallet' && (
-            <div className="checkout-payment__wallet-info">
-              <div className="checkout-payment__wallet-balance-row">
+            <div className="checkout-payment-card__wallet-info">
+              <div className="checkout-payment-card__balance-row">
                 <span>Số dư Ví Nexus khả dụng:</span>
                 <strong>{loadingWallet ? 'Đang tải...' : formatPrice(walletBalance)}</strong>
               </div>
               {!loadingWallet && !hasEnoughBalance && (
-                <p className="checkout-payment__wallet-warn">
+                <p className="checkout-payment-card__warn">
                   ⚠️ Số dư Ví Nexus không đủ để thanh toán đơn hàng này (Cần thêm {formatPrice(totalAmount - walletBalance)}). Vui lòng nạp thêm tiền vào ví hoặc chọn phương thức khác.
                 </p>
               )}
               {!loadingWallet && hasEnoughBalance && (
-                <p className="checkout-payment__wallet-success">
+                <p className="checkout-payment-card__success">
                   ✓ Số dư ví đủ để thanh toán trực tiếp cho đơn hàng.
                 </p>
               )}
@@ -88,19 +139,8 @@ export default function CheckoutPayment({
           )}
         </div>
       </div>
-
-      <label className="checkout-payment__note-label" htmlFor="checkout-note">
-        Lời nhắn cho người bán (tuỳ chọn)
-      </label>
-      <textarea
-        id="checkout-note"
-        className="checkout-payment__note"
-        value={note}
-        onChange={(e) => onNoteChange(e.target.value)}
-        placeholder="Ghi chú cho shop..."
-        rows={3}
-      />
     </section>
   );
 }
+
 
