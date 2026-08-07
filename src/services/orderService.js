@@ -1,6 +1,5 @@
 import api from '../config/api';
-import { unwrapData } from '../utils/apiResponse';
-import { MOCK_ORDERS } from '../data/mockOrders';
+import { unwrapData, unwrapPagedList } from '../utils/apiResponse';
 import { mockDelay } from './mockDelay';
 
 const storageKey = (userId) => `orders_${userId}`;
@@ -30,10 +29,72 @@ export const ORDER_STATUS_TABS = [
   { key: 'return', label: 'Trả hàng/Hoàn tiền' },
 ];
 
-export const getOrders = async (userId, { status = 'all', query = '' } = {}) => {
-  await mockDelay(400);
+const mapBackendOrderStatus = (statusStr) => {
+  if (!statusStr) return 'cho_xac_nhan';
+  const s = String(statusStr).toUpperCase();
+  if (['CREATED', 'PENDING_PAYMENT', 'PAYMENT_PENDING', 'UNPAID'].includes(s)) return 'pending_payment';
+  if (['PAID', 'CONFIRMED', 'PROCESSING', 'CHO_XAC_NHAN'].includes(s)) return 'cho_xac_nhan';
+  if (['SHIPPED', 'SHIPPING', 'IN_TRANSIT'].includes(s)) return 'shipping';
+  if (['DELIVERING', 'OUT_FOR_DELIVERY'].includes(s)) return 'delivering';
+  if (['COMPLETED', 'DELIVERED', 'SUCCESS'].includes(s)) return 'completed';
+  if (['CANCELLED', 'FAILED', 'REJECTED'].includes(s)) return 'cancelled';
+  if (['REFUNDED', 'RETURNED'].includes(s)) return 'return';
+  return 'cho_xac_nhan';
+};
 
-  let list = [...getStored(userId), ...MOCK_ORDERS];
+/**
+ * Lấy danh sách đơn hàng thực tế từ API GET /api/v1/orders
+ */
+export const getOrders = async (userId, { status = 'all', query = '' } = {}) => {
+  try {
+    const params = { pageNumber: 1, pageSize: 50 };
+    if (status && status !== 'all') {
+      params.status = status;
+    }
+    const { data } = await api.get('/orders', { params });
+    const result = unwrapPagedList(data);
+    const items = result?.items || (Array.isArray(result) ? result : []);
+
+    if (items.length > 0) {
+      let mapped = items.map((order) => ({
+        id: order.id || order.orderId || order.code,
+        shopName: order.sellerName || order.shopName || order.sellerShopName || 'Nexus Store',
+        status: mapBackendOrderStatus(order.status || order.orderStatus),
+        total: Number(order.totalAmount || order.totalPrice || order.total || 0),
+        subtotal: Number(order.subtotalAmount || order.subtotal || order.totalAmount || 0),
+        shippingFee: Number(order.shippingFeeAmount || order.shippingFee || 0),
+        createdAt: order.createdAt || order.orderDate || new Date().toISOString(),
+        address: order.shippingAddress || order.address,
+        paymentMethod: order.paymentMethod,
+        products: (order.items || order.orderItems || []).map((item) => ({
+          id: item.productId || item.skuId || item.id,
+          name: item.productName || item.name || 'Sản phẩm',
+          image: item.productImageUrl || item.image || item.imageUrl || '',
+          quantity: item.quantity || 1,
+          price: Number(item.unitPrice || item.price || 0),
+          variant: item.variantName || item.variant || item.skuName || '',
+        })),
+        items: order.items || [],
+      }));
+
+      if (query.trim()) {
+        const q = query.trim().toLowerCase();
+        mapped = mapped.filter(
+          (order) =>
+            order.id.toLowerCase().includes(q) ||
+            order.shopName.toLowerCase().includes(q) ||
+            order.products.some((p) => p.name.toLowerCase().includes(q)),
+        );
+      }
+      return mapped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+  } catch (err) {
+    console.warn('API GET /orders failed or unreachable, loading stored orders:', err);
+  }
+
+  // Fallback đơn hàng lưu trong localStorage của người dùng
+  await mockDelay(200);
+  let list = [...getStored(userId)];
 
   if (status !== 'all') {
     list = list.filter((order) => order.status === status);
@@ -51,6 +112,7 @@ export const getOrders = async (userId, { status = 'all', query = '' } = {}) => 
 
   return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 };
+
 
 export const createOrder = async (userId, orderData) => {
   await mockDelay(300);
