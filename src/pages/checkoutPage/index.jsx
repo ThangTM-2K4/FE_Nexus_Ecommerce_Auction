@@ -7,9 +7,9 @@ import { useCart } from '@/context/CartContext';
 import { useOrder } from '@/context/OrderContext';
 import { getApiErrorMessage } from '@/utils/apiResponse';
 import * as addressService from '@/services/addressService';
-import { MOCK_SHIPPING_FEE } from '@/data/mockCheckout';
 import CheckoutAddressCard from './components/checkoutAddressCard';
 import CheckoutProductList from './components/checkoutProductList';
+import CheckoutShipping, { SHIPPING_METHODS } from './components/checkoutShipping';
 import CheckoutPayment from './components/checkoutPayment';
 import CheckoutOrderSummary from './components/checkoutOrderSummary';
 import './index.scss';
@@ -20,6 +20,7 @@ export default function CheckoutPage() {
   const { createOrder } = useOrder();
 
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [shippingMethod, setShippingMethod] = useState(SHIPPING_METHODS[0]);
   const [note, setNote] = useState('');
   const [placing, setPlacing] = useState(false);
   const [addresses, setAddresses] = useState([]);
@@ -28,7 +29,7 @@ export default function CheckoutPage() {
 
   const selectedItems = getSelectedItems();
   const subtotal = getTotalPrice();
-  const shippingFee = MOCK_SHIPPING_FEE;
+  const shippingFee = shippingMethod?.fee ?? 30000;
   const total = subtotal + shippingFee;
   const address =
     addresses.find((item) => item.id === selectedAddressId) ||
@@ -85,6 +86,7 @@ export default function CheckoutPage() {
         totalPrice: total,
         address,
         paymentMethod,
+        shippingCarrier: shippingMethod?.name || 'Giao Hàng Nhanh (GHN)',
         note,
       });
 
@@ -119,11 +121,16 @@ export default function CheckoutPage() {
               onSelectAddress={setSelectedAddressId}
             />
             <CheckoutProductList items={selectedItems} />
+            <CheckoutShipping
+              selectedMethodId={shippingMethod?.id}
+              onSelectMethod={setShippingMethod}
+            />
             <CheckoutPayment
               paymentMethod={paymentMethod}
               onPaymentChange={setPaymentMethod}
               note={note}
               onNoteChange={setNote}
+              totalAmount={total}
             />
             <CheckoutOrderSummary
               subtotal={subtotal}
@@ -141,3 +148,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
+

@@ -22,28 +22,77 @@
   margin-bottom: 16px;
 }
 
-.checkout-payment__note-label {
-  display: block;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: $ink-muted;
-  margin-bottom: 8px;
-}
-
-.checkout-payment__note {
-  width: 100%;
-  border: 1px solid $border;
+.checkout-payment__wallet-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid $border-soft;
   border-radius: $radius-sm;
-  padding: 10px 12px;
-  font-size: 0.88rem;
-  font-family: inherit;
-  color: $ink;
-  resize: vertical;
-  min-height: 80px;
-  transition: border-color $transition-fast;
+  background: $surface;
+  transition: all $transition-fast;
 
-  &:focus {
-    outline: none;
-    border-color: rgba($raspberry, 0.5);
+  &.is-selected {
+    border-color: $accent-dark;
+    background: rgba($accent, 0.04);
   }
 }
+
+.checkout-payment__wallet-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkout-payment__wallet-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $ink;
+}
+
+.checkout-payment__wallet-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: $surface;
+  background: linear-gradient(135deg, $raspberry 0%, $indigo 100%);
+  padding: 2px 8px;
+  border-radius: $radius-pill;
+}
+
+.checkout-payment__wallet-info {
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: $radius-sm;
+  background: rgba($blush-pink, 0.2);
+  border: 1px solid rgba($raspberry, 0.2);
+  font-size: 0.84rem;
+}
+
+.checkout-payment__wallet-balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: $ink;
+  margin-bottom: 6px;
+
+  strong {
+    color: $accent-dark;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+}
+
+.checkout-payment__wallet-warn {
+  color: #c53030;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.checkout-payment__wallet-success {
+  color: #276749;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
