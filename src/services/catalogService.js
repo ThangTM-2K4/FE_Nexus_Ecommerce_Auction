@@ -186,14 +186,17 @@ export function mapProductDetailToUi(item, defaults = {}) {
   const minP = skuPrices.length ? Math.min(...skuPrices) : (fallbackPrice > 0 ? fallbackPrice : 150000);
   const maxP = skuPrices.length ? Math.max(...skuPrices) : (Number(item.maxPrice) > 0 ? Number(item.maxPrice) : minP);
 
-  // Extract stock from SKU attributes JSON when direct stock fields are missing
+  // Extract stock from SKU attributes — backend returns attributes as JsonElement object (public) or attributesJson string (management)
   const extractSkuStock = (s) => {
     let st = Number(s.stockQuantity ?? s.stock ?? s.quantity ?? 0);
     if (st > 0) return st;
-    // Parse from attributes (object or JSON string)
-    const attrs = typeof s.attributesJson === 'string'
-      ? (() => { try { return JSON.parse(s.attributesJson); } catch { return null; } })()
-      : (typeof s.attributes === 'object' ? s.attributes : null);
+    // Parse from attributes object (PublicProductSkuResponse) or attributesJson string (ProductSkuResponse)
+    let attrs = null;
+    if (typeof s.attributes === 'object' && s.attributes !== null) {
+      attrs = s.attributes;
+    } else if (typeof s.attributesJson === 'string') {
+      try { attrs = JSON.parse(s.attributesJson); } catch { /* ignore */ }
+    }
     if (attrs) {
       st = Number(attrs.stock ?? attrs.stockQuantity ?? attrs.quantity ?? 0);
     }
@@ -210,22 +213,24 @@ export function mapProductDetailToUi(item, defaults = {}) {
     : base.originalPrice ?? minP * 1.2;
 
   // Extract variant display name from SKU attributes
-  // Priority: sku.name > variant dimension values from attributes > skuCode > fallback
+  // Backend PublicProductSkuResponse fields: skuId, skuName, unitPrice, currency, status, isDefault, attributes (JsonElement)
+  // Backend ProductSkuResponse fields: skuId, skuCode, skuName, unitPrice, currency, status, isDefault, attributesJson, priceVersion, rowVersion
   const IGNORED_ATTR_KEYS = new Set(['stock', 'stockQuantity', 'quantity', 'condition', 'barcode']);
 
   const extractVariantName = (sku, index) => {
-    // 1. Use sku.name if it looks like a real variant name (not generic)
-    if (sku.name && !/^(Biến thể|Phân loại|SKU-|DEFAULT)/i.test(sku.name)) {
-      return sku.name;
+    // 1. Check skuName (backend field) or name — use if it's a real variant name
+    const rawName = sku.skuName ?? sku.name;
+    if (rawName && !/^(Biến thể|Phân loại|SKU-|DEFAULT|Mặc định)/i.test(rawName)) {
+      return rawName;
     }
 
-    // 2. Extract variant dimension values from attributes JSON
+    // 2. Extract variant dimension values from attributes (JsonElement object) or attributesJson (string)
     let attrs = null;
-    if (typeof sku.attributesJson === 'string') {
-      try { attrs = JSON.parse(sku.attributesJson); } catch { /* ignore */ }
-    }
-    if (!attrs && typeof sku.attributes === 'object' && sku.attributes !== null) {
+    if (typeof sku.attributes === 'object' && sku.attributes !== null) {
       attrs = sku.attributes;
+    }
+    if (!attrs && typeof sku.attributesJson === 'string') {
+      try { attrs = JSON.parse(sku.attributesJson); } catch { /* ignore */ }
     }
 
     if (attrs && typeof attrs === 'object') {
@@ -238,8 +243,8 @@ export function mapProductDetailToUi(item, defaults = {}) {
       }
     }
 
-    // 3. Fallback to sku.name, skuCode, or generic label
-    return sku.name || sku.skuCode || sku.code || `Biến thể ${index + 1}`;
+    // 3. Fallback to raw name, skuCode, or generic label
+    return rawName || sku.skuCode || sku.code || `Biến thể ${index + 1}`;
   };
 
   const variants = skus.length
@@ -247,7 +252,7 @@ export function mapProductDetailToUi(item, defaults = {}) {
         const skuP = Number(sku.unitPrice ?? sku.price ?? sku.salePrice ?? sku.originalPrice ?? minP);
         const skuS = extractSkuStock(sku);
         return {
-          id: sku.id ?? `v-${i + 1}`,
+          id: sku.skuId ?? sku.id ?? `v-${i + 1}`,
           name: extractVariantName(sku, i),
           image: sku.imageUrl ?? sku.image ?? gallery[0]?.src ?? DEFAULT_PRODUCT_IMAGE,
           price: skuP > 0 ? skuP : minP,
