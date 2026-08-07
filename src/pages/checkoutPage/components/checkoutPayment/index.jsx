@@ -55,26 +55,6 @@ export default function CheckoutPayment({
           />
         </div>
 
-        {/* Bank Transfer Option */}
-        <div
-          className={`checkout-payment-card__item ${paymentMethod === 'transfer' ? 'is-selected' : ''}`}
-          onClick={() => onPaymentChange('transfer')}
-        >
-          <Radio
-            id="payment-transfer"
-            name="payment-method"
-            value="transfer"
-            checked={paymentMethod === 'transfer'}
-            onChange={onPaymentChange}
-            label={
-              <div className="checkout-payment-card__item-label">
-                <span>🏦</span>
-                <span>Chuyển khoản qua ngân hàng / QR Code</span>
-              </div>
-            }
-          />
-        </div>
-
         {/* VNPay Option */}
         <div
           className={`checkout-payment-card__item ${paymentMethod === 'vnpay' ? 'is-selected' : ''}`}
