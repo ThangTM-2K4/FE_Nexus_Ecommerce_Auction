@@ -96,14 +96,11 @@ export default function ProductInfoPanel({ product }) {
 
 
 
-      <div className="product-info-panel__row product-info-panel__row--variant">
-        <span className="product-info-panel__label">Hàng Hóa</span>
-        <VariantSelector
-          variants={product.variants}
-          selectedId={selectedVariant?.id}
-          onChange={setSelectedVariant}
-        />
-      </div>
+      <VariantSelector
+        variants={product.variants}
+        selectedId={selectedVariant?.id}
+        onChange={setSelectedVariant}
+      />
 
       <div className="product-info-panel__row product-info-panel__row--quantity">
         <span className="product-info-panel__label">Số lượng</span>

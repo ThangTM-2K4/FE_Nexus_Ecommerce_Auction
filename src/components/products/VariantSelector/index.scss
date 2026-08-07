@@ -1,60 +1,125 @@
 @use '../../../styles/palette' as *;
 
-.variant-selector__label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: $ink-muted;
-  margin-bottom: 10px;
-  letter-spacing: 0.04em;
+.variant-selector-shopee {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 }
 
-.variant-selector__grid {
+.variant-selector-shopee__row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.variant-selector-shopee__label {
+  font-size: 0.85rem;
+  color: $ink-muted;
+  padding-top: 6px;
+  line-height: 1.4;
+}
+
+.variant-selector-shopee__options {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  /* Custom scrollbar for long option lists (e.g. phone models) */
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+    &:hover {
+      background: #aaa;
+    }
+  }
 }
 
-.variant-selector__item {
-  display: flex;
+.variant-selector-shopee__pill {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px 6px 6px;
-  border: 1px solid $border-soft;
-  border-radius: $radius-sm;
-  background: $surface;
-  min-width: 0;
-  max-width: 140px;
+  padding: 6px 14px;
+  min-height: 36px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+  font: inherit;
+  font-size: 0.84rem;
+  color: rgba(0, 0, 0, 0.8);
   cursor: pointer;
-  transition: border-color $transition-fast, background $transition-fast;
+  outline: none;
+  transition: all $transition-fast;
+  user-select: none;
 
-  &:hover {
+  &:hover:not(.variant-selector-shopee__pill--active) {
     border-color: $accent;
+    color: $accent-dark;
+    background: #fffafa;
   }
 
   &--active {
     border-color: $accent-dark;
-    background: rgba($sky, 0.12);
+    color: $accent-dark;
+    background: rgba($accent, 0.05);
+    position: relative;
+    box-shadow: 0 0 0 1px $accent-dark;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      border-bottom: 9px solid $accent-dark;
+      border-left: 9px solid transparent;
+    }
+
+    &::before {
+      content: '✓';
+      position: absolute;
+      bottom: -1px;
+      right: 1px;
+      font-size: 7px;
+      color: #fff;
+      z-index: 1;
+      font-weight: bold;
+    }
+  }
+
+  &--has-img {
+    padding-left: 6px;
   }
 }
 
-.variant-selector__img {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+.variant-selector-shopee__img {
+  width: 24px;
+  height: 24px;
   object-fit: cover;
+  border-radius: 2px;
   flex-shrink: 0;
 }
 
-.variant-selector__name {
-  font-size: 0.78rem;
-  color: $ink;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-height: 1.3;
-  max-height: 2.6em;
-  word-break: break-word;
+.variant-selector-shopee__text {
+  line-height: 1.2;
+  white-space: nowrap;
 }
+
+@media (max-width: 640px) {
+  .variant-selector-shopee__row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
 
