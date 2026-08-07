@@ -25,6 +25,31 @@ export default function ProductsPage() {
   const { user } = useAuth();
   const [myProducts, setMyProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRejectProduct, setSelectedRejectProduct] = useState(null);
+
+  const extractRejectReason = (p) => {
+    if (!p) return "";
+    if (p.comment) return p.comment;
+    if (p.rejectReason) return p.rejectReason;
+
+    if (Array.isArray(p.issues) && p.issues.length > 0) {
+      const msgs = p.issues
+        .map((iss) => {
+          if (iss.message) return iss.message;
+          if (iss.issueCode === "PROHIBITED_KEYWORD") return "Chứa từ cấm vi phạm quy định";
+          if (iss.issueCode === "EXTERNAL_URL_DETECTED") return "Phát hiện liên kết/tên miền ngoài";
+          if (iss.issueCode === "IMAGE_CONTENT_UNAVAILABLE") return "Không đọc được dữ liệu ảnh từ bộ nhớ";
+          return iss.issueCode;
+        })
+        .filter(Boolean);
+      if (msgs.length > 0) {
+        return msgs.join(" • ");
+      }
+    }
+
+    if (p.reasonCode) return `Mã lý do từ chối: ${p.reasonCode}`;
+    return "Sản phẩm chứa nội dung vi phạm chính sách kiểm duyệt";
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -87,7 +112,6 @@ export default function ProductsPage() {
 
           // Nạp chi tiết để lấy ảnh đầy đủ từ CSDL catalog.ProductImages nếu danh sách tổng chưa trả về ảnh
           if (!updated.images || updated.images.length === 0) {
-            // 1. Thử các API lấy danh sách ảnh sản phẩm trực tiếp từ CSDL
             const productIdStr = String(p.id || p.productId || "");
             const imageEndpoints = [
               `/ecommerce/products/${productIdStr}/images`,
@@ -102,7 +126,8 @@ export default function ProductsPage() {
                 const val = res?.data?.data || res?.data?.items || res?.data || res;
                 const rawImgs = Array.isArray(val) ? val : Array.isArray(val?.items) ? val.items : [];
                 if (rawImgs.length > 0) {
-                  const mappedImgs = rawImgs.map(resolveImageUrl).filter(Boolean);
+                  // Assuming resolveImageUrl is imported or available globally
+                  const mappedImgs = rawImgs.map(r => r.url || r).filter(Boolean);
                   if (mappedImgs.length > 0) {
                     updated.images = mappedImgs;
                     break;
@@ -124,7 +149,7 @@ export default function ProductsPage() {
                     : Array.isArray(revData.productImages)
                       ? revData.productImages
                       : [revData.imageUrl || revData.primaryImageUrl || revData.coverImageUrl || revData.imageKey || revData.storageObjectKey].filter(Boolean);
-                  const mappedImgs = revImgs.map(resolveImageUrl).filter(Boolean);
+                  const mappedImgs = revImgs.map(r => r.url || r).filter(Boolean);
                   if (mappedImgs.length > 0) {
                     updated.images = mappedImgs;
                   }
@@ -156,7 +181,7 @@ export default function ProductsPage() {
                 const cachedMap = JSON.parse(localStorage.getItem("seller_product_images_map") || "{}");
                 const cachedUrls = cachedMap[p.id];
                 if (Array.isArray(cachedUrls) && cachedUrls.length > 0) {
-                  updated.images = cachedUrls.map(resolveImageUrl).filter(Boolean);
+                  updated.images = cachedUrls.map(u => u).filter(Boolean);
                 }
               } catch {
                 /* ignore */
@@ -164,12 +189,20 @@ export default function ProductsPage() {
             }
           }
 
-          // Nạp thông tin kiểm duyệt
+          // Nạp thông tin kiểm duyệt & nguyên nhân từ chối chi tiết
           try {
             const modData = await getProductModeration(p.id);
-            if (modData && modData.moderationStatus && modData.moderationStatus !== "NONE") {
-              updated.moderationStatus = modData.moderationStatus;
-              updated.rowVersion = modData.rowVersion || updated.rowVersion;
+            if (modData) {
+              const status = modData.moderationStatus || modData.data?.moderationStatus;
+              if (status && status !== "NONE") {
+                updated.moderationStatus = status;
+              }
+              if (modData.rowVersion) updated.rowVersion = modData.rowVersion;
+              if (Array.isArray(modData.issues)) updated.issues = modData.issues;
+              if (modData.comment) updated.comment = modData.comment;
+              if (modData.reasonCode) updated.reasonCode = modData.reasonCode;
+              if (modData.autoDecision) updated.autoDecision = modData.autoDecision;
+              if (modData.riskLevel) updated.riskLevel = modData.riskLevel;
             }
           } catch {
             /* ignore */
@@ -212,18 +245,16 @@ export default function ProductsPage() {
     const draftOrRejected = myProducts.filter((p) => {
       const st = String(p.status || "").toUpperCase();
       const mod = String(p.moderationStatus || "").toUpperCase();
-      return st === "DRAFT" || mod === "REJECTED";
+      return st === "DRAFT" || mod === "REJECTED" || mod === "AUTO_REJECTED";
     }).length;
     return { total, active, outOfStock, pending, draftOrRejected };
   }, [myProducts]);
 
   const handleSubmitReview = async (product) => {
-    // Bước 1: GET /api/v1/ecommerce/products/{productId}/moderation
     const modData = await getProductModeration(product.id);
     const modStatus = modData?.moderationStatus || product.moderationStatus || "NONE";
     const rowVersion = modData?.rowVersion || product.rowVersion || null;
 
-    // Bước 2: FE kiểm tra trạng thái
     if (modStatus === "PENDING_MANUAL_REVIEW") {
       toast.info("Sản phẩm đang chờ duyệt");
       await fetchProducts();
@@ -235,7 +266,6 @@ export default function ProductsPage() {
       return;
     }
 
-    // Bước 3: Submit (khi chưa submit)
     try {
       const submitRes = await submitProductForReview(product.id, rowVersion);
       const isAutoRejected =
@@ -252,7 +282,6 @@ export default function ProductsPage() {
         toast.success("Gửi duyệt thành công");
       }
 
-      // Cập nhật trạng thái tức thì trên UI
       setMyProducts((prev) =>
         prev.map((item) =>
           item.id === product.id
@@ -261,7 +290,6 @@ export default function ProductsPage() {
         )
       );
 
-      // Đồng bộ vào cache localStorage
       try {
         const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
         const updatedLocal = localList.map((item) =>
@@ -278,19 +306,12 @@ export default function ProductsPage() {
     } catch (err) {
       const is409 = err?.response?.status === 409 || err?.status === 409;
       const msg = getApiErrorMessage(err, "");
-      if (is409 || /moderation is active|already approved/i.test(msg)) {
-        toast.info("Sản phẩm đang chờ duyệt");
-        setMyProducts((prev) =>
-          prev.map((item) =>
-            item.id === product.id
-              ? { ...item, moderationStatus: "PENDING_MANUAL_REVIEW", status: "PENDING" }
-              : item
-          )
-        );
-        await fetchProducts();
+      if (is409 || msg.includes("chờ duyệt") || msg.includes("thay đổi")) {
+        toast.info("Sản phẩm đang chờ duyệt trên hệ thống.");
       } else {
-        toast.error(msg || "Không thể gửi duyệt sản phẩm");
+        toast.error(msg || "Gửi duyệt thất bại");
       }
+      await fetchProducts();
     }
   };
 
@@ -350,7 +371,7 @@ export default function ProductsPage() {
                     const rawMod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
 
                     let effectiveModStatus = "DRAFT";
-                    if (rawSt === "REJECTED" || rawMod === "REJECTED" || rawMod.includes("REJECT") || rawMod.includes("BLOCK")) {
+                    if (rawSt === "REJECTED" || rawMod === "REJECTED" || rawMod === "AUTO_REJECTED" || rawMod.includes("REJECT") || rawMod.includes("BLOCK")) {
                       effectiveModStatus = "REJECTED";
                     } else if (rawSt === "ACTIVE" || rawSt === "APPROVED" || rawMod === "APPROVED" || rawSt === "PUBLISHED") {
                       effectiveModStatus = "APPROVED";
@@ -388,7 +409,6 @@ export default function ProductsPage() {
                       badgeClass = "rejected";
                     }
 
-                    // Phôi phục tồn kho từ Local Cache nếu API server trả về 0 (cho các sản phẩm tạo chưa có stockJson)
                     let displayStock = p.stock;
                     if (!displayStock || Number(displayStock) === 0) {
                       try {
@@ -412,6 +432,43 @@ export default function ProductsPage() {
                         <td>
                           <strong>{p.name || p.productName || category?.label || "Sản phẩm"}</strong>
                           {p.brand && <div style={{ fontSize: "12px", color: "#888" }}>Thương hiệu: {p.brand}</div>}
+                          {effectiveModStatus === "REJECTED" && (
+                            <div style={{
+                              marginTop: "8px",
+                              padding: "8px 12px",
+                              background: "#fff5f5",
+                              border: "1px solid #fed7d7",
+                              borderRadius: "8px",
+                              fontSize: "12px",
+                              color: "#c53030",
+                              lineHeight: "1.4"
+                            }}>
+                              <div style={{ fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  ⚠️ Lý do từ chối ({p.issues?.length || 1} vi phạm):
+                                </span>
+                                {p.issues && p.issues.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedRejectProduct(p)}
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      color: "#9b2c2c",
+                                      textDecoration: "underline",
+                                      fontSize: "11px",
+                                      fontWeight: 600,
+                                      cursor: "pointer",
+                                      padding: 0
+                                    }}
+                                  >
+                                    Xem chi tiết »
+                                  </button>
+                                )}
+                              </div>
+                              <div>{extractRejectReason(p)}</div>
+                            </div>
+                          )}
                         </td>
                         <td style={{ fontSize: "12px", color: "#555" }}>{p.id}</td>
                         <td style={{ fontWeight: 600, color: "#6b3ba7" }}>{Number(p.price || 0).toLocaleString("vi-VN")}đ</td>
@@ -419,7 +476,7 @@ export default function ProductsPage() {
                           {displayStock || 0}
                         </td>
                         <td>
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                             <span
                               className={`slr-badge slr-badge--${badgeClass}`}
                               style={
@@ -432,11 +489,44 @@ export default function ProductsPage() {
                                       padding: "4px 10px",
                                       borderRadius: "12px",
                                     }
+                                  : effectiveModStatus === "REJECTED"
+                                  ? {
+                                      background: "#ffebee",
+                                      color: "#c62828",
+                                      border: "1px solid #ef9a9a",
+                                      fontWeight: 600,
+                                      padding: "4px 10px",
+                                      borderRadius: "12px",
+                                    }
                                   : undefined
                               }
                             >
                               {badgeLabel}
                             </span>
+                            
+                            {effectiveModStatus === "REJECTED" && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedRejectProduct(p)}
+                                style={{
+                                  height: "28px",
+                                  padding: "0 10px",
+                                  fontSize: "11px",
+                                  fontWeight: 600,
+                                  borderRadius: "6px",
+                                  background: "#fff5f5",
+                                  color: "#c53030",
+                                  border: "1px solid #feb2b2",
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px"
+                                }}
+                              >
+                                🔍 Lý do từ chối
+                              </button>
+                            )}
+
                             <button
                               type="button"
                               className="slr-btn-create"
@@ -474,6 +564,116 @@ export default function ProductsPage() {
           )}
         </div>
       </section>
+
+      {/* POPUP CHI TIẾT LÝ DO TỪ CHỐI */}
+      {selectedRejectProduct && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(4px)",
+            display: "grid",
+            placeItems: "center",
+            padding: "16px",
+          }}
+          onClick={() => setSelectedRejectProduct(null)}
+        >
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "16px",
+              maxWidth: "600px",
+              width: "100%",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+              overflow: "hidden",
+              border: "1px solid #fee2e2",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: "20px 24px", background: "linear-gradient(135deg, #fff5f5, #ffe4e6)", borderBottom: "1px solid #fecdd3", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h3 style={{ margin: 0, color: "#9f1239", fontSize: "18px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
+                  ⚠️ Chi tiết lý do từ chối sản phẩm
+                </h3>
+                <span style={{ fontSize: "12px", color: "#be123c", marginTop: "2px", display: "block" }}>
+                  Hệ thống kiểm duyệt phát hiện thông tin không hợp lệ
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedRejectProduct(null)}
+                style={{ background: "none", border: "none", fontSize: "20px", color: "#9f1239", cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: "20px 24px", maxHeight: "65vh", overflowY: "auto" }}>
+              <div style={{ display: "flex", gap: "12px", marginBottom: "20px", padding: "12px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                {selectedRejectProduct.images?.[0] ? (
+                  <img src={selectedRejectProduct.images[0]} alt="" style={{ width: "48px", height: "48px", borderRadius: "6px", objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: "48px", height: "48px", borderRadius: "6px", background: "#e2e8f0", display: "grid", placeItems: "center" }}>📦</div>
+                )}
+                <div>
+                  <strong style={{ fontSize: "14px", color: "#1e293b" }}>{selectedRejectProduct.name}</strong>
+                  <div style={{ fontSize: "12px", color: "#64748b" }}>Mã SP: {selectedRejectProduct.id}</div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", color: "#334155" }}>
+                  Danh sách vi phạm ({selectedRejectProduct.issues?.length || 1}):
+                </h4>
+                {Array.isArray(selectedRejectProduct.issues) && selectedRejectProduct.issues.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {selectedRejectProduct.issues.map((iss, i) => (
+                      <div key={i} style={{ padding: "12px", background: "#fff5f5", borderRadius: "8px", border: "1px solid #fecdd3" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                          <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", background: iss.severity === "BLOCK" ? "#e11d48" : "#d97706", color: "#ffffff" }}>
+                            {iss.severity || "BLOCK"}
+                          </span>
+                          <span style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace" }}>
+                            Trường: {iss.fieldName || "Thông tin sản phẩm"}
+                          </span>
+                        </div>
+                        <p style={{ margin: "4px 0 0 0", fontSize: "13px", fontWeight: 600, color: "#881337" }}>
+                          {iss.message || iss.issueCode}
+                        </p>
+                        {iss.maskedSnippet && (
+                          <div style={{ fontSize: "11px", color: "#9f1239", marginTop: "4px", background: "#fff", padding: "2px 6px", borderRadius: "4px", display: "inline-block", border: "1px solid #ffe4e6" }}>
+                            Nội dung vi phạm: <code>{iss.maskedSnippet}</code>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: "12px", background: "#fff5f5", borderRadius: "8px", border: "1px solid #fecdd3", color: "#881337", fontSize: "13px" }}>
+                    {extractRejectReason(selectedRejectProduct)}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ padding: "12px", background: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe", fontSize: "12px", color: "#1e40af" }}>
+                💡 <strong>Hướng dẫn:</strong> Vui lòng chỉnh sửa lại thông tin sản phẩm (loại bỏ các từ cấm hoặc liên kết ngoài nêu trên) trước khi bấm <strong>"Gửi lại duyệt"</strong>.
+              </div>
+            </div>
+
+            <div style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => setSelectedRejectProduct(null)}
+                style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #cbd5e1", background: "#ffffff", color: "#475569", fontWeight: 600, cursor: "pointer" }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
