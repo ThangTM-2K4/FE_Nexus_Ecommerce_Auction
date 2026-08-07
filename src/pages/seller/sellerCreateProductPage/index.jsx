@@ -517,40 +517,43 @@ export default function CreateProductPage() {
           ? (Number(form.stock) >= 0 ? Number(form.stock) : 0)
           : (firstVarStock >= 0 ? firstVarStock : 0);
 
-        const uniqueSku = productSku.trim() || `SKU-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1000)}`;
+        // Build SKU list matching backend CreateProductSkuRequest:
+        // { skuName, unitPrice, isDefault, attributes (JsonElement), barcode }
+        // Backend auto-generates skuCode, hardcodes currency=VND & salesChannel=ECOMMERCE
 
         const skusList = productTypeMode === "single"
           ? [
               {
-                skuCode: uniqueSku,
                 skuName: form.name.trim() || "Mặc định",
                 unitPrice: priceNum,
-                price: priceNum,
-                currency: "VND",
-                salesChannel: "ECOMMERCE",
                 isDefault: true,
-                stock: stockNum,
-                stockQuantity: stockNum,
-                attributes: { stock: stockNum, condition: form.condition || "new" },
-                attributesJson: JSON.stringify({ stock: stockNum, stockQuantity: stockNum, condition: form.condition || "new" }),
+                attributes: {
+                  stock: stockNum,
+                  stockQuantity: stockNum,
+                  condition: form.condition || "new",
+                },
                 barcode: "",
               },
             ]
           : variationRows.map((r, idx) => {
               const rPrice = Number(r.price) > 0 ? Number(r.price) : 1000;
               const rStock = Number(r.stock) >= 0 ? Number(r.stock) : 0;
-              return {
-                skuCode: r.sku?.trim() || `SKU-${idx + 1}-${Date.now().toString(36).toUpperCase()}`,
-                skuName: [r.val1, r.val2].filter(Boolean).join(" - ") || `Phân loại ${idx + 1}`,
-                unitPrice: rPrice,
-                price: rPrice,
-                currency: "VND",
-                salesChannel: "ECOMMERCE",
-                isDefault: idx === 0,
+              const variantLabel = [r.val1, r.val2].filter(Boolean).join(" - ") || `Phân loại ${idx + 1}`;
+
+              // Store variant dimension info inside attributes for buyer display
+              const variantAttrs = {
                 stock: rStock,
                 stockQuantity: rStock,
-                attributes: { stock: rStock, condition: form.condition || "new" },
-                attributesJson: JSON.stringify({ stock: rStock, stockQuantity: rStock, condition: form.condition || "new" }),
+                condition: form.condition || "new",
+              };
+              if (group1Name && r.val1) variantAttrs[group1Name] = r.val1;
+              if (group2Name && r.val2) variantAttrs[group2Name] = r.val2;
+
+              return {
+                skuName: variantLabel,
+                unitPrice: rPrice,
+                isDefault: idx === 0,
+                attributes: variantAttrs,
                 barcode: "",
               };
             });

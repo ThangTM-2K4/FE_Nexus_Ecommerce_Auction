@@ -177,7 +177,9 @@ const DEFAULT_CURRENCY = 'VND';
 const DEFAULT_ORIGIN_COUNTRY = 'VN';
 
 /**
- * Build payload POST /ecommerce/products theo Swagger CreateProductRequest.
+ * Build payload POST /ecommerce/products theo backend CreateProductRequest.
+ * Backend CreateProductSkuRequest chỉ chấp nhận: skuName, unitPrice, isDefault, attributes (JsonElement), barcode.
+ * Backend tự sinh skuCode, hardcode currency=VND & salesChannel=ECOMMERCE.
  */
 export function buildCreateProductPayload({
   sellerUserId,
@@ -205,14 +207,12 @@ export function buildCreateProductPayload({
     originCountry: originCountry || DEFAULT_ORIGIN_COUNTRY,
     skus: [
       {
-        skuCode: 'DEFAULT',
         skuName: trimmedName || 'Mặc định',
         unitPrice,
-        currency: DEFAULT_CURRENCY,
-        salesChannel: DEFAULT_SALES_CHANNEL,
         isDefault: true,
         attributes: {
           stock: stockQty,
+          stockQuantity: stockQty,
           condition: condition || 'new',
         },
         barcode: '',

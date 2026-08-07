@@ -177,15 +177,30 @@ export function mapProductDetailToUi(item, defaults = {}) {
 
   const skus = Array.isArray(item.skus) ? item.skus : (Array.isArray(item.variants) ? item.variants : []);
   
+  // Parse SKU prices — check unitPrice first (backend field), then fallbacks
   const skuPrices = skus
-    .map(s => Number(s.price ?? s.salePrice ?? s.originalPrice ?? s.priceAmount ?? 0))
+    .map(s => Number(s.unitPrice ?? s.price ?? s.salePrice ?? s.originalPrice ?? s.priceAmount ?? 0))
     .filter(p => p > 0);
 
   const fallbackPrice = Number(item.price ?? item.minPrice ?? item.priceAmount ?? 0);
   const minP = skuPrices.length ? Math.min(...skuPrices) : (fallbackPrice > 0 ? fallbackPrice : 150000);
   const maxP = skuPrices.length ? Math.max(...skuPrices) : (Number(item.maxPrice) > 0 ? Number(item.maxPrice) : minP);
 
-  const skuStockSum = skus.reduce((sum, s) => sum + Number(s.stockQuantity ?? s.stock ?? s.quantity ?? 0), 0);
+  // Extract stock from SKU attributes JSON when direct stock fields are missing
+  const extractSkuStock = (s) => {
+    let st = Number(s.stockQuantity ?? s.stock ?? s.quantity ?? 0);
+    if (st > 0) return st;
+    // Parse from attributes (object or JSON string)
+    const attrs = typeof s.attributesJson === 'string'
+      ? (() => { try { return JSON.parse(s.attributesJson); } catch { return null; } })()
+      : (typeof s.attributes === 'object' ? s.attributes : null);
+    if (attrs) {
+      st = Number(attrs.stock ?? attrs.stockQuantity ?? attrs.quantity ?? 0);
+    }
+    return st > 0 ? st : 10;
+  };
+
+  const skuStockSum = skus.reduce((sum, s) => sum + extractSkuStock(s), 0);
   const rawStock = Number(item.stock ?? item.totalStock ?? item.quantity ?? 0);
   const totalStock = rawStock > 0 ? rawStock : (skuStockSum > 0 ? skuStockSum : (skus.length ? skus.length * 10 : 100));
 
@@ -194,13 +209,46 @@ export function mapProductDetailToUi(item, defaults = {}) {
     ? Math.round(minP / (1 - discount / 100))
     : base.originalPrice ?? minP * 1.2;
 
+  // Extract variant display name from SKU attributes
+  // Priority: sku.name > variant dimension values from attributes > skuCode > fallback
+  const IGNORED_ATTR_KEYS = new Set(['stock', 'stockQuantity', 'quantity', 'condition', 'barcode']);
+
+  const extractVariantName = (sku, index) => {
+    // 1. Use sku.name if it looks like a real variant name (not generic)
+    if (sku.name && !/^(Biến thể|Phân loại|SKU-|DEFAULT)/i.test(sku.name)) {
+      return sku.name;
+    }
+
+    // 2. Extract variant dimension values from attributes JSON
+    let attrs = null;
+    if (typeof sku.attributesJson === 'string') {
+      try { attrs = JSON.parse(sku.attributesJson); } catch { /* ignore */ }
+    }
+    if (!attrs && typeof sku.attributes === 'object' && sku.attributes !== null) {
+      attrs = sku.attributes;
+    }
+
+    if (attrs && typeof attrs === 'object') {
+      const variantValues = Object.entries(attrs)
+        .filter(([key]) => !IGNORED_ATTR_KEYS.has(key))
+        .map(([, val]) => String(val))
+        .filter(Boolean);
+      if (variantValues.length > 0) {
+        return variantValues.join(' - ');
+      }
+    }
+
+    // 3. Fallback to sku.name, skuCode, or generic label
+    return sku.name || sku.skuCode || sku.code || `Biến thể ${index + 1}`;
+  };
+
   const variants = skus.length
     ? skus.map((sku, i) => {
-        const skuP = Number(sku.price ?? sku.salePrice ?? sku.originalPrice ?? minP);
-        const skuS = Number(sku.stockQuantity ?? sku.stock ?? sku.quantity ?? 10);
+        const skuP = Number(sku.unitPrice ?? sku.price ?? sku.salePrice ?? sku.originalPrice ?? minP);
+        const skuS = extractSkuStock(sku);
         return {
           id: sku.id ?? `v-${i + 1}`,
-          name: sku.name ?? sku.skuCode ?? sku.code ?? (sku.attributes ? Object.values(sku.attributes).join(" - ") : `Biến thể ${i + 1}`),
+          name: extractVariantName(sku, i),
           image: sku.imageUrl ?? sku.image ?? gallery[0]?.src ?? DEFAULT_PRODUCT_IMAGE,
           price: skuP > 0 ? skuP : minP,
           stock: skuS > 0 ? skuS : 10,
