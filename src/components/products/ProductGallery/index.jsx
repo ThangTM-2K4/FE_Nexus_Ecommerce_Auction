@@ -15,6 +15,31 @@ export default function ProductGallery({ gallery = [], likeCount = 0 }) {
   const safeGallery = Array.isArray(gallery) && gallery.length > 0 ? gallery : [fallbackItem];
   const active = safeGallery[activeIndex] || safeGallery[0] || fallbackItem;
 
+  const scrollToThumb = (idx) => {
+    if (trackRef.current) {
+      const thumbs = trackRef.current.children;
+      if (thumbs && thumbs[idx]) {
+        thumbs[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  };
+
+  const handlePrev = () => {
+    setActiveIndex((prev) => {
+      const nextIdx = prev > 0 ? prev - 1 : safeGallery.length - 1;
+      scrollToThumb(nextIdx);
+      return nextIdx;
+    });
+  };
+
+  const handleNext = () => {
+    setActiveIndex((prev) => {
+      const nextIdx = prev < safeGallery.length - 1 ? prev + 1 : 0;
+      scrollToThumb(nextIdx);
+      return nextIdx;
+    });
+  };
+
   return (
     <div className="product-gallery">
       <div className="product-gallery__main">
@@ -26,12 +51,13 @@ export default function ProductGallery({ gallery = [], likeCount = 0 }) {
         )}
       </div>
 
+
       <div className="product-gallery__thumbs-wrap">
         <button
           type="button"
           className="product-gallery__thumb-arrow product-gallery__thumb-arrow--prev"
-          onClick={() => scrollThumbs(-1)}
-          aria-label="Cuộn thumbnail trái"
+          onClick={handlePrev}
+          aria-label="Ảnh trước"
         >
           ‹
         </button>
@@ -39,12 +65,15 @@ export default function ProductGallery({ gallery = [], likeCount = 0 }) {
         <div className="product-gallery__thumbs" ref={trackRef}>
           {safeGallery.map((item, index) => (
             <button
-              key={item.id}
+              key={item.id || `thumb-${index}`}
               type="button"
               className={`product-gallery__thumb ${
                 index === activeIndex ? 'product-gallery__thumb--active' : ''
               }`}
-              onClick={() => setActiveIndex(index)}
+              onClick={() => {
+                setActiveIndex(index);
+                scrollToThumb(index);
+              }}
               aria-label={`Xem ảnh ${index + 1}`}
             >
               <img src={item.src} alt="" />
@@ -56,12 +85,13 @@ export default function ProductGallery({ gallery = [], likeCount = 0 }) {
         <button
           type="button"
           className="product-gallery__thumb-arrow product-gallery__thumb-arrow--next"
-          onClick={() => scrollThumbs(1)}
-          aria-label="Cuộn thumbnail phải"
+          onClick={handleNext}
+          aria-label="Ảnh tiếp theo"
         >
           ›
         </button>
       </div>
+
 
       <div className="product-gallery__actions">
         <div className="product-gallery__share">
