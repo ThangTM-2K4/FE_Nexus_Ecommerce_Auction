@@ -25,9 +25,11 @@ export default function VariantSelector({ variants = [], selectedId, onChange })
   );
 }
 
-export function getVariantPriceLabel(variants, selectedId, priceMin, priceMax) {
+export function getVariantPriceLabel(variants = [], selectedId, priceMin, priceMax) {
   const selected = variants.find((v) => v.id === selectedId);
-  if (selected?.price) return formatPrice(selected.price);
-  if (priceMin === priceMax) return formatPrice(priceMin);
-  return `${formatPrice(priceMin)} - ${formatPrice(priceMax)}`;
+  if (selected?.price && Number(selected.price) > 0) return formatPrice(selected.price);
+  if (priceMin && priceMax && priceMin === priceMax && Number(priceMin) > 0) return formatPrice(priceMin);
+  if (priceMin && priceMax && Number(priceMin) > 0) return `${formatPrice(priceMin)} - ${formatPrice(priceMax)}`;
+  if (priceMin && Number(priceMin) > 0) return formatPrice(priceMin);
+  return formatPrice(150000);
 }

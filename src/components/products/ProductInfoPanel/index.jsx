@@ -43,6 +43,9 @@ export default function ProductInfoPanel({ product }) {
     navigate("/cart");
   };
 
+  const currentStock = selectedVariant?.stock ?? product.stock ?? 100;
+  const isInStock = currentStock > 0;
+
   return (
     <div className="product-info-panel">
       {product.badge && (
@@ -135,8 +138,8 @@ export default function ProductInfoPanel({ product }) {
         <span className="product-info-panel__label">Số lượng</span>
         <QuantitySelector
           value={quantity}
-          max={product.stock}
-          inStock={product.inStock}
+          max={currentStock}
+          inStock={isInStock}
           onChange={setQuantity}
           showLabel={false}
         />
@@ -145,7 +148,7 @@ export default function ProductInfoPanel({ product }) {
       <div className="product-info-panel__actions">
         <Button
           variant="outline"
-          disabled={!product.inStock}
+          disabled={!isInStock}
           onClick={handleAddToCart}
           className="product-info-panel__action-btn"
         >
@@ -153,7 +156,7 @@ export default function ProductInfoPanel({ product }) {
         </Button>
         <Button
           variant="accent"
-          disabled={!product.inStock}
+          disabled={!isInStock}
           onClick={handleBuyNow}
           className="product-info-panel__action-btn"
         >

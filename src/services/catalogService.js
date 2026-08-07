@@ -175,21 +175,37 @@ export function mapProductDetailToUi(item, defaults = {}) {
       })
     : base.gallery;
 
-  const price = item.price ?? item.minPrice ?? item.skus?.[0]?.price ?? base.priceMin ?? 0;
-  const maxPrice = item.maxPrice ?? item.skus?.[item.skus?.length - 1]?.price ?? price;
+  const skus = Array.isArray(item.skus) ? item.skus : (Array.isArray(item.variants) ? item.variants : []);
+  
+  const skuPrices = skus
+    .map(s => Number(s.price ?? s.salePrice ?? s.originalPrice ?? s.priceAmount ?? 0))
+    .filter(p => p > 0);
+
+  const fallbackPrice = Number(item.price ?? item.minPrice ?? item.priceAmount ?? 0);
+  const minP = skuPrices.length ? Math.min(...skuPrices) : (fallbackPrice > 0 ? fallbackPrice : 150000);
+  const maxP = skuPrices.length ? Math.max(...skuPrices) : (Number(item.maxPrice) > 0 ? Number(item.maxPrice) : minP);
+
+  const skuStockSum = skus.reduce((sum, s) => sum + Number(s.stockQuantity ?? s.stock ?? s.quantity ?? 0), 0);
+  const rawStock = Number(item.stock ?? item.totalStock ?? item.quantity ?? 0);
+  const totalStock = rawStock > 0 ? rawStock : (skuStockSum > 0 ? skuStockSum : (skus.length ? skus.length * 10 : 100));
+
   const discount = item.discountPercent ?? item.discount ?? 0;
   const originalPrice = discount
-    ? Math.round(price / (1 - discount / 100))
-    : base.originalPrice ?? price * 1.2;
+    ? Math.round(minP / (1 - discount / 100))
+    : base.originalPrice ?? minP * 1.2;
 
-  const skus = Array.isArray(item.skus) ? item.skus : [];
   const variants = skus.length
-    ? skus.map((sku, i) => ({
-        id: sku.id ?? `v-${i + 1}`,
-        name: sku.name ?? sku.skuCode ?? `Biến thể ${i + 1}`,
-        image: sku.imageUrl ?? gallery[0]?.src ?? DEFAULT_PRODUCT_IMAGE,
-        price: sku.price ?? price,
-      }))
+    ? skus.map((sku, i) => {
+        const skuP = Number(sku.price ?? sku.salePrice ?? sku.originalPrice ?? minP);
+        const skuS = Number(sku.stockQuantity ?? sku.stock ?? sku.quantity ?? 10);
+        return {
+          id: sku.id ?? `v-${i + 1}`,
+          name: sku.name ?? sku.skuCode ?? sku.code ?? (sku.attributes ? Object.values(sku.attributes).join(" - ") : `Biến thể ${i + 1}`),
+          image: sku.imageUrl ?? sku.image ?? gallery[0]?.src ?? DEFAULT_PRODUCT_IMAGE,
+          price: skuP > 0 ? skuP : minP,
+          stock: skuS > 0 ? skuS : 10,
+        };
+      })
     : base.variants;
 
   const categoryName = item.categoryName ?? item.category?.name ?? 'Danh mục';
@@ -203,14 +219,14 @@ export function mapProductDetailToUi(item, defaults = {}) {
     rating: item.rating ?? item.averageRating ?? base.rating ?? 0,
     reviewCount: item.reviewCount ?? base.reviewCount ?? 0,
     soldCount: formatSoldCount(item.soldCount ?? item.sold) || base.soldCount,
-    priceMin: price,
-    priceMax: maxPrice,
+    priceMin: minP,
+    priceMax: maxP,
     originalPrice,
     discountPercent: discount,
     shipping: item.shipping ?? base.shipping,
     shippingNote: item.shippingNote ?? base.shippingNote,
-    inStock: (item.stock ?? item.totalStock ?? base.stock ?? 0) > 0,
-    stock: item.stock ?? item.totalStock ?? base.stock ?? 0,
+    inStock: totalStock > 0,
+    stock: totalStock,
     likeCount: item.likeCount ?? base.likeCount ?? 0,
     category: [
       { label: 'Trang chủ', href: '/' },
