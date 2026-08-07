@@ -84,7 +84,8 @@ const mapAdminProductItem = (p) => {
     maxPrice: p.maxPrice ?? p.price ?? 0,
     currency: p.currency || 'VND',
     salesChannel: p.salesChannel || 'ECOMMERCE',
-    status: mappedStatus,
+    status: p.status || (rawStatus.includes('APPROV') || rawStatus.includes('ACTIVE') ? 'ACTIVE' : rawStatus),
+    statusLabel: mappedStatus,
     rawStatus: p.status,
     moderationStatus: p.moderationStatus || modStatus,
     sellerEligible: p.sellerEligible ?? true,
@@ -162,12 +163,17 @@ export async function getAdminProducts(params = {}) {
     allItems.map(async (item) => {
       if (!item.image && (!item.images || item.images.length === 0)) {
         try {
-          const { data } = await api.get(`/ecommerce/products/${item.id}`, { skipErrorRedirect: true });
+          const { data } = await api.get(`/admin/products/${item.id}/review-detail`, { skipErrorRedirect: true });
           const detail = data?.data || data;
           if (detail) {
-            const mappedDetail = mapAdminProductItem(detail);
-            if (mappedDetail.image) {
-              return { ...item, image: mappedDetail.image, imageUrl: mappedDetail.image, images: mappedDetail.images };
+            const rawImgs = Array.isArray(detail.images)
+              ? detail.images
+              : Array.isArray(detail.productImages)
+                ? detail.productImages
+                : [detail.imageUrl || detail.primaryImageUrl || detail.coverImageUrl || detail.storageObjectKey].filter(Boolean);
+            const mappedImgs = rawImgs.map((img) => typeof img === "string" ? img : img?.imageUrl || img?.storageObjectKey).filter(Boolean);
+            if (mappedImgs.length > 0) {
+              return { ...item, image: mappedImgs[0], imageUrl: mappedImgs[0], images: mappedImgs };
             }
           }
         } catch {

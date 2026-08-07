@@ -119,7 +119,7 @@ export async function getProducts(filters = {}) {
 /**
  * Chi tiết sản phẩm — GET /ecommerce/products/{productId}?scope=management
  */
-export async function getProductById(productId, scope = 'management') {
+export async function getProductById(productId, scope = 'all') {
   if (!productId) {
     return {
       ok: false,
@@ -467,12 +467,23 @@ export function mapSellerProductToUi(item) {
   const rawMod = String(item.moderationStatus || item.moderation_status || item.reviewStatus || item.approvalStatus || '').toUpperCase();
 
   let moderationStatus = 'DRAFT';
-  if (rawMod.includes('PENDING') || rawStatus === 'PENDING' || rawStatus === 'PENDING_REVIEW') {
+  if (
+    rawMod.includes('REJECT') ||
+    rawMod.includes('BLOCK') ||
+    rawStatus === 'REJECTED'
+  ) {
+    moderationStatus = 'REJECTED';
+  } else if (
+    rawMod.includes('PENDING') ||
+    rawMod.includes('AUTO_REVIEW') ||
+    rawMod.includes('REVIEW') ||
+    rawMod.includes('SUBMIT') ||
+    rawStatus === 'PENDING' ||
+    rawStatus === 'PENDING_REVIEW'
+  ) {
     moderationStatus = 'PENDING_MANUAL_REVIEW';
   } else if (rawMod.includes('APPROV') || rawStatus === 'ACTIVE' || rawStatus === 'APPROVED') {
     moderationStatus = 'APPROVED';
-  } else if (rawMod.includes('REJECT') || rawStatus === 'REJECTED') {
-    moderationStatus = 'REJECTED';
   }
 
   const stock = extractProductStock(item);

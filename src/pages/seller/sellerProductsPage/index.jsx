@@ -137,7 +137,7 @@ export default function ProductsPage() {
             // 3. Thử gọi API chi tiết sản phẩm: GET /ecommerce/products/{id}
             if (!updated.images || updated.images.length === 0) {
               try {
-                const { data } = await api.get(`/ecommerce/products/${p.id}`, { skipErrorRedirect: true });
+                const { data } = await api.get(`/ecommerce/products/${p.id}?scope=mine`, { skipErrorRedirect: true });
                 const detail = data?.data || data;
                 if (detail) {
                   const mappedDetail = mapSellerProductToUi(detail);
@@ -237,14 +237,56 @@ export default function ProductsPage() {
 
     // Bước 3: Submit (khi chưa submit)
     try {
-      await submitProductForReview(product.id, rowVersion);
-      toast.success("Gửi duyệt thành công");
+      const submitRes = await submitProductForReview(product.id, rowVersion);
+      const isAutoRejected =
+        submitRes?.moderationStatus === "AUTO_REJECTED" ||
+        submitRes?.autoDecision === "BLOCKED" ||
+        submitRes?.data?.moderationStatus === "AUTO_REJECTED";
+
+      const targetStatus = isAutoRejected ? "REJECTED" : "PENDING_MANUAL_REVIEW";
+      const targetMainStatus = isAutoRejected ? "REJECTED" : "PENDING";
+
+      if (isAutoRejected) {
+        toast.warning("Sản phẩm bị hệ thống từ chối tự động do vi phạm quy định (chứa từ cấm / liên kết ngoài).");
+      } else {
+        toast.success("Gửi duyệt thành công");
+      }
+
+      // Cập nhật trạng thái tức thì trên UI
+      setMyProducts((prev) =>
+        prev.map((item) =>
+          item.id === product.id
+            ? { ...item, moderationStatus: targetStatus, status: targetMainStatus }
+            : item
+        )
+      );
+
+      // Đồng bộ vào cache localStorage
+      try {
+        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        const updatedLocal = localList.map((item) =>
+          item.id === product.id
+            ? { ...item, moderationStatus: targetStatus, status: targetMainStatus }
+            : item
+        );
+        localStorage.setItem("seller_created_products", JSON.stringify(updatedLocal));
+      } catch {
+        /* ignore */
+      }
+
       await fetchProducts();
     } catch (err) {
       const is409 = err?.response?.status === 409 || err?.status === 409;
       const msg = getApiErrorMessage(err, "");
       if (is409 || /moderation is active|already approved/i.test(msg)) {
         toast.info("Sản phẩm đang chờ duyệt");
+        setMyProducts((prev) =>
+          prev.map((item) =>
+            item.id === product.id
+              ? { ...item, moderationStatus: "PENDING_MANUAL_REVIEW", status: "PENDING" }
+              : item
+          )
+        );
         await fetchProducts();
       } else {
         toast.error(msg || "Không thể gửi duyệt sản phẩm");
@@ -308,14 +350,18 @@ export default function ProductsPage() {
                     const rawMod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
 
                     let effectiveModStatus = "DRAFT";
-                    if (rawSt === "ACTIVE" || rawSt === "APPROVED" || rawMod === "APPROVED" || rawSt === "PUBLISHED") {
-                      effectiveModStatus = "APPROVED";
-                    } else if (rawSt === "REJECTED" || rawMod === "REJECTED") {
+                    if (rawSt === "REJECTED" || rawMod === "REJECTED" || rawMod.includes("REJECT") || rawMod.includes("BLOCK")) {
                       effectiveModStatus = "REJECTED";
+                    } else if (rawSt === "ACTIVE" || rawSt === "APPROVED" || rawMod === "APPROVED" || rawSt === "PUBLISHED") {
+                      effectiveModStatus = "APPROVED";
                     } else if (
                       rawSt === "PENDING_REVIEW" ||
                       rawSt === "PENDING" ||
-                      rawMod === "PENDING_MANUAL_REVIEW"
+                      rawMod === "PENDING_MANUAL_REVIEW" ||
+                      rawMod.includes("PENDING") ||
+                      rawMod.includes("AUTO_REVIEW") ||
+                      rawMod.includes("REVIEW") ||
+                      rawMod.includes("SUBMIT")
                     ) {
                       effectiveModStatus = "PENDING_MANUAL_REVIEW";
                     }
@@ -342,6 +388,20 @@ export default function ProductsPage() {
                       badgeClass = "rejected";
                     }
 
+                    // Phôi phục tồn kho từ Local Cache nếu API server trả về 0 (cho các sản phẩm tạo chưa có stockJson)
+                    let displayStock = p.stock;
+                    if (!displayStock || Number(displayStock) === 0) {
+                      try {
+                        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+                        const matchedLocal = localList.find((item) => String(item.id).toLowerCase() === String(p.id).toLowerCase());
+                        if (matchedLocal && matchedLocal.stock > 0) {
+                          displayStock = matchedLocal.stock;
+                        }
+                      } catch {
+                        /* ignore */
+                      }
+                    }
+
                     return (
                       <tr key={p.id}>
                         <td>
@@ -355,10 +415,26 @@ export default function ProductsPage() {
                         </td>
                         <td style={{ fontSize: "12px", color: "#555" }}>{p.id}</td>
                         <td style={{ fontWeight: 600, color: "#6b3ba7" }}>{Number(p.price || 0).toLocaleString("vi-VN")}đ</td>
-                        <td className={Number(p.stock) === 0 ? "warn" : ""}>{p.stock}</td>
+                        <td style={{ fontWeight: 600, color: Number(displayStock) === 0 ? "#d32f2f" : "#2e7d32" }}>
+                          {displayStock || 0}
+                        </td>
                         <td>
                           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-                            <span className={`slr-badge slr-badge--${badgeClass}`}>
+                            <span
+                              className={`slr-badge slr-badge--${badgeClass}`}
+                              style={
+                                effectiveModStatus === "APPROVED"
+                                  ? {
+                                      background: "#e8f5e9",
+                                      color: "#2e7d32",
+                                      border: "1px solid #a5d6a7",
+                                      fontWeight: 600,
+                                      padding: "4px 10px",
+                                      borderRadius: "12px",
+                                    }
+                                  : undefined
+                              }
+                            >
                               {badgeLabel}
                             </span>
                             <button
@@ -370,9 +446,17 @@ export default function ProductsPage() {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 height: "28px",
-                                padding: "0 10px",
+                                padding: "0 12px",
                                 fontSize: "11px",
-                                opacity: isSubmittingDisabled ? 0.65 : 1,
+                                fontWeight: 600,
+                                borderRadius: "6px",
+                                background:
+                                  effectiveModStatus === "APPROVED"
+                                    ? "linear-gradient(135deg, #2e7d32, #4caf50)"
+                                    : undefined,
+                                color: effectiveModStatus === "APPROVED" ? "#ffffff" : undefined,
+                                border: effectiveModStatus === "APPROVED" ? "none" : undefined,
+                                opacity: isSubmittingDisabled && effectiveModStatus !== "APPROVED" ? 0.65 : 1,
                                 cursor: isSubmittingDisabled ? "not-allowed" : "pointer",
                               }}
                               onClick={() => handleSubmitReview(p)}

@@ -12,7 +12,7 @@ import {
   rejectAdminProduct,
   getApiErrorMessage,
 } from "../../../services/adminProductService";
-import { getProductModeration, resolveImageUrl } from "../../../services/ecommerceProductService";
+import { getProductModeration, resolveImageUrl, extractProductStock } from "../../../services/ecommerceProductService";
 import "./index.scss";
 
 const TABS = [
@@ -73,25 +73,59 @@ const StaffProductReview = () => {
   };
 
   const extractStock = (p) => {
-    if (!p) return 0;
-    return (
-      p.stockQuantity ??
-      p.stock ??
-      p.totalStock ??
-      p.quantity ??
-      p.availableStock ??
-      p.skus?.[0]?.stockQuantity ??
-      p.skus?.[0]?.stock ??
-      p.skus?.[0]?.quantity ??
-      0
-    );
+    let s = extractProductStock(p);
+    if (!s || s === 0) {
+      try {
+        const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        const matched = localList.find((item) => String(item.id).toLowerCase() === String(p.id).toLowerCase());
+        if (matched && matched.stock > 0) {
+          s = matched.stock;
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    return s || 0;
   };
 
   const loadProducts = async () => {
     setLoading(true);
     try {
       const res = await getAdminProducts();
-      setProducts(res?.items || []);
+      const rawItems = res?.items || [];
+
+      // Nạp thông tin kiểm duyệt thời gian thực cho từng sản phẩm
+      const enrichedItems = await Promise.all(
+        rawItems.map(async (p) => {
+          let updated = { ...p };
+          try {
+            const modData = await getProductModeration(p.id);
+            if (modData && modData.moderationStatus) {
+              updated.moderationStatus = modData.moderationStatus;
+            }
+          } catch {
+            /* ignore */
+          }
+          return updated;
+        })
+      );
+
+      // Lọc bỏ các sản phẩm đã bị hệ thống tự động từ chối (AUTO_REJECTED / REJECTED / BLOCKED)
+      const validItems = enrichedItems.filter((p) => {
+        const mod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
+        const st = String(p.status || "").toUpperCase();
+
+        const isRejected =
+          mod === "AUTO_REJECTED" ||
+          mod === "REJECTED" ||
+          st === "REJECTED" ||
+          mod.includes("REJECT") ||
+          mod.includes("BLOCK");
+
+        return !isRejected;
+      });
+
+      setProducts(validItems);
     } catch (err) {
       console.error("Error loading products for staff:", err);
       setProducts([]);
@@ -118,15 +152,34 @@ const StaffProductReview = () => {
   const normalizeStatus = (p) => {
     if (!p) return "DRAFT";
     const mod = String(p.moderationStatus || p.reviewStatus || p.approvalStatus || "").toUpperCase();
-    const st = String(p.status || "").toUpperCase();
+    const st = String(p.status || p.statusLabel || "").toUpperCase();
 
-    if (mod === "APPROVED" || st === "APPROVED" || st === "ACTIVE" || st === "PUBLISHED") {
+    if (
+      mod === "APPROVED" ||
+      mod === "PASSED" ||
+      st === "APPROVED" ||
+      st === "ACTIVE" ||
+      st === "PUBLISHED" ||
+      st.includes("HOẠT") ||
+      st.includes("HOAT") ||
+      st.includes("ĐÃ DUYỆT") ||
+      st.includes("DA DUYET")
+    ) {
       return "APPROVED";
     }
-    if (mod === "REJECTED" || st === "REJECTED") {
+    if (mod === "REJECTED" || st === "REJECTED" || st.includes("TỪ CHỐI") || st.includes("TU CHOI")) {
       return "REJECTED";
     }
-    if (mod === "PENDING_MANUAL_REVIEW" || mod.includes("PENDING") || st.includes("PENDING") || st.includes("REVIEW") || st.includes("CHỜ")) {
+    if (
+      mod === "PENDING_MANUAL_REVIEW" ||
+      mod.includes("PENDING") ||
+      mod.includes("AUTO") ||
+      mod.includes("REVIEW") ||
+      st.includes("PENDING") ||
+      st.includes("REVIEW") ||
+      st.includes("CHỜ") ||
+      st.includes("CHO")
+    ) {
       return "PENDING";
     }
     return "DRAFT";
@@ -163,7 +216,16 @@ const StaffProductReview = () => {
     setProcessingId(product.id);
     try {
       await approveAdminProduct(product.id);
-      
+
+      // Cập nhật trạng thái tức thì trên UI Staff
+      setProducts((prev) =>
+        prev.map((item) =>
+          item.id === product.id
+            ? { ...item, moderationStatus: "APPROVED", status: "ACTIVE", rawStatus: "ACTIVE" }
+            : item
+        )
+      );
+
       try {
         const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
         const updated = localList.map((p) => {
@@ -323,7 +385,9 @@ const StaffProductReview = () => {
                   </div>
                   <div>
                     <dt>Tồn kho</dt>
-                    <dd>{p.stock ?? p.quantity ?? p.stockQuantity ?? 0}</dd>
+                    <dd style={{ fontWeight: 600, color: extractStock(p) === 0 ? "#d32f2f" : "#2e7d32" }}>
+                      {extractStock(p)}
+                    </dd>
                   </div>
                   <div>
                     <dt>Mã sản phẩm</dt>
@@ -343,18 +407,30 @@ const StaffProductReview = () => {
                 )}
 
                 <footer>
-                  <button
-                    type="button"
-                    className="reject"
-                    disabled={processingId === p.id || statusNorm === "REJECTED"}
-                    onClick={() => setRejectTarget(p)}
-                  >
-                    Từ chối
-                  </button>
+                  {statusNorm !== "APPROVED" && (
+                    <button
+                      type="button"
+                      className="reject"
+                      disabled={processingId === p.id || statusNorm === "REJECTED"}
+                      style={
+                        statusNorm === "REJECTED"
+                          ? { background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5", opacity: 0.8, cursor: "not-allowed" }
+                          : undefined
+                      }
+                      onClick={() => setRejectTarget(p)}
+                    >
+                      Từ chối
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="approve"
                     disabled={processingId === p.id || statusNorm === "APPROVED"}
+                    style={
+                      statusNorm === "APPROVED"
+                        ? { background: "#2e7d32", color: "#ffffff", opacity: 1, cursor: "not-allowed" }
+                        : undefined
+                    }
                     onClick={() => handleApprove(p)}
                   >
                     {processingId === p.id ? "Đang xử lý..." : statusNorm === "APPROVED" ? "✓ Đã duyệt" : "Phê duyệt"}
@@ -406,7 +482,9 @@ const StaffProductReview = () => {
                       <strong>{extractPrice(p).toLocaleString("vi-VN")}đ</strong>
                     </td>
                     <td className="col-stock">
-                      <span>{p.stock ?? p.quantity ?? 0}</span>
+                      <strong style={{ color: extractStock(p) === 0 ? "#d32f2f" : "#2e7d32" }}>
+                        {extractStock(p)}
+                      </strong>
                     </td>
                     <td className="col-status">
                       <span className={`stf-product-review__status ${statusClass}`}>{statusText}</span>
@@ -417,18 +495,30 @@ const StaffProductReview = () => {
                           type="button"
                           className="stf-btn-action stf-btn-action--approve"
                           disabled={processingId === p.id || statusNorm === "APPROVED"}
+                          style={
+                            statusNorm === "APPROVED"
+                              ? { background: "#2e7d32", color: "#ffffff", borderColor: "#2e7d32", opacity: 1, cursor: "not-allowed" }
+                              : undefined
+                          }
                           onClick={() => handleApprove(p)}
                         >
                           <FaCheck /> {statusNorm === "APPROVED" ? "Đã duyệt" : "Duyệt"}
                         </button>
-                        <button
-                          type="button"
-                          className="stf-btn-action stf-btn-action--reject"
-                          disabled={processingId === p.id || statusNorm === "REJECTED"}
-                          onClick={() => setRejectTarget(p)}
-                        >
-                          <FaTimes /> Từ chối
-                        </button>
+                        {statusNorm !== "APPROVED" && (
+                          <button
+                            type="button"
+                            className="stf-btn-action stf-btn-action--reject"
+                            disabled={processingId === p.id || statusNorm === "REJECTED"}
+                            style={
+                              statusNorm === "REJECTED"
+                                ? { background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5", opacity: 0.8, cursor: "not-allowed" }
+                                : undefined
+                            }
+                            onClick={() => setRejectTarget(p)}
+                          >
+                            <FaTimes /> {statusNorm === "REJECTED" ? "Đã từ chối" : "Từ chối"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
