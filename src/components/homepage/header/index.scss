@@ -9,7 +9,7 @@
 }
 
 .header-shell {
-  width: min(1360px, calc(100% - 32px));
+  width: min(1560px, calc(100% - 32px));
   margin: 0 auto;
 
   @include respond(mobile) {
