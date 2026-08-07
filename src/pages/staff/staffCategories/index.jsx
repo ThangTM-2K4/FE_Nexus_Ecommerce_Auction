@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import StaffPageHeader from "../../../components/staff/staffPageHeader";
 import StaffKpiCard from "../../../components/staff/staffKpiCard";
 import { getCategoryTree } from "../../../services/catalogService";
+import { getAdminProducts } from "../../../services/adminProductService";
 import "./index.scss";
 
 const StaffCategories = () => {
@@ -10,20 +11,70 @@ const StaffCategories = () => {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    getCategoryTree().then((data) => {
-      setCategories(data || []);
-      setLoading(false);
-    }).catch(() => {
-      setCategories([]);
-      setLoading(false);
-    });
+    let mounted = true;
+    const loadCategoriesAndProducts = async () => {
+      setLoading(true);
+      try {
+        const [catData, prodRes] = await Promise.all([
+          getCategoryTree(),
+          getAdminProducts().catch(() => ({ items: [] })),
+        ]);
+
+        const rawCats = catData || [];
+        const prodItems = prodRes?.items || [];
+        let localProds = [];
+        try {
+          localProds = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+        } catch {
+          /* ignore */
+        }
+        const allProducts = [...prodItems, ...localProds];
+
+        const enrichedCats = rawCats.map((cat) => {
+          const catIdStr = String(cat.id || cat.categoryId || "").toLowerCase();
+          const catNameStr = String(cat.name || cat.categoryName || "").trim().toLowerCase();
+
+          const matchedProds = allProducts.filter((p) => {
+            const pCatId = String(p.categoryId || p.category || "").toLowerCase();
+            const pCatName = String(p.categoryName || p.category || "").trim().toLowerCase();
+            return (
+              (pCatId && catIdStr && pCatId === catIdStr) ||
+              (pCatName && catNameStr && (pCatName === catNameStr || pCatName.includes(catNameStr) || catNameStr.includes(pCatName)))
+            );
+          });
+
+          const count = matchedProds.length;
+          const existingCount = Number(cat.productCount || cat.count || 0);
+
+          return {
+            ...cat,
+            productCount: existingCount > count ? existingCount : count,
+          };
+        });
+
+        if (mounted) {
+          setCategories(enrichedCats);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (mounted) {
+          setCategories([]);
+          setLoading(false);
+        }
+      }
+    };
+
+    loadCategoriesAndProducts();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const stats = useMemo(
     () => ({
       total: categories.length,
       active: categories.filter((c) => c.isActive !== false).length,
-      products: categories.reduce((s, c) => s + (c.productCount || c.count || 0), 0),
+      products: categories.reduce((s, c) => s + (c.productCount || 0), 0),
       roots: categories.filter((c) => !c.parentId && !c.parent).length,
     }),
     [categories]
@@ -62,7 +113,7 @@ const StaffCategories = () => {
       </div>
 
       {loading ? (
-        <p className="stf-categories__empty">Đang tải...</p>
+        <p className="stf-categories__empty">Đang tải danh mục...</p>
       ) : (
         <div className="stf-categories__table-wrap">
           <table className="stf-categories__table">
@@ -79,11 +130,13 @@ const StaffCategories = () => {
             <tbody>
               {shown.map((c) => (
                 <tr key={c.id}>
-                  <td><code>{c.id}</code></td>
+                  <td><code>{String(c.id).slice(0, 8)}</code></td>
                   <td><strong>{c.name || c.categoryName}</strong></td>
-                  <td>{c.parentId ? "—": "Danh mục gốc"}</td>
+                  <td>{c.parentId ? "—" : "Danh mục gốc"}</td>
                   <td>{c.sortOrder || c.order || "—"}</td>
-                  <td>{c.productCount?.toLocaleString("vi-VN") || c.count?.toLocaleString("vi-VN") || 0}</td>
+                  <td style={{ fontWeight: 600, color: c.productCount > 0 ? "#2e7d32" : "#64748b" }}>
+                    {c.productCount?.toLocaleString("vi-VN") || 0}
+                  </td>
                   <td>
                     <span className={`stf-categories__status ${c.isActive !== false ? "ok" : "off"}`}>
                       {c.isActive !== false ? "Hoạt động" : "Tắt"}
