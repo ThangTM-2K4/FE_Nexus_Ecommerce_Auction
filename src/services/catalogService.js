@@ -7,39 +7,69 @@ export { getApiErrorMessage, getProducts, getProductById };
 
 let sellerBusinessNameCache = null;
 
+const SQL_SERVER_SELLERS_MAP = {
+  '4bd76d55-6ab4-4883-b7d3-5a405bed06fb': 'Nam Shop',
+  '4f8c6758-faf6-477c-a1c3-23eeacb7df40': 'NY Shop',
+  'cc4a286a-690f-410f-9d8f-8608e7e56aeb': 'Tuấn Shop',
+  '6eb484ce-9dec-4de0-b9fe-fdf300d2b176': 'Louis Trần Chuyên Phụ Kiện',
+  'b884f65e-0222-4eed-b587-0473ad57c523': 'Katsu Chuyên Đồ Nữ',
+  'fe16eec5-ee1a-40b0-99f3-0523e526a8cc': 'TV Shop',
+  'bc42abb4-502f-4648-b9ac-e9938291a05b': 'Bảo bán áo',
+  'e40f71e5-edce-4fe9-aabf-2b55234362e1': 'VU QUAN BAN AO',
+  'f2efc4fd-365e-412e-a1b6-17cb3222ef3d': 'Shop Đồ Gia Dụng',
+  '5c33dfb-c0a2-4296-96aa-2507fcafb698': 'Thùy Dung Shop',
+  'ed8707cc-4064-4509-886f-0abb037083fd': 'Ngọc Hân Store',
+  'e370b989-af18-41e8-bc80-bce7a7610d00': 'Đạt Châu Shop',
+  '7f5f59d8-dd92-4398-86bf-b71cee783dde': 'Pate Shop',
+};
+
 /** Truy vấn Tên Shop (BusinessName) chính thức từ CSDL SQL Server qua GET /api/v1/sellers/search */
 export async function getSellerBusinessName(sellerUserId) {
   if (!sellerUserId) return null;
   const targetId = String(sellerUserId).toLowerCase().trim();
+
+  if (SQL_SERVER_SELLERS_MAP[targetId]) {
+    return SQL_SERVER_SELLERS_MAP[targetId];
+  }
 
   if (sellerBusinessNameCache && sellerBusinessNameCache[targetId]) {
     return sellerBusinessNameCache[targetId];
   }
 
   try {
-    const { data } = await api.get('/sellers/search', {
-      params: { page: 1, pageSize: 100 },
-      skipErrorRedirect: true,
-    });
-    const payload = unwrapData(data) || data?.data || data;
-    const items = payload?.items || (Array.isArray(payload) ? payload : []);
+    const keywords = ['Shop', 'a', 'e', 'o', 'i', 'u'];
+    sellerBusinessNameCache = sellerBusinessNameCache || { ...SQL_SERVER_SELLERS_MAP };
 
-    sellerBusinessNameCache = sellerBusinessNameCache || {};
-    items.forEach((s) => {
-      const uId = String(s.userId || s.UserId || '').toLowerCase().trim();
-      const sId = String(s.sellerId || s.SellerId || '').toLowerCase().trim();
-      const bName = s.businessName || s.BusinessName || s.shopName || s.ShopName;
-      if (bName) {
-        if (uId) sellerBusinessNameCache[uId] = bName;
-        if (sId) sellerBusinessNameCache[sId] = bName;
-      }
-    });
+    await Promise.all(
+      keywords.map((kw) =>
+        api
+          .get('/sellers/search', {
+            params: { keyword: kw, page: 1, pageSize: 100 },
+            skipErrorRedirect: true,
+          })
+          .then((res) => {
+            const payload = unwrapData(res.data) || res.data?.data || res.data;
+            const items = payload?.items || (Array.isArray(payload) ? payload : []);
+            items.forEach((s) => {
+              const uId = String(s.userId || s.UserId || '').toLowerCase().trim();
+              const sId = String(s.sellerId || s.SellerId || '').toLowerCase().trim();
+              const bName = s.businessName || s.BusinessName || s.shopName || s.ShopName;
+              if (bName) {
+                if (uId) sellerBusinessNameCache[uId] = bName;
+                if (sId) sellerBusinessNameCache[sId] = bName;
+              }
+            });
+          })
+          .catch(() => {}),
+      ),
+    );
 
     return sellerBusinessNameCache[targetId] || null;
   } catch {
-    return null;
+    return SQL_SERVER_SELLERS_MAP[targetId] || null;
   }
 }
+
 
 
 const CATEGORY_ICONS = [
@@ -331,24 +361,26 @@ export function mapProductDetailToUi(rawItem, defaults = {}) {
 
   const brandName = item.brandName || item.brand || 'Apple';
   const categoryName = item.categoryName ?? item.category?.name ?? 'Điện Thoại & Phụ Kiện';
-  const productTitle = item.name ?? item.title ?? base.title ?? 'Sản phẩm';
+  const targetSellerId = String(item.sellerUserId || item.sellerId || item.shopId || '').toLowerCase().trim();
+  const knownBusinessName = SQL_SERVER_SELLERS_MAP[targetSellerId];
+
   const shopName =
-    item.shopName ||
+    knownBusinessName ||
     item.businessName ||
+    item.shopName ||
     item.shop?.name ||
     item.sellerName ||
     item.seller ||
     (item.sellerUserId ? `Shop ${String(item.sellerUserId).substring(0, 8).toUpperCase()}` : 'Gian hàng Official');
 
-  const shopObj = item.shop || {
+  const shopObj = {
     id: item.sellerUserId || item.sellerId || item.shopId || 'shop-1',
     name: shopName,
     avatar: item.sellerAvatarUrl || item.shopAvatar || item.shop?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
     badge: 'Nexus Mall',
-
     isOnline: true,
     lastOnline: 'Online vài phút trước',
-    stats: [
+    stats: Array.isArray(item.shop?.stats) ? item.shop.stats : [
       { label: 'Đánh Giá', value: '4.9/5' },
       { label: 'Sản Phẩm', value: '24' },
       { label: 'Tỉ Lệ Phản Hồi', value: '99%' },
@@ -357,6 +389,7 @@ export function mapProductDetailToUi(rawItem, defaults = {}) {
       { label: 'Người Theo Dõi', value: '12.5k' },
     ],
   };
+
 
 
   const rawRating = Number(item.rating ?? item.averageRating ?? 0);
