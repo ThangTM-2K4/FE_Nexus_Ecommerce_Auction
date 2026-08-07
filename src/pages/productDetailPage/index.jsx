@@ -108,24 +108,49 @@ export default function ProductDetailPage() {
 
     // Resolving exact seller name from API
     if (currentSellerId && currentSellerId !== 'shop-1') {
-      api.get(`/sellers/${currentSellerId}/performance`, { skipErrorRedirect: true })
-        .then((res) => {
-          if (!active) return;
-          const data = res.data?.data || res.data;
-          if (data && (data.sellerName || data.businessName || data.shopName)) {
-            const exactName = data.sellerName || data.businessName || data.shopName;
+      getProducts({ pageSize: 100 }).then((res) => {
+        if (!active) return;
+        if (res.ok && Array.isArray(res.items)) {
+          const found = res.items.find(
+            (p) => String(p.sellerUserId || p.sellerId || '').toLowerCase() === String(currentSellerId).toLowerCase() && (p.sellerName || p.businessName),
+          );
+          if (found && (found.sellerName || found.businessName)) {
+            const realName = found.sellerName || found.businessName;
             setProduct((prev) => (prev ? {
               ...prev,
               shop: {
                 ...prev.shop,
-                name: exactName,
-                avatar: data.sellerAvatarUrl || data.avatarUrl || prev.shop.avatar,
+                name: realName,
+                avatar: found.sellerAvatarUrl || prev.shop.avatar,
               },
             } : prev));
+            return;
           }
-        })
-        .catch(() => {});
+        }
+
+        api.get('/sellers/search', { params: { pageSize: 50 }, skipErrorRedirect: true })
+          .then((sRes) => {
+            if (!active) return;
+            const sData = sRes.data?.data || sRes.data;
+            const items = sData?.items || (Array.isArray(sData) ? sData : []);
+            const matchedSeller = items.find(
+              (s) => String(s.userId || s.sellerId || '').toLowerCase() === String(currentSellerId).toLowerCase(),
+            );
+            if (matchedSeller && (matchedSeller.businessName || matchedSeller.sellerName)) {
+              const realName = matchedSeller.businessName || matchedSeller.sellerName;
+              setProduct((prev) => (prev ? {
+                ...prev,
+                shop: {
+                  ...prev.shop,
+                  name: realName,
+                },
+              } : prev));
+            }
+          })
+          .catch(() => {});
+      }).catch(() => {});
     }
+
 
     const currentCatId = product.categoryId || product.category?.[1]?.label;
 

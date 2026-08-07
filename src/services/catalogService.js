@@ -297,10 +297,12 @@ export function mapProductDetailToUi(rawItem, defaults = {}) {
   const productTitle = item.name ?? item.title ?? base.title ?? 'Sản phẩm';
   const sellerName =
     item.sellerName ||
+    item.businessName ||
     item.shopName ||
     item.seller ||
     item.shop?.name ||
-    (item.sellerUserId ? `Shop ${String(item.sellerUserId).substring(0, 8).toUpperCase()}` : 'Nexus Official Store');
+    (item.sellerUserId ? `Gian hàng ${String(item.sellerUserId).substring(0, 8).toUpperCase()}` : 'Gian hàng Official');
+
 
   const shopObj = item.shop || {
     id: item.sellerUserId || item.sellerId || item.shopId || 'shop-1',
