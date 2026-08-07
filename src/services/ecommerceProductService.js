@@ -413,51 +413,54 @@ export const resolveImageUrl = (img) => {
 export function extractProductStock(item) {
   if (!item) return 0;
 
-  // 1. Nếu có mảng skus, ưu tiên tính tổng tồn kho của tất cả SKUs
-  if (Array.isArray(item.skus) && item.skus.length > 0) {
-    let total = 0;
-    let found = false;
+  // 1. Kiểm tra các mảng SKUs / variations / variationRows / productSkus / variants
+  const skuArrays = [item.skus, item.productSkus, item.variations, item.variants, item.variationRows];
+  for (const arr of skuArrays) {
+    if (Array.isArray(arr) && arr.length > 0) {
+      let total = 0;
+      let found = false;
 
-    item.skus.forEach((s) => {
-      let skuStock =
-        s.stockQuantity ??
-        s.stock ??
-        s.quantity ??
-        s.inventoryQuantity ??
-        s.availableQuantity;
+      arr.forEach((s) => {
+        let skuStock =
+          s.stockQuantity ??
+          s.stock ??
+          s.quantity ??
+          s.inventoryQuantity ??
+          s.availableQuantity;
 
-      if (skuStock == null && s.attributes) {
-        if (typeof s.attributes === 'object') {
-          skuStock =
-            s.attributes.stock ??
-            s.attributes.stockQuantity ??
-            s.attributes.quantity;
-        } else if (typeof s.attributes === 'string') {
+        if (skuStock == null && s.attributes) {
+          if (typeof s.attributes === 'object') {
+            skuStock =
+              s.attributes.stock ??
+              s.attributes.stockQuantity ??
+              s.attributes.quantity;
+          } else if (typeof s.attributes === 'string') {
+            try {
+              const parsed = JSON.parse(s.attributes);
+              skuStock = parsed?.stock ?? parsed?.stockQuantity ?? parsed?.quantity;
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+
+        if (skuStock == null && s.attributesJson) {
           try {
-            const parsed = JSON.parse(s.attributes);
+            const parsed = JSON.parse(s.attributesJson);
             skuStock = parsed?.stock ?? parsed?.stockQuantity ?? parsed?.quantity;
           } catch {
             /* ignore */
           }
         }
-      }
 
-      if (skuStock == null && s.attributesJson) {
-        try {
-          const parsed = JSON.parse(s.attributesJson);
-          skuStock = parsed?.stock ?? parsed?.stockQuantity ?? parsed?.quantity;
-        } catch {
-          /* ignore */
+        if (skuStock != null && !isNaN(Number(skuStock))) {
+          total += Number(skuStock);
+          found = true;
         }
-      }
+      });
 
-      if (skuStock != null && !isNaN(Number(skuStock))) {
-        total += Number(skuStock);
-        found = true;
-      }
-    });
-
-    if (found && total > 0) return total;
+      if (found && total > 0) return total;
+    }
   }
 
   // 2. Kiểm tra thuộc tính trên root (ưu tiên các giá trị > 0)
@@ -483,13 +486,17 @@ export function extractProductStock(item) {
   // 3. Fallback tìm từ localStorage ("seller_created_products") theo id / productId / name
   try {
     const localList = JSON.parse(localStorage.getItem('seller_created_products') || '[]');
-    const targetId = String(item.id || item.productId || '').toLowerCase();
-    const targetName = (item.name || item.productName || item.title || '').trim().toLowerCase();
+    const targetId = String(item.id || item.productId || '').trim().toLowerCase();
+    const targetName = String(item.name || item.productName || item.title || '').trim().toLowerCase();
 
     const matched = localList.find((p) => {
-      const pid = String(p.id || p.productId || '').toLowerCase();
-      const pname = (p.name || p.productName || p.title || '').trim().toLowerCase();
-      return (pid && pid === targetId) || (pname && targetName && pname === targetName);
+      const pid = String(p.id || p.productId || '').trim().toLowerCase();
+      const pname = String(p.name || p.productName || p.title || '').trim().toLowerCase();
+
+      const idMatch = pid && targetId && (pid === targetId || pid.includes(targetId) || targetId.includes(pid));
+      const nameMatch = pname && targetName && (pname === targetName || pname.includes(targetName) || targetName.includes(pname));
+
+      return idMatch || nameMatch;
     });
 
     if (matched) {
@@ -499,8 +506,11 @@ export function extractProductStock(item) {
       if (matched.stockQuantity != null && !isNaN(Number(matched.stockQuantity)) && Number(matched.stockQuantity) > 0) {
         return Number(matched.stockQuantity);
       }
+      if (matched.quantity != null && !isNaN(Number(matched.quantity)) && Number(matched.quantity) > 0) {
+        return Number(matched.quantity);
+      }
       if (Array.isArray(matched.variationRows) && matched.variationRows.length > 0) {
-        const sum = matched.variationRows.reduce((acc, row) => acc + (Number(row.stock) || 0), 0);
+        const sum = matched.variationRows.reduce((acc, row) => acc + (Number(row.stock || row.quantity) || 0), 0);
         if (sum > 0) return sum;
       }
       if (Array.isArray(matched.skus) && matched.skus.length > 0) {

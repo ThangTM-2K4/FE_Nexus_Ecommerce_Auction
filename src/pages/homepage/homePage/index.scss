@@ -6,15 +6,14 @@
 }
 
 .home-page__shell {
-  width: 100%;
-  max-width: 100%;
-  padding: 0 24px;
+  width: min(1440px, calc(100% - 32px));
   margin: 0 auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
+
 
 .home-page__shell > * {
   @include surface-card;

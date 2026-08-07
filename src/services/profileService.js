@@ -237,8 +237,13 @@ export const submitIdentityVerification = async (
     permanentAddress,
     frontImageUrl,
     backImageUrl,
+    frontImageKey,
+    backImageKey,
   }
 ) => {
+  const finalFrontKey = frontImageKey || frontImageUrl || '';
+  const finalBackKey = backImageKey || backImageUrl || '';
+
   await api.post('/identity-verifications', {
     fullName,
     gender,
@@ -248,8 +253,10 @@ export const submitIdentityVerification = async (
     expiryDate,
     issuePlace,
     permanentAddress,
-    frontImageUrl,
-    backImageUrl,
+    frontImageKey: finalFrontKey,
+    backImageKey: finalBackKey,
+    frontImageUrl: finalFrontKey,
+    backImageUrl: finalBackKey,
   });
   return getProfile(userId);
 };

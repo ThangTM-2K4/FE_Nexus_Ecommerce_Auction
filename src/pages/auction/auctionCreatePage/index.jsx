@@ -14,19 +14,10 @@ import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { createAuctionApplication } from "../../../services/auctionProposalService";
-import { getCategories } from "../../../services/adminCategoryService";
+import { getCategoryTree } from "../../../services/catalogService";
 import Select from "../../../components/common/select";
 import { auctionImages } from "../../../data/auctionImages";
 import "./index.scss";
-
-const DEFAULT_CATEGORIES = [
-  { value: "dong-ho", label: "Đồng hồ" },
-  { value: "tui-xach", label: "Túi xách & Phụ kiện" },
-  { value: "do-co", label: "Đồ cổ & Sưu tầm" },
-  { value: "tranh-nghe-thuat", label: "Tranh & Nghệ thuật" },
-  { value: "trang-suc", label: "Trang sức & Đá quý" },
-  { value: "dieu-khac", label: "Điêu khắc & Đồ gốm" },
-];
 
 const initialForm = {
   title: "",
@@ -42,17 +33,12 @@ const initialForm = {
   agreeRules: false,
 };
 
-const categoryOptions = [
-  { value: "", label: "Chọn danh mục" },
-  ...DEFAULT_CATEGORIES,
-];
-
 const conditionOptions = [
   { value: "", label: "Chọn tình trạng" },
-  { value: "new", label: "Mới 100%" },
-  { value: "likenew", label: "Like New 95–99%" },
-  { value: "good", label: "Tốt 85–94%" },
-  { value: "used", label: "Đã qua sử dụng" },
+  { value: "NEW", label: "Mới 100%" },
+  { value: "LIKE_NEW", label: "Like New 95–99%" },
+  { value: "GOOD", label: "Tốt 85–94%" },
+  { value: "USED", label: "Đã qua sử dụng" },
 ];
 
 export default function AuctionCreatePage() {
@@ -64,6 +50,24 @@ export default function AuctionCreatePage() {
   const [imageFiles, setImageFiles] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [documentFiles, setDocumentFiles] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const items = await getCategoryTree({ view: 'tree', includeInactive: false, sortBy: 'name', sortDirection: 'asc', pageSize: 100 });
+        setCategories(items);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+        toast.error('Không thể tải danh mục, vui lòng thử lại');
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -169,30 +173,41 @@ export default function AuctionCreatePage() {
     try {
       setLoading(true);
 
-      // Xây dựng multipart/form-data đúng spec API
+      // Xây dựng multipart/form-data đúng spec C# PascalCase
       const fd = new FormData();
-      fd.append('productName', formData.title.trim());
-      fd.append('description', formData.description.trim());
-      fd.append('condition', formData.condition || 'GOOD');
-      fd.append('categoryId', formData.category || '');
-      fd.append('brand', formData.brand.trim());
-      fd.append('startingPrice', String(Number(formData.startPrice) || 0));
-      fd.append('bidIncrement', String(Number(formData.bidIncrement) || 500000));
-      fd.append('depositAmount', String(Number(formData.reservePrice) || 1000000));
-      if (formData.startDate) fd.append('scheduledStartUtc', new Date(formData.startDate).toISOString());
-      if (formData.endDate) fd.append('scheduledEndUtc', new Date(formData.endDate).toISOString());
+      fd.append('Title', formData.title.trim());
+      fd.append('Description', formData.description.trim());
+      fd.append('Condition', formData.condition || 'GOOD');
+      fd.append('CategoryId', formData.category || '');
+      fd.append('Brand', formData.brand.trim());
+      fd.append('StartPrice', String(Number(formData.startPrice) || 0));
+      fd.append('ReservePrice', String(Number(formData.reservePrice) || 0));
+      fd.append('BidIncrement', String(Number(formData.bidIncrement) || 0));
+      if (formData.startDate) fd.append('StartDate', new Date(formData.startDate).toISOString());
+      if (formData.endDate) fd.append('EndDate', new Date(formData.endDate).toISOString());
+      fd.append('AgreeRules', 'true');
 
       // Append ảnh thật
-      imageFiles.forEach((file) => fd.append('images', file));
+      imageFiles.forEach((file) => fd.append('Images', file));
       // Append tài liệu thật
-      documentFiles.forEach((file) => fd.append('documents', file));
+      documentFiles.forEach((file) => fd.append('Documents', file));
 
       await createAuctionApplication(fd);
 
       toast.success("🎉 Đã gửi hồ sơ đấu giá thành công! Đang chờ Admin duyệt.");
       setTimeout(() => navigate('/auction/seller'), 800);
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "Tạo đề xuất thất bại. Vui lòng thử lại!";
+      const errData = err?.response?.data;
+      // Parse validation errors from backend C# ProblemDetails
+      let msg = errData?.message || errData?.detail || err?.message || "Tạo đề xuất thất bại. Vui lòng thử lại!";
+      if (errData?.errors && typeof errData.errors === 'object') {
+        const firstKey = Object.keys(errData.errors)[0];
+        if (firstKey) {
+          const firstErrors = errData.errors[firstKey];
+          const firstMsg = Array.isArray(firstErrors) ? firstErrors[0] : firstErrors;
+          if (firstMsg) msg = `${firstKey}: ${firstMsg}`;
+        }
+      }
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -324,7 +339,10 @@ export default function AuctionCreatePage() {
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  options={categoryOptions}
+                  options={[
+                    { value: '', label: categoriesLoading ? 'Đang tải danh mục...' : 'Chọn danh mục' },
+                    ...categories.map((cat) => ({ value: cat.categoryId, label: cat.name }))
+                  ]}
                   theme="dark"
                   error={errors.category}
                 />
