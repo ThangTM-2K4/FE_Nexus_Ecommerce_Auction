@@ -89,8 +89,8 @@ export const createOrder = async (userId, orderData) => {
  * Khởi tạo thanh toán VNPAY trực tiếp qua API backend và chuyển hướng người dùng sang trang thanh toán VNPay
  */
 export async function initiateVnPayPayment(orderId, amount) {
-  const returnUrl = `${window.location.origin}/profile/orders?status=cho_xac_nhan&payment=success`;
-  const cancelUrl = `${window.location.origin}/profile/orders?status=pending_payment&payment=cancel`;
+  const returnUrl = `${window.location.origin}/profile/orders?payment_return=vnpay&vnp_ResponseCode=00&status=cho_xac_nhan&orderId=${orderId}`;
+  const cancelUrl = `${window.location.origin}/profile/orders?payment_return=vnpay&vnp_ResponseCode=24&status=pending_payment&orderId=${orderId}`;
   const idempotencyKey = `vnpay-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
   try {
@@ -151,4 +151,5 @@ export async function initiateVnPayPayment(orderId, amount) {
 
   return `${vnpaySandboxHost}?${queryParams.toString()}`;
 }
+
 

@@ -12,6 +12,8 @@ import EmptyState from '../../../components/profile/emptyState';
 import OrderList from '../../../components/profile/orderList';
 import './index.scss';
 
+import { toast } from 'react-toastify';
+
 export default function OrdersPage() {
   const { user } = useAuth();
   const location = useLocation();
@@ -20,11 +22,28 @@ export default function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (location.state?.status) {
+    const params = new URLSearchParams(location.search);
+    const vnpCode = params.get('vnp_ResponseCode');
+    const paymentReturn = params.get('payment_return') || params.get('payment');
+    const statusParam = params.get('status');
+
+    if (vnpCode || paymentReturn || statusParam) {
+      if (vnpCode === '00' || statusParam === 'cho_xac_nhan' || paymentReturn === 'success') {
+        toast.success('Thanh toán đơn hàng qua VNPay thành công! Đơn hàng của bạn đang được xử lý.');
+        setActiveTab('cho_xac_nhan');
+      } else if (vnpCode && vnpCode !== '00') {
+        toast.error('Thanh toán qua VNPay không thành công hoặc đã bị hủy.');
+        setActiveTab('pending_payment');
+      } else if (statusParam) {
+        setActiveTab(statusParam);
+      }
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (location.state?.status) {
       setActiveTab(location.state.status);
-      window.history.replaceState({}, document.title);
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [location.state]);
+  }, [location.search, location.state]);
+
 
   useEffect(() => {
     if (user?.id) {
