@@ -136,12 +136,13 @@ export async function getProductById(productId, scope = 'public') {
   const path = `${BUYER_LIST_PATH}/${productId}`;
 
   try {
-    const { data } = await api.get(path, { params: { scope } });
+    const { data } = await api.get(path, { params: { scope }, skipErrorRedirect: true });
     return {
       ok: true,
       data: unwrapData(data),
       status: 200,
     };
+
   } catch (error) {
     return {
       ok: false,
@@ -177,7 +178,9 @@ const DEFAULT_CURRENCY = 'VND';
 const DEFAULT_ORIGIN_COUNTRY = 'VN';
 
 /**
- * Build payload POST /ecommerce/products theo Swagger CreateProductRequest.
+ * Build payload POST /ecommerce/products theo backend CreateProductRequest.
+ * Backend CreateProductSkuRequest chỉ chấp nhận: skuName, unitPrice, isDefault, attributes (JsonElement), barcode.
+ * Backend tự sinh skuCode, hardcode currency=VND & salesChannel=ECOMMERCE.
  */
 export function buildCreateProductPayload({
   sellerUserId,
@@ -205,14 +208,12 @@ export function buildCreateProductPayload({
     originCountry: originCountry || DEFAULT_ORIGIN_COUNTRY,
     skus: [
       {
-        skuCode: 'DEFAULT',
         skuName: trimmedName || 'Mặc định',
         unitPrice,
-        currency: DEFAULT_CURRENCY,
-        salesChannel: DEFAULT_SALES_CHANNEL,
         isDefault: true,
         attributes: {
           stock: stockQty,
+          stockQuantity: stockQty,
           condition: condition || 'new',
         },
         barcode: '',
@@ -377,16 +378,34 @@ const normalizeStatus = (status) => {
 
 export const resolveImageUrl = (img) => {
   if (!img) return '';
+  const isDirectPath = (str) =>
+    str.startsWith('http://') ||
+    str.startsWith('https://') ||
+    str.startsWith('data:') ||
+    str.startsWith('blob:') ||
+    str.startsWith('/images/') ||
+    str.startsWith('/catalog/') ||
+    str.startsWith('/api/') ||
+    str.startsWith('/');
+
   if (typeof img === 'string') {
-    if (img.startsWith('http')) return img;
-    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${img.replace(/^\//, '')}`;
+    const trimmed = img.trim();
+    if (!trimmed) return '';
+    if (isDirectPath(trimmed)) return trimmed;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${trimmed.replace(/^\//, '')}`;
   }
+
   const url = img.imageUrl || img.url || img.fileUrl || img.primaryImageUrl || img.coverImageUrl;
-  if (url && typeof url === 'string' && url.startsWith('http')) return url;
+  if (url && typeof url === 'string') {
+    const trimmedUrl = url.trim();
+    if (isDirectPath(trimmedUrl)) return trimmedUrl;
+  }
+
   const key = img.storageObjectKey || img.imageKey || img.key || url;
   if (key && typeof key === 'string') {
-    if (key.startsWith('http')) return key;
-    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${key.replace(/^\//, '')}`;
+    const trimmedKey = key.trim();
+    if (isDirectPath(trimmedKey)) return trimmedKey;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${trimmedKey.replace(/^\//, '')}`;
   }
   return '';
 };

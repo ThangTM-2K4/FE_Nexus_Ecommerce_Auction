@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
+import api from '@/config/api';
 import Header from '@/components/homepage/header';
+
 import Footer from '@/components/homepage/footer';
 import ProductGrid from '@/components/homepage/productGrid';
 import Breadcrumb from '@/components/products/Breadcrumb';
@@ -12,11 +14,13 @@ import ReviewList from '@/components/products/ReviewList';
 import {
   getShopProducts,
   getSimilarProducts,
+  getProductDetail,
 } from '@/data/mockProductDetail';
 import { mockReviews } from '@/data/mockReviews';
 import { generateMoreProducts } from '@/data/mockProducts';
-import { mapProductDetailToUi } from '@/services/catalogService';
-import { getPublicProductDetail } from '@/services/ecommerceProductService';
+import { mapProductDetailToUi, mapProductListItem, getSellerBusinessName } from '@/services/catalogService';
+
+import { getPublicProductDetail, getProducts } from '@/services/ecommerceProductService';
 import { useProductNavigate } from '@/hooks/useProductNavigate';
 import './index.scss';
 
@@ -31,32 +35,168 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setNotFound(false);
-    setLoadError(null);
-    setProduct(null);
 
-    getPublicProductDetail(id).then((result) => {
-      if (cancelled) return;
+    async function fetchDetail() {
+      setLoading(true);
+      setNotFound(false);
+      setLoadError(null);
+      setProduct(null);
 
-      if (result.ok && result.data) {
-        setProduct(mapProductDetailToUi(result.data));
-      } else if (result.status === 404) {
-        setNotFound(true);
-      } else {
-        setLoadError(result.error || 'Không tải được chi tiết sản phẩm');
+      const isGuid = typeof id === 'string' && id.includes('-') && id.length > 20;
+
+      // 1. Gọi API chi tiết sản phẩm đơn công khai
+      try {
+        const result = await getPublicProductDetail(id);
+        if (cancelled) return;
+
+        if (result.ok && result.data) {
+          setProduct(mapProductDetailToUi(result.data));
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // ignore
       }
 
-      setLoading(false);
-    });
+      // 2. Nếu API đơn thất bại/404, tìm sản phẩm từ API danh sách sản phẩm sàn
+      try {
+        const listRes = await getProducts({ pageSize: 100 });
+        if (cancelled) return;
+
+        if (listRes.ok && Array.isArray(listRes.items) && listRes.items.length > 0) {
+          const matched = listRes.items.find(
+            (item) => String(item.id || item.productId || '').toLowerCase() === String(id).toLowerCase(),
+          );
+
+          if (matched) {
+            setProduct(mapProductDetailToUi(matched));
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      // 3. Kiểm tra danh sách sản phẩm do Seller vừa tạo từ localStorage
+      try {
+        const localList = JSON.parse(localStorage.getItem('seller_created_products') || '[]');
+        const localMatch = localList.find(
+          (p) => String(p.id || p.productId || '').toLowerCase() === String(id).toLowerCase(),
+        );
+        if (localMatch) {
+          setProduct(mapProductDetailToUi(localMatch));
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+
+      // 4. Nếu là GUID sản phẩm thật nhưng không tìm thấy trên hệ thống -> Báo lỗi, TUYỆT ĐỐI KHÔNG FALLBACK MOCK DATA!
+      if (isGuid) {
+        if (!cancelled) {
+          setLoadError('Sản phẩm không tồn tại hoặc chưa được duyệt hiển thị công khai');
+          setNotFound(true);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // 5. Chỉ cho phép fallback nếu là ID sản phẩm mẫu thử nghiệm (legacy mock ID)
+      if (!cancelled) {
+        const fallbackLocal = getProductDetail(id);
+        if (fallbackLocal && fallbackLocal.id === id) {
+          setProduct(fallbackLocal);
+          setLoading(false);
+          return;
+        }
+
+        setLoadError('Không tìm thấy chi tiết sản phẩm này');
+        setNotFound(true);
+        setLoading(false);
+      }
+
+    }
+
+    fetchDetail();
 
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  const shopProducts = useMemo(() => getShopProducts(id), [id]);
-  const similarProducts = useMemo(() => getSimilarProducts(id), [id]);
+
+  const [shopProducts, setShopProducts] = useState([]);
+  const [similarProducts, setSimilarProducts] = useState([]);
+
+  useEffect(() => {
+    if (!product) return;
+
+    let active = true;
+    const currentSellerId = product.sellerUserId || product.shop?.id;
+
+    // Resolving exact BusinessName from SQL Server database
+    if (currentSellerId && currentSellerId !== 'shop-1') {
+      getSellerBusinessName(currentSellerId).then((realBusinessName) => {
+        if (!active) return;
+        if (realBusinessName) {
+          setProduct((prev) => (prev ? {
+            ...prev,
+            shop: {
+              ...prev.shop,
+              name: realBusinessName,
+            },
+          } : prev));
+        }
+      });
+    }
+
+
+
+
+    const currentCatId = product.categoryId || product.category?.[1]?.label;
+
+    getProducts({ pageSize: 40 })
+
+      .then((res) => {
+        if (!active) return;
+        if (res.ok && Array.isArray(res.items) && res.items.length > 0) {
+          const mapped = res.items.map(mapProductListItem).filter(Boolean);
+
+          // 1. Các sản phẩm của Seller
+          const ofSeller = mapped.filter(
+            (p) => (p.sellerUserId === currentSellerId || p.shopId === currentSellerId) && p.id !== product.id,
+          );
+          setShopProducts(ofSeller.length > 0 ? ofSeller : mapped.filter((p) => p.id !== product.id));
+
+          // 2. Các sản phẩm liên quan cùng danh mục
+          const ofCategory = mapped.filter(
+            (p) =>
+              (p.categoryId === currentCatId ||
+                p.categoryName === currentCatId ||
+                p.category === currentCatId) &&
+              p.id !== product.id,
+          );
+          setSimilarProducts(
+            ofCategory.length > 0 ? ofCategory : mapped.filter((p) => p.id !== product.id).reverse(),
+          );
+        } else {
+          setShopProducts(getShopProducts(product.id));
+          setSimilarProducts(getSimilarProducts(product.id));
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setShopProducts(getShopProducts(product.id));
+          setSimilarProducts(getSimilarProducts(product.id));
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [product]);
 
   const [shopExtra, setShopExtra] = useState([]);
   const [similarExtra, setSimilarExtra] = useState([]);
@@ -141,7 +281,7 @@ export default function ProductDetailPage() {
             </div>
           </section>
 
-          <ReviewList reviews={mockReviews} />
+          <ReviewList reviews={product.reviews || []} />
 
           <ProductGrid
             products={shopProducts}
@@ -157,7 +297,7 @@ export default function ProductDetailPage() {
           <ProductGrid
             products={similarProducts}
             extraProducts={similarExtra}
-            title="CÓ THỂ BẠN CŨNG THÍCH"
+            title="SẢN PHẨM LIÊN QUAN"
             columns={6}
             rows={8}
             onLoadMore={handleSimilarLoadMore}
@@ -166,6 +306,7 @@ export default function ProductDetailPage() {
           />
         </div>
       </main>
+
 
       <Footer />
     </>

@@ -4,6 +4,7 @@ import './index.scss';
 export default function ProductDetailTable({ attributes = {} }) {
   const rows = [
     { label: 'Danh Mục', value: attributes.category, isLink: true },
+    { label: 'Thương hiệu', value: attributes.brand, isLink: true },
     { label: 'Kho', value: attributes.stock },
     { label: 'Loại bảo hành', value: attributes.warranty },
     { label: 'Xuất xứ', value: attributes.origin },

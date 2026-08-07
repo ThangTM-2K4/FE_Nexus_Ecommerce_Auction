@@ -1,12 +1,13 @@
 import OrderCard from '../orderCard';
 import './index.scss';
 
-export default function OrderList({ orders = [] }) {
+export default function OrderList({ orders = [], onPayNow }) {
   return (
     <div className="account-order-list">
       {orders.map((order) => (
-        <OrderCard key={order.id} order={order} />
+        <OrderCard key={order.id} order={order} onPayNow={onPayNow} />
       ))}
     </div>
   );
 }
+

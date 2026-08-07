@@ -43,6 +43,11 @@ export default function ProductInfoPanel({ product }) {
     navigate("/cart");
   };
 
+  const currentStock = selectedVariant?.stock ?? product.stock ?? 100;
+  const isInStock = currentStock > 0;
+
+  const displayRating = (product.reviewCount > 0 && Number(product.rating) > 0) ? product.rating : 5;
+
   return (
     <div className="product-info-panel">
       {product.badge && (
@@ -54,13 +59,14 @@ export default function ProductInfoPanel({ product }) {
       <div className="product-info-panel__meta">
         <div className="product-info-panel__meta-main">
           <span className="product-info-panel__rating">
-            <strong>{product.rating}</strong> ★
+            <strong>{displayRating}</strong> ★
           </span>
           <span className="product-info-panel__divider">|</span>
-          <span>{product.reviewCount.toLocaleString("vi-VN")} Đánh Giá</span>
+          <span>{(product.reviewCount || 0).toLocaleString("vi-VN")} Đánh Giá</span>
           <span className="product-info-panel__divider">|</span>
-          <span>{product.soldCount} Đã Bán</span>
-        </div>        <button type="button" className="product-info-panel__report">
+          <span>{product.soldCount || 0} Đã Bán</span>
+        </div>
+        <button type="button" className="product-info-panel__report">
           Tố cáo
         </button>
       </div>
@@ -91,52 +97,20 @@ export default function ProductInfoPanel({ product }) {
         </div>
       </div>
 
-      <div className="product-info-panel__row product-info-panel__row--policy">
-        <span className="product-info-panel__label">An Tâm Mua Sắm</span>
-        <div className="product-info-panel__policies">
-          <button
-            type="button"
-            className="product-info-panel__policy-toggle"
-            onClick={() => setPoliciesOpen((v) => !v)}
-            aria-expanded={policiesOpen}
-          >
-            <span className="product-info-panel__policy-toggle-text">
-              An Tâm Mua Sắm Cùng BidDoubleTk
-            </span>
-            <FiChevronDown
-              className={`product-info-panel__policy-chevron ${policiesOpen ? "is-open" : ""}`}
-              aria-hidden="true"
-            />          </button>
-          {policiesOpen && (
-            <ul className="product-info-panel__policy-list">
-              {product.policies.map((policy) => (
-                <li key={policy.text} className="product-info-panel__policy-item">
-                  <span className="product-info-panel__policy-icon" aria-hidden="true">
-                    {policy.icon}
-                  </span>
-                  <span className="product-info-panel__policy-text">{policy.text}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
 
-      <div className="product-info-panel__row product-info-panel__row--variant">
-        <span className="product-info-panel__label">Hàng Hóa</span>
-        <VariantSelector
-          variants={product.variants}
-          selectedId={selectedVariant?.id}
-          onChange={setSelectedVariant}
-        />
-      </div>
+
+      <VariantSelector
+        variants={product.variants}
+        selectedId={selectedVariant?.id}
+        onChange={setSelectedVariant}
+      />
 
       <div className="product-info-panel__row product-info-panel__row--quantity">
         <span className="product-info-panel__label">Số lượng</span>
         <QuantitySelector
           value={quantity}
-          max={product.stock}
-          inStock={product.inStock}
+          max={currentStock}
+          inStock={isInStock}
           onChange={setQuantity}
           showLabel={false}
         />
@@ -145,7 +119,7 @@ export default function ProductInfoPanel({ product }) {
       <div className="product-info-panel__actions">
         <Button
           variant="outline"
-          disabled={!product.inStock}
+          disabled={!isInStock}
           onClick={handleAddToCart}
           className="product-info-panel__action-btn"
         >
@@ -153,7 +127,7 @@ export default function ProductInfoPanel({ product }) {
         </Button>
         <Button
           variant="accent"
-          disabled={!product.inStock}
+          disabled={!isInStock}
           onClick={handleBuyNow}
           className="product-info-panel__action-btn"
         >

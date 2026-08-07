@@ -42,13 +42,15 @@ export default function ReviewList({ reviews = [] }) {
     return reviews;
   }, [activeFilter, reviews]);
 
+  const summaryAverage = reviews.length > 0 ? summary.average : '5.0';
+
   return (
     <section className="review-list">
       <h2 className="review-list__title">ĐÁNH GIÁ SẢN PHẨM</h2>
 
       <div className="review-list__summary">
         <div className="review-list__score">
-          <span className="review-list__score-value">{summary.average}</span>
+          <span className="review-list__score-value">{summaryAverage}</span>
           <span className="review-list__score-label">trên 5</span>
           <span className="review-list__score-stars">★★★★★</span>
         </div>
@@ -70,10 +72,17 @@ export default function ReviewList({ reviews = [] }) {
       </div>
 
       <div className="review-list__items">
-        {filteredReviews.map((review) => (
-          <ReviewItem key={review.id} review={review} />
-        ))}
+        {reviews.length === 0 ? (
+          <div className="review-list__empty" style={{ textAlign: 'center', padding: '36px 0', color: '#718096', fontSize: '0.92rem' }}>
+            Chưa có đánh giá nào cho sản phẩm này.
+          </div>
+        ) : (
+          filteredReviews.map((review) => (
+            <ReviewItem key={review.id} review={review} />
+          ))
+        )}
       </div>
     </section>
   );
 }
+

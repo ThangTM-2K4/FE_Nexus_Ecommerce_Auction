@@ -1,50 +1,134 @@
 @use '../../../styles/palette' as *;
 
-.variant-selector__label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: $ink-muted;
-  margin-bottom: 10px;
-  letter-spacing: 0.04em;
+.variant-selector-shopee {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 }
 
-.variant-selector__grid {
+.variant-selector-shopee__row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.variant-selector-shopee__label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: $ink-muted;
+  line-height: 1.4;
+}
+
+.variant-selector-shopee__options {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  /* Custom scrollbar for long option lists (e.g. phone models) */
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f5f5f5;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 4px;
+    &:hover {
+      background: #bbb;
+    }
+  }
 }
 
-.variant-selector__item {
-  display: flex;
+.variant-selector-shopee__pill {
+  position: relative;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px 6px 6px;
-  border: 1px solid $border-soft;
-  border-radius: $radius-sm;
-  background: $surface;
-  min-width: 0;
-  transition: border-color $transition-fast, background $transition-fast;
+  padding: 6px 14px;
+  min-height: 38px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 400;
+  color: #2d3748;
+  cursor: pointer;
+  outline: none;
+  overflow: hidden;
+  transition: border-color $transition-fast, background $transition-fast, color $transition-fast;
+  user-select: none;
 
-  &:hover {
-    border-color: $accent;
+  &:hover:not(.variant-selector-shopee__pill--active) {
+    border-color: $raspberry;
+    color: $raspberry;
+    background: rgba($blush-pink, 0.15);
   }
 
   &--active {
-    border-color: $accent-dark;
-    background: rgba($sky, 0.12);
+    border: 1.5px solid $raspberry;
+    color: $raspberry;
+    font-weight: 600;
+    background: rgba($blush-pink, 0.18);
+
+    /* Shopee active checkmark triangle badge in bottom-right corner */
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-bottom: 13px solid $raspberry;
+      border-left: 13px solid transparent;
+      z-index: 1;
+    }
+
+    &::before {
+      content: '✓';
+      position: absolute;
+      bottom: 0px;
+      right: 1px;
+      font-size: 8px;
+      line-height: 1;
+      color: #ffffff;
+      z-index: 2;
+      font-weight: 700;
+    }
+  }
+
+  &--has-img {
+    padding-left: 6px;
   }
 }
 
-.variant-selector__img {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+.variant-selector-shopee__img {
+  width: 26px;
+  height: 26px;
   object-fit: cover;
+  border-radius: 3px;
   flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.variant-selector__name {
-  font-size: 0.82rem;
-  color: $ink;
+.variant-selector-shopee__text {
+  line-height: 1.2;
   white-space: nowrap;
 }
+
+@media (max-width: 640px) {
+  .variant-selector-shopee__row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+
+

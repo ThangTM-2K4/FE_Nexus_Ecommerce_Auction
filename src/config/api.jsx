@@ -175,9 +175,13 @@ api.interceptors.response.use(
       if (!isPublicPath) {
         handleUnauthorized();
       }
+    } else if (status === 404) {
+      // Bỏ qua tự động chuyển hướng trang /404 khi API trả về 404 (để UI trang tự xử lý hiển thị)
+      return Promise.reject(error);
     } else if (status && originalRequest) {
       redirectToHttpErrorPage(status, originalRequest);
     }
+
     return Promise.reject(error);
   }
 );

@@ -60,13 +60,14 @@ export default function ShopInfoCard({ shop }) {
       </div>
 
       <div className="shop-info-card__stats">
-        {shop.stats.map((stat) => (
+        {(Array.isArray(shop.stats) ? shop.stats : []).map((stat) => (
           <div key={stat.label} className="shop-info-card__stat">
             <span className="shop-info-card__stat-label">{stat.label}</span>
             <span className="shop-info-card__stat-value">{stat.value}</span>
           </div>
         ))}
       </div>
+
     </section>
   );
 }

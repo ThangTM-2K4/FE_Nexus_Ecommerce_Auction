@@ -100,8 +100,9 @@ export const shopProducts = getAllShopProducts();
 
 export const shopProfile = {
   id: SHOP_ID,
-  name: 'TechZone Official Store',
+  name: 'Pate Shop',
   avatar: '/images/products/collectibles/leica.jpg',
+
   isOnline: true,
   lastOnline: '5 phút trước',
   isMall: true,

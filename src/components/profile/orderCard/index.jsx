@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { formatPrice } from '@/utils/formatPrice';
 import './index.scss';
 
@@ -11,9 +12,10 @@ const STATUS_LABELS = {
   return: 'Trả hàng/Hoàn tiền',
 };
 
-export default function OrderCard({ order }) {
+export default function OrderCard({ order, onPayNow }) {
   const firstProduct = order.products?.[0];
   const extraCount = Math.max(0, (order.products?.length || 0) - 1);
+  const isPendingPayment = order.status === 'pending_payment';
 
   return (
     <article className="account-order-card">
@@ -52,6 +54,25 @@ export default function OrderCard({ order }) {
       <footer className="account-order-card__foot">
         <time>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</time>
         <div className="account-order-card__actions">
+          {isPendingPayment && (
+            <button
+              type="button"
+              className="account-order-card__btn account-order-card__btn--primary"
+              onClick={() => onPayNow?.(order)}
+              style={{
+                backgroundColor: '#ee4d2d',
+                color: '#fff',
+                fontWeight: 600,
+                border: 'none',
+                padding: '8px 18px',
+                borderRadius: '6px',
+                marginRight: '8px',
+                cursor: 'pointer',
+              }}
+            >
+              Thanh toán ngay
+            </button>
+          )}
           <button type="button" className="account-order-card__btn">
             Xem chi tiết
           </button>
@@ -60,3 +81,4 @@ export default function OrderCard({ order }) {
     </article>
   );
 }
+

@@ -28,7 +28,7 @@ const parseOrderDate = (str) => {
  * + dòng tổng số đơn + sắp xếp + Giao Hàng Loạt. Dùng chung cho Đơn hàng và
  * Quản lý vận chuyển.
  */
-export default function SellerOrderBoard({ orders, exportName = "don-hang", initialTab = "all" }) {
+export default function SellerOrderBoard({ orders, exportName = "don-hang", initialTab = "all", loading = false, onRefresh }) {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   // Đồng bộ tab khi điều hướng giữa các mục "Quản Lý Đơn Hàng" ở sidebar
@@ -134,7 +134,7 @@ export default function SellerOrderBoard({ orders, exportName = "don-hang", init
       </div>
 
       <div className="slr-ob__subbar">
-        <strong>{visible.length} Đơn hàng</strong>
+        <strong>{visible.length} Đơn hàng {loading && "(Đang tải dữ liệu từ server...)"}</strong>
         <div className="slr-ob__subbar-actions">
           <div className="slr-ob__sort">
             <span>Sắp xếp theo</span>
@@ -198,7 +198,7 @@ export default function SellerOrderBoard({ orders, exportName = "don-hang", init
             {visible.length === 0 && (
               <tr>
                 <td colSpan={5} className="muted" style={{ textAlign: "center", padding: "32px" }}>
-                  Không có đơn hàng phù hợp.
+                  {loading ? "Đang tải dữ liệu đơn hàng..." : "Không có đơn hàng phù hợp."}
                 </td>
               </tr>
             )}
@@ -206,7 +206,14 @@ export default function SellerOrderBoard({ orders, exportName = "don-hang", init
         </table>
       </div>
 
-      {selected && <SellerOrderDetailModal order={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <SellerOrderDetailModal
+          order={selected}
+          onClose={() => setSelected(null)}
+          onRefresh={onRefresh}
+        />
+      )}
     </div>
   );
 }
+

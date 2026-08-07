@@ -1,69 +1,101 @@
-@use '../../../../styles/palette' as *;
-
-.checkout-address-card {
-  background: $surface;
-  border: 1px solid $border-soft;
-  border-radius: $radius-md;
-  padding: 16px 20px;
-  box-shadow: $shadow-sm;
+.checkout-shipping-info {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 16px;
 }
 
-.checkout-address-card__head {
+.checkout-shipping-info__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-
-  h2 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: $ink;
-  }
+  margin-bottom: 16px;
 }
 
-.checkout-address-card__name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: $ink;
-
-  span {
-    font-weight: 400;
-    color: $ink-muted;
-    margin-left: 8px;
-  }
-}
-
-.checkout-address-card__line {
-  font-size: 0.88rem;
-  color: $ink-muted;
-  margin-top: 6px;
-  line-height: 1.5;
-}
-
-.checkout-address-card__hint,
-.checkout-address-card__empty p {
-  font-size: 0.88rem;
-  color: $ink-muted;
+.checkout-shipping-info__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a202c;
   margin: 0;
 }
 
-.checkout-address-card__empty {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.checkout-address-card__link,
-.checkout-address-picker__link {
+.checkout-shipping-info__saved-btn {
+  background: none;
+  border: none;
   font-size: 0.85rem;
-  font-weight: 600;
-  color: $accent;
-  text-decoration: none;
+  font-weight: 500;
+  color: #3182ce;
+  cursor: pointer;
 
   &:hover {
     text-decoration: underline;
   }
+}
+
+.checkout-shipping-info__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkout-field {
+  position: relative;
+  width: 100%;
+}
+
+.checkout-field__input {
+  width: 100%;
+  height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #2d3748;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &::placeholder {
+    color: #a0aec0;
+  }
+
+  &:focus {
+    border-color: #3182ce;
+    box-shadow: 0 0 0 1px #3182ce;
+  }
+}
+
+.checkout-field--phone {
+  .checkout-field__input {
+    padding-right: 42px;
+  }
+}
+
+.checkout-field__flag-badge {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+.checkout-field--readonly {
+  .checkout-field__input {
+    background: #f7fafc;
+    color: #4a5568;
+    padding-top: 14px;
+  }
+}
+
+.checkout-field__floating-label {
+  position: absolute;
+  top: 4px;
+  left: 14px;
+  font-size: 0.68rem;
+  color: #a0aec0;
+  pointer-events: none;
 }
 
 .checkout-address-picker {
@@ -78,17 +110,17 @@
 .checkout-address-picker__item {
   width: 100%;
   text-align: left;
-  border: 1px solid $border-soft;
-  border-radius: $radius-sm;
-  background: $surface;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
   padding: 12px 14px;
   cursor: pointer;
-  transition: border-color $transition-fast, background $transition-fast;
+  transition: border-color 0.2s ease;
 
   &:hover,
   &.is-selected {
-    border-color: rgba($raspberry, 0.45);
-    background: rgba($blush-pink, 0.25);
+    border-color: #3182ce;
+    background: #ebf8ff;
   }
 }
 
@@ -103,27 +135,27 @@
 .checkout-address-picker__name {
   font-size: 0.88rem;
   font-weight: 600;
-  color: $ink;
+  color: #2d3748;
 }
 
 .checkout-address-picker__phone {
   font-size: 0.82rem;
-  color: $ink-muted;
+  color: #718096;
 }
 
 .checkout-address-picker__default {
   font-size: 0.68rem;
   font-weight: 700;
-  color: $live-red;
-  border: 1px solid rgba($live-red, 0.35);
-  border-radius: $radius-pill;
+  color: #e53e3e;
+  border: 1px solid rgba(229, 62, 62, 0.35);
+  border-radius: 999px;
   padding: 1px 8px;
 }
 
 .checkout-address-picker__line {
   margin: 0;
   font-size: 0.82rem;
-  color: $ink-muted;
+  color: #718096;
   line-height: 1.45;
 }
 
@@ -133,13 +165,7 @@
 
   p {
     margin: 0 0 10px;
-    color: $ink-muted;
+    color: #718096;
   }
 }
 
-.checkout-address-picker__footer {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid $border-soft;
-  text-align: center;
-}
