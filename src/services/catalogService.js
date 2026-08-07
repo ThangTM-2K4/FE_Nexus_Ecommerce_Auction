@@ -295,24 +295,30 @@ export function mapProductDetailToUi(rawItem, defaults = {}) {
   const brandName = item.brandName || item.brand || 'Apple';
   const categoryName = item.categoryName ?? item.category?.name ?? 'Điện Thoại & Phụ Kiện';
   const productTitle = item.name ?? item.title ?? base.title ?? 'Sản phẩm';
-  const sellerName = item.sellerName || item.shopName || item.seller || 'BidDoubleTk Official Store';
+  const sellerName =
+    item.sellerName ||
+    item.shopName ||
+    item.seller ||
+    item.shop?.name ||
+    (item.sellerUserId ? `Shop ${String(item.sellerUserId).substring(0, 8).toUpperCase()}` : 'Nexus Official Store');
 
   const shopObj = item.shop || {
-    id: item.sellerUserId || item.sellerId || 'shop-1',
+    id: item.sellerUserId || item.sellerId || item.shopId || 'shop-1',
     name: sellerName,
-    avatar: item.sellerAvatarUrl || item.shopAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
-    badge: 'BidDoubleTk Mall',
+    avatar: item.sellerAvatarUrl || item.shopAvatar || item.shop?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
+    badge: 'Nexus Mall',
     isOnline: true,
     lastOnline: 'Online vài phút trước',
     stats: [
-      { label: 'Đánh Giá', value: '179,4k' },
-      { label: 'Sản Phẩm', value: '614' },
-      { label: 'Tỉ Lệ Phản Hồi', value: '100%' },
+      { label: 'Đánh Giá', value: '4.9/5' },
+      { label: 'Sản Phẩm', value: '24' },
+      { label: 'Tỉ Lệ Phản Hồi', value: '99%' },
       { label: 'Thời Gian Phản Hồi', value: 'trong vài giờ' },
-      { label: 'Tham Gia', value: '2 năm trước' },
-      { label: 'Người Theo Dõi', value: '976,5k' },
+      { label: 'Tham Gia', value: '1 năm trước' },
+      { label: 'Người Theo Dõi', value: '12.5k' },
     ],
   };
+
 
   const rawRating = Number(item.rating ?? item.averageRating ?? 0);
   const reviewCount = Number(item.reviewCount ?? item.totalReviews ?? base.reviewCount ?? 0);

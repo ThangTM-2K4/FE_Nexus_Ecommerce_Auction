@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
+import api from '@/config/api';
 import Header from '@/components/homepage/header';
+
 import Footer from '@/components/homepage/footer';
 import ProductGrid from '@/components/homepage/productGrid';
 import Breadcrumb from '@/components/products/Breadcrumb';
@@ -102,10 +104,33 @@ export default function ProductDetailPage() {
     if (!product) return;
 
     let active = true;
-    const currentSellerId = product.shop?.id || product.sellerUserId;
+    const currentSellerId = product.sellerUserId || product.shop?.id;
+
+    // Resolving exact seller name from API
+    if (currentSellerId && currentSellerId !== 'shop-1') {
+      api.get(`/sellers/${currentSellerId}/performance`, { skipErrorRedirect: true })
+        .then((res) => {
+          if (!active) return;
+          const data = res.data?.data || res.data;
+          if (data && (data.sellerName || data.businessName || data.shopName)) {
+            const exactName = data.sellerName || data.businessName || data.shopName;
+            setProduct((prev) => (prev ? {
+              ...prev,
+              shop: {
+                ...prev.shop,
+                name: exactName,
+                avatar: data.sellerAvatarUrl || data.avatarUrl || prev.shop.avatar,
+              },
+            } : prev));
+          }
+        })
+        .catch(() => {});
+    }
+
     const currentCatId = product.categoryId || product.category?.[1]?.label;
 
     getProducts({ pageSize: 40 })
+
       .then((res) => {
         if (!active) return;
         if (res.ok && Array.isArray(res.items) && res.items.length > 0) {
