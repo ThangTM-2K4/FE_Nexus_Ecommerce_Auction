@@ -435,40 +435,6 @@ export default function ProductsPage() {
                               {p.name || p.productName || category?.label || "Sản phẩm"}
                             </strong>
                             {p.brand && <span style={{ fontSize: "12px", color: "#64748b" }}>Thương hiệu: {p.brand}</span>}
-                            {effectiveModStatus === "REJECTED" && (
-                              <button
-                                type="button"
-                                onClick={() => setSelectedRejectProduct(p)}
-                                style={{
-                                  marginTop: "4px",
-                                  alignSelf: "flex-start",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  padding: "3px 10px",
-                                  background: "#fff1f2",
-                                  border: "1px solid #fecdd3",
-                                  borderRadius: "20px",
-                                  color: "#be123c",
-                                  fontSize: "11px",
-                                  fontWeight: 600,
-                                  cursor: "pointer",
-                                  transition: "all 0.2s ease",
-                                  boxShadow: "0 1px 2px rgba(225,29,72,0.06)",
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = "#ffe4e6";
-                                  e.currentTarget.style.transform = "translateY(-1px)";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = "#fff1f2";
-                                  e.currentTarget.style.transform = "none";
-                                }}
-                              >
-                                <span style={{ fontSize: "12px" }}>⚠️</span>
-                                <span>Phát hiện {p.issues?.length || 1} vi phạm — <u>Xem lý do</u></span>
-                              </button>
-                            )}
                           </div>
                         </td>
                         <td style={{ fontSize: "12px", color: "#555" }}>{p.id}</td>
@@ -477,7 +443,7 @@ export default function ProductsPage() {
                           {displayStock || 0}
                         </td>
                         <td>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-start" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "flex-start", flexWrap: "wrap" }}>
                             <span
                               className={`slr-badge slr-badge--${badgeClass}`}
                               style={
@@ -529,63 +495,61 @@ export default function ProductsPage() {
                                 type="button"
                                 onClick={() => setSelectedRejectProduct(p)}
                                 style={{
-                                  height: "32px",
-                                  padding: "0 12px",
-                                  fontSize: "12px",
-                                  fontWeight: 600,
-                                  borderRadius: "8px",
-                                  background: "#ffffff",
-                                  color: "#be123c",
-                                  border: "1px solid #fecdd3",
-                                  cursor: "pointer",
                                   display: "inline-flex",
                                   alignItems: "center",
-                                  gap: "5px",
-                                  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                  gap: "6px",
+                                  padding: "4px 12px",
+                                  background: "linear-gradient(135deg, #fff1f2, #ffe4e6)",
+                                  border: "1px solid #fecdd3",
+                                  borderRadius: "20px",
+                                  color: "#be123c",
+                                  fontSize: "12px",
+                                  fontWeight: 600,
+                                  cursor: "pointer",
                                   transition: "all 0.2s ease",
+                                  boxShadow: "0 1px 3px rgba(225,29,72,0.1)",
                                 }}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = "#fff1f2";
-                                  e.currentTarget.style.borderColor = "#fda4af";
+                                  e.currentTarget.style.transform = "translateY(-1px)";
+                                  e.currentTarget.style.boxShadow = "0 3px 6px rgba(225,29,72,0.15)";
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = "#ffffff";
-                                  e.currentTarget.style.borderColor = "#fecdd3";
+                                  e.currentTarget.style.transform = "none";
+                                  e.currentTarget.style.boxShadow = "0 1px 3px rgba(225,29,72,0.1)";
                                 }}
                               >
-                                🔍 Lý do từ chối
+                                <span>⚠️ Phát hiện {p.issues?.length || 1} vi phạm — <u>Xem lý do</u></span>
                               </button>
                             )}
 
-                            <button
-                              type="button"
-                              className="slr-btn-create"
-                              disabled={isSubmittingDisabled}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                height: "32px",
-                                padding: "0 14px",
-                                fontSize: "12px",
-                                fontWeight: 600,
-                                borderRadius: "8px",
-                                background:
-                                  effectiveModStatus === "APPROVED"
-                                    ? "linear-gradient(135deg, #16a34a, #22c55e)"
-                                    : effectiveModStatus === "REJECTED"
-                                    ? "linear-gradient(135deg, #6366f1, #4f46e5)"
-                                    : undefined,
-                                color: "#ffffff",
-                                border: "none",
-                                opacity: isSubmittingDisabled && effectiveModStatus !== "APPROVED" ? 0.55 : 1,
-                                cursor: isSubmittingDisabled ? "not-allowed" : "pointer",
-                                boxShadow: effectiveModStatus === "REJECTED" ? "0 2px 4px rgba(99,102,241,0.25)" : undefined,
-                              }}
-                              onClick={() => handleSubmitReview(p)}
-                            >
-                              {buttonText}
-                            </button>
+                            {effectiveModStatus !== "REJECTED" && (
+                              <button
+                                type="button"
+                                className="slr-btn-create"
+                                disabled={isSubmittingDisabled}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  height: "32px",
+                                  padding: "0 14px",
+                                  fontSize: "12px",
+                                  fontWeight: 600,
+                                  borderRadius: "8px",
+                                  background:
+                                    effectiveModStatus === "APPROVED"
+                                      ? "linear-gradient(135deg, #16a34a, #22c55e)"
+                                      : undefined,
+                                  color: "#ffffff",
+                                  border: "none",
+                                  opacity: isSubmittingDisabled ? 0.55 : 1,
+                                  cursor: isSubmittingDisabled ? "not-allowed" : "pointer",
+                                }}
+                                onClick={() => handleSubmitReview(p)}
+                              >
+                                {buttonText}
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
