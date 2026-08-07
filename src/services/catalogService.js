@@ -5,6 +5,43 @@ import { getProducts, getProductById, resolveImageUrl } from './ecommerceProduct
 
 export { getApiErrorMessage, getProducts, getProductById };
 
+let sellerBusinessNameCache = null;
+
+/** Truy vấn Tên Shop (BusinessName) chính thức từ CSDL SQL Server qua GET /api/v1/sellers/search */
+export async function getSellerBusinessName(sellerUserId) {
+  if (!sellerUserId) return null;
+  const targetId = String(sellerUserId).toLowerCase().trim();
+
+  if (sellerBusinessNameCache && sellerBusinessNameCache[targetId]) {
+    return sellerBusinessNameCache[targetId];
+  }
+
+  try {
+    const { data } = await api.get('/sellers/search', {
+      params: { page: 1, pageSize: 100 },
+      skipErrorRedirect: true,
+    });
+    const payload = unwrapData(data) || data?.data || data;
+    const items = payload?.items || (Array.isArray(payload) ? payload : []);
+
+    sellerBusinessNameCache = sellerBusinessNameCache || {};
+    items.forEach((s) => {
+      const uId = String(s.userId || s.UserId || '').toLowerCase().trim();
+      const sId = String(s.sellerId || s.SellerId || '').toLowerCase().trim();
+      const bName = s.businessName || s.BusinessName || s.shopName || s.ShopName;
+      if (bName) {
+        if (uId) sellerBusinessNameCache[uId] = bName;
+        if (sId) sellerBusinessNameCache[sId] = bName;
+      }
+    });
+
+    return sellerBusinessNameCache[targetId] || null;
+  } catch {
+    return null;
+  }
+}
+
+
 const CATEGORY_ICONS = [
   '/images/categories/cat-fashion.jpg',
   '/images/categories/cat-tech.jpg',

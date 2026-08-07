@@ -18,7 +18,8 @@ import {
 } from '@/data/mockProductDetail';
 import { mockReviews } from '@/data/mockReviews';
 import { generateMoreProducts } from '@/data/mockProducts';
-import { mapProductDetailToUi, mapProductListItem } from '@/services/catalogService';
+import { mapProductDetailToUi, mapProductListItem, getSellerBusinessName } from '@/services/catalogService';
+
 import { getPublicProductDetail, getProducts } from '@/services/ecommerceProductService';
 import { useProductNavigate } from '@/hooks/useProductNavigate';
 import './index.scss';
@@ -106,48 +107,22 @@ export default function ProductDetailPage() {
     let active = true;
     const currentSellerId = product.sellerUserId || product.shop?.id;
 
-    // Resolving exact shop name from API or local registration
+    // Resolving exact BusinessName from SQL Server database
     if (currentSellerId && currentSellerId !== 'shop-1') {
-      try {
-        const rawLocal = localStorage.getItem(`mockSellerApplication_${currentSellerId}`);
-        if (rawLocal) {
-          const parsedLocal = JSON.parse(rawLocal);
-          if (parsedLocal.shopName || parsedLocal.businessName) {
-            const localShopName = parsedLocal.shopName || parsedLocal.businessName;
-            setProduct((prev) => (prev ? {
-              ...prev,
-              shop: {
-                ...prev.shop,
-                name: localShopName,
-              },
-            } : prev));
-          }
+      getSellerBusinessName(currentSellerId).then((realBusinessName) => {
+        if (!active) return;
+        if (realBusinessName) {
+          setProduct((prev) => (prev ? {
+            ...prev,
+            shop: {
+              ...prev.shop,
+              name: realBusinessName,
+            },
+          } : prev));
         }
-      } catch {
-        // ignore
-      }
-
-      api.get('/sellers/search', { params: { pageSize: 50 }, skipErrorRedirect: true })
-        .then((sRes) => {
-          if (!active) return;
-          const sData = sRes.data?.data || sRes.data;
-          const items = sData?.items || (Array.isArray(sData) ? sData : []);
-          const matchedSeller = items.find(
-            (s) => String(s.userId || s.sellerId || '').toLowerCase() === String(currentSellerId).toLowerCase(),
-          );
-          if (matchedSeller && (matchedSeller.shopName || matchedSeller.businessName)) {
-            const realShopName = matchedSeller.shopName || matchedSeller.businessName;
-            setProduct((prev) => (prev ? {
-              ...prev,
-              shop: {
-                ...prev.shop,
-                name: realShopName,
-              },
-            } : prev));
-          }
-        })
-        .catch(() => {});
+      });
     }
+
 
 
 
