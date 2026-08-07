@@ -55,8 +55,55 @@ export default function ProductDetailPage() {
     };
   }, [id]);
 
-  const shopProducts = useMemo(() => getShopProducts(id), [id]);
-  const similarProducts = useMemo(() => getSimilarProducts(id), [id]);
+  const [shopProducts, setShopProducts] = useState([]);
+  const [similarProducts, setSimilarProducts] = useState([]);
+
+  useEffect(() => {
+    if (!product) return;
+
+    let active = true;
+    const currentSellerId = product.shop?.id || product.sellerUserId;
+    const currentCatId = product.categoryId || product.category?.[1]?.label;
+
+    getProducts({ pageSize: 40 })
+      .then((res) => {
+        if (!active) return;
+        if (res.ok && Array.isArray(res.items) && res.items.length > 0) {
+          const mapped = res.items.map(mapProductListItem).filter(Boolean);
+
+          // 1. Các sản phẩm của Seller
+          const ofSeller = mapped.filter(
+            (p) => (p.sellerUserId === currentSellerId || p.shopId === currentSellerId) && p.id !== product.id,
+          );
+          setShopProducts(ofSeller.length > 0 ? ofSeller : mapped.filter((p) => p.id !== product.id));
+
+          // 2. Các sản phẩm liên quan cùng danh mục
+          const ofCategory = mapped.filter(
+            (p) =>
+              (p.categoryId === currentCatId ||
+                p.categoryName === currentCatId ||
+                p.category === currentCatId) &&
+              p.id !== product.id,
+          );
+          setSimilarProducts(
+            ofCategory.length > 0 ? ofCategory : mapped.filter((p) => p.id !== product.id).reverse(),
+          );
+        } else {
+          setShopProducts(getShopProducts(product.id));
+          setSimilarProducts(getSimilarProducts(product.id));
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setShopProducts(getShopProducts(product.id));
+          setSimilarProducts(getSimilarProducts(product.id));
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [product]);
 
   const [shopExtra, setShopExtra] = useState([]);
   const [similarExtra, setSimilarExtra] = useState([]);
@@ -157,7 +204,7 @@ export default function ProductDetailPage() {
           <ProductGrid
             products={similarProducts}
             extraProducts={similarExtra}
-            title="CÓ THỂ BẠN CŨNG THÍCH"
+            title="SẢN PHẨM LIÊN QUAN"
             columns={6}
             rows={8}
             onLoadMore={handleSimilarLoadMore}
@@ -166,6 +213,7 @@ export default function ProductDetailPage() {
           />
         </div>
       </main>
+
 
       <Footer />
     </>
