@@ -430,45 +430,46 @@ export default function ProductsPage() {
                           </div>
                         </td>
                         <td>
-                          <strong>{p.name || p.productName || category?.label || "Sản phẩm"}</strong>
-                          {p.brand && <div style={{ fontSize: "12px", color: "#888" }}>Thương hiệu: {p.brand}</div>}
-                          {effectiveModStatus === "REJECTED" && (
-                            <div style={{
-                              marginTop: "8px",
-                              padding: "8px 12px",
-                              background: "#fff5f5",
-                              border: "1px solid #fed7d7",
-                              borderRadius: "8px",
-                              fontSize: "12px",
-                              color: "#c53030",
-                              lineHeight: "1.4"
-                            }}>
-                              <div style={{ fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                  ⚠️ Lý do từ chối ({p.issues?.length || 1} vi phạm):
-                                </span>
-                                {p.issues && p.issues.length > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setSelectedRejectProduct(p)}
-                                    style={{
-                                      background: "none",
-                                      border: "none",
-                                      color: "#9b2c2c",
-                                      textDecoration: "underline",
-                                      fontSize: "11px",
-                                      fontWeight: 600,
-                                      cursor: "pointer",
-                                      padding: 0
-                                    }}
-                                  >
-                                    Xem chi tiết »
-                                  </button>
-                                )}
-                              </div>
-                              <div>{extractRejectReason(p)}</div>
-                            </div>
-                          )}
+                          <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                            <strong style={{ fontSize: "14px", color: "#1e293b", fontWeight: 600 }}>
+                              {p.name || p.productName || category?.label || "Sản phẩm"}
+                            </strong>
+                            {p.brand && <span style={{ fontSize: "12px", color: "#64748b" }}>Thương hiệu: {p.brand}</span>}
+                            {effectiveModStatus === "REJECTED" && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedRejectProduct(p)}
+                                style={{
+                                  marginTop: "4px",
+                                  alignSelf: "flex-start",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  padding: "3px 10px",
+                                  background: "#fff1f2",
+                                  border: "1px solid #fecdd3",
+                                  borderRadius: "20px",
+                                  color: "#be123c",
+                                  fontSize: "11px",
+                                  fontWeight: 600,
+                                  cursor: "pointer",
+                                  transition: "all 0.2s ease",
+                                  boxShadow: "0 1px 2px rgba(225,29,72,0.06)",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = "#ffe4e6";
+                                  e.currentTarget.style.transform = "translateY(-1px)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = "#fff1f2";
+                                  e.currentTarget.style.transform = "none";
+                                }}
+                              >
+                                <span style={{ fontSize: "12px" }}>⚠️</span>
+                                <span>Phát hiện {p.issues?.length || 1} vi phạm — <u>Xem lý do</u></span>
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td style={{ fontSize: "12px", color: "#555" }}>{p.id}</td>
                         <td style={{ fontWeight: 600, color: "#6b3ba7" }}>{Number(p.price || 0).toLocaleString("vi-VN")}đ</td>
@@ -476,51 +477,80 @@ export default function ProductsPage() {
                           {displayStock || 0}
                         </td>
                         <td>
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-start" }}>
                             <span
                               className={`slr-badge slr-badge--${badgeClass}`}
                               style={
                                 effectiveModStatus === "APPROVED"
                                   ? {
-                                      background: "#e8f5e9",
-                                      color: "#2e7d32",
-                                      border: "1px solid #a5d6a7",
+                                      background: "linear-gradient(135deg, #dcfce7, #bbf7d0)",
+                                      color: "#15803d",
+                                      border: "1px solid #86efac",
                                       fontWeight: 600,
-                                      padding: "4px 10px",
-                                      borderRadius: "12px",
+                                      padding: "4px 12px",
+                                      borderRadius: "20px",
+                                      fontSize: "12px",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "4px",
                                     }
                                   : effectiveModStatus === "REJECTED"
                                   ? {
-                                      background: "#ffebee",
-                                      color: "#c62828",
-                                      border: "1px solid #ef9a9a",
+                                      background: "linear-gradient(135deg, #ffe4e6, #fecdd3)",
+                                      color: "#be123c",
+                                      border: "1px solid #fda4af",
                                       fontWeight: 600,
-                                      padding: "4px 10px",
-                                      borderRadius: "12px",
+                                      padding: "4px 12px",
+                                      borderRadius: "20px",
+                                      fontSize: "12px",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "4px",
                                     }
-                                  : undefined
+                                  : {
+                                      background: "#f1f5f9",
+                                      color: "#475569",
+                                      border: "1px solid #cbd5e1",
+                                      fontWeight: 600,
+                                      padding: "4px 12px",
+                                      borderRadius: "20px",
+                                      fontSize: "12px",
+                                    }
                               }
                             >
+                              {effectiveModStatus === "APPROVED" && "✓ "}
+                              {effectiveModStatus === "REJECTED" && "✕ "}
+                              {effectiveModStatus === "PENDING_MANUAL_REVIEW" && "⏳ "}
                               {badgeLabel}
                             </span>
-                            
+
                             {effectiveModStatus === "REJECTED" && (
                               <button
                                 type="button"
                                 onClick={() => setSelectedRejectProduct(p)}
                                 style={{
-                                  height: "28px",
-                                  padding: "0 10px",
-                                  fontSize: "11px",
+                                  height: "32px",
+                                  padding: "0 12px",
+                                  fontSize: "12px",
                                   fontWeight: 600,
-                                  borderRadius: "6px",
-                                  background: "#fff5f5",
-                                  color: "#c53030",
-                                  border: "1px solid #feb2b2",
+                                  borderRadius: "8px",
+                                  background: "#ffffff",
+                                  color: "#be123c",
+                                  border: "1px solid #fecdd3",
                                   cursor: "pointer",
                                   display: "inline-flex",
                                   alignItems: "center",
-                                  gap: "4px"
+                                  gap: "5px",
+                                  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                  transition: "all 0.2s ease",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = "#fff1f2";
+                                  e.currentTarget.style.borderColor = "#fda4af";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = "#ffffff";
+                                  e.currentTarget.style.borderColor = "#fecdd3";
                                 }}
                               >
                                 🔍 Lý do từ chối
@@ -535,19 +565,22 @@ export default function ProductsPage() {
                                 display: "inline-flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                height: "28px",
-                                padding: "0 12px",
-                                fontSize: "11px",
+                                height: "32px",
+                                padding: "0 14px",
+                                fontSize: "12px",
                                 fontWeight: 600,
-                                borderRadius: "6px",
+                                borderRadius: "8px",
                                 background:
                                   effectiveModStatus === "APPROVED"
-                                    ? "linear-gradient(135deg, #2e7d32, #4caf50)"
+                                    ? "linear-gradient(135deg, #16a34a, #22c55e)"
+                                    : effectiveModStatus === "REJECTED"
+                                    ? "linear-gradient(135deg, #6366f1, #4f46e5)"
                                     : undefined,
-                                color: effectiveModStatus === "APPROVED" ? "#ffffff" : undefined,
-                                border: effectiveModStatus === "APPROVED" ? "none" : undefined,
-                                opacity: isSubmittingDisabled && effectiveModStatus !== "APPROVED" ? 0.65 : 1,
+                                color: "#ffffff",
+                                border: "none",
+                                opacity: isSubmittingDisabled && effectiveModStatus !== "APPROVED" ? 0.55 : 1,
                                 cursor: isSubmittingDisabled ? "not-allowed" : "pointer",
+                                boxShadow: effectiveModStatus === "REJECTED" ? "0 2px 4px rgba(99,102,241,0.25)" : undefined,
                               }}
                               onClick={() => handleSubmitReview(p)}
                             >
@@ -565,15 +598,15 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* POPUP CHI TIẾT LÝ DO TỪ CHỐI */}
+      {/* POPUP CHI TIẾT LÝ DO TỪ CHỐI - STUNNING PREMIUM MODAL */}
       {selectedRejectProduct && (
         <div
           style={{
             position: "fixed",
             inset: 0,
             zIndex: 9999,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(4px)",
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(8px)",
             display: "grid",
             placeItems: "center",
             padding: "16px",
@@ -583,90 +616,236 @@ export default function ProductsPage() {
           <div
             style={{
               backgroundColor: "#ffffff",
-              borderRadius: "16px",
-              maxWidth: "600px",
+              borderRadius: "20px",
+              maxWidth: "620px",
               width: "100%",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               overflow: "hidden",
-              border: "1px solid #fee2e2",
+              border: "1px solid #ffe4e6",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ padding: "20px 24px", background: "linear-gradient(135deg, #fff5f5, #ffe4e6)", borderBottom: "1px solid #fecdd3", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h3 style={{ margin: 0, color: "#9f1239", fontSize: "18px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
-                  ⚠️ Chi tiết lý do từ chối sản phẩm
-                </h3>
-                <span style={{ fontSize: "12px", color: "#be123c", marginTop: "2px", display: "block" }}>
-                  Hệ thống kiểm duyệt phát hiện thông tin không hợp lệ
-                </span>
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "20px 24px",
+                background: "linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)",
+                borderBottom: "1px solid #fecdd3",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "42px",
+                    height: "42px",
+                    borderRadius: "12px",
+                    background: "#ffffff",
+                    display: "grid",
+                    placeItems: "center",
+                    fontSize: "22px",
+                    boxShadow: "0 2px 8px rgba(225,29,72,0.15)",
+                  }}
+                >
+                  🚫
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, color: "#881337", fontSize: "18px", fontWeight: 700 }}>
+                    Chi tiết lý do từ chối
+                  </h3>
+                  <span style={{ fontSize: "12px", color: "#9f1239", fontWeight: 500 }}>
+                    Phát hiện bởi hệ thống kiểm duyệt tự động (Auto Moderation)
+                  </span>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedRejectProduct(null)}
-                style={{ background: "none", border: "none", fontSize: "20px", color: "#9f1239", cursor: "pointer" }}
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  border: "none",
+                  background: "rgba(255,255,255,0.7)",
+                  color: "#9f1239",
+                  fontSize: "16px",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#ffffff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.7)"; }}
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ padding: "20px 24px", maxHeight: "65vh", overflowY: "auto" }}>
-              <div style={{ display: "flex", gap: "12px", marginBottom: "20px", padding: "12px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+            {/* Modal Content */}
+            <div style={{ padding: "24px", maxHeight: "68vh", overflowY: "auto" }}>
+              {/* Product Info Summary Card */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "14px",
+                  padding: "14px 16px",
+                  background: "#f8fafc",
+                  borderRadius: "14px",
+                  border: "1px solid #e2e8f0",
+                  marginBottom: "20px",
+                }}
+              >
                 {selectedRejectProduct.images?.[0] ? (
-                  <img src={selectedRejectProduct.images[0]} alt="" style={{ width: "48px", height: "48px", borderRadius: "6px", objectFit: "cover" }} />
+                  <img
+                    src={selectedRejectProduct.images[0]}
+                    alt=""
+                    style={{ width: "52px", height: "52px", borderRadius: "10px", objectFit: "cover", border: "1px solid #cbd5e1" }}
+                  />
                 ) : (
-                  <div style={{ width: "48px", height: "48px", borderRadius: "6px", background: "#e2e8f0", display: "grid", placeItems: "center" }}>📦</div>
+                  <div style={{ width: "52px", height: "52px", borderRadius: "10px", background: "#cbd5e1", display: "grid", placeItems: "center", fontSize: "24px" }}>
+                    📦
+                  </div>
                 )}
-                <div>
-                  <strong style={{ fontSize: "14px", color: "#1e293b" }}>{selectedRejectProduct.name}</strong>
-                  <div style={{ fontSize: "12px", color: "#64748b" }}>Mã SP: {selectedRejectProduct.id}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h4 style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#0f172a", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {selectedRejectProduct.name}
+                  </h4>
+                  <div style={{ fontSize: "12px", color: "#64748b" }}>
+                    Mã sản phẩm: <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", color: "#475569" }}>{selectedRejectProduct.id}</code>
+                  </div>
                 </div>
+                <span
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: "20px",
+                    background: "#ffe4e6",
+                    color: "#9f1239",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    border: "1px solid #fecdd3",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  🔴 BLOCKED
+                </span>
               </div>
 
-              <div style={{ marginBottom: "16px" }}>
-                <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", color: "#334155" }}>
-                  Danh sách vi phạm ({selectedRejectProduct.issues?.length || 1}):
-                </h4>
+              {/* Issues List */}
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#1e293b" }}>
+                    Các vi phạm cần sửa đổi ({selectedRejectProduct.issues?.length || 1}):
+                  </span>
+                  <span style={{ fontSize: "12px", color: "#e11d48", fontWeight: 600 }}>
+                    Cần sửa trước khi gửi duyệt lại
+                  </span>
+                </div>
+
                 {Array.isArray(selectedRejectProduct.issues) && selectedRejectProduct.issues.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     {selectedRejectProduct.issues.map((iss, i) => (
-                      <div key={i} style={{ padding: "12px", background: "#fff5f5", borderRadius: "8px", border: "1px solid #fecdd3" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                          <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", background: iss.severity === "BLOCK" ? "#e11d48" : "#d97706", color: "#ffffff" }}>
+                      <div
+                        key={i}
+                        style={{
+                          padding: "16px",
+                          background: "#fff1f2",
+                          borderRadius: "14px",
+                          border: "1px solid #fecdd3",
+                          boxShadow: "0 2px 4px rgba(225,29,72,0.03)",
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 800,
+                              padding: "3px 8px",
+                              borderRadius: "6px",
+                              background: iss.severity === "BLOCK" ? "#be123c" : "#d97706",
+                              color: "#ffffff",
+                              letterSpacing: "0.5px",
+                              textTransform: "uppercase",
+                            }}
+                          >
                             {iss.severity || "BLOCK"}
                           </span>
-                          <span style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace" }}>
-                            Trường: {iss.fieldName || "Thông tin sản phẩm"}
+                          <span style={{ fontSize: "11px", color: "#64748b", fontWeight: 600 }}>
+                            📌 Trường: <strong style={{ color: "#0f172a" }}>{iss.fieldName || "Mô tả sản phẩm"}</strong>
                           </span>
                         </div>
-                        <p style={{ margin: "4px 0 0 0", fontSize: "13px", fontWeight: 600, color: "#881337" }}>
+
+                        <p style={{ margin: "0 0 6px 0", fontSize: "13px", fontWeight: 600, color: "#881337", lineHeight: "1.4" }}>
                           {iss.message || iss.issueCode}
                         </p>
+
                         {iss.maskedSnippet && (
-                          <div style={{ fontSize: "11px", color: "#9f1239", marginTop: "4px", background: "#fff", padding: "2px 6px", borderRadius: "4px", display: "inline-block", border: "1px solid #ffe4e6" }}>
-                            Nội dung vi phạm: <code>{iss.maskedSnippet}</code>
+                          <div style={{ marginTop: "6px", fontSize: "11px", color: "#9f1239", background: "#ffffff", padding: "6px 10px", borderRadius: "8px", border: "1px solid #ffe4e6", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ color: "#e11d48", fontWeight: 600 }}>Mẫu bị chặn:</span>
+                            <code style={{ color: "#be123c", fontWeight: 700 }}>{iss.maskedSnippet}</code>
                           </div>
                         )}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div style={{ padding: "12px", background: "#fff5f5", borderRadius: "8px", border: "1px solid #fecdd3", color: "#881337", fontSize: "13px" }}>
+                  <div style={{ padding: "16px", background: "#fff1f2", borderRadius: "14px", border: "1px solid #fecdd3", color: "#881337", fontSize: "13px", lineHeight: "1.5" }}>
                     {extractRejectReason(selectedRejectProduct)}
                   </div>
                 )}
               </div>
 
-              <div style={{ padding: "12px", background: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe", fontSize: "12px", color: "#1e40af" }}>
-                💡 <strong>Hướng dẫn:</strong> Vui lòng chỉnh sửa lại thông tin sản phẩm (loại bỏ các từ cấm hoặc liên kết ngoài nêu trên) trước khi bấm <strong>"Gửi lại duyệt"</strong>.
+              {/* Instructions Banner */}
+              <div
+                style={{
+                  padding: "14px 16px",
+                  background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+                  borderRadius: "14px",
+                  border: "1px solid #bfdbfe",
+                  fontSize: "13px",
+                  color: "#1e40af",
+                  lineHeight: "1.5",
+                  display: "flex",
+                  gap: "10px",
+                  alignItems: "flex-start",
+                }}
+              >
+                <span style={{ fontSize: "18px" }}>💡</span>
+                <div>
+                  <strong>Hướng dẫn khắc phục:</strong> Vui lòng loại bỏ từ cấm, các đường link ngoài hoặc cập nhật ảnh mới, sau đó bấm <strong>"Gửi lại duyệt"</strong> để hệ thống phê duyệt lại.
+                </div>
               </div>
             </div>
 
-            <div style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: "16px 24px",
+                background: "#f8fafc",
+                borderTop: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setSelectedRejectProduct(null)}
-                style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #cbd5e1", background: "#ffffff", color: "#475569", fontWeight: 600, cursor: "pointer" }}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "10px",
+                  border: "1px solid #cbd5e1",
+                  background: "#ffffff",
+                  color: "#475569",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#ffffff"; }}
               >
                 Đóng
               </button>
