@@ -9,15 +9,15 @@
 
 .variant-selector-shopee__row {
   display: grid;
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 110px 1fr;
   gap: 12px;
-  align-items: start;
+  align-items: center;
 }
 
 .variant-selector-shopee__label {
   font-size: 0.85rem;
+  font-weight: 500;
   color: $ink-muted;
-  padding-top: 6px;
   line-height: 1.4;
 }
 
@@ -31,69 +31,76 @@
 
   /* Custom scrollbar for long option lists (e.g. phone models) */
   &::-webkit-scrollbar {
-    width: 5px;
+    width: 4px;
   }
   &::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #f5f5f5;
     border-radius: 4px;
   }
   &::-webkit-scrollbar-thumb {
-    background: #ccc;
+    background: #ddd;
     border-radius: 4px;
     &:hover {
-      background: #aaa;
+      background: #bbb;
     }
   }
 }
 
 .variant-selector-shopee__pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  min-height: 36px;
+  min-height: 38px;
   background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 2px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
   font: inherit;
   font-size: 0.84rem;
-  color: rgba(0, 0, 0, 0.8);
+  font-weight: 400;
+  color: #2d3748;
   cursor: pointer;
   outline: none;
-  transition: all $transition-fast;
+  overflow: hidden;
+  transition: border-color $transition-fast, background $transition-fast, color $transition-fast;
   user-select: none;
 
   &:hover:not(.variant-selector-shopee__pill--active) {
-    border-color: $accent;
-    color: $accent-dark;
-    background: #fffafa;
+    border-color: $raspberry;
+    color: $raspberry;
+    background: rgba($blush-pink, 0.15);
   }
 
   &--active {
-    border-color: $accent-dark;
-    color: $accent-dark;
-    background: rgba($accent, 0.05);
-    position: relative;
-    box-shadow: 0 0 0 1px $accent-dark;
+    border: 1.5px solid $raspberry;
+    color: $raspberry;
+    font-weight: 600;
+    background: rgba($blush-pink, 0.18);
 
+    /* Shopee active checkmark triangle badge in bottom-right corner */
     &::after {
       content: '';
       position: absolute;
       bottom: 0;
       right: 0;
-      border-bottom: 9px solid $accent-dark;
-      border-left: 9px solid transparent;
+      width: 0;
+      height: 0;
+      border-bottom: 13px solid $raspberry;
+      border-left: 13px solid transparent;
+      z-index: 1;
     }
 
     &::before {
       content: '✓';
       position: absolute;
-      bottom: -1px;
+      bottom: 0px;
       right: 1px;
-      font-size: 7px;
-      color: #fff;
-      z-index: 1;
-      font-weight: bold;
+      font-size: 8px;
+      line-height: 1;
+      color: #ffffff;
+      z-index: 2;
+      font-weight: 700;
     }
   }
 
@@ -103,11 +110,12 @@
 }
 
 .variant-selector-shopee__img {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   object-fit: cover;
-  border-radius: 2px;
+  border-radius: 3px;
   flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .variant-selector-shopee__text {
@@ -121,5 +129,6 @@
     gap: 6px;
   }
 }
+
 
 
