@@ -312,13 +312,18 @@ export function mapProductDetailToUi(item, defaults = {}) {
     ],
   };
 
+  const rawRating = Number(item.rating ?? item.averageRating ?? 0);
+  const reviewCount = Number(item.reviewCount ?? item.totalReviews ?? base.reviewCount ?? 0);
+  const rating = (rawRating > 0 && reviewCount > 0) ? rawRating : 5.0;
+
   return {
     ...base,
     id: item.id ?? item.productId ?? base.id,
     title: productTitle,
     badge: item.badge ?? base.badge ?? null,
-    rating: item.rating ?? item.averageRating ?? base.rating ?? 0,
-    reviewCount: item.reviewCount ?? base.reviewCount ?? 0,
+    rating,
+    reviewCount,
+
     soldCount: formatSoldCount(item.soldCount ?? item.sold) || base.soldCount,
     priceMin: minP,
     priceMax: maxP,

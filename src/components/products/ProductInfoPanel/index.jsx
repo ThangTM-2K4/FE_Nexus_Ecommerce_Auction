@@ -46,6 +46,8 @@ export default function ProductInfoPanel({ product }) {
   const currentStock = selectedVariant?.stock ?? product.stock ?? 100;
   const isInStock = currentStock > 0;
 
+  const displayRating = (product.reviewCount > 0 && Number(product.rating) > 0) ? product.rating : 5;
+
   return (
     <div className="product-info-panel">
       {product.badge && (
@@ -57,13 +59,14 @@ export default function ProductInfoPanel({ product }) {
       <div className="product-info-panel__meta">
         <div className="product-info-panel__meta-main">
           <span className="product-info-panel__rating">
-            <strong>{product.rating}</strong> ★
+            <strong>{displayRating}</strong> ★
           </span>
           <span className="product-info-panel__divider">|</span>
-          <span>{product.reviewCount.toLocaleString("vi-VN")} Đánh Giá</span>
+          <span>{(product.reviewCount || 0).toLocaleString("vi-VN")} Đánh Giá</span>
           <span className="product-info-panel__divider">|</span>
-          <span>{product.soldCount} Đã Bán</span>
-        </div>        <button type="button" className="product-info-panel__report">
+          <span>{product.soldCount || 0} Đã Bán</span>
+        </div>
+        <button type="button" className="product-info-panel__report">
           Tố cáo
         </button>
       </div>

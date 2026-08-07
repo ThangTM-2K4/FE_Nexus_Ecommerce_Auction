@@ -141,7 +141,7 @@ export default function ProductDetailPage() {
             </div>
           </section>
 
-          <ReviewList reviews={mockReviews} />
+          <ReviewList reviews={product.reviews || []} />
 
           <ProductGrid
             products={shopProducts}
