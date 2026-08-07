@@ -42,6 +42,8 @@ export default function ProductDetailPage() {
       setLoadError(null);
       setProduct(null);
 
+      const isGuid = typeof id === 'string' && id.includes('-') && id.length > 20;
+
       // 1. Gọi API chi tiết sản phẩm đơn công khai
       try {
         const result = await getPublicProductDetail(id);
@@ -76,18 +78,45 @@ export default function ProductDetailPage() {
         // ignore
       }
 
-      // 3. Fallback theo ID sản phẩm mẫu nếu là dữ liệu test
+      // 3. Kiểm tra danh sách sản phẩm do Seller vừa tạo từ localStorage
+      try {
+        const localList = JSON.parse(localStorage.getItem('seller_created_products') || '[]');
+        const localMatch = localList.find(
+          (p) => String(p.id || p.productId || '').toLowerCase() === String(id).toLowerCase(),
+        );
+        if (localMatch) {
+          setProduct(mapProductDetailToUi(localMatch));
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+
+      // 4. Nếu là GUID sản phẩm thật nhưng không tìm thấy trên hệ thống -> Báo lỗi, TUYỆT ĐỐI KHÔNG FALLBACK MOCK DATA!
+      if (isGuid) {
+        if (!cancelled) {
+          setLoadError('Sản phẩm không tồn tại hoặc chưa được duyệt hiển thị công khai');
+          setNotFound(true);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // 5. Chỉ cho phép fallback nếu là ID sản phẩm mẫu thử nghiệm (legacy mock ID)
       if (!cancelled) {
         const fallbackLocal = getProductDetail(id);
-        if (fallbackLocal && (fallbackLocal.id === id || !id)) {
+        if (fallbackLocal && fallbackLocal.id === id) {
           setProduct(fallbackLocal);
           setLoading(false);
           return;
         }
 
         setLoadError('Không tìm thấy chi tiết sản phẩm này');
+        setNotFound(true);
         setLoading(false);
       }
+
     }
 
     fetchDetail();
