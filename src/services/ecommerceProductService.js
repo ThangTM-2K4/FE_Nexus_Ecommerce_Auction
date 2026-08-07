@@ -117,9 +117,13 @@ export async function getProducts(filters = {}) {
 }
 
 /**
- * Chi tiết sản phẩm — GET /ecommerce/products/{productId}?scope=management
+ * Chi tiết sản phẩm — GET /ecommerce/products/{productId}
+ * Scope phân chia theo vai trò:
+ * - 'public': Người mua công khai xem sản phẩm (mặc định, không bắt buộc token)
+ * - 'mine': Seller xem sản phẩm của chính mình (cần user token)
+ * - 'all': Admin xem đầy đủ dữ liệu quản trị (cần admin token)
  */
-export async function getProductById(productId, scope = 'all') {
+export async function getProductById(productId, scope = 'public') {
   if (!productId) {
     return {
       ok: false,
@@ -147,6 +151,15 @@ export async function getProductById(productId, scope = 'all') {
     };
   }
 }
+
+/** Trang người mua công khai — scope="public", không bắt buộc token */
+export const getPublicProductDetail = (productId) => getProductById(productId, 'public');
+
+/** Seller xem sản phẩm của chính mình — scope="mine" */
+export const getSellerProductDetail = (productId) => getProductById(productId, 'mine');
+
+/** Admin xem đầy đủ dữ liệu quản trị — scope="all" */
+export const getAdminProductDetail = (productId) => getProductById(productId, 'all');
 
 const getUploadPayload = (response) => response?.data?.data ?? response?.data ?? {};
 
