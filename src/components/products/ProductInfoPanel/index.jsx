@@ -94,36 +94,7 @@ export default function ProductInfoPanel({ product }) {
         </div>
       </div>
 
-      <div className="product-info-panel__row product-info-panel__row--policy">
-        <span className="product-info-panel__label">An Tâm Mua Sắm</span>
-        <div className="product-info-panel__policies">
-          <button
-            type="button"
-            className="product-info-panel__policy-toggle"
-            onClick={() => setPoliciesOpen((v) => !v)}
-            aria-expanded={policiesOpen}
-          >
-            <span className="product-info-panel__policy-toggle-text">
-              An Tâm Mua Sắm Cùng BidDoubleTk
-            </span>
-            <FiChevronDown
-              className={`product-info-panel__policy-chevron ${policiesOpen ? "is-open" : ""}`}
-              aria-hidden="true"
-            />          </button>
-          {policiesOpen && (
-            <ul className="product-info-panel__policy-list">
-              {product.policies.map((policy) => (
-                <li key={policy.text} className="product-info-panel__policy-item">
-                  <span className="product-info-panel__policy-icon" aria-hidden="true">
-                    {policy.icon}
-                  </span>
-                  <span className="product-info-panel__policy-text">{policy.text}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+
 
       <div className="product-info-panel__row product-info-panel__row--variant">
         <span className="product-info-panel__label">Hàng Hóa</span>
