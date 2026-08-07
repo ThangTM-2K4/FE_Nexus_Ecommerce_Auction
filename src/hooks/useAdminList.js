@@ -1,5 +1,33 @@
 import { useCallback, useMemo, useState } from "react";
 
+const matchesValue = (itemVal, filterVal) => {
+  if (itemVal === filterVal) return true;
+  if (!itemVal || !filterVal) return false;
+  
+  const normItem = String(itemVal).toLowerCase();
+  const normFilter = String(filterVal).toLowerCase();
+  
+  if (normItem === normFilter) return true;
+  
+  if (normFilter === "hoạt động" || normFilter === "active" || normFilter === "approved") {
+    return normItem === "active" || normItem === "approved" || normItem === "hoạt động";
+  }
+  
+  if (normFilter === "chờ duyệt" || normFilter === "pending" || normFilter === "draft" || normFilter === "bản nháp") {
+    return normItem.includes("chờ") || normItem.includes("pending") || normItem.includes("draft") || normItem.includes("nháp") || normItem.includes("submit");
+  }
+
+  if (normFilter === "tắt" || normFilter === "ẩn" || normFilter === "inactive") {
+    return normItem === "tắt" || normItem === "ẩn" || normItem === "inactive";
+  }
+
+  if (normFilter === "đã khóa" || normFilter === "tạm khóa" || normFilter === "locked" || normFilter === "suspended") {
+    return normItem.includes("khóa") || normItem.includes("lock") || normItem.includes("suspend");
+  }
+  
+  return normItem.includes(normFilter) || normFilter.includes(normItem);
+};
+
 export const useAdminList = (initialData, searchKeys = []) => {
   const [items, setItems] = useState(initialData);
   const [search, setSearch] = useState("");
@@ -19,7 +47,7 @@ export const useAdminList = (initialData, searchKeys = []) => {
 
     Object.entries(filter).forEach(([key, value]) => {
       if (value) {
-        result = result.filter((item) => item[key] === value);
+        result = result.filter((item) => matchesValue(item[key], value));
       }
     });
 
