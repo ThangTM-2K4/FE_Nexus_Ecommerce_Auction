@@ -136,12 +136,13 @@ export async function getProductById(productId, scope = 'public') {
   const path = `${BUYER_LIST_PATH}/${productId}`;
 
   try {
-    const { data } = await api.get(path, { params: { scope } });
+    const { data } = await api.get(path, { params: { scope }, skipErrorRedirect: true });
     return {
       ok: true,
       data: unwrapData(data),
       status: 200,
     };
+
   } catch (error) {
     return {
       ok: false,
