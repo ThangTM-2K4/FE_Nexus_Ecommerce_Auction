@@ -1,3 +1,5 @@
+import api from '../config/api';
+import { unwrapData } from '../utils/apiResponse';
 import { MOCK_ORDERS } from '../data/mockOrders';
 import { mockDelay } from './mockDelay';
 
@@ -59,7 +61,7 @@ export const createOrder = async (userId, orderData) => {
   const newOrder = {
     id: `ORD-${Date.now()}`,
     shopName,
-    status: 'cho_xac_nhan',
+    status: orderData.paymentMethod === 'vnpay' ? 'pending_payment' : 'cho_xac_nhan',
     total: orderData.totalPrice,
     subtotal: orderData.subtotal,
     shippingFee: orderData.shippingFee,
@@ -82,3 +84,71 @@ export const createOrder = async (userId, orderData) => {
   save(userId, list);
   return newOrder;
 };
+
+/**
+ * Khởi tạo thanh toán VNPAY trực tiếp qua API backend và chuyển hướng người dùng sang trang thanh toán VNPay
+ */
+export async function initiateVnPayPayment(orderId, amount) {
+  const returnUrl = `${window.location.origin}/profile/orders?status=cho_xac_nhan&payment=success`;
+  const cancelUrl = `${window.location.origin}/profile/orders?status=pending_payment&payment=cancel`;
+  const idempotencyKey = `vnpay-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+  try {
+    // 1. Thử gọi API thanh toán đơn hàng POST /api/v1/orders/{orderId}/payments
+    const { data } = await api.post(
+      `/orders/${orderId}/payments`,
+      {
+        provider: 'VNPAY',
+        paymentMethod: 'VNPAY_QR',
+        returnUrl,
+        cancelUrl,
+      },
+      {
+        headers: { 'Idempotency-Key': idempotencyKey },
+      }
+    );
+    const result = unwrapData(data);
+    const paymentUrl = result?.paymentUrl || result?.checkoutUrl || result?.redirectUrl || result?.url;
+    if (paymentUrl) return paymentUrl;
+  } catch (err) {
+    console.warn('API /orders/{id}/payments failed, trying fallback topup payment endpoint...', err);
+  }
+
+  try {
+    // 2. Thử gọi API /wallets/top-ups cho VNPay
+    const { data } = await api.post(
+      `/wallets/top-ups`,
+      {
+        amount: amount || 50000,
+        provider: 'VNPAY',
+        walletType: 'BUYER',
+      },
+      {
+        headers: { 'Idempotency-Key': idempotencyKey },
+      }
+    );
+    const result = unwrapData(data);
+    const paymentUrl = result?.checkoutUrl || result?.paymentUrl || result?.vnpUrl || result?.redirectUrl;
+    if (paymentUrl) return paymentUrl;
+  } catch (err) {
+    console.warn('Fallback /wallets/top-ups failed:', err);
+  }
+
+  // 3. Chuyển sang Cổng VNPay Sandbox
+  const vnpaySandboxHost = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
+  const queryParams = new URLSearchParams({
+    vnp_Version: '2.1.0',
+    vnp_Command: 'pay',
+    vnp_TmnCode: 'NEXUS001',
+    vnp_Amount: String((amount || 100000) * 100),
+    vnp_CurrCode: 'VND',
+    vnp_TxnRef: String(orderId || Date.now()),
+    vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
+    vnp_OrderType: 'other',
+    vnp_Locale: 'vn',
+    vnp_ReturnUrl: returnUrl,
+  });
+
+  return `${vnpaySandboxHost}?${queryParams.toString()}`;
+}
+

@@ -85,7 +85,7 @@ export default function CheckoutPage() {
 
     setPlacing(true);
     try {
-      await createOrder({
+      const createdOrder = await createOrder({
         items: selectedItems,
         subtotal,
         shippingFee,
@@ -97,6 +97,21 @@ export default function CheckoutPage() {
       });
 
       removeItems(selectedItems.map((i) => i.id));
+
+      if (paymentMethod === 'vnpay') {
+        toast.info('Đang chuyển hướng sang Cổng thanh toán VNPay...');
+        const paymentUrl = await addressService.initiateVnPayPayment?.(createdOrder?.id, total) ||
+          await (async () => {
+            const { initiateVnPayPayment } = await import('@/services/orderService');
+            return initiateVnPayPayment(createdOrder?.id, total);
+          })();
+
+        if (paymentUrl) {
+          window.location.assign(paymentUrl);
+          return;
+        }
+      }
+
       toast.success('Đặt hàng thành công!');
       navigate('/profile/orders', { state: { status: 'cho_xac_nhan' } });
     } catch (err) {
@@ -105,6 +120,7 @@ export default function CheckoutPage() {
       setPlacing(false);
     }
   };
+
 
   if (selectedItems.length === 0) {
     return null;
