@@ -158,13 +158,16 @@ export async function getAdminProducts(params = {}) {
 
   let allItems = Array.from(map.values());
 
-  // Nạp bổ sung chi tiết ảnh nếu sản phẩm chưa có ảnh
+  // Nạp bổ sung chi tiết ảnh & SKUs/tồn kho nếu sản phẩm chưa có ảnh hoặc tồn kho bằng 0
   allItems = await Promise.all(
     allItems.map(async (item) => {
-      if (!item.image && (!item.images || item.images.length === 0)) {
+      let enriched = { ...item };
+      let currentStock = extractProductStock(enriched);
+
+      if (!enriched.image || currentStock === 0) {
         try {
           const { data } = await api.get(`/admin/products/${item.id}/review-detail`, { skipErrorRedirect: true });
-          const detail = data?.data || data;
+          const detail = unwrapData(data) || data?.data || data;
           if (detail) {
             const rawImgs = Array.isArray(detail.images)
               ? detail.images
@@ -172,15 +175,60 @@ export async function getAdminProducts(params = {}) {
                 ? detail.productImages
                 : [detail.imageUrl || detail.primaryImageUrl || detail.coverImageUrl || detail.storageObjectKey].filter(Boolean);
             const mappedImgs = rawImgs.map((img) => typeof img === "string" ? img : img?.imageUrl || img?.storageObjectKey).filter(Boolean);
-            if (mappedImgs.length > 0) {
-              return { ...item, image: mappedImgs[0], imageUrl: mappedImgs[0], images: mappedImgs };
+
+            if (mappedImgs.length > 0 && !enriched.image) {
+              enriched.image = mappedImgs[0];
+              enriched.imageUrl = mappedImgs[0];
+              enriched.images = mappedImgs;
+            }
+
+            if (Array.isArray(detail.skus) && detail.skus.length > 0) {
+              enriched.skus = detail.skus;
+            }
+            if (detail.stock != null && Number(detail.stock) > 0) enriched.stock = Number(detail.stock);
+            if (detail.quantity != null && Number(detail.quantity) > 0) enriched.quantity = Number(detail.quantity);
+            if (detail.stockQuantity != null && Number(detail.stockQuantity) > 0) enriched.stockQuantity = Number(detail.stockQuantity);
+
+            const detailStock = extractProductStock(detail);
+            if (detailStock > 0) {
+              enriched.stock = detailStock;
+              enriched.quantity = detailStock;
             }
           }
         } catch {
           /* ignore */
         }
       }
-      return item;
+
+      // Gọi tiếp API /ecommerce/products/{id}?scope=management nếu tồn kho vẫn bằng 0
+      if (extractProductStock(enriched) === 0) {
+        try {
+          const { data } = await api.get(`/ecommerce/products/${item.id}?scope=management`, { skipErrorRedirect: true });
+          const detail = unwrapData(data) || data?.data || data;
+          if (detail) {
+            if (Array.isArray(detail.skus) && detail.skus.length > 0) {
+              enriched.skus = detail.skus;
+            }
+            if (detail.stock != null && Number(detail.stock) > 0) enriched.stock = Number(detail.stock);
+            if (detail.quantity != null && Number(detail.quantity) > 0) enriched.quantity = Number(detail.quantity);
+
+            const detailStock = extractProductStock(detail);
+            if (detailStock > 0) {
+              enriched.stock = detailStock;
+              enriched.quantity = detailStock;
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+
+      const finalStock = extractProductStock(enriched);
+      return {
+        ...enriched,
+        stock: finalStock,
+        quantity: finalStock,
+      };
     })
   );
 
