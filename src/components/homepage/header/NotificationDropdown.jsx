@@ -8,17 +8,43 @@ const TYPE_LABELS = {
   system: "Hệ thống",
 };
 
+const NOTIFICATION_TRANSLATIONS = {
+  'Seller application approved.': 'Yêu cầu đăng ký người bán đã được phê duyệt.',
+  'Seller application submitted.': 'Hồ sơ đăng ký người bán đã được gửi.',
+  'Seller registration submitted.': 'Hồ sơ đăng ký người bán đã được gửi.',
+  'Phone verification code requested.': 'Đã gửi yêu cầu mã xác thực số điện thoại.',
+  'Account registration completed.': 'Đăng ký tài khoản thành công.',
+  'Seller application created.': 'Đã tạo hồ sơ đăng ký người bán.',
+  'Identity verification submitted.': 'Đã gửi xác thực danh tính.',
+  'Identity verification approved.': 'Xác thực danh tính đã được phê duyệt.',
+};
+
+function translateNotificationText(text) {
+  if (!text) return '';
+  const trimmed = String(text).trim();
+  if (NOTIFICATION_TRANSLATIONS[trimmed]) {
+    return NOTIFICATION_TRANSLATIONS[trimmed];
+  }
+  return trimmed
+    .replace(/^Seller application approved\.?/i, 'Yêu cầu đăng ký người bán đã được phê duyệt.')
+    .replace(/^Seller application submitted\.?/i, 'Hồ sơ đăng ký người bán đã được gửi.')
+    .replace(/^Seller registration submitted\.?/i, 'Hồ sơ đăng ký người bán đã được gửi.')
+    .replace(/^Phone verification code requested\.?/i, 'Đã gửi yêu cầu mã xác thực số điện thoại.')
+    .replace(/^Account registration completed\.?/i, 'Đăng ký tài khoản thành công.');
+}
+
 function normalizeNotification(item) {
   return {
     ...item,
     id: item.id ?? item.notificationId,
     type: String(item.type ?? item.notificationType ?? "system").toLowerCase(),
-    title: item.title ?? "Thông báo",
-    message: item.message ?? item.content ?? item.body ?? "",
+    title: translateNotificationText(item.title ?? "Thông báo"),
+    message: translateNotificationText(item.message ?? item.content ?? item.body ?? ""),
     read: item.isRead ?? item.read ?? false,
     createdAt: item.createdAt ?? item.sentAt ?? item.occurredAt,
   };
 }
+
 
 export default function NotificationDropdown({ onClose }) {
   const [notifications, setNotifications] = useState([]);
