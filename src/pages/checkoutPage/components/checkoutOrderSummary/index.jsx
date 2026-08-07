@@ -1,5 +1,4 @@
 import { formatPrice } from '@/utils/formatPrice';
-import Button from '@/components/common/button';
 import './index.scss';
 
 export default function CheckoutOrderSummary({
@@ -13,39 +12,33 @@ export default function CheckoutOrderSummary({
   const isDisabled = placing || disabled;
 
   return (
-    <>
-      <section className="checkout-order-summary">
-        <h2 className="checkout-order-summary__title">Tổng Kết Đơn Hàng</h2>
-        <div className="checkout-order-summary__row">
-          <span>Tiền hàng</span>
+    <section className="checkout-summary-card">
+      <h2 className="checkout-summary-card__title">Tóm tắt đơn hàng</h2>
+
+      <div className="checkout-summary-card__rows">
+        <div className="checkout-summary-card__row">
+          <span>Tổng tiền hàng</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
-        <div className="checkout-order-summary__row">
+        <div className="checkout-summary-card__row">
           <span>Phí vận chuyển</span>
-          <span>{formatPrice(shippingFee)}</span>
+          <span>{shippingFee ? formatPrice(shippingFee) : '-'}</span>
         </div>
-        <div className="checkout-order-summary__row checkout-order-summary__row--total">
+        <div className="checkout-summary-card__row checkout-summary-card__row--total">
           <span>Tổng thanh toán</span>
-          <strong>{formatPrice(total)}</strong>
-        </div>
-      </section>
-
-      <div className="checkout-summary-bar">
-        <div className="checkout-summary-bar__inner">
-          <div className="checkout-summary-bar__total">
-            <span>Tổng thanh toán</span>
-            <strong>{formatPrice(total)}</strong>
-          </div>
-          <Button
-            variant="accent"
-            onClick={onPlaceOrder}
-            disabled={isDisabled}
-            className="checkout-summary-bar__btn"
-          >
-            {placing ? 'Đang xử lý...' : 'Đặt Hàng'}
-          </Button>
+          <strong className="checkout-summary-card__total-amount">{formatPrice(total)}</strong>
         </div>
       </div>
-    </>
+
+      <button
+        type="button"
+        className="checkout-summary-card__submit-btn"
+        onClick={onPlaceOrder}
+        disabled={isDisabled}
+      >
+        {placing ? 'Đang xử lý...' : 'Đặt hàng'}
+      </button>
+    </section>
   );
 }
+
