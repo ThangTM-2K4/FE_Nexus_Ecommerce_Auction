@@ -85,8 +85,39 @@ export const createOrder = async (userId, orderData) => {
   return newOrder;
 };
 
+export const updateOrderStatus = async (userId, orderId, status) => {
+  const list = getStored(userId);
+  const updated = list.map((order) => {
+    if (order.id === orderId) {
+      return { ...order, status };
+    }
+    return order;
+  });
+  save(userId, updated);
+
+  // Also update MOCK_ORDERS in memory if present
+  const mockItem = MOCK_ORDERS.find((o) => o.id === orderId);
+  if (mockItem) {
+    mockItem.status = status;
+  }
+
+  return updated.find((o) => o.id === orderId);
+};
+
+export const markOrderPaid = async (userId, orderId) => {
+  return updateOrderStatus(userId, orderId, 'cho_xac_nhan');
+};
+
+export const payOrderWithWallet = async (userId, orderId, amount) => {
+  await mockDelay(300);
+  // Mark order as paid
+  await updateOrderStatus(userId, orderId, 'cho_xac_nhan');
+  return { success: true };
+};
+
 /**
- * Khởi tạo thanh toán VNPAY trực tiếp qua API backend và chuyển hướng người dùng sang trang thanh toán VNPay
+ * Khởi tạo thanh toán VNPAY trực tiếp cho đơn hàng qua API backend POST /api/v1/orders/{orderId}/payments
+ * và chuyển hướng người dùng sang trang thanh toán VNPay.
  */
 export async function initiateVnPayPayment(orderId, amount) {
   const returnUrl = `${window.location.origin}/profile/orders?payment_return=vnpay&vnp_ResponseCode=00&status=cho_xac_nhan&orderId=${orderId}`;
@@ -94,7 +125,7 @@ export async function initiateVnPayPayment(orderId, amount) {
   const idempotencyKey = `vnpay-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
   try {
-    // 1. Thử gọi API thanh toán đơn hàng POST /api/v1/orders/{orderId}/payments
+    // 1. Gọi API thanh toán đơn hàng POST /api/v1/orders/{orderId}/payments
     const { data } = await api.post(
       `/orders/${orderId}/payments`,
       {
@@ -111,36 +142,16 @@ export async function initiateVnPayPayment(orderId, amount) {
     const paymentUrl = result?.paymentUrl || result?.checkoutUrl || result?.redirectUrl || result?.url;
     if (paymentUrl) return paymentUrl;
   } catch (err) {
-    console.warn('API /orders/{id}/payments failed, trying fallback topup payment endpoint...', err);
+    console.warn('API /orders/{id}/payments not available or failed, redirecting to VNPay payment gateway...', err);
   }
 
-  try {
-    // 2. Thử gọi API /wallets/top-ups cho VNPay
-    const { data } = await api.post(
-      `/wallets/top-ups`,
-      {
-        amount: amount || 50000,
-        provider: 'VNPAY',
-        walletType: 'BUYER',
-      },
-      {
-        headers: { 'Idempotency-Key': idempotencyKey },
-      }
-    );
-    const result = unwrapData(data);
-    const paymentUrl = result?.checkoutUrl || result?.paymentUrl || result?.vnpUrl || result?.redirectUrl;
-    if (paymentUrl) return paymentUrl;
-  } catch (err) {
-    console.warn('Fallback /wallets/top-ups failed:', err);
-  }
-
-  // 3. Chuyển sang Cổng VNPay Sandbox
+  // 2. Chuyển sang Cổng VNPay Sandbox cho ĐƠN HÀNG (Không gọi nạp ví)
   const vnpaySandboxHost = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
   const queryParams = new URLSearchParams({
     vnp_Version: '2.1.0',
     vnp_Command: 'pay',
     vnp_TmnCode: 'NEXUS001',
-    vnp_Amount: String((amount || 100000) * 100),
+    vnp_Amount: String(Math.round((amount || 100000) * 100)),
     vnp_CurrCode: 'VND',
     vnp_TxnRef: String(orderId || Date.now()),
     vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
@@ -151,5 +162,6 @@ export async function initiateVnPayPayment(orderId, amount) {
 
   return `${vnpaySandboxHost}?${queryParams.toString()}`;
 }
+
 
 
