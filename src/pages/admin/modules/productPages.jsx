@@ -252,9 +252,127 @@ export const AdminProducts = () => {
       </AdminAnimatedView>
       <AdminModal open={!!detail} title="Chi tiết sản phẩm" onClose={() => setDetail(null)} wide>
         {detail && (
-          <dl className="adm-detail-grid">
-            {Object.entries(detail).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{String(v)}</dd></div>)}
-          </dl>
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "4px 0" }}>
+            {/* Header thông tin chính và ảnh */}
+            <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap", paddingBottom: "16px", borderBottom: "1px solid #f0f0f0" }}>
+              <div style={{ display: "flex", gap: "8px", overflowX: "auto" }}>
+                {Array.isArray(detail.images) && detail.images.length > 0 ? (
+                  detail.images.map((img, idx) => {
+                    const src = typeof img === "string" ? img : img?.imageUrl || img?.storageObjectKey;
+                    return (
+                      <img
+                        key={idx}
+                        src={src}
+                        alt=""
+                        style={{
+                          width: idx === 0 ? "90px" : "60px",
+                          height: idx === 0 ? "90px" : "60px",
+                          borderRadius: "10px",
+                          objectFit: "cover",
+                          border: "1px solid #e0e0e0",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
+                        }}
+                      />
+                    );
+                  })
+                ) : (
+                  <div style={{ width: "80px", height: "80px", borderRadius: "10px", background: "#f5f5f5", display: "grid", placeItems: "center", fontSize: "32px" }}>
+                    📦
+                  </div>
+                )}
+              </div>
+
+              <div style={{ flex: 1, minWidth: "260px" }}>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px", flexWrap: "wrap" }}>
+                  <span style={{ background: "#e8f5e9", color: "#2e7d32", fontWeight: 700, fontSize: "11px", padding: "4px 10px", borderRadius: "12px" }}>
+                    Trạng thái: {detail.status || "ACTIVE"}
+                  </span>
+                  <span style={{ background: detail.moderationStatus === "APPROVED" ? "#e8f5e9" : "#fff8e1", color: detail.moderationStatus === "APPROVED" ? "#2e7d32" : "#f57f17", fontWeight: 700, fontSize: "11px", padding: "4px 10px", borderRadius: "12px" }}>
+                    Kiểm duyệt: {detail.moderationStatus || "APPROVED"}
+                  </span>
+                  {detail.productCode && (
+                    <span style={{ background: "#f0f4f8", color: "#334e68", fontWeight: 600, fontSize: "11px", padding: "4px 10px", borderRadius: "12px" }}>
+                      Mã: {detail.productCode}
+                    </span>
+                  )}
+                </div>
+
+                <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#1e1b4b", margin: "0 0 6px 0" }}>
+                  {detail.name || detail.productName || "Sản phẩm chưa đặt tên"}
+                </h3>
+
+                <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
+                  Danh mục: <strong style={{ color: "#334155" }}>{detail.categoryName || detail.category || "—"}</strong> · Người bán ID: <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", fontSize: "11px" }}>{detail.sellerUserId || detail.seller || "—"}</code>
+                </p>
+              </div>
+            </div>
+
+            {/* Mô tả sản phẩm */}
+            {detail.description && (
+              <div style={{ background: "#f8fafc", padding: "14px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <h4 style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 6px 0" }}>
+                  Mô tả sản phẩm
+                </h4>
+                <p style={{ fontSize: "13px", color: "#334155", margin: 0, lineHeight: 1.6, whiteSpace: "pre-line" }}>
+                  {detail.description}
+                </p>
+              </div>
+            )}
+
+            {/* Bảng phiên bản / SKUs */}
+            <div>
+              <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#1e1b4b", margin: "0 0 10px 0" }}>
+                Danh sách phiên bản / SKUs ({Array.isArray(detail.skus) ? detail.skus.length : 0})
+              </h4>
+              {Array.isArray(detail.skus) && detail.skus.length > 0 ? (
+                <div style={{ overflowX: "auto", border: "1px solid #e2e8f0", borderRadius: "10px" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                    <thead>
+                      <tr style={{ background: "#f1f5f9", textAlign: "left", color: "#475569", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        <th style={{ padding: "10px 14px" }}>Mã SKU</th>
+                        <th style={{ padding: "10px 14px" }}>Tên phiên bản</th>
+                        <th style={{ padding: "10px 14px" }}>Giá bán</th>
+                        <th style={{ padding: "10px 14px" }}>Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.skus.map((sku, i) => (
+                        <tr key={sku.skuId || i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "10px 14px", fontWeight: 600, fontFamily: "monospace" }}>{sku.skuCode || "—"}</td>
+                          <td style={{ padding: "10px 14px" }}>{sku.skuName || detail.name || "Mặc định"}</td>
+                          <td style={{ padding: "10px 14px", fontWeight: 700, color: "#6b3ba7" }}>
+                            {Number(sku.price || sku.unitPrice || 0).toLocaleString("vi-VN")}đ
+                          </td>
+                          <td style={{ padding: "10px 14px" }}>
+                            <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "8px", background: sku.status === "ACTIVE" ? "#e8f5e9" : "#f5f5f5", color: sku.status === "ACTIVE" ? "#2e7d32" : "#666" }}>
+                              {sku.status || "ACTIVE"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ padding: "12px 16px", background: "#f8fafc", borderRadius: "8px", fontSize: "13px", color: "#64748b" }}>
+                  Giá bán sản phẩm: <strong style={{ color: "#6b3ba7", fontSize: "15px" }}>{Number(detail.price || detail.minPrice || 0).toLocaleString("vi-VN")}đ</strong>
+                </div>
+              )}
+            </div>
+
+            {/* Thông tin kỹ thuật và metadata */}
+            <div style={{ background: "#fafafa", padding: "14px 16px", borderRadius: "10px", border: "1px solid #f0f0f0", fontSize: "12px" }}>
+              <h4 style={{ fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px 0" }}>
+                Thông tin hệ thống & Thời gian
+              </h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px", color: "#64748b" }}>
+                <div><strong>Product ID:</strong> <code style={{ fontSize: "11px" }}>{detail.productId || detail.id}</code></div>
+                <div><strong>Kênh bán:</strong> {detail.salesChannel || "ECOMMERCE"}</div>
+                <div><strong>Ngày tạo:</strong> {detail.createdAtUtc || detail.createdAt ? new Date(detail.createdAtUtc || detail.createdAt).toLocaleString("vi-VN") : "Hôm nay"}</div>
+                <div><strong>Phiên bản gửi duyệt:</strong> #{detail.submissionVersion || 1}</div>
+              </div>
+            </div>
+          </div>
         )}
       </AdminModal>
     </div>
