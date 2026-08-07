@@ -5,7 +5,7 @@ import HeroSection from '../../../components/homepage/heroSection';
 import CategoryGrid from '../../../components/homepage/categoryGrid';
 import ProductGrid from '../../../components/homepage/productGrid';
 import { bannerLeftImages, bannerRightImages } from '../../../data/mockBanners';
-import { getCategoryTree, mapProductListItem } from '../../../services/catalogService';
+import { getCategoryTree, mapProductListItem, resolveProductId, productIdsMatch } from '../../../services/catalogService';
 import { getProducts } from '../../../services/ecommerceProductService';
 import { useProductNavigate } from '../../../hooks/useProductNavigate';
 import './index.scss';
@@ -17,6 +17,7 @@ export default function HomePage() {
   const { handleProductClick } = useProductNavigate();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
+  const [rawProducts, setRawProducts] = useState([]);
   const [extraProducts, setExtraProducts] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -40,8 +41,11 @@ export default function HomePage() {
       setCategories(Array.isArray(categoryResult) ? categoryResult : []);
 
       if (productResult.ok) {
-        setProducts((productResult.items || []).map(mapProductListItem).filter(Boolean));
+        const items = productResult.items || [];
+        setRawProducts(items);
+        setProducts(items.map(mapProductListItem).filter((p) => p?.id));
       } else {
+        setRawProducts([]);
         setProducts([]);
         setLoadError(productResult.error || 'Không tải được sản phẩm');
       }
@@ -62,8 +66,11 @@ export default function HomePage() {
     try {
       const res = await getProducts({ categoryId: cat.id, pageSize: INITIAL_PAGE_SIZE });
       if (res.ok) {
-        setProducts((res.items || []).map(mapProductListItem).filter(Boolean));
+        const items = res.items || [];
+        setRawProducts(items);
+        setProducts(items.map(mapProductListItem).filter((p) => p?.id));
       } else {
+        setRawProducts([]);
         setProducts([]);
       }
     } catch {
@@ -84,7 +91,9 @@ export default function HomePage() {
     setLoadError(null);
     const res = await getProducts({ pageNumber: 1, pageSize: INITIAL_PAGE_SIZE });
     if (res.ok) {
-      setProducts((res.items || []).map(mapProductListItem).filter(Boolean));
+      const items = res.items || [];
+      setRawProducts(items);
+      setProducts(items.map(mapProductListItem).filter((p) => p?.id));
     }
     setLoading(false);
   }, []);
@@ -98,9 +107,11 @@ export default function HomePage() {
     const res = await getProducts(params);
 
     if (res.ok) {
+      const items = res.items || [];
+      setRawProducts((prev) => [...prev, ...items]);
       setExtraProducts((prev) => [
         ...prev,
-        ...(res.items || []).map(mapProductListItem).filter(Boolean),
+        ...items.map(mapProductListItem).filter((p) => p?.id),
       ]);
       setPageNumber(nextPage);
     }
@@ -112,6 +123,15 @@ export default function HomePage() {
       onClick: () => handleSelectCategory(cat),
     }));
   }, [categories, handleSelectCategory]);
+
+  const handleProductCardClick = useCallback(
+    (product) => {
+      const productId = resolveProductId(product);
+      const raw = rawProducts.find((item) => productIdsMatch(resolveProductId(item), productId));
+      handleProductClick(product, raw);
+    },
+    [rawProducts, handleProductClick],
+  );
 
   return (
     <>
@@ -173,7 +193,7 @@ export default function HomePage() {
                 columns={6}
                 rows={8}
                 onLoadMore={handleLoadMore}
-                onProductClick={handleProductClick}
+                onProductClick={handleProductCardClick}
               />
             )}
           </div>

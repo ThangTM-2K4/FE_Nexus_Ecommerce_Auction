@@ -70,6 +70,154 @@ export async function getSellerBusinessName(sellerUserId) {
   }
 }
 
+const DEFAULT_SHOP_AVATAR =
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80';
+
+/** Tìm bản ghi seller từ API theo userId / sellerId (GUID). */
+export async function findSellerRecordById(sellerOrUserId) {
+  const target = String(sellerOrUserId || '').trim().toLowerCase();
+  if (!target) return null;
+
+  const directPaths = [
+    `/sellers/${sellerOrUserId}`,
+    `/sellers/user/${sellerOrUserId}`,
+    `/sellers/public/${sellerOrUserId}`,
+  ];
+
+  for (const path of directPaths) {
+    try {
+      const { data } = await api.get(path, { skipErrorRedirect: true });
+      const seller = unwrapData(data);
+      if (seller && typeof seller === 'object') return seller;
+    } catch {
+      /* thử path tiếp theo */
+    }
+  }
+
+  const keywords = ['Shop', 'a', 'e', 'o', 'u'];
+  for (const kw of keywords) {
+    try {
+      const { data } = await api.get('/sellers/search', {
+        params: { keyword: kw, page: 1, pageSize: 100 },
+        skipErrorRedirect: true,
+      });
+      const payload = unwrapData(data) || data;
+      const items = payload?.items || (Array.isArray(payload) ? payload : []);
+      const matched = items.find((s) => {
+        const uId = String(s.userId || s.UserId || '').toLowerCase().trim();
+        const sId = String(s.sellerId || s.SellerId || s.id || '').toLowerCase().trim();
+        return uId === target || sId === target;
+      });
+      if (matched) return matched;
+    } catch {
+      /* keyword tiếp theo */
+    }
+  }
+
+  return null;
+}
+
+/** Avatar shop: ưu tiên API → logo seller đã lưu local → mặc định. */
+export function resolveSellerAvatar(seller, userId) {
+  const fromApi =
+    seller?.avatarUrl ||
+    seller?.logoUrl ||
+    seller?.shopAvatarUrl ||
+    seller?.profileImageUrl ||
+    seller?.avatar ||
+    seller?.logo;
+
+  if (fromApi) {
+    const resolved = resolveImageUrl(fromApi);
+    return resolved || fromApi;
+  }
+
+  if (userId) {
+    try {
+      const raw = localStorage.getItem(`mockSellerShopProfile_${userId}`);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved?.logo) return saved.logo;
+        if (saved?.avatar) return saved.avatar;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return DEFAULT_SHOP_AVATAR;
+}
+
+/** Hồ sơ shop công khai cho /shop/:shopId — mock shop-1 hoặc seller thật từ API. */
+export async function resolvePublicShopProfile(shopId, mockShopResolver) {
+  const normalizedId = String(shopId || '').trim();
+  if (!normalizedId) return null;
+
+  if (typeof mockShopResolver === 'function') {
+    const mockShop = mockShopResolver(normalizedId);
+    if (mockShop) return mockShop;
+  }
+
+  const seller = await findSellerRecordById(normalizedId);
+  const ownerUserId = seller?.userId || seller?.UserId || normalizedId;
+  const businessName =
+    seller?.businessName ||
+    seller?.BusinessName ||
+    seller?.shopName ||
+    seller?.ShopName ||
+    (await getSellerBusinessName(normalizedId)) ||
+    `Shop ${normalizedId.substring(0, 8).toUpperCase()}`;
+
+  return {
+    id: normalizedId,
+    name: businessName,
+    avatar: resolveSellerAvatar(seller, ownerUserId),
+    isOnline: true,
+    lastOnline: 'Online vài phút trước',
+    isMall: Boolean(seller?.isMall ?? seller?.IsMall),
+    badge: seller?.badge || seller?.Badge || 'Nexus Mall',
+    addressMasked: seller?.address || seller?.Address || 'Việt Nam',
+    companyMasked: businessName,
+    stats: {
+      products: String(seller?.productCount ?? seller?.ProductCount ?? '—'),
+      following: '—',
+      chatResponseRate: '98%',
+      followers: '—',
+      rating: '4.9',
+      reviewCount: '—',
+      joined: '—',
+      address: seller?.address || seller?.Address || 'Việt Nam',
+      company: businessName,
+    },
+  };
+}
+
+/** Map sản phẩm API → format catalog ShopProfilePage dùng. */
+export function mapApiItemsToShopCatalog(rawItems, shopId) {
+  const items = Array.isArray(rawItems) ? rawItems : [];
+
+  return items
+    .filter((item) => productIdsMatch(item.sellerUserId || item.sellerId || item.shopId, shopId))
+    .map((item, index) => {
+      const card = mapProductListItem(item);
+      if (!card?.id) return null;
+
+      return {
+        ...card,
+        shopId,
+        categoryId: item.categoryId || item.category?.id || null,
+        rating: card.rating ?? 5,
+        soldNumeric: Number(item.soldCount ?? item.sold ?? index * 10 + 1),
+        monthlySold: card.soldCount || '—',
+        popularity: Math.max(1, 100 - index),
+        createdAt: Date.now() - index * 86400000,
+        isSuggested: index < 6,
+        isBestSeller: index < 6,
+      };
+    })
+    .filter(Boolean);
+}
+
 
 
 const CATEGORY_ICONS = [
@@ -80,6 +228,84 @@ const CATEGORY_ICONS = [
 ];
 
 const DEFAULT_PRODUCT_IMAGE = '/images/products/electronics/iphone.jpg';
+
+/** Lấy ID sản phẩm thống nhất — ưu tiên productId (field backend ecommerce). */
+export function resolveProductId(item) {
+  if (item == null) return null;
+  if (typeof item === 'string' || typeof item === 'number') {
+    const str = String(item).trim();
+    return str || null;
+  }
+
+  const candidates = [
+    item.productId,
+    item.ProductId,
+    item.id,
+    item.Id,
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate != null && String(candidate).trim() !== '') {
+      return String(candidate).trim();
+    }
+  }
+
+  return null;
+}
+
+export function productIdsMatch(left, right) {
+  if (left == null || right == null) return false;
+  return String(left).trim().toLowerCase() === String(right).trim().toLowerCase();
+}
+
+/** Lọc sản phẩm cùng shop / cùng danh mục từ raw API items → card cho ProductGrid */
+export function buildRelatedProductLists(rawItems, currentProduct) {
+  const items = Array.isArray(rawItems) ? rawItems : [];
+  const currentId = resolveProductId(currentProduct);
+  const currentSellerId =
+    currentProduct?.sellerUserId ||
+    currentProduct?.shop?.id ||
+    currentProduct?.shopId ||
+    null;
+  const currentCategoryId = currentProduct?.categoryId || null;
+  const currentCategoryName =
+    currentProduct?.categoryName ||
+    currentProduct?.category?.[1]?.label ||
+    null;
+
+  const others = items.filter((item) => {
+    const itemId = resolveProductId(item);
+    if (!currentId) return Boolean(itemId);
+    return itemId && !productIdsMatch(itemId, currentId);
+  });
+
+  const sellerItems = others.filter((item) => {
+    const sellerId = item.sellerUserId || item.sellerId || item.shopId || item.shop?.id;
+    return currentSellerId && productIdsMatch(sellerId, currentSellerId);
+  });
+
+  const categoryItems = others.filter((item) => {
+    const catId = item.categoryId || item.category?.id;
+    const catName = item.categoryName || item.category?.name;
+    if (currentCategoryId && catId && productIdsMatch(catId, currentCategoryId)) return true;
+    if (
+      currentCategoryName &&
+      catName &&
+      String(catName).trim().toLowerCase() === String(currentCategoryName).trim().toLowerCase()
+    ) {
+      return true;
+    }
+    return false;
+  });
+
+  const toCards = (list) =>
+    list.map(mapProductListItem).filter((p) => p?.id);
+
+  return {
+    shop: toCards(sellerItems.length > 0 ? sellerItems : others),
+    similar: toCards(categoryItems.length > 0 ? categoryItems : [...others].reverse()),
+  };
+}
 
 const CATEGORY_IMAGE_BY_NAME = {
   'điện thoại': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&q=80',
@@ -200,7 +426,7 @@ export function mapProductListItem(item) {
   const priceVal = item.price ?? item.minPrice ?? item.unitPrice ?? item.skuMinPrice ?? item.skus?.[0]?.price ?? 0;
 
   return {
-    id: item.id ?? item.productId,
+    id: resolveProductId(item),
     image: finalImage,
     title: finalTitle,
     price: Number(priceVal) || 0,
@@ -208,6 +434,10 @@ export function mapProductListItem(item) {
     soldCount: formatSoldCount(item.soldCount ?? item.sold ?? item.totalSold),
     tags: Array.isArray(item.tags) ? item.tags : [],
     rating: item.rating ?? item.averageRating ?? 5.0,
+    sellerUserId: item.sellerUserId || item.sellerId || item.shopId || null,
+    shopId: item.shopId || item.sellerId || item.sellerUserId || null,
+    categoryId: item.categoryId || item.category?.id || null,
+    categoryName: item.categoryName || item.category?.name || null,
   };
 }
 
@@ -225,6 +455,12 @@ export function mapProductDetailToUi(rawItem, defaults = {}) {
   const item = rawItem?.data || rawItem;
   if (!item || typeof item !== 'object') return defaults;
 
+  const productTitle =
+    item.productName ||
+    item.name ||
+    item.title ||
+    defaults.title ||
+    'Sản phẩm E-Commerce';
 
   const base = {
     gallery: [],
@@ -398,8 +634,12 @@ export function mapProductDetailToUi(rawItem, defaults = {}) {
 
   return {
     ...base,
-    id: item.id ?? item.productId ?? base.id,
+    id: resolveProductId(item) ?? base.id,
     title: productTitle,
+    sellerUserId: item.sellerUserId || item.sellerId || item.shopId || shopObj.id,
+    shopId: item.shopId || item.sellerId || item.sellerUserId || shopObj.id,
+    categoryId: item.categoryId || item.category?.id || null,
+    categoryName,
     badge: item.badge ?? base.badge ?? null,
     rating,
     reviewCount,

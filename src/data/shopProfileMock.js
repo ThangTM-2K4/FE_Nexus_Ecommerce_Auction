@@ -131,12 +131,14 @@ export function getShopCategories() {
   return shopCategories;
 }
 
-export function getSuggestedProducts(shopId, limit = 6) {
-  return getAllShopProducts().filter((p) => p.shopId === shopId && p.isSuggested).slice(0, limit);
+export function getSuggestedProducts(shopId, limit = 6, productsSource = null) {
+  const source = productsSource || getAllShopProducts();
+  return source.filter((p) => p.shopId === shopId && p.isSuggested).slice(0, limit);
 }
 
-export function getBestSellerProducts(shopId, limit = 6) {
-  return getAllShopProducts()
+export function getBestSellerProducts(shopId, limit = 6, productsSource = null) {
+  const source = productsSource || getAllShopProducts();
+  return source
     .filter((p) => p.shopId === shopId && p.isBestSeller)
     .sort((a, b) => b.soldNumeric - a.soldNumeric)
     .slice(0, limit);
@@ -151,10 +153,13 @@ const PRICE_RANGES = {
 
 export function filterShopProducts(
   products,
-  { categoryId = null, sortBy = 'popular', priceFilter = 'all' } = {},
+  { shopId = SHOP_ID, categoryId = null, sortBy = 'popular', priceFilter = 'all' } = {},
 ) {
   const source = Array.isArray(products) && products.length > 0 ? products : getAllShopProducts();
-  let list = source.filter((p) => p.shopId === SHOP_ID);
+  const normalizedShopId = shopId || SHOP_ID;
+  let list = source.filter(
+    (p) => String(p.shopId || '').toLowerCase() === String(normalizedShopId).toLowerCase(),
+  );
 
   if (categoryId) {
     list = list.filter((p) => p.categoryId === categoryId);

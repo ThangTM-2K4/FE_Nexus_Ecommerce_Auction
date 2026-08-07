@@ -12,7 +12,9 @@ export default function ShopInfoCard({ shop }) {
   const handleViewShop = () => {
     if (shop.id) {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      navigate(`/shop/${shop.id}`);
+      navigate(`/shop/${encodeURIComponent(shop.id)}`, {
+        state: { shopPreview: shop },
+      });
     }
   };
 

@@ -44,7 +44,15 @@ export default function ShopHeader({ shop, isFollowing, onToggleFollow, onChat }
     <header className="shop-header">
       <div className="shop-header__main">
         <div className="shop-header__identity">
-          <img src={shop.avatar} alt={shop.name} className="shop-header__avatar" />
+          <img
+            src={shop.avatar}
+            alt={shop.name}
+            className="shop-header__avatar"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80';
+            }}
+          />
           <div className="shop-header__meta">
             <div className="shop-header__name-row">
               <h1 className="shop-header__name">{shop.name}</h1>

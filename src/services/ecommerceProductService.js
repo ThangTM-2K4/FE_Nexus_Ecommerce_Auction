@@ -133,24 +133,38 @@ export async function getProductById(productId, scope = 'public') {
     };
   }
 
-  const path = `${BUYER_LIST_PATH}/${productId}`;
+  const normalizedId = String(productId).trim();
+  const attempts = [
+    { path: `${BUYER_LIST_PATH}/${normalizedId}`, params: undefined },
+    { path: `${BUYER_LIST_PATH}/${normalizedId}`, params: { scope } },
+    { path: `/products/${normalizedId}`, params: undefined },
+  ];
 
-  try {
-    const { data } = await api.get(path, { params: { scope }, skipErrorRedirect: true });
-    return {
-      ok: true,
-      data: unwrapData(data),
-      status: 200,
-    };
-
-  } catch (error) {
-    return {
-      ok: false,
-      data: null,
-      error: getApiErrorMessage(error, 'Không tải được chi tiết sản phẩm'),
-      status: error?.response?.status ?? 0,
-    };
+  for (const attempt of attempts) {
+    try {
+      const { data } = await api.get(attempt.path, {
+        params: attempt.params,
+        skipErrorRedirect: true,
+      });
+      const unwrapped = unwrapData(data);
+      if (unwrapped && typeof unwrapped === 'object') {
+        return {
+          ok: true,
+          data: unwrapped,
+          status: 200,
+        };
+      }
+    } catch {
+      // thử endpoint/scope tiếp theo
+    }
   }
+
+  return {
+    ok: false,
+    data: null,
+    error: 'Không tải được chi tiết sản phẩm',
+    status: 404,
+  };
 }
 
 /** Trang người mua công khai — scope="public", không bắt buộc token */

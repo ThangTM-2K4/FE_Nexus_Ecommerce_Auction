@@ -15,13 +15,25 @@ export default function ProductCard({
   rating = 4.9,
   tags = [],
   onClick,
+  ...rest
 }) {
   const displayTitle = title || name || "Sản phẩm";
   const displayRating = rating ?? 4.9;
   const displaySoldCount = soldCount ?? "1.2k";
 
   const handleClick = () => {
-    onClick?.(id);
+    onClick?.({
+      id,
+      image,
+      title: displayTitle,
+      name,
+      price,
+      discountPercent,
+      soldCount: displaySoldCount,
+      rating: displayRating,
+      tags,
+      ...rest,
+    });
   };
 
   const handleKeyDown = (event) => {

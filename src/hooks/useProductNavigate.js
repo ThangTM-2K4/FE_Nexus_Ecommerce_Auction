@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { resolveProductId } from '../services/catalogService';
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -14,9 +15,24 @@ export function useProductNavigate() {
   const { isAuthenticated } = useAuth();
 
   const handleProductClick = useCallback(
-    (id) => {
+    (productOrId, rawProduct = null) => {
       scrollToTop();
-      navigate(`/product/${id}`);
+
+      const product = typeof productOrId === 'object' && productOrId !== null
+        ? productOrId
+        : { id: productOrId };
+
+      const productId = resolveProductId(product);
+      if (!productId) {
+        console.warn('[useProductNavigate] Không xác định được productId', productOrId);
+        return;
+      }
+
+      navigate(`/product/${encodeURIComponent(productId)}`, {
+        state: {
+          productPreview: rawProduct || product,
+        },
+      });
     },
     [navigate],
   );

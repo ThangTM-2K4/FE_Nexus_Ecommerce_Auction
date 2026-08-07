@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FiChevronRight, FiChevronDown } from 'react-icons/fi';
 import ProductCard from '../productCard';
 import styles from './index.module.scss';
@@ -19,7 +19,8 @@ export default function ProductGrid({
   viewAllLabel,
   onViewAll,
 }) {
-  const initialPageSize = columns * rows; // Default 18 products
+  const initialPageSize = columns * rows;
+  const loadMoreStep = initialPageSize || 18;
   const [visibleCount, setVisibleCount] = useState(initialPageSize);
 
   const allProducts = useMemo(
@@ -27,11 +28,18 @@ export default function ProductGrid({
     [products, extraProducts],
   );
 
+  useEffect(() => {
+    setVisibleCount(initialPageSize);
+  }, [products, initialPageSize]);
+
   const visibleProducts = allProducts.slice(0, visibleCount);
+  const canRevealMore = visibleCount < allProducts.length;
+  const showLoadMoreButton = allProducts.length > 0 && (canRevealMore || Boolean(onLoadMore));
 
   const handleLoadMore = () => {
-    if (visibleCount < allProducts.length) {
-      setVisibleCount((prev) => prev + 18);
+    if (canRevealMore) {
+      setVisibleCount((prev) => prev + loadMoreStep);
+      return;
     }
     if (onLoadMore) {
       onLoadMore();
@@ -56,33 +64,35 @@ export default function ProductGrid({
         ))}
       </div>
 
-      <div className={styles.actions} style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', marginBottom: '16px' }}>
-        <button
-          type="button"
-          className={styles.btnLoadMore}
-          onClick={handleLoadMore}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            minWidth: '240px',
-            padding: '12px 36px',
-            borderRadius: '8px',
-            border: '1.5px solid #6b3ba7',
-            background: '#ffffff',
-            color: '#6b3ba7',
-            fontSize: '0.95rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(107, 59, 167, 0.08)',
-            transition: 'all 0.25s ease',
-          }}
-        >
-          <span>Xem thêm sản phẩm</span>
-          <FiChevronDown style={{ fontSize: '1.1rem' }} />
-        </button>
-      </div>
+      {showLoadMoreButton && (
+        <div className={styles.actions} style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', marginBottom: '16px' }}>
+          <button
+            type="button"
+            className={styles.btnLoadMore}
+            onClick={handleLoadMore}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              minWidth: '240px',
+              padding: '12px 36px',
+              borderRadius: '8px',
+              border: '1.5px solid #6b3ba7',
+              background: '#ffffff',
+              color: '#6b3ba7',
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(107, 59, 167, 0.08)',
+              transition: 'all 0.25s ease',
+            }}
+          >
+            <span>Xem thêm sản phẩm</span>
+            <FiChevronDown style={{ fontSize: '1.1rem' }} />
+          </button>
+        </div>
+      )}
     </section>
   );
 }

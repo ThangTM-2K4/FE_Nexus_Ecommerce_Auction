@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import Header from '../../../components/homepage/header';
 import Footer from '../../../components/homepage/footer';
 import ProductGrid from '../../../components/homepage/productGrid';
@@ -12,8 +12,14 @@ import {
   getShopCategories,
   getSuggestedProducts,
   paginateProducts,
-  shopProducts,
+  shopProducts as mockShopProducts,
 } from '../../../data/shopProfileMock';
+import {
+  getProducts,
+  mapApiItemsToShopCatalog,
+  productIdsMatch,
+  resolvePublicShopProfile,
+} from '../../../services/catalogService';
 import ShopBestSeller from './shopBestSeller';
 import ShopCatalog from './shopCatalog';
 import ShopHeader from './shopHeader';
@@ -23,13 +29,19 @@ import './index.scss';
 const PAGE_SIZE = 15;
 
 export default function ShopProfilePage() {
-  const { shopId } = useParams();
+  const { shopId: rawShopId } = useParams();
+  const location = useLocation();
+  const shopId = decodeURIComponent(rawShopId || '').trim();
   const { handleProductClick } = useProductNavigate();
   const { openChat } = useChat();
   const catalogRef = useRef(null);
   const tabsRef = useRef(null);
 
-  const shop = getShopById(shopId);
+  const [shop, setShop] = useState(null);
+  const [shopLoading, setShopLoading] = useState(true);
+  const [shopError, setShopError] = useState(null);
+  const [catalogProducts, setCatalogProducts] = useState([]);
+
   const categories = getShopCategories();
 
   const [activeTab, setActiveTab] = useState('browse');
@@ -38,12 +50,99 @@ export default function ShopProfilePage() {
   const [priceFilter, setPriceFilter] = useState('all');
   const [page, setPage] = useState(1);
 
-  const suggested = useMemo(() => getSuggestedProducts(shopId), [shopId]);
-  const bestSellers = useMemo(() => getBestSellerProducts(shopId), [shopId]);
+  useEffect(() => {
+    let active = true;
+
+    async function loadShop() {
+      setShopLoading(true);
+      setShopError(null);
+      setShop(null);
+      setCatalogProducts([]);
+
+      if (!shopId) {
+        if (active) {
+          setShopError('Không xác định được shop');
+          setShopLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const profile = await resolvePublicShopProfile(shopId, getShopById);
+        if (!active) return;
+
+        if (!profile) {
+          setShopError('Không tìm thấy shop này');
+          setShopLoading(false);
+          return;
+        }
+
+        const preview = location.state?.shopPreview;
+        const mergedProfile =
+          preview && productIdsMatch(preview.id, shopId)
+            ? {
+                ...profile,
+                name: preview.name || profile.name,
+                avatar: preview.avatar || profile.avatar,
+              }
+            : profile;
+
+        setShop(mergedProfile);
+
+        const mockOnly = getShopById(shopId);
+        if (mockOnly) {
+          setCatalogProducts(mockShopProducts);
+          setShopLoading(false);
+          return;
+        }
+
+        const productRes = await getProducts({ pageSize: 100 });
+        if (!active) return;
+
+        if (productRes.ok && Array.isArray(productRes.items)) {
+          const mapped = mapApiItemsToShopCatalog(productRes.items, shopId);
+          setCatalogProducts(mapped);
+        } else {
+          setCatalogProducts([]);
+        }
+      } catch (err) {
+        console.error('[ShopProfilePage] loadShop failed', err);
+        if (active) {
+          setShopError('Không tải được thông tin shop');
+        }
+      } finally {
+        if (active) {
+          setShopLoading(false);
+        }
+      }
+    }
+
+    loadShop();
+
+    return () => {
+      active = false;
+    };
+  }, [shopId, location.state?.shopPreview]);
+
+  const suggested = useMemo(
+    () => getSuggestedProducts(shopId, 6, catalogProducts),
+    [shopId, catalogProducts],
+  );
+
+  const bestSellers = useMemo(
+    () => getBestSellerProducts(shopId, 6, catalogProducts),
+    [shopId, catalogProducts],
+  );
 
   const filteredProducts = useMemo(
-    () => filterShopProducts(shopProducts, { categoryId: activeCategory, sortBy, priceFilter }),
-    [activeCategory, sortBy, priceFilter],
+    () =>
+      filterShopProducts(catalogProducts, {
+        shopId,
+        categoryId: activeCategory,
+        sortBy,
+        priceFilter,
+      }),
+    [catalogProducts, shopId, activeCategory, sortBy, priceFilter],
   );
 
   const pagination = useMemo(
@@ -73,14 +172,11 @@ export default function ShopProfilePage() {
     [scrollToTabs],
   );
 
-  const handleCategoryChange = useCallback(
-    (categoryId) => {
-      setActiveCategory(categoryId);
-      setActiveTab(categoryId ? categoryId : 'all');
-      setPage(1);
-    },
-    [],
-  );
+  const handleCategoryChange = useCallback((categoryId) => {
+    setActiveCategory(categoryId);
+    setActiveTab(categoryId ? categoryId : 'all');
+    setPage(1);
+  }, []);
 
   const handleViewAllSuggested = useCallback(() => {
     setActiveTab('all');
@@ -97,8 +193,34 @@ export default function ShopProfilePage() {
     requestAnimationFrame(() => scrollToCatalog());
   }, [scrollToCatalog]);
 
-  if (!shop) {
-    return <Navigate to="/404" replace />;
+  if (shopLoading) {
+    return (
+      <>
+        <Header />
+        <main className="shop-profile-page">
+          <div className="shop-profile-page__shell">
+            <p style={{ textAlign: 'center', padding: '3rem 0' }}>Đang tải shop...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (shopError || !shop) {
+    return (
+      <>
+        <Header />
+        <main className="shop-profile-page">
+          <div className="shop-profile-page__shell">
+            <p style={{ textAlign: 'center', padding: '3rem 1rem', color: '#666' }}>
+              {shopError || 'Không tìm thấy shop này.'}
+            </p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
   }
 
   const showBrowseSections = activeTab === 'browse';
