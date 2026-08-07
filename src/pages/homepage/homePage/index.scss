@@ -6,8 +6,11 @@
 }
 
 .home-page__shell {
-  width: min(1560px, calc(100% - 32px));
+  width: 100%;
+  max-width: 100%;
+  padding: 0 24px;
   margin: 0 auto;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -41,7 +44,7 @@
   }
 
   .home-page__shell {
-    width: calc(100% - 24px);
+    padding: 0 16px;
     gap: 12px;
   }
 
@@ -52,28 +55,11 @@
 
 @include respond(mobile) {
   .home-page__shell {
-    width: calc(100% - 16px);
+    padding: 0 12px;
     gap: 10px;
   }
 
   .home-page__shell > #product-section {
     padding: 12px 10px;
-  }
-}
-
-@include respond(desktop-lg) {
-  .home-page__shell {
-    width: min(1560px, calc(100% - 32px));
-    gap: 22px;
-  }
-}
-
-@include respond(desktop-xl) {
-  .home-page {
-    padding: 20px 0 40px;
-  }
-
-  .home-page__shell {
-    width: min(1600px, calc(100% - 32px));
   }
 }

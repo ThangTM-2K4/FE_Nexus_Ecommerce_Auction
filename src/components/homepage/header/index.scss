@@ -9,11 +9,14 @@
 }
 
 .header-shell {
-  width: min(1560px, calc(100% - 32px));
+  width: 100%;
+  max-width: 100%;
+  padding: 0 24px;
   margin: 0 auto;
+  box-sizing: border-box;
 
   @include respond(mobile) {
-    width: calc(100% - 16px);
+    padding: 0 12px;
   }
 }
 
