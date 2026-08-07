@@ -377,16 +377,34 @@ const normalizeStatus = (status) => {
 
 export const resolveImageUrl = (img) => {
   if (!img) return '';
+  const isDirectPath = (str) =>
+    str.startsWith('http://') ||
+    str.startsWith('https://') ||
+    str.startsWith('data:') ||
+    str.startsWith('blob:') ||
+    str.startsWith('/images/') ||
+    str.startsWith('/catalog/') ||
+    str.startsWith('/api/') ||
+    str.startsWith('/');
+
   if (typeof img === 'string') {
-    if (img.startsWith('http')) return img;
-    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${img.replace(/^\//, '')}`;
+    const trimmed = img.trim();
+    if (!trimmed) return '';
+    if (isDirectPath(trimmed)) return trimmed;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${trimmed.replace(/^\//, '')}`;
   }
+
   const url = img.imageUrl || img.url || img.fileUrl || img.primaryImageUrl || img.coverImageUrl;
-  if (url && typeof url === 'string' && url.startsWith('http')) return url;
+  if (url && typeof url === 'string') {
+    const trimmedUrl = url.trim();
+    if (isDirectPath(trimmedUrl)) return trimmedUrl;
+  }
+
   const key = img.storageObjectKey || img.imageKey || img.key || url;
   if (key && typeof key === 'string') {
-    if (key.startsWith('http')) return key;
-    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${key.replace(/^\//, '')}`;
+    const trimmedKey = key.trim();
+    if (isDirectPath(trimmedKey)) return trimmedKey;
+    return `https://biddoubletk-media.sgp1.digitaloceanspaces.com/${trimmedKey.replace(/^\//, '')}`;
   }
   return '';
 };

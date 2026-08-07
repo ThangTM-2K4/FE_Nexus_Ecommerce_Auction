@@ -1,7 +1,7 @@
 import api from '../config/api';
 import { unwrapData, getApiErrorMessage } from '../utils/apiResponse';
 import { getCategories as fetchCategories } from './categoryService';
-import { getProducts, getProductById } from './ecommerceProductService';
+import { getProducts, getProductById, resolveImageUrl } from './ecommerceProductService';
 
 export { getApiErrorMessage, getProducts, getProductById };
 
@@ -105,17 +105,30 @@ export function mapCategoryItem(cat, index = 0) {
   };
 }
 
+const resolveProductDefaultImage = (item) => {
+  const name = String(item?.name || item?.productName || item?.title || item?.categoryName || item?.category?.name || '').toLowerCase();
+  for (const [key, url] of Object.entries(CATEGORY_IMAGE_BY_NAME)) {
+    if (name.includes(key)) {
+      return url;
+    }
+  }
+  return DEFAULT_PRODUCT_IMAGE;
+};
+
 /** Map item API → field ProductGrid / ProductCard cần */
 export function mapProductListItem(item) {
   if (!item) return null;
 
   const images = Array.isArray(item.images) ? item.images : [];
   const firstImage = images[0];
-  const imageUrl = typeof firstImage === 'string'
+  const rawUrl = typeof firstImage === 'string'
     ? firstImage
     : firstImage?.url || firstImage?.imageUrl;
 
-  const finalImage = item.imageUrl || item.primaryImageUrl || item.coverImageUrl || item.image || imageUrl || DEFAULT_PRODUCT_IMAGE;
+  const singleImg = item.imageUrl || item.primaryImageUrl || item.coverImageUrl || item.image || rawUrl;
+  const resolved = singleImg ? resolveImageUrl(singleImg) : '';
+
+  const finalImage = resolved || resolveProductDefaultImage(item);
   const finalTitle = item.productName || item.name || item.title || 'Sản phẩm E-Commerce';
   const priceVal = item.price ?? item.minPrice ?? item.unitPrice ?? item.skuMinPrice ?? item.skus?.[0]?.price ?? 0;
 
@@ -162,21 +175,35 @@ export function mapProductDetailToUi(item, defaults = {}) {
     ...defaults,
   };
 
-  const images = Array.isArray(item.images) ? item.images : [];
-  const gallery = images.length
-    ? images.map((img, i) => {
-        const src = typeof img === 'string' ? img : img.url || img.imageUrl || DEFAULT_PRODUCT_IMAGE;
-        return {
-          id: `g-${i + 1}`,
-          src,
-          alt: item.name ?? item.title ?? `Ảnh ${i + 1}`,
-          isVideo: false,
-        };
-      })
-    : base.gallery;
-
   const skus = Array.isArray(item.skus) ? item.skus : (Array.isArray(item.variants) ? item.variants : []);
-  
+
+  // Collect candidate images from item.images, item.imageUrl, item.primaryImageUrl, item.coverImageUrl, item.image, and SKUs
+  const rawImages = Array.isArray(item.images) ? item.images : [];
+  const candidateImages = [...rawImages];
+
+  const singleImg = item.imageUrl || item.primaryImageUrl || item.coverImageUrl || item.image;
+  if (singleImg) candidateImages.push(singleImg);
+
+  skus.forEach((sku) => {
+    const skuImg = sku.imageUrl || sku.image;
+    if (skuImg) candidateImages.push(skuImg);
+  });
+
+  const resolvedUrls = candidateImages
+    .map((img) => resolveImageUrl(img) || (typeof img === 'string' ? img : img?.url || img?.imageUrl || ''))
+    .filter(Boolean);
+
+  const uniqueUrls = Array.from(new Set(resolvedUrls));
+  const fallbackImg = resolveProductDefaultImage(item);
+  const gallerySources = uniqueUrls.length > 0 ? uniqueUrls : [fallbackImg];
+
+  const gallery = gallerySources.map((src, i) => ({
+    id: `g-${i + 1}`,
+    src,
+    alt: item.name ?? item.title ?? `Ảnh ${i + 1}`,
+    isVideo: false,
+  }));
+
   // Parse SKU prices — check unitPrice first (backend field), then fallbacks
   const skuPrices = skus
     .map(s => Number(s.unitPrice ?? s.price ?? s.salePrice ?? s.originalPrice ?? s.priceAmount ?? 0))
@@ -251,10 +278,12 @@ export function mapProductDetailToUi(item, defaults = {}) {
     ? skus.map((sku, i) => {
         const skuP = Number(sku.unitPrice ?? sku.price ?? sku.salePrice ?? sku.originalPrice ?? minP);
         const skuS = extractSkuStock(sku);
+        const rawSkuImg = sku.imageUrl ?? sku.image;
+        const resolvedSkuImg = rawSkuImg ? resolveImageUrl(rawSkuImg) : null;
         return {
           id: sku.skuId ?? sku.id ?? `v-${i + 1}`,
           name: extractVariantName(sku, i),
-          image: sku.imageUrl ?? sku.image ?? gallery[0]?.src ?? DEFAULT_PRODUCT_IMAGE,
+          image: resolvedSkuImg || gallery[0]?.src || fallbackImg,
           price: skuP > 0 ? skuP : minP,
           stock: skuS > 0 ? skuS : 10,
         };

@@ -6,14 +6,14 @@ import './index.scss';
 export default function ProductGallery({ gallery = [], likeCount = 0 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const trackRef = useRef(null);
-  const active = gallery[activeIndex] || gallery[0];
-
-  const scrollThumbs = (direction) => {
-    if (!trackRef.current) return;
-    trackRef.current.scrollBy({ left: direction * 80, behavior: 'smooth' });
+  const fallbackItem = {
+    id: 'g-fallback',
+    src: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&q=80',
+    alt: 'Ảnh sản phẩm',
+    isVideo: false,
   };
-
-  if (!active) return null;
+  const safeGallery = Array.isArray(gallery) && gallery.length > 0 ? gallery : [fallbackItem];
+  const active = safeGallery[activeIndex] || safeGallery[0] || fallbackItem;
 
   return (
     <div className="product-gallery">
@@ -37,7 +37,7 @@ export default function ProductGallery({ gallery = [], likeCount = 0 }) {
         </button>
 
         <div className="product-gallery__thumbs" ref={trackRef}>
-          {gallery.map((item, index) => (
+          {safeGallery.map((item, index) => (
             <button
               key={item.id}
               type="button"
