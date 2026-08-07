@@ -67,8 +67,9 @@ Sản phẩm phù hợp đi làm, tập gym, đi du lịch. Bảo hành chính h
   })),
   shop: {
     id: 'shop-1',
-    name: 'TechZone Official Store',
+    name: 'Pate Shop',
     avatar: '/images/products/collectibles/leica.jpg',
+
     isOnline: true,
     lastOnline: '5 phút trước',
     badge: 'Yêu thích+',
