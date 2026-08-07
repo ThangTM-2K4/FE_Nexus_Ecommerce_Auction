@@ -407,19 +407,21 @@ const StaffProductReview = () => {
                 )}
 
                 <footer>
-                  <button
-                    type="button"
-                    className="reject"
-                    disabled={processingId === p.id || statusNorm === "REJECTED"}
-                    style={
-                      statusNorm === "REJECTED"
-                        ? { background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5", opacity: 0.8, cursor: "not-allowed" }
-                        : undefined
-                    }
-                    onClick={() => setRejectTarget(p)}
-                  >
-                    Từ chối
-                  </button>
+                  {statusNorm !== "APPROVED" && (
+                    <button
+                      type="button"
+                      className="reject"
+                      disabled={processingId === p.id || statusNorm === "REJECTED"}
+                      style={
+                        statusNorm === "REJECTED"
+                          ? { background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5", opacity: 0.8, cursor: "not-allowed" }
+                          : undefined
+                      }
+                      onClick={() => setRejectTarget(p)}
+                    >
+                      Từ chối
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="approve"
@@ -502,19 +504,21 @@ const StaffProductReview = () => {
                         >
                           <FaCheck /> {statusNorm === "APPROVED" ? "Đã duyệt" : "Duyệt"}
                         </button>
-                        <button
-                          type="button"
-                          className="stf-btn-action stf-btn-action--reject"
-                          disabled={processingId === p.id || statusNorm === "REJECTED"}
-                          style={
-                            statusNorm === "REJECTED"
-                              ? { background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5", opacity: 0.8, cursor: "not-allowed" }
-                              : undefined
-                          }
-                          onClick={() => setRejectTarget(p)}
-                        >
-                          <FaTimes /> {statusNorm === "REJECTED" ? "Đã từ chối" : "Từ chối"}
-                        </button>
+                        {statusNorm !== "APPROVED" && (
+                          <button
+                            type="button"
+                            className="stf-btn-action stf-btn-action--reject"
+                            disabled={processingId === p.id || statusNorm === "REJECTED"}
+                            style={
+                              statusNorm === "REJECTED"
+                                ? { background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5", opacity: 0.8, cursor: "not-allowed" }
+                                : undefined
+                            }
+                            onClick={() => setRejectTarget(p)}
+                          >
+                            <FaTimes /> {statusNorm === "REJECTED" ? "Đã từ chối" : "Từ chối"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
