@@ -102,33 +102,60 @@ export const UserListRow = ({ user, type = "customer", actions = [] }) => (
 export const ProductCard = ({ product, actions = [] }) => {
   const imgSrc = product.image || product.imageUrl || product.primaryImageUrl || (Array.isArray(product.images) ? product.images[0] : null);
 
+  let displayStock = extractProductStock(product);
+  if (!displayStock || Number(displayStock) === 0) {
+    try {
+      const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+      const matched = localList.find((item) => String(item.id).toLowerCase() === String(product.id).toLowerCase());
+      if (matched && matched.stock > 0) {
+        displayStock = matched.stock;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  let priceText = "0đ";
+  const rawPrice = product.minPrice ?? product.price;
+  if (typeof rawPrice === "number") {
+    priceText = `${rawPrice.toLocaleString("vi-VN")}đ`;
+  } else if (typeof rawPrice === "string" && rawPrice.trim()) {
+    if (rawPrice.includes("đ") || rawPrice.includes("₫") || rawPrice.includes(".")) {
+      priceText = rawPrice.endsWith("đ") || rawPrice.endsWith("₫") ? rawPrice : `${rawPrice}đ`;
+    } else {
+      const parsed = parseFloat(rawPrice.replace(/[^0-9]/g, "")) || 0;
+      priceText = `${parsed.toLocaleString("vi-VN")}đ`;
+    }
+  }
+
   return (
-    <article className="adm-product-card">
-      <div className="adm-product-card__img">
-        <div className="adm-product-card__thumb" aria-hidden="true" style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <article className="adm-product-card" style={{ display: "flex", flexDirection: "column", height: "100%", background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden", transition: "transform 0.2s ease, box-shadow 0.2s ease" }}>
+      <div className="adm-product-card__img" style={{ height: "110px", background: "#f8fafc", display: "grid", placeItems: "center", borderBottom: "1px solid #f1f5f9" }}>
+        <div className="adm-product-card__thumb" aria-hidden="true" style={{ width: "58px", height: "58px", borderRadius: "10px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e8f0", background: "#ffffff", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
           {imgSrc ? (
-            <img src={imgSrc} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={imgSrc} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           ) : (
-            "📦"
+            <span style={{ fontSize: "26px" }}>📦</span>
           )}
         </div>
       </div>
-      <div className="adm-product-card__body">
-        <div className="adm-product-card__head">
-          <small>{product.id} · {product.category}</small>
+      <div className="adm-product-card__body" style={{ padding: "14px 16px", flex: "1 1 auto", display: "flex", flexDirection: "column", gap: "6px" }}>
+        <div className="adm-product-card__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+          <small style={{ fontSize: "11px", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={product.id}>{product.id} · {product.category || product.categoryName || "Điện Thoại & Phụ Kiện"}</small>
           <AdminStatusBadge status={product.status} />
         </div>
-        <h3>{product.name}</h3>
-        <p className="adm-product-card__seller">{product.seller}</p>
-        {product.brand && <span className="adm-product-card__brand">{product.brand}</span>}
-        <div className="adm-product-card__price">
-          <strong>{product.price}</strong>
-          <span>SL: {product.quantity}</span>
+        <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#1e1b4b", margin: 0, lineHeight: 1.4, height: "38px", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{product.name}</h3>
+        <p className="adm-product-card__seller" style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>{product.seller || "Shop"}</p>
+        <div className="adm-product-card__price" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: "8px" }}>
+          <strong style={{ fontSize: "15px", color: "#6b3ba7", fontWeight: 800 }}>{priceText}</strong>
+          <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>SL: {displayStock || 0}</span>
         </div>
       </div>
-      <footer>{actions.map((a) => (
-        <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick}>{a.label}</button>
-      ))}</footer>
+      <footer style={{ display: "flex", gap: "8px", padding: "10px 14px", borderTop: "1px solid #f1f5f9", background: "#fafafa" }}>
+        {actions.map((a) => (
+          <button key={a.label} type="button" className={a.variant || ""} onClick={a.onClick} style={{ padding: "5px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, border: "1px solid #cbd5e1", cursor: "pointer", background: "#ffffff" }}>{a.label}</button>
+        ))}
+      </footer>
     </article>
   );
 };
