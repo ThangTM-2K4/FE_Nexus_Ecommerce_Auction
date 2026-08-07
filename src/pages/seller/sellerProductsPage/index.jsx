@@ -449,16 +449,17 @@ export default function ProductsPage() {
                               style={
                                 effectiveModStatus === "APPROVED"
                                   ? {
-                                      background: "linear-gradient(135deg, #dcfce7, #bbf7d0)",
-                                      color: "#15803d",
-                                      border: "1px solid #86efac",
-                                      fontWeight: 600,
-                                      padding: "4px 12px",
+                                      background: "#e6f4ea",
+                                      color: "#137333",
+                                      border: "1px solid #ceead6",
+                                      fontWeight: 700,
+                                      padding: "6px 14px",
                                       borderRadius: "20px",
                                       fontSize: "12px",
                                       display: "inline-flex",
                                       alignItems: "center",
-                                      gap: "4px",
+                                      gap: "5px",
+                                      boxShadow: "0 1px 2px rgba(19,115,51,0.08)",
                                     }
                                   : effectiveModStatus === "REJECTED"
                                   ? {
@@ -466,19 +467,32 @@ export default function ProductsPage() {
                                       color: "#be123c",
                                       border: "1px solid #fda4af",
                                       fontWeight: 600,
-                                      padding: "4px 12px",
+                                      padding: "6px 14px",
                                       borderRadius: "20px",
                                       fontSize: "12px",
                                       display: "inline-flex",
                                       alignItems: "center",
-                                      gap: "4px",
+                                      gap: "5px",
+                                    }
+                                  : effectiveModStatus === "PENDING_MANUAL_REVIEW"
+                                  ? {
+                                      background: "#fef3c7",
+                                      color: "#b45309",
+                                      border: "1px solid #fde68a",
+                                      fontWeight: 600,
+                                      padding: "6px 14px",
+                                      borderRadius: "20px",
+                                      fontSize: "12px",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "5px",
                                     }
                                   : {
                                       background: "#f1f5f9",
                                       color: "#475569",
                                       border: "1px solid #cbd5e1",
                                       fontWeight: 600,
-                                      padding: "4px 12px",
+                                      padding: "6px 14px",
                                       borderRadius: "20px",
                                       fontSize: "12px",
                                     }
@@ -498,7 +512,7 @@ export default function ProductsPage() {
                                   display: "inline-flex",
                                   alignItems: "center",
                                   gap: "6px",
-                                  padding: "4px 12px",
+                                  padding: "5px 12px",
                                   background: "linear-gradient(135deg, #fff1f2, #ffe4e6)",
                                   border: "1px solid #fecdd3",
                                   borderRadius: "20px",
@@ -522,11 +536,10 @@ export default function ProductsPage() {
                               </button>
                             )}
 
-                            {effectiveModStatus !== "REJECTED" && (
+                            {(effectiveModStatus === "DRAFT" || !isSubmittingDisabled) && (
                               <button
                                 type="button"
                                 className="slr-btn-create"
-                                disabled={isSubmittingDisabled}
                                 style={{
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -536,18 +549,15 @@ export default function ProductsPage() {
                                   fontSize: "12px",
                                   fontWeight: 600,
                                   borderRadius: "8px",
-                                  background:
-                                    effectiveModStatus === "APPROVED"
-                                      ? "linear-gradient(135deg, #16a34a, #22c55e)"
-                                      : undefined,
+                                  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
                                   color: "#ffffff",
                                   border: "none",
-                                  opacity: isSubmittingDisabled ? 0.55 : 1,
-                                  cursor: isSubmittingDisabled ? "not-allowed" : "pointer",
+                                  cursor: "pointer",
+                                  boxShadow: "0 2px 4px rgba(99,102,241,0.25)",
                                 }}
                                 onClick={() => handleSubmitReview(p)}
                               >
-                                {buttonText}
+                                Gửi duyệt
                               </button>
                             )}
                           </div>

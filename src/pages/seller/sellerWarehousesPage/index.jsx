@@ -100,7 +100,7 @@ export default function SellerWarehousesPage() {
             onClick={() => setShowModal(true)}
             style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
           >
-            <FaPlus /> + Thêm kho mới
+            <FaPlus /> Thêm kho mới
           </button>
         }
       />
