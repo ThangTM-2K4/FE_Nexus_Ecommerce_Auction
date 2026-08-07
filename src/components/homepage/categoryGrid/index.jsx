@@ -44,8 +44,12 @@ export default function CategoryGrid({
     return categories.slice(start, start + itemsPerPage);
   }, [categories, itemsPerPage, page]);
 
-  const handleNext = () => {
-    setPage((prev) => (prev + 1) % totalPages);
+  const handleToggle = () => {
+    if (page > 0) {
+      setPage((prev) => prev - 1);
+    } else {
+      setPage((prev) => (prev + 1) % totalPages);
+    }
   };
 
   return (
@@ -63,10 +67,12 @@ export default function CategoryGrid({
             <motion.button
               type="button"
               className="category-grid__next-btn"
-              onClick={handleNext}
-              aria-label="Xem thêm danh mục"
+              onClick={handleToggle}
+              aria-label={page > 0 ? "Quay lại trang trước" : "Xem thêm danh mục"}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.94 }}
+              animate={{ rotate: page > 0 ? 180 : 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
             >
               ›
             </motion.button>

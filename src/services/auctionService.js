@@ -58,7 +58,7 @@ export async function getAuctions(params = {}) {
  * Chi tiết phiên đấu giá GET /api/v1/auctions/{id}
  */
 export async function getAuctionById(id) {
-  const { data } = await api.get(`/auctions/${id}`);
+  const { data } = await api.get(`/auctions/${id}`, { skipErrorRedirect: true });
   const res = unwrapData(data);
   return mapBackendAuctionToUi(res);
 }
@@ -67,7 +67,7 @@ export async function getAuctionById(id) {
  * Trang LIVE — giá hiện tại, rowVersion, allowed actions GET /api/v1/auctions/{id}/live-view
  */
 export async function getAuctionLiveView(auctionId) {
-  const { data } = await api.get(`/auctions/${auctionId}/live-view`);
+  const { data } = await api.get(`/auctions/${auctionId}/live-view`, { skipErrorRedirect: true });
   return unwrapData(data);
 }
 
@@ -116,6 +116,7 @@ export async function placeBid(auctionId, amount, expectedBidHeadRowVersion, cur
     },
     {
       headers: { 'Idempotency-Key': key },
+      skipErrorRedirect: true,
     }
   );
   return unwrapData(data);
@@ -131,6 +132,7 @@ export async function registerAuction(auctionId, idempotencyKey) {
     {},
     {
       headers: { 'Idempotency-Key': key },
+      skipErrorRedirect: true,
     }
   );
   return unwrapData(data);
@@ -152,7 +154,7 @@ export async function cancelAuction(id, { reasonCode, reason, expectedRowVersion
     reasonCode: reasonCode || 'OTHER',
     reason: reason || 'Hủy phiên đấu giá',
     expectedRowVersion: expectedRowVersion ?? null,
-  });
+  }, { skipErrorRedirect: true });
   return unwrapData(data);
 }
 
@@ -226,6 +228,7 @@ export async function initiateWinnerPayment(auctionId, { provider, paymentMethod
     },
     {
       headers: { 'Idempotency-Key': key },
+      skipErrorRedirect: true,
     }
   );
   return unwrapData(data);

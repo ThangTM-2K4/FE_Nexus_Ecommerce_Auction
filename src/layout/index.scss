@@ -12,9 +12,3 @@
   min-height: 100vh;
   margin: 0 auto;
 }
-
-@include respond(desktop-lg) {
-  .layout-wrapper {
-    max-width: $content-width;
-  }
-}
