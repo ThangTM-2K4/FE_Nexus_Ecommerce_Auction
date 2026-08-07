@@ -58,6 +58,7 @@
 .checkout-haravan-page__left {
   display: flex;
   flex-direction: column;
+  gap: 16px;
 }
 
 .checkout-haravan-page__right {
@@ -65,7 +66,19 @@
   flex-direction: column;
   position: sticky;
   top: 90px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  padding-right: 2px;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+  }
 }
+
 
 .checkout-einvoice-card {
   display: flex;
