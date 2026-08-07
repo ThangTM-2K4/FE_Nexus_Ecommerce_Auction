@@ -595,9 +595,31 @@ export const ShippingZoneItem = ({ zone }) => (
 // ==========================================
 
 export const ProductListRow = ({ product, actions = [] }) => {
-  const stockVal = extractProductStock(product);
-  const priceVal = typeof product.price === "number" ? product.price : parseFloat(String(product.price || "0").replace(/[^0-9.]/g, "")) || 0;
-  const priceText = priceVal > 0 ? `${priceVal.toLocaleString("vi-VN")}đ` : (product.price || "0đ");
+  let displayStock = extractProductStock(product);
+  if (!displayStock || Number(displayStock) === 0) {
+    try {
+      const localList = JSON.parse(localStorage.getItem("seller_created_products") || "[]");
+      const matched = localList.find((item) => String(item.id).toLowerCase() === String(product.id).toLowerCase());
+      if (matched && matched.stock > 0) {
+        displayStock = matched.stock;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  let priceText = "0đ";
+  const rawPrice = product.minPrice ?? product.price;
+  if (typeof rawPrice === "number") {
+    priceText = `${rawPrice.toLocaleString("vi-VN")}đ`;
+  } else if (typeof rawPrice === "string" && rawPrice.trim()) {
+    if (rawPrice.includes("đ") || rawPrice.includes("₫") || rawPrice.includes(".")) {
+      priceText = rawPrice.endsWith("đ") || rawPrice.endsWith("₫") ? rawPrice : `${rawPrice}đ`;
+    } else {
+      const parsed = parseFloat(rawPrice.replace(/[^0-9]/g, "")) || 0;
+      priceText = `${parsed.toLocaleString("vi-VN")}đ`;
+    }
+  }
 
   return (
     <article className="adm-list-row adm-list-row--product" style={{ display: "flex", alignItems: "center", width: "100%", gap: "16px", padding: "12px 16px", background: "#ffffff", borderRadius: "10px", border: "1px solid #e2e8f0", marginBottom: "8px" }}>
@@ -619,7 +641,7 @@ export const ProductListRow = ({ product, actions = [] }) => {
       <div className="adm-list-row__col adm-list-row__col--price" style={{ flex: "0 0 160px" }}>
         <span className="adm-list-row__label" style={{ fontSize: "10px", textTransform: "uppercase", color: "#94a3b8", fontWeight: 700, display: "block" }}>Giá & Tồn kho</span>
         <span className="adm-list-row__val" style={{ fontSize: "13px" }}>
-          <strong className="highlight" style={{ color: "#6b3ba7", fontWeight: 700 }}>{priceText}</strong> · SL: {stockVal}
+          <strong className="highlight" style={{ color: "#6b3ba7", fontWeight: 700 }}>{priceText}</strong> · SL: {displayStock || 0}
         </span>
       </div>
       <div className="adm-list-row__col adm-list-row__col--status" style={{ flex: "0 0 110px" }}>
