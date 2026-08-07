@@ -354,14 +354,15 @@ export function mapProductDetailToUi(item, defaults = {}) {
     gallery,
     shop: item.shop
       ? {
-          id: item.shop.id ?? item.shopId ?? base.shop?.id,
-          name: item.shop.name ?? item.shopName ?? base.shop?.name,
-          avatar: item.shop.avatar ?? item.shop.avatarUrl ?? base.shop?.avatar,
-          isOnline: item.shop.isOnline ?? base.shop?.isOnline,
-          lastOnline: item.shop.lastOnline ?? base.shop?.lastOnline,
-          badge: item.shop.badge ?? base.shop?.badge,
-          stats: item.shop.stats ?? base.shop?.stats,
+          id: item.shop.id ?? item.shopId ?? shopObj.id,
+          name: item.shop.name ?? item.shopName ?? shopObj.name,
+          avatar: item.shop.avatar ?? item.shop.avatarUrl ?? shopObj.avatar,
+          isOnline: item.shop.isOnline ?? shopObj.isOnline,
+          lastOnline: item.shop.lastOnline ?? shopObj.lastOnline,
+          badge: item.shop.badge ?? shopObj.badge,
+          stats: item.shop.stats || shopObj.stats,
         }
-      : base.shop,
+      : shopObj,
   };
 }
+
