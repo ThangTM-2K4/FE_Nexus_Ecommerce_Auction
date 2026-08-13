@@ -3,8 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuctionIntroBanner from '../../../components/auction/auctionIntroBanner';
 import AuctionFilterBar, { EMPTY_FILTERS } from '../../../components/auction/auctionFilterBar';
 import AuctionCard from '../../../components/auction/auctionCard';
-import { auctionListings, countLiveAuctions } from '../../../data/auctionData';
-import { getAuctions } from '../../../services/auctionService';
+import { getAuctions, countLiveAuctions } from '../../../services/auctionService';
 import { useAuth } from '../../../context/AuthContext';
 import './index.scss';
 
@@ -94,14 +93,12 @@ export default function AuctionBrowsePage() {
 
   useEffect(() => {
     async function loadAuctions() {
-      const publishedLocal = JSON.parse(localStorage.getItem("auc_published_auctions") || "[]");
       try {
         setIsLoading(true);
-        const res = await getAuctions();
-        const apiItems = (res && Array.isArray(res.items)) ? res.items : [];
-        setRawAuctions([...publishedLocal, ...apiItems]);
+        const res = await getAuctions({ pageSize: 100 });
+        setRawAuctions(Array.isArray(res?.items) ? res.items : []);
       } catch {
-        setRawAuctions(publishedLocal);
+        setRawAuctions([]);
       } finally {
         setIsLoading(false);
       }
@@ -213,7 +210,11 @@ export default function AuctionBrowsePage() {
         </div>
       )}
       <div className="auction-browse-page__grid" role="list">
-        {filteredListings.length === 0 ? (
+        {isLoading ? (
+          <div className="auction-browse-page__empty" role="status">
+            <p>Đang tải danh sách phiên đấu giá...</p>
+          </div>
+        ) : filteredListings.length === 0 ? (
           <div className="auction-browse-page__empty" role="status">
             <p>Không tìm thấy phiên đấu giá phù hợp. Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm.</p>
             <button

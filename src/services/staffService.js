@@ -23,11 +23,16 @@ import {
   mockProducts,
   mockCategories,
   mockOrders,
-  mockAuctions,
-  mockBids,
   mockRolePermissions,
 } from '../data/adminEntities';
 import { getAdminAuditLogs, getAdminAuditLogById, mapAuditLog } from './adminAuditService';
+import {
+  getAuctions,
+  getAuctionById,
+  getAuctionBids,
+  mapAuctionToStaffRow,
+  mapBidToHistoryItem,
+} from './auctionService';
 
 const applicationKey = (userId) => `mockSellerApplication_${userId}`;
 
@@ -761,22 +766,59 @@ export const getStaffOrderDetail = async (orderId) => {
 };
 
 export const getStaffAuctions = async () => {
-  await mockDelay(200);
-  return mockAuctions.map((a) => ({ ...a }));
+  try {
+    const res = await getAuctions({ pageSize: 100 });
+    return (res?.items || [])
+      .map((raw) => mapAuctionToStaffRow(raw))
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
 };
 
 export const getStaffAuctionDetail = async (auctionId) => {
-  await mockDelay(150);
-  const auction = mockAuctions.find((a) => a.id === auctionId);
-  if (!auction) return null;
-  const bids = mockBids.filter((b) => b.auction === auctionId);
-  return { ...auction, bids };
+  try {
+    const [auction, bidsRaw] = await Promise.all([
+      getAuctionById(auctionId),
+      getAuctionBids(auctionId, { pageSize: 50 }).catch(() => []),
+    ]);
+    if (!auction) return null;
+    const row = mapAuctionToStaffRow(auction);
+    const bids = (Array.isArray(bidsRaw) ? bidsRaw : []).map((b, i) => {
+      const mapped = mapBidToHistoryItem(b, i, false);
+      return {
+        id: b.id || b.bidId || `${auctionId}-${i}`,
+        bidder: mapped.user,
+        amount: mapped.amount,
+        time: mapped.exactTime || mapped.time,
+        ip: mapped.ip || '—',
+        suspicious: mapped.status?.includes('Nghi vấn'),
+      };
+    });
+    return { ...row, bids };
+  } catch {
+    return null;
+  }
 };
 
 export const getStaffBidHistory = async (auctionId) => {
-  await mockDelay(150);
-  if (auctionId) return mockBids.filter((b) => b.auction === auctionId);
-  return mockBids.map((b) => ({ ...b }));
+  if (!auctionId) return [];
+  try {
+    const bids = await getAuctionBids(auctionId, { pageSize: 100 });
+    return (Array.isArray(bids) ? bids : []).map((b, i) => {
+      const mapped = mapBidToHistoryItem(b, i, false);
+      return {
+        id: b.id || b.bidId || `${auctionId}-${i}`,
+        auction: auctionId,
+        bidder: mapped.user,
+        amount: mapped.amount,
+        time: mapped.exactTime || mapped.time,
+        suspicious: mapped.status?.includes('Nghi vấn'),
+      };
+    });
+  } catch {
+    return [];
+  }
 };
 
 export const getStaffShipments = async () => {

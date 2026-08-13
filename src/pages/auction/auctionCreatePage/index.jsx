@@ -13,7 +13,8 @@ import {
 import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
-import { createAuctionApplication } from "../../../services/auctionProposalService";
+import { createAuctionApplication, buildAuctionApplicationFormData } from "../../../services/auctionProposalService";
+import { getApiErrorMessage } from "../../../utils/apiResponse";
 import { getCategoryTree } from "../../../services/catalogService";
 import Select from "../../../components/common/select";
 import { auctionImages } from "../../../data/auctionImages";
@@ -32,6 +33,8 @@ const initialForm = {
   endDate: "",
   agreeRules: false,
 };
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const conditionOptions = [
   { value: "", label: "Chọn tình trạng" },
@@ -77,6 +80,12 @@ export default function AuctionCreatePage() {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
+    const oversized = files.find((file) => file.size > MAX_IMAGE_BYTES);
+    if (oversized) {
+      toast.error(`Ảnh "${oversized.name}" vượt 5MB. Vui lòng chọn ảnh nhỏ hơn.`);
+      e.target.value = "";
+      return;
+    }
     if (previews.length + files.length > 5) {
       toast.error("Tối đa 5 ảnh sản phẩm");
       return;
@@ -138,20 +147,42 @@ export default function AuctionCreatePage() {
     }
     if (!formData.startPrice.trim()) {
       newErrors.startPrice = "Vui lòng nhập giá khởi điểm";
+    } else if (Number(formData.startPrice) < 100000) {
+      newErrors.startPrice = "Giá khởi điểm tối thiểu 100.000đ";
     } else if (Number(formData.startPrice) <= 0) {
       newErrors.startPrice = "Giá khởi điểm phải lớn hơn 0";
     }
     if (!formData.bidIncrement.trim()) {
       newErrors.bidIncrement = "Vui lòng nhập bước giá";
+    } else if (
+      formData.startPrice &&
+      Number(formData.bidIncrement) < Number(formData.startPrice) * 0.01
+    ) {
+      newErrors.bidIncrement = "Bước giá tối thiểu 1% giá khởi điểm";
+    }
+    const reserveNum = Number(formData.reservePrice);
+    const startNum = Number(formData.startPrice);
+    if (formData.reservePrice && reserveNum > 0 && reserveNum < startNum) {
+      newErrors.reservePrice = "Giá dự trữ phải >= giá khởi điểm";
     }
     if (!formData.startDate) newErrors.startDate = "Vui lòng chọn ngày bắt đầu";
+    else if (new Date(formData.startDate) <= new Date()) {
+      newErrors.startDate = "Ngày bắt đầu phải ở tương lai";
+    }
     if (!formData.endDate) newErrors.endDate = "Vui lòng chọn ngày kết thúc";
-    if (
-      formData.startDate &&
-      formData.endDate &&
-      formData.endDate <= formData.startDate
-    ) {
-      newErrors.endDate = "Ngày kết thúc phải sau ngày bắt đầu";
+    if (formData.startDate && formData.endDate) {
+      const startMs = new Date(formData.startDate).getTime();
+      const endMs = new Date(formData.endDate).getTime();
+      if (endMs <= startMs) {
+        newErrors.endDate = "Ngày kết thúc phải sau ngày bắt đầu";
+      } else {
+        const durationHours = (endMs - startMs) / 3_600_000;
+        if (durationHours < 24) {
+          newErrors.endDate = "Phiên đấu giá tối thiểu 24 giờ";
+        } else if (durationHours > 14 * 24) {
+          newErrors.endDate = "Phiên đấu giá tối đa 14 ngày";
+        }
+      }
     }
     if (previews.length === 0) {
       newErrors.images = "Vui lòng tải lên ít nhất 1 ảnh";
@@ -173,42 +204,41 @@ export default function AuctionCreatePage() {
     try {
       setLoading(true);
 
-      // Xây dựng multipart/form-data đúng spec C# PascalCase
-      const fd = new FormData();
-      fd.append('Title', formData.title.trim());
-      fd.append('Description', formData.description.trim());
-      fd.append('Condition', formData.condition || 'GOOD');
-      fd.append('CategoryId', formData.category || '');
-      fd.append('Brand', formData.brand.trim());
-      fd.append('StartPrice', String(Number(formData.startPrice) || 0));
-      fd.append('ReservePrice', String(Number(formData.reservePrice) || 0));
-      fd.append('BidIncrement', String(Number(formData.bidIncrement) || 0));
-      if (formData.startDate) fd.append('StartDate', new Date(formData.startDate).toISOString());
-      if (formData.endDate) fd.append('EndDate', new Date(formData.endDate).toISOString());
-      fd.append('AgreeRules', 'true');
-
-      // Append ảnh thật
-      imageFiles.forEach((file) => fd.append('Images', file));
-      // Append tài liệu thật
-      documentFiles.forEach((file) => fd.append('Documents', file));
+      const fd = buildAuctionApplicationFormData({
+        title: formData.title,
+        description: formData.description,
+        condition: formData.condition,
+        categoryId: formData.category,
+        brand: formData.brand,
+        startPrice: formData.startPrice,
+        reservePrice: formData.reservePrice,
+        bidIncrement: formData.bidIncrement,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        agreeRules: formData.agreeRules,
+        images: imageFiles,
+        documents: documentFiles,
+      });
 
       await createAuctionApplication(fd);
 
       toast.success("🎉 Đã gửi hồ sơ đấu giá thành công! Đang chờ Admin duyệt.");
       setTimeout(() => navigate('/auction/seller'), 800);
     } catch (err) {
+      const status = err?.response?.status;
       const errData = err?.response?.data;
-      // Parse validation errors from backend C# ProblemDetails
-      let msg = errData?.message || errData?.detail || err?.message || "Tạo đề xuất thất bại. Vui lòng thử lại!";
-      if (errData?.errors && typeof errData.errors === 'object') {
-        const firstKey = Object.keys(errData.errors)[0];
-        if (firstKey) {
-          const firstErrors = errData.errors[firstKey];
-          const firstMsg = Array.isArray(firstErrors) ? firstErrors[0] : firstErrors;
-          if (firstMsg) msg = `${firstKey}: ${firstMsg}`;
-        }
+      let msg = getApiErrorMessage(err, "Tạo đề xuất thất bại. Vui lòng thử lại!");
+      if (status === 401) msg = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
+      if (status === 403) msg = 'Tài khoản chưa có quyền Seller hoặc chưa đủ điều kiện tạo đấu giá.';
+      if (status === 415) msg = 'Lỗi định dạng dữ liệu upload. Vui lòng thử lại hoặc đổi ảnh khác.';
+      if (status === 500) {
+        const refId = errData?.correlationId || errData?.traceId;
+        msg = refId
+          ? `Lỗi máy chủ (500). Gửi mã này cho team backend: ${refId}`
+          : 'Lỗi máy chủ (500). Vui lòng thử lại sau hoặc liên hệ hỗ trợ.';
       }
-      toast.error(msg);
+      console.error('[AuctionCreate] submit failed', status, errData);
+      toast.error(msg, { autoClose: status === 500 ? 12000 : 5000 });
     } finally {
       setLoading(false);
     }

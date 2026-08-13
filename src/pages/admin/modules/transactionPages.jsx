@@ -10,8 +10,10 @@ import {
 } from "../../../components/admin/adminViews";
 import { useAdminList } from "../../../hooks/useAdminList";
 import {
-  mockOrders, mockAuctionOrders, mockBids, mockPayments, mockWallets, mockWithdrawals, STATUS_OPTIONS,
+  mockOrders, mockPayments, mockWallets, mockWithdrawals, STATUS_OPTIONS,
 } from "../../../data/adminEntities";
+import { getAdminAuctions, getAuctionBidAudit, getAuctionSettlementMonitor } from "../../../services/adminAuctionService";
+import { mapBidAuditToAdminFeed, mapSettlementToAdminOrder, mapBackendAuctionToUi } from "../../../services/auctionService";
 import {
   getAdminWithdrawals,
   approveAdminWithdrawal,
@@ -75,8 +77,38 @@ export const AdminOrders = () => {
 };
 
 export const AdminAuctionOrders = () => {
-  const list = useAdminList(mockAuctionOrders, ["id", "winner", "auction"]);
+  const list = useAdminList([], ["id", "winner", "auction"]);
   const [viewMode, setViewMode] = useState("grid");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadOrders() {
+      setLoading(true);
+      try {
+        const res = await getAdminAuctions({ pageSize: 100, status: 'ENDED' });
+        const auctions = (res?.items || []).map(mapBackendAuctionToUi).filter(Boolean);
+        const ended = auctions.filter((a) => a.isEnded);
+
+        const orders = await Promise.all(
+          ended.slice(0, 30).map(async (auction) => {
+            try {
+              const monitor = await getAuctionSettlementMonitor(auction.id);
+              return mapSettlementToAdminOrder(monitor || {}, auction);
+            } catch {
+              return mapSettlementToAdminOrder({}, auction);
+            }
+          }),
+        );
+        list.setItems(orders.filter(Boolean));
+      } catch {
+        list.setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOrders();
+  }, []);
+
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Đấu giá" title="Đơn hàng đấu giá" subtitle="Pipeline thanh toán và giao hàng sau đấu giá." />
@@ -85,7 +117,11 @@ export const AdminAuctionOrders = () => {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
-      {viewMode === "grid" ? (
+      {loading ? (
+        <p style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>Đang tải đơn hàng đấu giá...</p>
+      ) : list.filtered.length === 0 ? (
+        <p style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>Chưa có đơn hàng đấu giá nào.</p>
+      ) : viewMode === "grid" ? (
         <div className="adm-order-timeline">
           {list.filtered.map((order) => (
             <OrderTimelineItem
@@ -137,8 +173,40 @@ export const AdminAuctionOrders = () => {
 };
 
 export const AdminBids = () => {
-  const list = useAdminList(mockBids, ["bidder", "auction", "id"]);
+  const list = useAdminList([], ["bidder", "auction", "id"]);
   const [viewMode, setViewMode] = useState("grid");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadBids() {
+      setLoading(true);
+      try {
+        const res = await getAdminAuctions({ pageSize: 50 });
+        const auctions = (res?.items || []).map(mapBackendAuctionToUi).filter(Boolean);
+        const liveOrRecent = auctions.filter((a) => a.isLive || a.isEnded).slice(0, 15);
+
+        const bidGroups = await Promise.all(
+          liveOrRecent.map(async (auction) => {
+            try {
+              const bids = await getAuctionBidAudit(auction.id, { pageSize: 20 });
+              return (Array.isArray(bids) ? bids : []).map((b) =>
+                mapBidAuditToAdminFeed(b, auction.title),
+              );
+            } catch {
+              return [];
+            }
+          }),
+        );
+        list.setItems(bidGroups.flat());
+      } catch {
+        list.setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadBids();
+  }, []);
+
   return (
     <div className="adm-page">
       <AdminPageHeader kicker="Đấu giá" title="Quản lý Bid" subtitle="Luồng bid theo thời gian — phát hiện spam và bid giả." />
@@ -147,6 +215,11 @@ export const AdminBids = () => {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
+      {loading ? (
+        <p style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>Đang tải lịch sử bid...</p>
+      ) : list.filtered.length === 0 ? (
+        <p style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>Chưa có lượt bid nào.</p>
+      ) : (
       <div className={viewMode === "list" ? "adm-bid-feed adm-view-as-list" : "adm-bid-feed"}>
         {list.filtered.map((bid) => (
           <BidFeedItem
@@ -160,6 +233,7 @@ export const AdminBids = () => {
           />
         ))}
       </div>
+      )}
     </div>
   );
 };

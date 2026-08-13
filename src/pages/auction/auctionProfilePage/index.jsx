@@ -11,7 +11,7 @@ import ProfileInfo from "../../../components/profile/profileInfo";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
 import AuctionCard from "../../../components/auction/auctionCard";
-import { auctionListings } from "../../../data/auctionData";
+import { getMyAuctionActivities } from "../../../services/auctionService";
 import RequireAuthModal from "../../../components/auction/requireAuthModal";
 import "./index.scss";
 
@@ -27,6 +27,9 @@ export default function AuctionProfilePage() {
 
   // Load watchlist items from localStorage
   const [watchlistItems, setWatchlistItems] = useState([]);
+
+  const [activityStats, setActivityStats] = useState(null);
+  const [recentBids, setRecentBids] = useState([]);
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id) {
@@ -45,7 +48,6 @@ export default function AuctionProfilePage() {
         setLoading(false);
       });
 
-    // Load local watchlist
     try {
       const saved = JSON.parse(localStorage.getItem("auc_watchlist") || "[]");
       setWatchlistItems(saved);
@@ -53,6 +55,37 @@ export default function AuctionProfilePage() {
       setWatchlistItems([]);
     }
   }, [user?.id, isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    getMyAuctionActivities()
+      .then((activities) => {
+        const list = Array.isArray(activities) ? activities : (activities?.items || []);
+        const totalBids = list.reduce((sum, a) => sum + (a.bidCount || a.myBidCount || (a.myBids?.length ?? 0)), 0);
+        const won = list.filter((a) => a.result === 'WINNER' || a.isWinner).length;
+        const active = list.filter((a) => {
+          const st = String(a.status || a.auctionStatus || '').toUpperCase();
+          return st === 'LIVE' || a.participating;
+        }).length;
+        const leading = list.filter((a) => a.isLeading || a.leadingStatus === 'LEADING').length;
+        setActivityStats({ totalBids, won, active, leading, sessions: list.length });
+
+        const bids = list.flatMap((a) => (a.myBids || a.recentBids || []).map((b) => ({
+          id: b.id || `${a.auctionId}-${b.amount}`,
+          title: a.title || a.productName || 'Phiên đấu giá',
+          bidPrice: `${Number(b.amount ?? b.bidAmount ?? 0).toLocaleString('vi-VN')} ₫`,
+          time: b.placedAtUtc ? new Date(b.placedAtUtc).toLocaleString('vi-VN') : 'Gần đây',
+          status: b.isLeading ? 'LEADING' : (a.isWinner ? 'WON' : 'OUTBID'),
+          statusLabel: b.isLeading ? '👑 Đang dẫn đầu' : (a.isWinner ? '🏆 Thắng thầu' : '⚠️ Đã bị vượt giá'),
+          statusClass: b.isLeading ? 'status-leading' : (a.isWinner ? 'status-won' : 'status-outbid'),
+        }))).slice(0, 5);
+        setRecentBids(bids);
+      })
+      .catch(() => {
+        setActivityStats(null);
+        setRecentBids([]);
+      });
+  }, [isAuthenticated]);
 
   const handleProfileUpdate = (updated) => {
     setProfile(updated);
@@ -96,80 +129,50 @@ export default function AuctionProfilePage() {
   const phone = profile?.phone || user?.phone || "";
   const address = profile?.address || user?.address || "Việt Nam";
 
-  // Mock auction stats for user
   const auctionStats = [
     {
       id: "total_bids",
       label: "Tổng lượt đặt giá",
-      value: "28",
-      subText: "Trên 12 sản phẩm",
+      value: String(activityStats?.totalBids ?? 0),
+      subText: activityStats?.sessions ? `Trên ${activityStats.sessions} phiên` : "Chưa có dữ liệu",
       icon: <FaGavel style={{ color: "#C3A05D" }} />,
     },
     {
       id: "won_auctions",
       label: "Số phiên thắng thầu",
-      value: "5",
-      subText: "Tỷ lệ thắng 83.3%",
+      value: String(activityStats?.won ?? 0),
+      subText: activityStats?.totalBids
+        ? `Tỷ lệ thắng ${activityStats.totalBids ? Math.round((activityStats.won / Math.max(activityStats.sessions, 1)) * 100) : 0}%`
+        : "Chưa có dữ liệu",
       icon: <FaTrophy style={{ color: "#E8C468" }} />,
     },
     {
       id: "active_bids",
       label: "Phiên đang tham gia",
-      value: "3",
-      subText: "Đang dẫn đầu 2 phiên",
+      value: String(activityStats?.active ?? 0),
+      subText: activityStats?.leading ? `Đang dẫn đầu ${activityStats.leading} phiên` : "Chưa tham gia phiên nào",
       icon: <FaClock style={{ color: "#53ADBE" }} />,
     },
     {
       id: "watchlist_count",
       label: "Sản phẩm theo dõi",
-      value: String(watchlistItems.length || 8),
+      value: String(watchlistItems.length),
       subText: "Đang theo dõi",
       icon: <FaHeart style={{ color: "#ef4444" }} />,
     },
     {
       id: "deposit_volume",
       label: "Tổng cọc / giao dịch",
-      value: `${(user?.balance ? (user.balance * 2.5) : 185000000).toLocaleString()} ₫`,
-      subText: "Điểm tín nhiệm cao",
+      value: `${(user?.balance ? (user.balance * 2.5) : 0).toLocaleString()} ₫`,
+      subText: "Theo số dư ví",
       icon: <FaWallet style={{ color: "#10b981" }} />,
     },
     {
       id: "trust_score",
       label: "Điểm uy tín đấu giá",
       value: `${reputationScore} / 5.0`,
-      subText: "Hạng Vật Thầu Vàng Gold",
+      subText: "Hạng uy tín cá nhân",
       icon: <FaMedal style={{ color: "#C3A05D" }} />,
-    },
-  ];
-
-  // Recent bid history
-  const recentBids = [
-    {
-      id: "BID_101",
-      title: "Đồng hồ Rolex Submariner Date 41mm (2023)",
-      bidPrice: "330.000.000 ₫",
-      time: "10 phút trước",
-      status: "LEADING",
-      statusLabel: "👑 Đang dẫn đầu",
-      statusClass: "status-leading",
-    },
-    {
-      id: "BID_102",
-      title: "Túi Hermès Birkin 30 Togo Gold Hardware",
-      bidPrice: "412.000.000 ₫",
-      time: "1 giờ trước",
-      status: "OUTBID",
-      statusLabel: "⚠️ Đã bị vượt giá",
-      statusClass: "status-outbid",
-    },
-    {
-      id: "BID_103",
-      title: "MacBook Pro 16 inch M3 Max 36GB / 1TB",
-      bidPrice: "68.900.000 ₫",
-      time: "2 giờ trước",
-      status: "WON",
-      statusLabel: "🏆 Thắng thầu (Đã cọc)",
-      statusClass: "status-won",
     },
   ];
 
@@ -353,15 +356,21 @@ export default function AuctionProfilePage() {
           <div className="auc-profile-tab-content">
             <div className="auc-watchlist-grid">
               {watchlistItems.length > 0 ? (
-                auctionListings
-                  .filter((item) => watchlistItems.some((w) => String(w.id) === String(item.id)))
-                  .map((item) => (
-                    <AuctionCard
-                      key={item.id}
-                      auction={item}
-                      onClick={() => navigate(`/auction/detail/${item.id}`)}
-                    />
-                  ))
+                watchlistItems.map((item) => (
+                  <AuctionCard
+                    key={item.id}
+                    auction={{
+                      id: item.id,
+                      title: item.title,
+                      image: item.image,
+                      currentPrice: item.currentPrice,
+                      categoryLabel: item.categoryLabel || '',
+                      endTime: Date.now() + 86400000,
+                      isLive: true,
+                    }}
+                    onClick={() => navigate(`/auction/detail/${item.id}`)}
+                  />
+                ))
               ) : (
                 <div className="auc-empty-watchlist">
                   <FaHeart style={{ fontSize: 48, color: "rgba(255,255,255,0.2)" }} />

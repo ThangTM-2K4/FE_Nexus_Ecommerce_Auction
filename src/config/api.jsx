@@ -58,6 +58,11 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     const isAuthPath = config.url?.includes('/auth/');
+    // FormData: để axios/browser tự gắn Content-Type kèm boundary (tránh lỗi 415)
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+    }
     if (!isAuthPath && ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
       const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID()

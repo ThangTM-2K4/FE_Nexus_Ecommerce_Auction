@@ -8,71 +8,10 @@ import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayo
 import AuctionImage from "../../../components/auction/auctionImage";
 import AuctionCountdown from "../../../components/auction/auctionCountdown";
 import { useAuth } from "../../../context/AuthContext";
-import { getMyAuctionActivities } from "../../../services/auctionService";
+import { getMyAuctionActivities, getWinnerOrder, placeBid as apiPlaceBid, mapActivityToLiveAuction, mapWinnerOrderToUi, mapBidToHistoryItem } from "../../../services/auctionService";
 import "./index.scss";
 
 const BID_HISTORY_KEY = "auc_bid_history";
-const WON_ORDERS_KEY = "auc_orders";
-
-const MOCK_WON_AUCTIONS = [
-  {
-    id: "AUC-WIN-101",
-    auctionId: "auc-1",
-    productTitle: "Đồng Hồ Patek Philippe Nautilus 5711/1A (Phiên Bản Giới Hạn)",
-    productImage: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80",
-    finalPrice: "325.500.000 ₫",
-    startingPrice: "280.000.000 ₫",
-    depositAmount: "5.000.000 ₫",
-    paidAmount: "320.500.000 ₫",
-    paidAt: "2026-07-29T09:15:00.000Z",
-    paymentMethod: "Ví Nexus Pay",
-    status: "delivering", // 'processing' | 'delivering' | 'completed'
-    shippingCarrier: "Giao Hàng Nhanh (GHN Express)",
-    trackingCode: "GHN-AUC-998241",
-    estimatedDeliveryDate: "30/07/2026 - 01/08/2026 (2 - 3 ngày làm việc)",
-    deliveryTimeSlot: "08:00 - 12:00 hoặc 13:00 - 17:00 (Giờ hành chính - Giao tất cả các ngày)",
-    address: {
-      recipient: "Nguyễn Minh Đức",
-      phone: "0912 345 678",
-      fullAddress: "123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-    },
-    timeline: [
-      { time: "09:15 - 29/07/2026", text: "Thanh toán trúng thầu thành công & Khấu trừ cọc 5.000.000 ₫", done: true },
-      { time: "10:30 - 29/07/2026", text: "Người bán (Patek Official Store) kiểm tra & đóng gói bảo hiểm", done: true },
-      { time: "14:15 - 29/07/2026", text: "Đã bàn giao cho đơn vị vận chuyển GHN Express (Kho HCM Central)", done: true },
-      { time: "18:00 - 29/07/2026", text: "Đơn hàng đang trên đường vận chuyển đến Bưu cục giao Quận 1", done: true },
-      { time: "Dự kiến 31/07/2026", text: "Nhân viên shipper giao hàng đến địa chỉ nhận", done: false },
-    ],
-  },
-  {
-    id: "AUC-WIN-102",
-    auctionId: "auc-2",
-    productTitle: "Rolex Submariner Date 126610LN Mới 100% Fullbox",
-    productImage: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600&auto=format&fit=crop&q=80",
-    finalPrice: "215.000.000 ₫",
-    startingPrice: "190.000.000 ₫",
-    depositAmount: "5.000.000 ₫",
-    paidAmount: "210.000.000 ₫",
-    paidAt: "2026-07-28T14:30:00.000Z",
-    paymentMethod: "Chuyển khoản Ngân hàng (Napas 24/7)",
-    status: "completed",
-    shippingCarrier: "Viettel Post Special Cargo",
-    trackingCode: "VTP-AUC-881920",
-    estimatedDeliveryDate: "29/07/2026 (Đã giao hàng)",
-    deliveryTimeSlot: "13:00 - 17:00 (Đã hoàn tất)",
-    address: {
-      recipient: "Nguyễn Minh Đức",
-      phone: "0912 345 678",
-      fullAddress: "123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-    },
-    timeline: [
-      { time: "14:30 - 28/07/2026", text: "Thanh toán trúng thầu thành công", done: true },
-      { time: "16:00 - 28/07/2026", text: "Bàn giao đơn vị vận chuyển Viettel Post", done: true },
-      { time: "09:00 - 29/07/2026", text: "Shipper đang giao hàng đến người nhận", done: true },
-      { time: "10:45 - 29/07/2026", text: "Giao hàng thành công & Khách hàng đã ký nhận", done: true },
-    ],
-  },
-];
 
 function maskUsername(name, isCurrentUser) {
   if (isCurrentUser) return name;
@@ -112,6 +51,7 @@ export default function AuctionMyBidsPage() {
   const [bidHistory, setBidHistory] = useState([]);
   const [wonOrders, setWonOrders] = useState([]);
   const [liveAuctions, setLiveAuctions] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [selectedWonOrder, setSelectedWonOrder] = useState(null);
   
   // Search & Filter state
@@ -124,158 +64,97 @@ export default function AuctionMyBidsPage() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Sync live auctions from bidHistory & myBidsAuctions
-  const syncLiveAuctions = useCallback((historyData) => {
-    setLiveAuctions((prevList) => {
-      return prevList.map((auction) => {
-        const bidsForThis = historyData.filter(
-          (b) => String(b.auctionId) === String(auction.id)
-        );
-        if (bidsForThis.length === 0) return auction;
-
-        // Top bid is highest amount
-        const sortedBids = [...bidsForThis].sort((a, b) => b.amount - a.amount);
-        const topBid = sortedBids[0];
-        const isUsd = String(auction.currentPrice).includes("$");
-        const formattedPrice = isUsd
-          ? `$${topBid.amount.toLocaleString("en-US")}`
-          : `${topBid.amount.toLocaleString("vi-VN")} ₫`;
-
-        const userBidsFormatted = sortedBids.map((b) => ({
-          user: b.userName,
-          avatar: b.userAvatar || "",
-          amount: isUsd ? `$${b.amount.toLocaleString("en-US")}` : `${b.amount.toLocaleString("vi-VN")} ₫`,
-          isYou: true,
-          isLeader: b.id === topBid.id,
-        }));
-
-        const otherBids = (auction.bidHistory || []).filter((b) => !b.isYou);
-        const mergedHistory = [...userBidsFormatted, ...otherBids];
-
-        return {
-          ...auction,
-          currentPrice: formattedPrice,
-          status: { label: "ĐANG DẪN ĐẦU", type: "leading" },
-          bidHistory: mergedHistory,
-        };
-      });
-    });
-  }, []);
-
-  // Load bid history from localStorage
-  const loadHistory = useCallback(() => {
-    try {
-      const data = JSON.parse(localStorage.getItem(BID_HISTORY_KEY) || "[]");
-      setBidHistory(data);
-      syncLiveAuctions(data);
-    } catch {
-      setBidHistory([]);
-    }
-  }, [syncLiveAuctions]);
-
-  // Load won orders — ưu tiên API, fallback sang mock nếu API chưa có dữ liệu
-  const loadWonOrders = useCallback(async () => {
+  // Load hoạt động đấu giá từ API
+  const loadActivities = useCallback(async () => {
+    setActivitiesLoading(true);
     try {
       const activities = await getMyAuctionActivities();
-      const won = Array.isArray(activities)
-        ? activities.filter(a => a.result === 'WINNER' || a.isWinner || a.winnerOrder)
-        : [];
+      const list = Array.isArray(activities) ? activities : (activities?.items || []);
 
-      if (won.length > 0) {
-        const mapped = won.map((a) => {
-          const order = a.winnerOrder || a;
-          return {
-            id: order.orderId || order.id || `AUC-WIN-${a.auctionId}`,
-            auctionId: a.auctionId || a.id,
-            productTitle: a.title || a.productName || 'Sản phẩm trúng thầu',
-            productImage: a.imageUrl || a.image || MOCK_WON_AUCTIONS[0].productImage,
-            finalPrice: order.winningAmount
-              ? `${Number(order.winningAmount).toLocaleString('vi-VN')} ₫`
-              : (order.finalPrice || '---'),
-            startingPrice: a.startingPrice
-              ? `${Number(a.startingPrice).toLocaleString('vi-VN')} ₫`
-              : '---',
-            depositAmount: order.depositAmount
-              ? `${Number(order.depositAmount).toLocaleString('vi-VN')} ₫`
-              : '---',
-            paidAmount: order.totalPayable
-              ? `${Number(order.totalPayable).toLocaleString('vi-VN')} ₫`
-              : (order.finalPrice || '---'),
-            paidAt: order.paidAt || order.createdAt || new Date().toISOString(),
-            paymentMethod: order.paymentMethod || 'VNPAY',
-            status: order.orderStatus === 'COMPLETED' ? 'completed' : 'delivering',
-            shippingCarrier: order.shippingCarrier || 'Giao Hàng Nhanh (GHN Express)',
-            trackingCode: order.trackingCode || (order.shipmentId ? `VTP-${order.shipmentId}` : 'Chưa có mã vận đơn'),
-            estimatedDeliveryDate: order.estimatedDeliveryDate || 'Chưa có thông tin',
-            deliveryTimeSlot: order.deliveryTimeSlot || 'Giờ hành chính',
-            address: {
-              recipient: order.recipientName || user?.fullName || 'Người dùng',
-              phone: order.phone || user?.phone || '',
-              fullAddress: order.addressLine || user?.address || '',
-            },
-            timeline: order.timeline || [
-              { time: formatDateTime(order.createdAt || new Date().toISOString()), text: 'Trúng đấu giá - Đơn hàng được tạo', done: true },
-            ],
-          };
-        });
-        setWonOrders(mapped);
-        return;
+      const active = list
+        .filter((a) => {
+          const st = String(a.status || a.auctionStatus || '').toUpperCase();
+          return st === 'LIVE' || st === 'REGISTERED' || a.isActive || a.participating;
+        })
+        .map(mapActivityToLiveAuction);
+      setLiveAuctions(active);
+
+      const historyFromApi = list.flatMap((a) => {
+        const bids = a.myBids || a.bids || [];
+        return bids.map((b, idx) => ({
+          id: b.id || `${a.auctionId || a.id}-${idx}`,
+          auctionId: a.auctionId || a.id,
+          title: a.title || a.productName || 'Phiên đấu giá',
+          image: a.imageUrl || a.image || '',
+          category: a.categoryName || '',
+          amount: b.amount ?? b.bidAmount ?? 0,
+          currency: b.currency || a.currency || 'VND',
+          bidAt: b.placedAtUtc || b.createdAt || b.bidAt || new Date().toISOString(),
+          userName: user?.name || user?.fullName || user?.email || 'Bạn',
+          userAvatar: user?.avatar || user?.avatarUrl || '',
+          status: b.isLeading || b.status === 'LEADING' ? 'winning' : 'placed',
+        }));
+      });
+      if (historyFromApi.length > 0) {
+        setBidHistory(historyFromApi);
       }
-    } catch { /* ignore, fallback below */ }
-
-    // Fallback sang mock data
-    const local = JSON.parse(localStorage.getItem(WON_ORDERS_KEY) || '[]');
-    if (local.length > 0) {
-      const normalizedLocal = local.map((item) => ({
-        id: item.id || `AUC-WIN-${Date.now()}`,
-        productTitle: item.productTitle || 'Sản phẩm trúng thầu',
-        productImage: item.productImage || MOCK_WON_AUCTIONS[0].productImage,
-        finalPrice: item.finalPrice || '100.000.000 ₫',
-        startingPrice: '80.000.000 ₫',
-        depositAmount: '5.000.000 ₫',
-        paidAmount: item.finalPrice || '95.000.000 ₫',
-        paidAt: item.paidAt || new Date().toISOString(),
-        paymentMethod: item.paymentMethod === 'wallet' ? 'Ví Nexus Pay' : 'Chuyển khoản Ngân hàng',
-        status: item.status || 'delivering',
-        shippingCarrier: 'Giao Hàng Nhanh (GHN Express)',
-        trackingCode: `GHN-AUC-${Math.floor(100000 + Math.random() * 900000)}`,
-        estimatedDeliveryDate: '30/07/2026 - 01/08/2026 (2 - 3 ngày làm việc)',
-        deliveryTimeSlot: '08:00 - 12:00 hoặc 13:00 - 17:00 (Giờ hành chính)',
-        address: item.address || { recipient: user?.fullName, phone: user?.phone, fullAddress: user?.address || '' },
-        timeline: [
-          { time: formatDateTime(item.paidAt || new Date().toISOString()), text: 'Thanh toán trúng thầu thành công & Khấu trừ cọc 5.000.000 ₫', done: true },
-          { time: 'Hôm nay 14:15', text: 'Đã bàn giao cho đơn vị vận chuyển GHN Express', done: true },
-          { time: 'Dự kiến', text: 'Shipper giao hàng tận nhà', done: false },
-        ],
-      }));
-      setWonOrders([...normalizedLocal, ...MOCK_WON_AUCTIONS]);
-    } else {
-      setWonOrders(MOCK_WON_AUCTIONS);
+    } catch {
+      setLiveAuctions([]);
+    } finally {
+      setActivitiesLoading(false);
     }
   }, [user]);
 
+  // Load won orders từ API
+  const loadWonOrders = useCallback(async () => {
+    try {
+      const activities = await getMyAuctionActivities();
+      const list = Array.isArray(activities) ? activities : (activities?.items || []);
+      const wonActivities = list.filter(
+        (a) => a.result === 'WINNER' || a.isWinner || a.winnerOrder || a.hasWinnerOrder,
+      );
+
+      if (wonActivities.length === 0) {
+        setWonOrders([]);
+        return;
+      }
+
+      const mapped = await Promise.all(
+        wonActivities.map(async (a) => {
+          const auctionId = a.auctionId || a.id;
+          try {
+            const order = await getWinnerOrder(auctionId);
+            return mapWinnerOrderToUi(order || a.winnerOrder || {}, a);
+          } catch {
+            return mapWinnerOrderToUi(a.winnerOrder || {}, a);
+          }
+        }),
+      );
+      setWonOrders(mapped.filter(Boolean));
+    } catch {
+      setWonOrders([]);
+    }
+  }, []);
+
   useEffect(() => {
-    loadHistory();
+    loadActivities();
     loadWonOrders();
     const onStorage = (e) => {
-      if (!e.key || e.key === BID_HISTORY_KEY) loadHistory();
-      if (!e.key || e.key === WON_ORDERS_KEY) loadWonOrders();
+      if (!e.key || e.key === BID_HISTORY_KEY) loadActivities();
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [loadHistory, loadWonOrders]);
+  }, [loadActivities, loadWonOrders]);
 
   useEffect(() => {
-    if (activeTab === "history") loadHistory();
     if (activeTab === "won") loadWonOrders();
-    if (activeTab === "current") loadHistory();
-  }, [activeTab, loadHistory, loadWonOrders]);
+    if (activeTab === "current" || activeTab === "history") loadActivities();
+  }, [activeTab, loadActivities, loadWonOrders]);
 
   const clearHistory = () => {
     localStorage.removeItem(BID_HISTORY_KEY);
     setBidHistory([]);
-    syncLiveAuctions([]);
-    toast.success("Đã xoá toàn bộ lịch sử đấu giá!");
+    toast.success("Đã xoá lịch sử đấu giá cục bộ!");
   };
 
   // Compute attempt number per auction
@@ -380,36 +259,20 @@ export default function AuctionMyBidsPage() {
   };
 
   // Perform Bid Execution after modal confirmation
-  const handleExecuteBid = () => {
+  const handleExecuteBid = async () => {
     if (!pendingBidModal) return;
     const { auction, amount, formattedAmount, isUsd } = pendingBidModal;
-    const userName = user?.name || user?.fullName || user?.email || "Bạn";
-    const userAvatar = user?.avatar || user?.avatarUrl || "";
 
-    const existing = JSON.parse(localStorage.getItem(BID_HISTORY_KEY) || "[]");
-    const entry = {
-      id: Date.now(),
-      auctionId: auction.id,
-      title: auction.title,
-      image: auction.image || "",
-      category: "",
-      amount,
-      currency: isUsd ? "USD" : "VND",
-      bidAt: new Date().toISOString(),
-      userName,
-      userAvatar,
-      status: "winning",
-    };
-
-    const updatedHistory = [entry, ...existing].slice(0, 200);
-    localStorage.setItem(BID_HISTORY_KEY, JSON.stringify(updatedHistory));
-    window.dispatchEvent(new Event("storage"));
-    setBidHistory(updatedHistory);
-    syncLiveAuctions(updatedHistory);
-
-    toast.success(`🎉 Đặt giá ${formattedAmount} thành công cho ${auction.title}! Bạn đang dẫn đầu.`);
-    setBidAmounts({ ...bidAmounts, [auction.id]: "" });
-    setPendingBidModal(null);
+    try {
+      await apiPlaceBid(auction.id, amount, auction.rowVersion, isUsd ? 'USD' : 'VND');
+      toast.success(`🎉 Đặt giá ${formattedAmount} thành công cho ${auction.title}!`);
+      setBidAmounts({ ...bidAmounts, [auction.id]: "" });
+      setPendingBidModal(null);
+      loadActivities();
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Đặt giá thất bại, vui lòng thử lại!';
+      toast.error(msg);
+    }
   };
 
   return (
@@ -704,7 +567,11 @@ export default function AuctionMyBidsPage() {
         ) : (
           /* ─── Tab: Phiên hiện tại ─── */
           <div className={`auc-my-bids__grid ${view}`}>
-            {filteredLiveAuctions.length === 0 ? (
+            {activitiesLoading ? (
+              <div className="auc-bid-history-panel__empty" style={{ gridColumn: "1 / -1" }}>
+                <p>Đang tải phiên đấu giá...</p>
+              </div>
+            ) : filteredLiveAuctions.length === 0 ? (
               <div className="auc-bid-history-panel__empty" style={{ gridColumn: "1 / -1" }}>
                 <FaGavel className="empty-icon" />
                 <h3>Không tìm thấy phiên đấu giá nào</h3>

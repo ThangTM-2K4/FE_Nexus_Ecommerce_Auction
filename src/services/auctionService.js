@@ -42,6 +42,260 @@ export function mapBackendAuctionToUi(item) {
   };
 }
 
+export function countLiveAuctions(listings = []) {
+  return listings.filter((item) => {
+    const end = item.endTime || 0;
+    const liveFlag = item.isLive ?? item.status === 'LIVE';
+    return liveFlag && end > Date.now();
+  }).length;
+}
+
+/** Chi tiết phiên đấu giá — format đầy đủ cho AuctionDetailPage */
+export function mapAuctionDetailToUi(item) {
+  const base = mapBackendAuctionToUi(item);
+  if (!base) return null;
+  const categoryLabel = base.categoryLabel || base.category || 'ĐẤU GIÁ';
+  return {
+    ...base,
+    currentPrice: base.currentPrice || formatPrice(base.currentBid || base.startingPrice || 0),
+    breadcrumbs: ['TRANG CHỦ', String(categoryLabel).toUpperCase(), base.title],
+    sellerAvatar: item.sellerAvatarUrl || item.sellerAvatar || '/images/avatars/seller.png',
+    sellerBadge: item.sellerBadge || 'NGƯỜI BÁN UY TÍN',
+    sellerVerified: item.sellerVerified ?? true,
+    leader: item.leaderName || item.currentLeaderName || item.winningBidderName || 'Chưa có lượt đặt giá',
+    leaderAvatar: item.leaderAvatarUrl || item.leaderAvatar || '',
+    badge: base.isEnded ? 'ĐÃ KẾT THÚC' : base.isLive ? 'LIVE' : 'SẮP DIỄN RA',
+    timeLeft: base.endTime ? Math.max(0, Math.floor((base.endTime - Date.now()) / 1000)) : 0,
+    specs: {
+      brand: item.brand,
+      condition: item.condition,
+      movement: item.movement,
+      year: item.year,
+    },
+    bidHistory: [],
+    brand: item.brand,
+    condition: item.condition,
+    movement: item.movement,
+    year: item.year,
+  };
+}
+
+function formatBidRelativeTime(iso) {
+  if (!iso) return 'Vừa xong';
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'Vừa xong';
+  if (mins < 60) return `${mins} phút trước`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  return new Date(iso).toLocaleString('vi-VN');
+}
+
+/** Map bid API → UI bid history item */
+export function mapBidToHistoryItem(bid, index = 0, isUsd = false) {
+  const amount = bid.amount ?? bid.bidAmount ?? 0;
+  const formatted = isUsd
+    ? `$${Number(amount).toLocaleString('en-US')}`
+    : `${Number(amount).toLocaleString('vi-VN')}đ`;
+  const placedAt = bid.placedAtUtc || bid.createdAt || bid.bidAt;
+  return {
+    user: bid.bidderName || bid.userName || bid.maskedBidderName || bid.bidderDisplayName || '***',
+    avatar: bid.bidderAvatarUrl || bid.avatar || '',
+    amount: formatted,
+    rawAmount: amount,
+    time: formatBidRelativeTime(placedAt),
+    isLeader: index === 0,
+    userId: bid.bidderUserId || bid.userId,
+    exactTime: placedAt ? new Date(placedAt).toLocaleString('vi-VN') : '',
+    ip: bid.ipAddress || bid.ip,
+    device: bid.deviceInfo || bid.device,
+    method: bid.sourceChannel || bid.method || 'WEB',
+    status: bid.isSuspicious || bid.suspicious ? '⚠️ Nghi vấn' : (bid.status || '✓ Hợp lệ'),
+    attemptNum: bid.attemptNumber || bid.sequenceNumber,
+  };
+}
+
+/** Map admin bid audit → UI feed item */
+export function mapBidAuditToAdminFeed(bid, auctionTitle = '') {
+  return {
+    id: bid.id || bid.bidId || `${bid.auctionId}-${bid.placedAtUtc}`,
+    bidder: bid.bidderName || bid.maskedBidderName || bid.bidderUserId || '***',
+    auction: auctionTitle || bid.auctionId || bid.auctionTitle || '—',
+    amount: bid.amount != null
+      ? `${Number(bid.amount).toLocaleString('vi-VN')}đ`
+      : (bid.amountFormatted || '—'),
+    time: bid.placedAtUtc ? new Date(bid.placedAtUtc).toLocaleString('vi-VN') : '—',
+    suspicious: Boolean(bid.isSuspicious || bid.suspicious),
+    ip: bid.ipAddress || bid.ip || '—',
+  };
+}
+
+/** Map settlement monitor / winner order → admin order card */
+export function mapSettlementToAdminOrder(item, auction) {
+  const winner = item.winnerName || item.winnerUserName || item.buyerName || '—';
+  return {
+    id: item.orderId || item.winnerOrderId || `${auction?.id}-order`,
+    winner,
+    auction: auction?.title || item.auctionTitle || auction?.id || '—',
+    seller: auction?.seller || item.sellerName || '—',
+    finalPrice: item.winningAmount != null
+      ? `${Number(item.winningAmount).toLocaleString('vi-VN')}đ`
+      : (item.finalPrice || '—'),
+    paymentStatus: item.paymentStatus || item.paymentState || '—',
+    deliveryStatus: item.deliveryStatus || item.shippingStatus || '—',
+    createdAt: item.createdAtUtc || item.createdAt
+      ? new Date(item.createdAtUtc || item.createdAt).toLocaleDateString('vi-VN')
+      : '—',
+  };
+}
+
+/** Map my activities → live auction card (my-bids current tab) */
+export function mapActivityToLiveAuction(activity) {
+  const isUsd = activity.currency === 'USD';
+  const currentPrice = activity.currentPrice ?? activity.lastBidAmount ?? activity.startingPrice ?? 0;
+  const formatted = isUsd
+    ? `$${Number(currentPrice).toLocaleString('en-US')}`
+    : `${Number(currentPrice).toLocaleString('vi-VN')} ₫`;
+  let statusType = 'watching';
+  let statusLabel = 'Đang theo dõi';
+  if (activity.isLeading || activity.leadingStatus === 'LEADING') {
+    statusType = 'leading';
+    statusLabel = 'ĐANG DẪN ĐẦU';
+  } else if (activity.isOutbid || activity.leadingStatus === 'OUTBID') {
+    statusType = 'outbid';
+    statusLabel = 'BỊ VƯỢT GIÁ';
+  }
+  return {
+    id: activity.auctionId || activity.id,
+    title: activity.title || activity.productName || 'Phiên đấu giá',
+    image: activity.imageUrl || activity.image || '/images/auction/default.png',
+    currentPrice: formatted,
+    endTime: activity.endTimeUtc
+      ? new Date(activity.endTimeUtc).getTime()
+      : (activity.endTime || Date.now() + 86400000),
+    status: { label: statusLabel, type: statusType },
+    buttonStyle: statusType === 'leading' ? 'gold' : 'purple',
+    bidIncrements: isUsd ? ['+$500', '+$1K', '+$5K'] : ['+500K', '+1M', '+5M'],
+    bidHistory: (activity.recentBids || []).map((b, i) => mapBidToHistoryItem(b, i, isUsd)),
+    rowVersion: activity.bidHeadRowVersion,
+  };
+}
+
+/** Map winner order API → my-bids won tab */
+export function mapWinnerOrderToUi(order, activity = {}) {
+  const finalAmount = order.winningAmount ?? order.finalPrice ?? order.totalPayable ?? 0;
+  return {
+    id: order.orderId || order.id || `AUC-WIN-${activity.auctionId || order.auctionId}`,
+    auctionId: activity.auctionId || order.auctionId,
+    productTitle: activity.title || order.productTitle || order.title || 'Sản phẩm trúng thầu',
+    productImage: activity.imageUrl || order.imageUrl || order.image || '/images/auction/default.png',
+    finalPrice: `${Number(finalAmount).toLocaleString('vi-VN')} ₫`,
+    startingPrice: order.startingPrice
+      ? `${Number(order.startingPrice).toLocaleString('vi-VN')} ₫`
+      : '—',
+    depositAmount: order.depositAmount
+      ? `${Number(order.depositAmount).toLocaleString('vi-VN')} ₫`
+      : '—',
+    paidAmount: order.totalPayable != null
+      ? `${Number(order.totalPayable).toLocaleString('vi-VN')} ₫`
+      : `${Number(finalAmount).toLocaleString('vi-VN')} ₫`,
+    paidAt: order.paidAtUtc || order.paidAt || order.createdAtUtc || new Date().toISOString(),
+    paymentMethod: order.paymentMethod || order.provider || 'VNPAY',
+    status: ['COMPLETED', 'DELIVERED'].includes(String(order.orderStatus || order.status).toUpperCase())
+      ? 'completed'
+      : 'delivering',
+    shippingCarrier: order.shippingCarrier || order.carrierName || '—',
+    trackingCode: order.trackingCode || order.trackingNumber || 'Chưa có mã vận đơn',
+    estimatedDeliveryDate: order.estimatedDeliveryDate || order.estimatedDeliveryAt || 'Chưa có thông tin',
+    deliveryTimeSlot: order.deliveryTimeSlot || 'Giờ hành chính',
+    address: {
+      recipient: order.recipientName || order.buyerName || '—',
+      phone: order.phone || order.recipientPhone || '',
+      fullAddress: order.addressLine || order.fullAddress || '',
+    },
+    timeline: Array.isArray(order.timeline) ? order.timeline : [
+      {
+        time: order.createdAtUtc ? new Date(order.createdAtUtc).toLocaleString('vi-VN') : '—',
+        text: 'Trúng đấu giá - Đơn hàng được tạo',
+        done: true,
+      },
+    ],
+  };
+}
+
+/** Map proposal API → admin auction card */
+export function mapProposalToAdminCard(p) {
+  const rawStatus = String(p.status || '').toUpperCase();
+  let status = 'Chờ duyệt đề xuất';
+  if (rawStatus === 'APPROVED') status = 'Đã duyệt';
+  else if (rawStatus === 'REJECTED') status = 'Đã từ chối';
+  else if (rawStatus === 'PUBLISHED' || rawStatus === 'SCHEDULED') status = 'Chuẩn bị đấu giá';
+  else if (rawStatus === 'LIVE') status = 'Đang diễn ra';
+  else if (rawStatus === 'ENDED') status = 'Hoàn thành';
+  else if (rawStatus === 'CANCELLED') status = 'Đã hủy';
+  return {
+    id: p.id,
+    title: p.title || p.productName || 'Đề xuất đấu giá',
+    seller: p.sellerName || p.businessName || 'Seller',
+    startPrice: `${Number(p.startingPrice || p.startPrice || 0).toLocaleString('vi-VN')}đ`,
+    currentPrice: `${Number(p.currentPrice || p.startingPrice || p.startPrice || 0).toLocaleString('vi-VN')}đ`,
+    highestBid: p.highestBid ? `${Number(p.highestBid).toLocaleString('vi-VN')}đ` : '—',
+    winner: p.winnerName || '—',
+    endTime: p.scheduledEndUtc
+      ? new Date(p.scheduledEndUtc).toLocaleDateString('vi-VN')
+      : 'Chờ duyệt',
+    status,
+    bids: p.totalBids ?? p.bidCount ?? 0,
+    rowVersion: p.rowVersion,
+    isProposal: true,
+    image: p.imageUrl || p.coverImageUrl || '/images/auction/default.png',
+  };
+}
+
+/** Map live auction API → admin card */
+export function mapAuctionToAdminCard(a) {
+  const ui = mapBackendAuctionToUi(a);
+  if (!ui) return null;
+  let status = 'Đang diễn ra';
+  if (ui.isEnded) status = ui.status === 'CANCELLED' ? 'Đã hủy' : 'Hoàn thành';
+  else if (ui.isUpcoming) status = 'Chuẩn bị đấu giá';
+  return {
+    id: ui.id,
+    title: ui.title,
+    seller: ui.seller,
+    startPrice: `${Number(ui.startingPrice || 0).toLocaleString('vi-VN')}đ`,
+    currentPrice: ui.currentPrice,
+    highestBid: ui.currentPrice,
+    winner: a.winnerName || '—',
+    endTime: ui.endTime ? new Date(ui.endTime).toLocaleDateString('vi-VN') : '—',
+    status,
+    bids: ui.totalBids ?? 0,
+    rowVersion: ui.rowVersion,
+    isProposal: false,
+    image: ui.image,
+  };
+}
+
+/** Staff lookup row */
+export function mapAuctionToStaffRow(a) {
+  const ui = mapBackendAuctionToUi(a);
+  if (!ui) return null;
+  let status = 'Đang diễn ra';
+  if (ui.isEnded) status = 'Hoàn thành';
+  else if (ui.isUpcoming) status = 'Chuẩn bị';
+  return {
+    id: ui.id,
+    title: ui.title,
+    seller: ui.seller,
+    currentPrice: ui.currentPrice,
+    startPrice: `${Number(ui.startingPrice || 0).toLocaleString('vi-VN')}đ`,
+    bids: ui.totalBids ?? 0,
+    endTime: ui.endTime ? new Date(ui.endTime).toLocaleString('vi-VN') : '—',
+    status,
+    winner: a.winnerName || '—',
+  };
+}
+
 /**
  * Lấy danh sách phiên đấu giá từ backend GET /api/v1/auctions
  */
@@ -60,7 +314,7 @@ export async function getAuctions(params = {}) {
 export async function getAuctionById(id) {
   const { data } = await api.get(`/auctions/${id}`, { skipErrorRedirect: true });
   const res = unwrapData(data);
-  return mapBackendAuctionToUi(res);
+  return mapAuctionDetailToUi(res);
 }
 
 /**

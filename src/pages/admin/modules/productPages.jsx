@@ -18,9 +18,17 @@ import {
 import Select from "../../../components/common/select";
 import { useAdminList } from "../../../hooks/useAdminList";
 import {
-  mockProducts, mockAuctions, mockCategories, mockBrands, mockInventory,
+  mockProducts, mockCategories, mockBrands, mockInventory,
   mockSellerWarehouses, STATUS_OPTIONS,
 } from "../../../data/adminEntities";
+import { getAuctions, mapProposalToAdminCard, mapAuctionToAdminCard } from "../../../services/auctionService";
+import { getAuctionProposals, publishProposal } from "../../../services/auctionProposalService";
+import {
+  approveAuctionProposal,
+  rejectAuctionProposal,
+  reconcileAuction,
+  getApiErrorMessage as getAdminAuctionErrorMessage,
+} from "../../../services/adminAuctionService";
 import { getCategories, createCategory, updateCategory, deleteCategory, saveCategoryImage, uploadCategoryImage, updateCategoryStatus } from "../../../services/adminCategoryService";
 import {
   getAdminProducts,
@@ -394,130 +402,72 @@ export const AdminAuctionProducts = () => {
 
   useEffect(() => {
     async function loadRealData() {
-      const localProposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]").map(p => {
-        const rawStatus = typeof p.status === "object" ? p.status?.label : p.status;
-        const statusStr = rawStatus || "Chờ duyệt đề xuất";
-        return {
-          id: p.id,
-          title: p.title,
-          seller: p.sellerName || "Fashion Elite (Seller)",
-          startPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
-          currentPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
-          highestBid: "—",
-          winner: "—",
-          endTime: statusStr === "Đang diễn ra" ? "2d 23h" : (statusStr === "Đã duyệt" ? "Chờ xuất bản" : "Chờ duyệt"),
-          status: statusStr,
-          bids: 0,
-        };
-      });
-
       try {
         const [proposalsRes, auctionsRes] = await Promise.all([
-          getAuctionProposals().catch(() => ({ items: [] })),
-          getAuctions().catch(() => ({ items: [] })),
+          getAuctionProposals({ pageSize: 100 }),
+          getAuctions({ pageSize: 100 }),
         ]);
-        const proposalItems = (proposalsRes?.items || []).map(p => ({
-          id: p.id,
-          title: p.title,
-          seller: p.sellerName || "Seller",
-          startPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
-          currentPrice: `${(p.startingPrice || 0).toLocaleString()}đ`,
-          highestBid: "—",
-          winner: "—",
-          endTime: "Chờ duyệt",
-          status: p.status || "Chờ duyệt đề xuất",
-          bids: 0,
-        }));
-        const auctionItems = auctionsRes?.items || [];
-        list.setItems([...localProposals, ...proposalItems, ...auctionItems]);
+        const proposalItems = (proposalsRes?.items || []).map(mapProposalToAdminCard);
+        const auctionItems = (auctionsRes?.items || [])
+          .map((a) => mapAuctionToAdminCard(a))
+          .filter(Boolean);
+        list.setItems([...proposalItems, ...auctionItems]);
       } catch {
-        list.setItems(localProposals);
+        list.setItems([]);
       }
     }
     loadRealData();
   }, []);
 
+  const reloadList = async () => {
+    const [proposalsRes, auctionsRes] = await Promise.all([
+      getAuctionProposals({ pageSize: 100 }),
+      getAuctions({ pageSize: 100 }),
+    ]);
+    const proposalItems = (proposalsRes?.items || []).map(mapProposalToAdminCard);
+    const auctionItems = (auctionsRes?.items || [])
+      .map((a) => mapAuctionToAdminCard(a))
+      .filter(Boolean);
+    list.setItems([...proposalItems, ...auctionItems]);
+  };
+
   const handleApproveProposal = async (item) => {
     try {
-      await approveAuctionProposal(item.id);
-    } catch {}
-    list.updateItem(item.id, { status: "Đã duyệt", endTime: "Chờ xuất bản" });
-
-    try {
-      const proposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
-      const updated = proposals.map((p) => {
-        if (String(p.id) === String(item.id)) {
-          return { ...p, status: { label: "Đã duyệt", type: "approved", color: "green" } };
-        }
-        return p;
-      });
-      localStorage.setItem("auc_my_proposals", JSON.stringify(updated));
-    } catch {}
-
-    toast.success(`🎉 Đã duyệt đề xuất phiên đấu giá "${item.title}"!`);
+      await approveAuctionProposal(item.id, { rowVersion: item.rowVersion });
+      await reloadList();
+      toast.success(`🎉 Đã duyệt đề xuất phiên đấu giá "${item.title}"!`);
+    } catch (err) {
+      toast.error(getAdminAuctionErrorMessage(err) || 'Duyệt đề xuất thất bại');
+    }
   };
 
   const handleRejectProposal = async (item) => {
     try {
-      await rejectAuctionProposal(item.id, "Từ chối bởi Admin");
-    } catch {}
-    list.updateItem(item.id, { status: "Đã từ chối" });
-
-    try {
-      const proposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
-      const updated = proposals.map((p) => {
-        if (String(p.id) === String(item.id)) {
-          return { ...p, status: { label: "Đã từ chối", type: "rejected", color: "red" } };
-        }
-        return p;
-      });
-      localStorage.setItem("auc_my_proposals", JSON.stringify(updated));
-    } catch {}
-
-    toast.warning(`Đã từ chối đề xuất "${item.title}"`);
+      await rejectAuctionProposal(item.id, { reason: 'Từ chối bởi Admin', rowVersion: item.rowVersion });
+      await reloadList();
+      toast.warning(`Đã từ chối đề xuất "${item.title}"`);
+    } catch (err) {
+      toast.error(getAdminAuctionErrorMessage(err) || 'Từ chối đề xuất thất bại');
+    }
   };
 
   const handlePublish = async (item) => {
     try {
-      await publishAuction(item.id);
-    } catch {}
-    list.updateItem(item.id, { status: "Đang diễn ra", endTime: "2d 23h" });
+      await publishProposal(item.id, { expectedRowVersion: item.rowVersion });
+      await reloadList();
+      toast.success(`🚀 Đã xuất bản phiên đấu giá "${item.title}" lên Sảnh Đấu Giá chính!`);
+    } catch (err) {
+      toast.error(getAdminAuctionErrorMessage(err) || 'Xuất bản thất bại');
+    }
+  };
 
+  const handleReconcile = async (item) => {
     try {
-      const proposals = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
-      const updated = proposals.map((p) => {
-        if (String(p.id) === String(item.id)) {
-          return { ...p, status: { label: "Đang diễn ra", type: "active", color: "green" } };
-        }
-        return p;
-      });
-      localStorage.setItem("auc_my_proposals", JSON.stringify(updated));
-    } catch {}
-
-    const published = JSON.parse(localStorage.getItem("auc_published_auctions") || "[]");
-    const newAuction = {
-      id: item.id || `DG-${Date.now().toString().slice(-4)}`,
-      title: item.title,
-      description: item.description || "Phiên đấu giá vừa được Admin phê duyệt",
-      category: item.categoryName || "Đồng hồ",
-      categoryLabel: item.categoryName || "Đồng hồ",
-      currentBid: Number(String(item.startPrice).replace(/[^0-9]/g, "")) || 10000000,
-      currentPrice: item.startPrice || "10.000.000đ",
-      startingPrice: Number(String(item.startPrice).replace(/[^0-9]/g, "")) || 10000000,
-      bidIncrement: 500000,
-      depositAmount: 1000000,
-      image: item.image || "/images/auction/default.png",
-      images: [item.image || "/images/auction/default.png"],
-      location: "TP.HCM",
-      postedAt: Date.now(),
-      endTime: Date.now() + 86400000 * 3,
-      isUpcoming: false,
-      listingType: "Cá nhân",
-      status: "Đang diễn ra",
-    };
-    localStorage.setItem("auc_published_auctions", JSON.stringify([newAuction, ...published]));
-
-    toast.success(`🚀 Đã xuất bản phiên đấu giá "${item.title}" lên Sảnh Đấu Giá chính!`);
+      await reconcileAuction(item.id);
+      toast.success(`Đã đối soát phiên "${item.title}"`);
+    } catch (err) {
+      toast.error(getAdminAuctionErrorMessage(err) || 'Đối soát thất bại');
+    }
   };
 
   const tabs = [

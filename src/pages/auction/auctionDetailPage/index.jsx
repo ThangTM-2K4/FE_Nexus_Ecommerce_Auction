@@ -9,12 +9,21 @@ import AuctionImage from "../../../components/auction/auctionImage";
 import {
   getAuctionById,
   getAuctionLiveView,
+  getAuctionBids,
+  getAuctionResult,
   getMyAuctionRegistration,
+  getWinnerOrderSummary,
+  getWinnerOrderPaymentStatus,
   placeBid as apiPlaceBid,
   registerAuction as apiRegisterAuction,
   updateWinnerDeliveryAddress,
   initiateWinnerPayment,
+  mapBidToHistoryItem,
 } from "../../../services/auctionService";
+import {
+  getAuctionLiveMonitor,
+  getAuctionBidAudit,
+} from "../../../services/adminAuctionService";
 import { useAuth } from "../../../context/AuthContext";
 import RequireAuthModal from "../../../components/auction/requireAuthModal";
 import { useProvinces, useWards } from "../../../services/locationService";
@@ -75,6 +84,7 @@ function formatSeconds(totalSeconds) {
 }
 
 function parseTimeToSeconds(str) {
+  if (typeof str === 'number') return str;
   if (!str) return 300;
   if (str.includes("ngày")) {
     const days = parseInt(str) || 1;
@@ -90,62 +100,6 @@ function parseTimeToSeconds(str) {
   return 180;
 }
 
-function loadAuctionDetailData(id) {
-  if (!id) return getAuctionDetail("1");
-
-  try {
-    const publishedList = JSON.parse(localStorage.getItem("auc_published_auctions") || "[]");
-    const foundPublished = publishedList.find((item) => String(item.id) === String(id));
-    if (foundPublished) {
-      return {
-        id: foundPublished.id,
-        title: foundPublished.title,
-        description: foundPublished.description || "Phiên đấu giá vừa được Admin phê duyệt và xuất bản sảnh chính.",
-        currentPrice: foundPublished.currentPrice || "1.000.000đ",
-        startingPrice: foundPublished.startingPrice || 1000000,
-        bidIncrement: foundPublished.bidIncrement || 500000,
-        depositAmount: foundPublished.depositAmount || 1000000,
-        images: foundPublished.images || [foundPublished.image || "/images/auction/default.png"],
-        seller: foundPublished.seller || "Seller (Shop)",
-        sellerAvatar: "/images/avatars/seller.png",
-        sellerBadge: "NGƯỜI BÁN UY TÍN",
-        breadcrumbs: ["TRANG CHỦ", String(foundPublished.category || "ĐỒNG HỒ").toUpperCase(), foundPublished.title],
-        timeLeft: "2d 23h",
-        bidHistory: [],
-        leader: "Chưa có lượt đặt giá",
-        leaderAvatar: "",
-      };
-    }
-  } catch {}
-
-  try {
-    const proposalsList = JSON.parse(localStorage.getItem("auc_my_proposals") || "[]");
-    const foundProposal = proposalsList.find((item) => String(item.id) === String(id));
-    if (foundProposal) {
-      return {
-        id: foundProposal.id,
-        title: foundProposal.title,
-        description: foundProposal.description || "Đề xuất phiên đấu giá đang được kiểm duyệt.",
-        currentPrice: `${(foundProposal.startingPrice || 0).toLocaleString()}đ`,
-        startingPrice: foundProposal.startingPrice || 0,
-        bidIncrement: foundProposal.bidIncrement || 500000,
-        depositAmount: foundProposal.depositAmount || 1000000,
-        images: [foundProposal.image || "/images/auction/default.png"],
-        seller: "Bạn (Người bán)",
-        sellerAvatar: "/images/avatars/seller.png",
-        sellerBadge: "NGƯỜI BÁN",
-        breadcrumbs: ["TRANG CHỦ", String(foundProposal.categoryName || "ĐỒNG HỒ").toUpperCase(), foundProposal.title],
-        timeLeft: "Đang chờ duyệt",
-        bidHistory: [],
-        leader: "Chưa có lượt đặt giá",
-        leaderAvatar: "",
-      };
-    }
-  } catch {}
-
-  return getAuctionDetail(id);
-}
-
 export default function AuctionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -153,29 +107,44 @@ export default function AuctionDetailPage() {
   const { user, isSellerMode, isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(true);
+  const [detailError, setDetailError] = useState(null);
   // rowVersion dùng cho optimistic concurrency khi đặt giá
   const [bidHeadRowVersion, setBidHeadRowVersion] = useState(null);
 
   // Load chi tiết phiên đấu giá từ API
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setDetailLoading(false);
+      setDetailError('Không xác định được phiên đấu giá');
+      return;
+    }
+    let active = true;
+    setDetailLoading(true);
+    setDetailError(null);
+
     getAuctionById(id)
       .then((res) => {
+        if (!active) return;
         if (res) {
           setProduct(res);
           if (res.currentPrice) setCurrentPrice(res.currentPrice);
+          if (res.timeLeft) setSecondsLeft(typeof res.timeLeft === 'number' ? res.timeLeft : parseTimeToSeconds(res.timeLeft));
+          if (res.isEnded) setIsAuctionEnded(true);
+          if (res.leader) setLeader(res.leader);
+          if (res.leaderAvatar) setLeaderAvatar(res.leaderAvatar);
         } else {
-          // Fallback sang mock nếu API chưa có dữ liệu
-          const fallback = loadAuctionDetailData(id);
-          setProduct(fallback);
-          if (fallback?.currentPrice) setCurrentPrice(fallback.currentPrice);
+          setDetailError('Không tìm thấy phiên đấu giá này');
         }
       })
       .catch(() => {
-        const fallback = loadAuctionDetailData(id);
-        setProduct(fallback);
-        if (fallback?.currentPrice) setCurrentPrice(fallback.currentPrice);
+        if (active) setDetailError('Không tải được chi tiết phiên đấu giá');
+      })
+      .finally(() => {
+        if (active) setDetailLoading(false);
       });
+
+    return () => { active = false; };
   }, [id]);
 
   // Poll live-view mỗi 5 giây để cập nhật giá, rowVersion, thời gian kết thúc
@@ -368,78 +337,84 @@ export default function AuctionDetailPage() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
 
-  // Load history & initial top leader
+  // Load bid history từ API
   useEffect(() => {
-    if (!product) return;
+    if (!id || !product) return;
+    let active = true;
 
-    let stored = [];
-    try {
-      stored = JSON.parse(localStorage.getItem(BID_HISTORY_KEY) || "[]");
-    } catch {
-      stored = [];
+    async function loadBids() {
+      try {
+        const bids = await getAuctionBids(id, { pageSize: 50 });
+        if (!active) return;
+        const isUsd = String(currentPrice || product.currentPrice).includes('$');
+        const sorted = [...(Array.isArray(bids) ? bids : [])].sort(
+          (a, b) => Number(b.amount ?? b.bidAmount ?? 0) - Number(a.amount ?? a.bidAmount ?? 0),
+        );
+        const mapped = sorted.map((b, i) => mapBidToHistoryItem(b, i, isUsd));
+        if (mapped.length > 0) {
+          mapped[0] = { ...mapped[0], isLeader: true };
+          setBidHistory(mapped);
+          setLeader(mapped[0].user);
+          setLeaderAvatar(mapped[0].avatar);
+          setCurrentPrice(mapped[0].amount);
+        } else {
+          setBidHistory([]);
+        }
+      } catch {
+        if (active) setBidHistory([]);
+      }
     }
 
-    const localBidsForThis = stored.filter(
-      (item) => String(item.auctionId) === String(product.id)
-    );
+    loadBids();
+    return () => { active = false; };
+  }, [id, product?.id]);
 
-    let mergedHistory = Array.isArray(product.bidHistory) ? [...product.bidHistory] : [];
+  // Admin: bid audit từ API
+  useEffect(() => {
+    if (!id || !fromAdmin) return;
+    let active = true;
+    getAuctionBidAudit(id, { pageSize: 100 })
+      .then((bids) => {
+        if (!active || !Array.isArray(bids) || bids.length === 0) return;
+        const isUsd = String(currentPrice || product?.currentPrice || '').includes('$');
+        const mapped = bids.map((b, i) => mapBidToHistoryItem(b, i, isUsd));
+        if (mapped.length > 0) {
+          mapped[0] = { ...mapped[0], isLeader: true };
+          setBidHistory(mapped);
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [id, fromAdmin]);
 
-    if (localBidsForThis.length > 0) {
-      const isUsd = String(product.currentPrice || "").includes("$");
-      const formattedLocal = localBidsForThis.map((b) => {
-        const formattedAmt = isUsd
-          ? `$${Number(b.amount).toLocaleString("en-US")}`
-          : `${Number(b.amount).toLocaleString("vi-VN")}đ`;
-        return {
-          user: b.userName,
-          avatar: b.userAvatar || product.leaderAvatar,
-          amount: formattedAmt,
-          rawAmount: b.amount,
-          time: "Vừa xong",
-          isLeader: false,
-          userId: b.userId,
-        };
+  // Kết quả & thanh toán sau đấu giá
+  useEffect(() => {
+    if (!id || !isAuctionEnded) return;
+    let active = true;
 
-      });
-
-      mergedHistory = [...formattedLocal, ...mergedHistory];
+    async function loadPostAuction() {
+      try {
+        const [result, summary, paymentStatus] = await Promise.all([
+          getAuctionResult(id).catch(() => null),
+          getWinnerOrderSummary(id).catch(() => null),
+          getWinnerOrderPaymentStatus(id).catch(() => null),
+        ]);
+        if (!active) return;
+        if (result?.winnerName) setLeader(result.winnerName);
+        if (result?.winningAmount != null) {
+          setCurrentPrice(`${Number(result.winningAmount).toLocaleString('vi-VN')}đ`);
+        }
+        const paid = paymentStatus?.isPaid || paymentStatus?.status === 'PAID' || summary?.paymentStatus === 'PAID';
+        if (paid) setIsPaid(true);
+        if (paymentStatus?.remainingSeconds != null) {
+          setPayTimerSeconds(Math.max(0, paymentStatus.remainingSeconds));
+        }
+      } catch { /* ignore */ }
     }
 
-    if (mergedHistory.length > 0) {
-      mergedHistory[0] = { ...mergedHistory[0], isLeader: true };
-      const topBid = mergedHistory[0];
-      setCurrentPrice(topBid.amount || product.currentPrice);
-      setLeader(topBid.user || product.leader);
-      setLeaderAvatar(topBid.avatar || product.leaderAvatar);
-    } else {
-      setCurrentPrice(product.currentPrice || "");
-      setLeader(product.leader || "");
-      setLeaderAvatar(product.leaderAvatar || "");
-    }
-
-    const ips = ["113.161.42.88", "14.232.180.12", "118.69.182.44", "27.72.105.19", "171.244.30.95"];
-    const devices = ["Desktop Chrome 126 (Win 11)", "Mobile Safari (iOS 17.4)", "Desktop Edge 125 (Win 11)", "Mobile Chrome (Android 14)"];
-    const methods = ["Thủ công", "Đặt tự động (AutoBid)", "Thủ công", "Thủ công"];
-
-    const enrichedHistory = mergedHistory.map((b, index) => {
-      const attempt = mergedHistory.length - index;
-      const dateObj = new Date(Date.now() - index * 4 * 60 * 1000 - 18000);
-      const timeStr = dateObj.toLocaleTimeString("vi-VN") + " " + dateObj.toLocaleDateString("vi-VN");
-
-      return {
-        ...b,
-        attemptNum: attempt,
-        exactTime: b.exactTime || timeStr,
-        ip: b.ip || ips[index % ips.length],
-        device: b.device || devices[index % devices.length],
-        method: b.method || methods[index % methods.length],
-        status: b.status || (index === 3 ? "⚠️ Nghi vấn (Chênh IP)" : "✓ Hợp lệ"),
-      };
-    });
-
-    setBidHistory(enrichedHistory);
-  }, [product]);
+    loadPostAuction();
+    return () => { active = false; };
+  }, [id, isAuctionEnded]);
 
   // Real-time Countdown timer tick
   useEffect(() => {
@@ -521,10 +496,18 @@ export default function AuctionDetailPage() {
     }
   };
 
-  if (!product) {
+  if (detailLoading) {
     return (
       <div className="auc-detail auc-detail--empty">
-        <p>Không tìm thấy phiên đấu giá này.</p>
+        <p>Đang tải phiên đấu giá...</p>
+      </div>
+    );
+  }
+
+  if (detailError || !product) {
+    return (
+      <div className="auc-detail auc-detail--empty">
+        <p>{detailError || 'Không tìm thấy phiên đấu giá này.'}</p>
         <button type="button" onClick={() => navigate("/auction")}>Quay lại danh sách</button>
       </div>
     );
@@ -676,12 +659,13 @@ export default function AuctionDetailPage() {
           window.location.assign(payResult.redirectUrl);
           return;
         }
-      } catch { /* fall through to mock success */ }
+      } catch (payErr) {
+        const msg = payErr?.response?.data?.message || payErr?.message || 'Khởi tạo thanh toán thất bại';
+        toast.error(msg);
+        return;
+      }
 
-      // Fallback mock khi API chưa sẵn sàng
-      setIsPaid(true);
-      setShowCheckoutModal(false);
-      toast.success("🎉 Thanh toán thành công! Đơn hàng trúng thầu đang được chuẩn bị giao.");
+      toast.error('Không nhận được liên kết thanh toán từ hệ thống');
     } catch {
       toast.error("Thanh toán thất bại, vui lòng thử lại!");
     } finally {

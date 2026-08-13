@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaPlus, FaTimes, FaMapMarkerAlt, FaCheckCircle, FaShieldAlt, FaMedal } from "react-icons/fa";
+import { toast } from "react-toastify";
 import AuctionSidebarLayout from "../../../components/auction/auctionSidebarLayout";
 import AuctionImage from "../../../components/auction/auctionImage";
 import { getAuctionProposals, publishProposal } from "../../../services/auctionProposalService";
+import { getSellerAuctionRegistrations, getSellerPostAuction } from "../../../services/sellerAuctionService";
 import { useAuth } from "../../../context/AuthContext";
 import * as profileService from "../../../services/profileService";
 import "./index.scss";
@@ -84,7 +86,7 @@ export default function AuctionSellerPage() {
   const handlePublish = async (item) => {
     if (!window.confirm(`Xuất bản phiên đấu giá "${item.title}"?`)) return;
     try {
-      await publishProposal(item.id);
+      await publishProposal(item.id, { expectedRowVersion: item.rowVersion });
       setRealAuctions(prev => prev.map(a =>
         a.id === item.id
           ? { ...a, status: { label: 'Sắp diễn ra', type: 'upcoming', color: 'blue' }, rawStatus: 'PUBLISHED' }
